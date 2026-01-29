@@ -104,7 +104,7 @@ const HeroSection = () => {
           <ProfileFileCard 
             absorbedCount={absorbedCount}
             totalLogos={TOTAL_LOGOS}
-            className="w-[120px] h-[140px] md:w-[140px] md:h-[160px]"
+            className="w-[130px] h-[140px] md:w-[150px] md:h-[160px]"
             onExplosion={handleExplosion}
           />
         </div>
