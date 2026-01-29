@@ -10,20 +10,42 @@ const HeroSection = () => {
   const t = useTranslation('hero');
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState('');
+
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (email) {
-      console.log('Email submitted:', email);
-      setIsSubmitted(true);
+    setError('');
+    
+    const trimmedEmail = email.trim();
+    
+    if (!trimmedEmail) {
+      setError(t.form.error.empty);
+      return;
     }
+    
+    if (!validateEmail(trimmedEmail)) {
+      setError(t.form.error.invalid);
+      return;
+    }
+    
+    console.log('Email submitted:', trimmedEmail);
+    setIsSubmitted(true);
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    if (error) setError('');
   };
 
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
       {/* Floating IDE Logos */}
       <FloatingLogos />
-
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         {/* Badge */}
@@ -50,56 +72,58 @@ const HeroSection = () => {
 
         {/* Subheadline */}
         <p 
-          className="mx-auto mb-4 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0 md:text-xl"
+          className="mx-auto mb-10 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0 md:text-xl"
           style={{ animationDelay: '0.3s' }}
         >
           {t.subheadline}
         </p>
 
-        {/* Tagline */}
-        <p 
-          className="mx-auto mb-10 animate-fade-in text-lg font-semibold text-primary opacity-0 md:text-xl"
-          style={{ animationDelay: '0.35s' }}
-        >
-          {t.tagline}
-        </p>
-
         {/* Email Form */}
         <form 
           onSubmit={handleSubmit}
-          className="mx-auto mb-8 flex max-w-md animate-fade-in flex-col gap-3 opacity-0 sm:flex-row"
+          className="mx-auto mb-8 flex max-w-md animate-fade-in flex-col gap-3 opacity-0"
           style={{ animationDelay: '0.4s' }}
         >
-          <Input
-            type="email"
-            placeholder={t.form.placeholder}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={isSubmitted}
-            className="h-12 flex-1 border-border/50 bg-muted/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-          />
-          <Button
-            type="submit"
-            disabled={isSubmitted}
-            className={`h-12 gap-2 px-6 font-semibold transition-all duration-300 ${
-              isSubmitted 
-                ? 'bg-secondary text-secondary-foreground' 
-                : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:glow-violet'
-            }`}
-          >
-            {isSubmitted ? (
-              <>
-                <Sparkles className="h-4 w-4" />
-                {t.form.success}
-              </>
-            ) : (
-              <>
-                {t.form.button}
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+            <Input
+              type="text"
+              placeholder={t.form.placeholder}
+              value={email}
+              onChange={(e) => handleEmailChange(e.target.value)}
+              disabled={isSubmitted}
+              className={`h-12 flex-1 border-border/50 bg-muted/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary ${
+                error ? 'border-destructive focus:border-destructive focus:ring-destructive' : ''
+              }`}
+            />
+            <Button
+              type="submit"
+              disabled={isSubmitted}
+              className={`h-12 gap-2 px-6 font-semibold transition-all duration-300 ${
+                isSubmitted 
+                  ? 'bg-secondary text-secondary-foreground' 
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:glow-violet'
+              }`}
+            >
+              {isSubmitted ? (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  {t.form.success}
+                </>
+              ) : (
+                <>
+                  {t.form.button}
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {/* Error Message */}
+          {error && (
+            <p className="text-sm text-destructive animate-fade-in">
+              {error}
+            </p>
+          )}
         </form>
 
         {/* Social Proof */}
