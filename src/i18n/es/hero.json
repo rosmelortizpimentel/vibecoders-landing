@@ -1,7 +1,8 @@
 {
   "badge": "Construyendo en público",
-  "headline": "Menos bla bla bla. Más 'Mira lo que construí'.",
-  "subheadline": "El punto de encuentro para los que creamos con IA. Sin trajes, sin recruiters. Solo builders compartiendo sus proyectos y recibiendo feedback real.",
+  "headline": "Tus proyectos están dispersos por internet. Tráelos a casa.",
+  "subheadline": "LinkedIn no entiende tu código. GitHub no muestra tu velocidad. Vibecoders es el único lugar diseñado para centralizar, exhibir y dar contexto a todo lo que estás construyendo con IA.",
+  "tagline": "Un perfil. Todos tus links. Tu verdadera reputación.",
   "form": {
     "placeholder": "tucorreo@ejemplo.com",
     "button": "Unirme al Club",
