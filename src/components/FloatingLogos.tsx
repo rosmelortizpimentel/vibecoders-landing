@@ -3,49 +3,51 @@ import replitLogo from '@/assets/logos/replit.svg';
 import windsurfLogo from '@/assets/logos/windsurf.svg';
 
 const logos = [
+  // Left side logos
   { 
     name: 'Lovable', 
     image: lovableLogo,
-    position: 'top-[12%] left-1/2 -translate-x-1/2 md:top-[8%] md:left-[42%]', 
+    position: 'top-[25%] left-[5%] md:left-[12%]', 
     delay: '0s',
-    size: 'h-12 w-auto md:h-16'
+    size: 'h-14 w-14 md:h-20 md:w-20'
   },
   { 
     name: 'Cursor', 
-    initials: 'Cursor',
-    position: 'top-[22%] left-[8%] md:top-[18%] md:left-[18%]', 
+    initials: 'C',
+    position: 'top-[42%] left-[3%] md:left-[8%]', 
     delay: '0.5s',
-    size: 'h-10 md:h-12 px-3'
+    size: 'h-12 w-12 md:h-16 md:w-16'
   },
   { 
     name: 'v0', 
     initials: 'v0',
-    position: 'top-[18%] right-[8%] md:top-[15%] md:right-[18%]', 
+    position: 'top-[58%] left-[6%] md:left-[14%]', 
     delay: '1s',
-    size: 'h-10 md:h-12 px-3'
+    size: 'h-10 w-10 md:h-14 md:w-14',
+    hidden: 'hidden sm:flex'
   },
+  // Right side logos
   { 
     name: 'Bolt', 
-    initials: 'Bolt',
-    position: 'top-[42%] left-[5%] md:top-[38%] md:left-[8%]', 
+    initials: '⚡',
+    position: 'top-[22%] right-[4%] md:right-[10%]', 
     delay: '0.3s',
-    size: 'h-9 md:h-11 px-3',
-    hidden: 'hidden sm:flex'
+    size: 'h-12 w-12 md:h-16 md:w-16'
   },
   { 
     name: 'Replit', 
     image: replitLogo,
-    position: 'top-[38%] right-[5%] md:top-[35%] md:right-[10%]', 
+    position: 'top-[40%] right-[2%] md:right-[6%]', 
     delay: '0.8s',
-    size: 'h-8 w-auto md:h-10',
+    size: 'h-14 w-14 md:h-18 md:w-18',
     hidden: 'hidden sm:flex'
   },
   { 
     name: 'Windsurf', 
     image: windsurfLogo,
-    position: 'bottom-[28%] left-[12%] md:bottom-[22%] md:left-[22%]', 
+    position: 'top-[56%] right-[5%] md:right-[12%]', 
     delay: '0.6s',
-    size: 'h-8 w-auto md:h-10',
+    size: 'h-10 w-10 md:h-14 md:w-14',
     hidden: 'hidden md:flex'
   },
 ];
@@ -56,7 +58,7 @@ const FloatingLogos = () => {
       {logos.map((logo) => (
         <div
           key={logo.name}
-          className={`absolute ${logo.position} ${logo.size} ${logo.hidden || 'flex'} animate-float items-center justify-center`}
+          className={`absolute ${logo.position} ${logo.size} ${logo.hidden || 'flex'} animate-float items-center justify-center rounded-full border-4 border-slate-900 bg-white overflow-hidden shadow-lg`}
           style={{ animationDelay: logo.delay }}
           title={logo.name}
         >
@@ -64,10 +66,10 @@ const FloatingLogos = () => {
             <img 
               src={logo.image} 
               alt={logo.name} 
-              className="h-full w-auto object-contain"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <span className="text-sm md:text-base font-bold text-white">{logo.initials}</span>
+            <span className="text-sm md:text-base font-bold text-slate-900">{logo.initials}</span>
           )}
         </div>
       ))}
