@@ -13,7 +13,7 @@
 /* Cyber-Garage Design System */
 @layer base {
   :root {
-    --background: 220 29% 23%;
+    --background: 231 99% 62%;
     --foreground: 0 0% 100%;
 
     --card: 222 47% 8%;
@@ -59,7 +59,7 @@
   }
 
   .dark {
-    --background: 220 29% 23%;
+    --background: 231 99% 62%;
     --foreground: 0 0% 100%;
 
     --card: 222 47% 8%;
