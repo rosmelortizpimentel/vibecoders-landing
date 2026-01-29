@@ -84,7 +84,7 @@ const HeroSection = () => {
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
               disabled={isSubmitted}
-              className={`h-12 flex-1 border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:border-[#1c1c1c] focus:ring-[#1c1c1c] ${
+              className={`h-12 flex-1 border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:border-white focus:ring-white/50 ${
                 error ? 'border-white/70' : ''
               }`}
             />
