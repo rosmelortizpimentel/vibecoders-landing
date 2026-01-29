@@ -1,12 +1,15 @@
 {
-  "badge": "Construyendo en público",
-  "headline": "Tus proyectos están dispersos por internet. Tráelos a casa.",
-  "subheadline": "LinkedIn no entiende tu código. GitHub no muestra tu velocidad. Vibecoders es el único lugar diseñado para centralizar, exhibir y dar contexto a todo lo que estás construyendo con IA.",
-  "tagline": "Un perfil. Todos tus links. Tu verdadera reputación.",
+  "badge": "El portafolio para AI Builders",
+  "headline": "Tus proyectos están dispersos. Tráelos a casa.",
+  "subheadline": "Deja de perder tus links en chats y redes sociales. Únete a la nueva generación de creadores, centraliza tus mejores deploys y demuestra tu velocidad de ejecución en un solo perfil.",
   "form": {
     "placeholder": "tucorreo@ejemplo.com",
-    "button": "Unirme al Club",
-    "success": "Anotado"
+    "button": "Unirme a la Waitlist",
+    "success": "¡Estás dentro!",
+    "error": {
+      "empty": "Ingresa tu correo electrónico",
+      "invalid": "Hmm, ese correo no parece válido"
+    }
   },
   "socialProof": "Únete a los primeros fundadores en espera"
 }
