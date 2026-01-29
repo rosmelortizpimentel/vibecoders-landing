@@ -19,11 +19,30 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16">
-      {/* Subtle gradient background effect */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-1/2 top-1/4 h-96 w-96 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute right-1/4 top-1/2 h-64 w-64 rounded-full bg-secondary/10 blur-3xl" />
+    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
+      {/* Large radial gradient orb - inspired by reference */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        {/* Outer blue/violet glow */}
+        <div 
+          className="absolute h-[800px] w-[800px] rounded-full opacity-80 blur-3xl md:h-[1000px] md:w-[1000px]"
+          style={{
+            background: 'radial-gradient(circle, hsl(187 80% 55% / 0.4) 0%, hsl(263 70% 58% / 0.6) 40%, transparent 70%)'
+          }}
+        />
+        {/* Inner magenta/violet core */}
+        <div 
+          className="absolute h-[500px] w-[500px] rounded-full opacity-90 blur-2xl md:h-[600px] md:w-[600px]"
+          style={{
+            background: 'radial-gradient(circle, hsl(320 80% 55% / 0.8) 0%, hsl(263 70% 58% / 0.6) 50%, transparent 80%)'
+          }}
+        />
+        {/* Hot center glow */}
+        <div 
+          className="absolute h-[300px] w-[300px] rounded-full opacity-70 blur-xl md:h-[400px] md:w-[400px]"
+          style={{
+            background: 'radial-gradient(circle, hsl(25 90% 55% / 0.7) 0%, hsl(340 80% 55% / 0.5) 60%, transparent 100%)'
+          }}
+        />
       </div>
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
