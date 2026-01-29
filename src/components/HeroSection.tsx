@@ -56,6 +56,14 @@ const HeroSection = () => {
 
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
+      {/* Top gradient overlay - white fade */}
+      <div 
+        className="pointer-events-none absolute inset-x-0 top-0 z-20 h-32 md:h-48"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 0%, transparent 100%)'
+        }}
+      />
+
       {/* Floating IDE Logos */}
       <FloatingLogos 
         onAbsorbedCountChange={setAbsorbedCount}
