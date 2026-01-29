@@ -9,21 +9,21 @@ const logos = [
     image: lovableLogo,
     position: 'top-[25%] left-[5%] md:left-[12%]', 
     delay: '0s',
-    size: 'h-14 w-14 md:h-20 md:w-20'
+    size: 'h-[68px] w-[68px] md:h-24 md:w-24'
   },
   { 
     name: 'Replit', 
     image: replitLogo,
     position: 'top-[42%] left-[3%] md:left-[8%]', 
     delay: '0.5s',
-    size: 'h-12 w-12 md:h-16 md:w-16'
+    size: 'h-[58px] w-[58px] md:h-[76px] md:w-[76px]'
   },
   { 
     name: 'Windsurf', 
     image: windsurfLogo,
     position: 'top-[58%] left-[6%] md:left-[14%]', 
     delay: '1s',
-    size: 'h-10 w-10 md:h-14 md:w-14',
+    size: 'h-[52px] w-[52px] md:h-[72px] md:w-[72px]',
     hidden: 'hidden sm:flex'
   },
   // Right side logos - placeholders for now
@@ -32,14 +32,14 @@ const logos = [
     initials: 'C',
     position: 'top-[22%] right-[4%] md:right-[10%]', 
     delay: '0.3s',
-    size: 'h-12 w-12 md:h-16 md:w-16'
+    size: 'h-[58px] w-[58px] md:h-[76px] md:w-[76px]'
   },
   { 
     name: 'v0', 
     initials: 'v0',
     position: 'top-[40%] right-[2%] md:right-[6%]', 
     delay: '0.8s',
-    size: 'h-14 w-14 md:h-18 md:w-18',
+    size: 'h-[68px] w-[68px] md:h-[86px] md:w-[86px]',
     hidden: 'hidden sm:flex'
   },
   { 
@@ -47,7 +47,7 @@ const logos = [
     initials: '⚡',
     position: 'top-[56%] right-[5%] md:right-[12%]', 
     delay: '0.6s',
-    size: 'h-10 w-10 md:h-14 md:w-14',
+    size: 'h-[52px] w-[52px] md:h-[72px] md:w-[72px]',
     hidden: 'hidden md:flex'
   },
 ];
@@ -58,7 +58,7 @@ const FloatingLogos = () => {
       {logos.map((logo) => (
         <div
           key={logo.name}
-          className={`absolute ${logo.position} ${logo.size} ${logo.hidden || 'flex'} animate-float items-center justify-center rounded-full border-4 border-slate-900 bg-white overflow-hidden shadow-lg`}
+          className={`absolute ${logo.position} ${logo.size} ${logo.hidden || 'flex'} animate-float items-center justify-center rounded-full bg-white overflow-hidden shadow-lg`}
           style={{ animationDelay: logo.delay }}
           title={logo.name}
         >

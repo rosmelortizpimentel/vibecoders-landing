@@ -1,5 +1,4 @@
 import HeroSection from '@/components/HeroSection';
-import ManifestoSection from '@/components/ManifestoSection';
 import FeaturesGrid from '@/components/FeaturesGrid';
 import Footer from '@/components/Footer';
 
@@ -8,7 +7,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <main>
         <HeroSection />
-        <ManifestoSection />
+        <FeaturesGrid />
         <FeaturesGrid />
       </main>
       <Footer />
