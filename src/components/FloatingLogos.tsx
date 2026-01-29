@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import lovableLogo from '@/assets/logos/lovable.svg';
 import replitLogo from '@/assets/logos/replit.svg';
 import windsurfLogo from '@/assets/logos/windsurf.svg';
@@ -12,9 +12,11 @@ import cursorLogo from '@/assets/logos/cursor.jpg';
 
 interface FloatingLogosProps {
   onAbsorbedCountChange: (count: number) => void;
+  triggerExplosion?: boolean;
+  onExplosionComplete?: () => void;
 }
 
-type LogoState = 'floating' | 'falling' | 'absorbed';
+type LogoState = 'floating' | 'falling' | 'absorbed' | 'exploding';
 
 const logos = [
   { name: 'Lovable', image: lovableLogo },
@@ -32,45 +34,56 @@ const logos = [
 // Desktop positions - 5 left, 5 right - falling towards center (where ProfileFileCard is now)
 const desktopPositions = [
   // Left side → fall to center-right
-  { position: 'top-[18%] left-[10%]', delay: '0s', size: 'h-[106px] w-[106px]', fallX: '40vw', fallY: '37vh' },
-  { position: 'top-[34%] left-[6%]', delay: '0.5s', size: 'h-[84px] w-[84px]', fallX: '44vw', fallY: '21vh' },
-  { position: 'top-[50%] left-[12%]', delay: '1s', size: 'h-[79px] w-[79px]', fallX: '38vw', fallY: '5vh' },
-  { position: 'top-[66%] left-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]', fallX: '42vw', fallY: '-11vh' },
-  { position: 'top-[80%] left-[14%]', delay: '1.2s', size: 'h-[82px] w-[82px]', fallX: '36vw', fallY: '-25vh' },
+  { position: 'top-[18%] left-[10%]', delay: '0s', size: 'h-[106px] w-[106px]', fallX: '40vw', fallY: '37vh', explodeX: '-40vw', explodeY: '-37vh' },
+  { position: 'top-[34%] left-[6%]', delay: '0.5s', size: 'h-[84px] w-[84px]', fallX: '44vw', fallY: '21vh', explodeX: '-44vw', explodeY: '-21vh' },
+  { position: 'top-[50%] left-[12%]', delay: '1s', size: 'h-[79px] w-[79px]', fallX: '38vw', fallY: '5vh', explodeX: '-38vw', explodeY: '-5vh' },
+  { position: 'top-[66%] left-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]', fallX: '42vw', fallY: '-11vh', explodeX: '-42vw', explodeY: '11vh' },
+  { position: 'top-[80%] left-[14%]', delay: '1.2s', size: 'h-[82px] w-[82px]', fallX: '36vw', fallY: '-25vh', explodeX: '-36vw', explodeY: '25vh' },
   // Right side → fall to center-left
-  { position: 'top-[18%] right-[10%]', delay: '0.3s', size: 'h-[106px] w-[106px]', fallX: '-40vw', fallY: '37vh' },
-  { position: 'top-[34%] right-[6%]', delay: '0.8s', size: 'h-[84px] w-[84px]', fallX: '-44vw', fallY: '21vh' },
-  { position: 'top-[50%] right-[12%]', delay: '0.6s', size: 'h-[79px] w-[79px]', fallX: '-38vw', fallY: '5vh' },
-  { position: 'top-[66%] right-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]', fallX: '-42vw', fallY: '-11vh' },
-  { position: 'top-[80%] right-[14%]', delay: '1.1s', size: 'h-[82px] w-[82px]', fallX: '-36vw', fallY: '-25vh' },
+  { position: 'top-[18%] right-[10%]', delay: '0.3s', size: 'h-[106px] w-[106px]', fallX: '-40vw', fallY: '37vh', explodeX: '40vw', explodeY: '-37vh' },
+  { position: 'top-[34%] right-[6%]', delay: '0.8s', size: 'h-[84px] w-[84px]', fallX: '-44vw', fallY: '21vh', explodeX: '44vw', explodeY: '-21vh' },
+  { position: 'top-[50%] right-[12%]', delay: '0.6s', size: 'h-[79px] w-[79px]', fallX: '-38vw', fallY: '5vh', explodeX: '38vw', explodeY: '-5vh' },
+  { position: 'top-[66%] right-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]', fallX: '-42vw', fallY: '-11vh', explodeX: '42vw', explodeY: '11vh' },
+  { position: 'top-[80%] right-[14%]', delay: '1.1s', size: 'h-[82px] w-[82px]', fallX: '-36vw', fallY: '-25vh', explodeX: '36vw', explodeY: '25vh' },
 ];
 
 const FLOAT_DURATION = 2000; // 2s float before falling starts
 const FALL_INTERVAL = 800; // 0.8s between each logo falling
 const FALL_DURATION = 800; // 0.8s for fall animation
-const VERIFIED_DISPLAY_DURATION = 3000; // 3s showing verified state
-const TOTAL_CYCLE_DURATION = FLOAT_DURATION + (logos.length * FALL_INTERVAL) + VERIFIED_DISPLAY_DURATION;
+const EXPLODE_DURATION = 800; // 0.8s for explode animation
+const RESET_PAUSE = 500; // 0.5s pause after explosion before reset
 
-const FloatingLogos = ({ onAbsorbedCountChange }: FloatingLogosProps) => {
+const FloatingLogos = ({ 
+  onAbsorbedCountChange, 
+  triggerExplosion = false,
+  onExplosionComplete
+}: FloatingLogosProps) => {
   const [logoStates, setLogoStates] = useState<LogoState[]>(
     logos.map(() => 'floating')
   );
   const [localAbsorbedCount, setLocalAbsorbedCount] = useState(0);
   const [cycleKey, setCycleKey] = useState(0);
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+  const clearAllTimeouts = useCallback(() => {
+    timeoutsRef.current.forEach(t => clearTimeout(t));
+    timeoutsRef.current = [];
+  }, []);
 
   const startFallingSequence = useCallback(() => {
     logos.forEach((_, index) => {
       // Start falling
-      setTimeout(() => {
+      const fallStartTimer = setTimeout(() => {
         setLogoStates(prev => {
           const newStates = [...prev];
           newStates[index] = 'falling';
           return newStates;
         });
       }, FLOAT_DURATION + (index * FALL_INTERVAL));
+      timeoutsRef.current.push(fallStartTimer);
 
       // Mark as absorbed after fall animation completes
-      setTimeout(() => {
+      const absorbTimer = setTimeout(() => {
         setLogoStates(prev => {
           const newStates = [...prev];
           newStates[index] = 'absorbed';
@@ -82,28 +95,40 @@ const FloatingLogos = ({ onAbsorbedCountChange }: FloatingLogosProps) => {
           return newCount;
         });
       }, FLOAT_DURATION + (index * FALL_INTERVAL) + FALL_DURATION);
+      timeoutsRef.current.push(absorbTimer);
     });
   }, [onAbsorbedCountChange]);
 
-  const resetAnimation = useCallback(() => {
-    setLogoStates(logos.map(() => 'floating'));
-    setLocalAbsorbedCount(0);
-    onAbsorbedCountChange(0);
-    setCycleKey(prev => prev + 1);
-  }, [onAbsorbedCountChange]);
+  const triggerExplosionAnimation = useCallback(() => {
+    // Set all logos to exploding state (they'll animate from center outward)
+    setLogoStates(logos.map(() => 'exploding'));
 
+    // After explosion animation completes, reset everything
+    const resetTimer = setTimeout(() => {
+      setLogoStates(logos.map(() => 'floating'));
+      setLocalAbsorbedCount(0);
+      onAbsorbedCountChange(0);
+      setCycleKey(prev => prev + 1);
+      onExplosionComplete?.();
+    }, EXPLODE_DURATION + RESET_PAUSE);
+    timeoutsRef.current.push(resetTimer);
+  }, [onAbsorbedCountChange, onExplosionComplete]);
+
+  // Handle explosion trigger from parent
+  useEffect(() => {
+    if (triggerExplosion) {
+      triggerExplosionAnimation();
+    }
+  }, [triggerExplosion, triggerExplosionAnimation]);
+
+  // Start the falling sequence when component mounts or cycle restarts
   useEffect(() => {
     startFallingSequence();
 
-    // Reset and restart the cycle
-    const cycleTimer = setTimeout(() => {
-      resetAnimation();
-    }, TOTAL_CYCLE_DURATION);
-
     return () => {
-      clearTimeout(cycleTimer);
+      clearAllTimeouts();
     };
-  }, [cycleKey, startFallingSequence, resetAnimation]);
+  }, [cycleKey, startFallingSequence, clearAllTimeouts]);
 
   return (
     <>
@@ -113,21 +138,27 @@ const FloatingLogos = ({ onAbsorbedCountChange }: FloatingLogosProps) => {
           const state = logoStates[index];
           const pos = desktopPositions[index];
           
+          // For exploding state, position at center first
+          const isExploding = state === 'exploding';
+          
           return (
             <div
               key={`${logo.name}-${cycleKey}`}
               className={`
-                absolute ${pos.position} ${pos.size} 
+                absolute ${isExploding ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : pos.position} ${pos.size} 
                 flex items-center justify-center rounded-full bg-white overflow-hidden shadow-lg
                 will-change-transform
                 ${state === 'floating' ? 'animate-float' : ''}
                 ${state === 'falling' ? 'animate-fall-to-target' : ''}
                 ${state === 'absorbed' ? 'opacity-0 pointer-events-none' : ''}
+                ${state === 'exploding' ? 'animate-explode-out' : ''}
               `}
               style={{
                 animationDelay: state === 'floating' ? pos.delay : '0s',
                 '--fall-x': pos.fallX,
                 '--fall-y': pos.fallY,
+                '--explode-x': pos.explodeX,
+                '--explode-y': pos.explodeY,
               } as React.CSSProperties}
               title={logo.name}
             >
@@ -158,6 +189,7 @@ const FloatingLogos = ({ onAbsorbedCountChange }: FloatingLogosProps) => {
                     rounded-full bg-white overflow-hidden shadow-lg
                     transition-all duration-500
                     ${state === 'absorbed' ? 'opacity-30 scale-75' : 'opacity-100 scale-100'}
+                    ${state === 'exploding' ? 'opacity-100 scale-100' : ''}
                   `}
                   title={logo.name}
                 >

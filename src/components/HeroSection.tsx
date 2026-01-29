@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useCallback } from 'react';
 import { ArrowRight, Sparkles, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ const HeroSection = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [absorbedCount, setAbsorbedCount] = useState(0);
+  const [triggerExplosion, setTriggerExplosion] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -45,10 +46,22 @@ const HeroSection = () => {
     if (error) setError('');
   };
 
+  const handleExplosion = useCallback(() => {
+    setTriggerExplosion(true);
+  }, []);
+
+  const handleExplosionComplete = useCallback(() => {
+    setTriggerExplosion(false);
+  }, []);
+
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
       {/* Floating IDE Logos */}
-      <FloatingLogos onAbsorbedCountChange={setAbsorbedCount} />
+      <FloatingLogos 
+        onAbsorbedCountChange={setAbsorbedCount}
+        triggerExplosion={triggerExplosion}
+        onExplosionComplete={handleExplosionComplete}
+      />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         {/* Eyebrow - pequeño y simple */}
@@ -84,6 +97,7 @@ const HeroSection = () => {
             absorbedCount={absorbedCount}
             totalLogos={TOTAL_LOGOS}
             className="w-[120px] h-[140px] md:w-[140px] md:h-[160px]"
+            onExplosion={handleExplosion}
           />
         </div>
 
