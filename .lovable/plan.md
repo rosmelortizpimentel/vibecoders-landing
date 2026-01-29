@@ -1,121 +1,50 @@
 
+# Footer Redesign - Premium Minimalist Style
 
-# Rediseño Hero Section - Estilo Lovable Community
+## Overview
+Transformar el footer actual de estilo centrado con fondo azul a un diseño premium minimalista estilo "Lovable/Linear", con layout horizontal y storytelling sutil.
 
-## Objetivo
-Transformar la sección Hero para que tenga el mismo impacto visual que la página de referencia, con logos de herramientas de AI/vibe-coding flotando alrededor del headline principal.
+## Cambios de Diseño
 
----
-
-## Cambios Visuales Principales
-
-### 1. Logos Flotantes (En lugar de avatares)
-Círculos con borde oscuro posicionados estratégicamente alrededor del texto:
-
+### Estructura Visual
 ```text
-          [Lovable]
-    [Cursor]            [v0]
-              HEADLINE
-    [Bolt]              [Replit]
-          [Windsurf]
+┌────────────────────────────────────────────────────────────────┐
+│ border-t border-stone-200 (línea sutil superior)               │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  © 2026 Vibecoders.la          Construido a -13°C en 🇨🇦 por  │
+│  (text-stone-500)              [Rosmel Ortiz] ← LinkedIn link  │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+  bg-[#F6F5F4] o transparent (sin bloques de color sólido)
 ```
 
-**Herramientas a incluir:**
-- Lovable
-- Cursor
-- v0 (Vercel)
-- Bolt
-- Replit
-- Windsurf
-
-**Diseño de cada círculo:**
-- Tamaño: 60-80px en desktop, 40-50px en móvil
-- Borde oscuro grueso (border-4 border-slate-900)
-- Fondo con gradiente sutil o color de marca
-- Posicionamiento absoluto con coordenadas específicas
-- Animación sutil de flotación (float)
-
-### 2. Ajustes al Layout
-- Mantener el gradiente de fondo actual (ya es similar)
-- Aumentar el área del hero para dar espacio a los logos flotantes
-- Centrar mejor el contenido principal
-
-### 3. Responsive Design
-- En móvil: logos más pequeños y posiciones ajustadas
-- Algunos logos ocultos en pantallas muy pequeñas
-
----
+### Especificaciones de Estilo
+- **Fondo**: `bg-[#F6F5F4]` (mismo off-white que el BentoGrid) o transparent
+- **Borde superior**: `border-t border-stone-200` (sutil)
+- **Layout**: Flexbox con `justify-between` (copyright izquierda, créditos derecha)
+- **Tipografía**: `text-sm text-stone-500` para texto general
+- **Énfasis**: `-13°C` en `font-semibold text-stone-700` para llamar la atención
+- **Link**: Nombre vinculado a LinkedIn con hover sutil
 
 ## Archivos a Modificar
 
-### `src/components/HeroSection.tsx`
-- Agregar componente `FloatingLogos` con los círculos posicionados
-- Cada logo tendrá:
-  - Posición absoluta con coordenadas responsivas
-  - Animación de flotación con delay escalonado
-  - Placeholder con inicial o nombre corto (reemplazable por imagen)
+### 1. `src/i18n/es/common.json`
+Actualizar las traducciones del footer:
+- `builtAt`: "Construido a"
+- `temperature`: "-13°C"
+- `inCanada`: "en Canadá"
+- `by`: "por"
+- `authorName`: "Rosmel Ortiz"
+- `linkedIn`: URL del perfil
 
-### `tailwind.config.ts`
-- Agregar animación `float` para el efecto de flotación suave:
-```javascript
-keyframes: {
-  float: {
-    '0%, 100%': { transform: 'translateY(0px)' },
-    '50%': { transform: 'translateY(-10px)' },
-  }
-}
-```
+### 2. `src/components/Footer.tsx`
+- Eliminar el icono MapPin
+- Cambiar layout de centrado vertical a horizontal con `justify-between`
+- Lado izquierdo: Copyright simple
+- Lado derecho: Frase con temperatura destacada + link a LinkedIn
+- Aplicar colores stone en lugar de muted-foreground
+- Añadir emoji de bandera 🇨🇦
 
-### `src/index.css` (opcional)
-- Estilos adicionales si son necesarios para las posiciones
-
----
-
-## Estructura del Componente FloatingLogos
-
-```tsx
-const logos = [
-  { name: 'Lovable', position: 'top-[15%] left-[30%]', delay: '0s' },
-  { name: 'Cursor', position: 'top-[25%] left-[15%]', delay: '0.5s' },
-  { name: 'v0', position: 'top-[20%] right-[20%]', delay: '1s' },
-  { name: 'Bolt', position: 'top-[45%] left-[10%]', delay: '0.3s' },
-  { name: 'Replit', position: 'top-[40%] right-[12%]', delay: '0.8s' },
-  { name: 'Windsurf', position: 'top-[55%] left-[25%]', delay: '0.6s' },
-];
-```
-
----
-
-## Siguiente Paso: Logos Reales
-Una vez aprobado el plan, implementaré los placeholders. Luego podrás subir los logos reales de:
-- Lovable
-- Cursor  
-- v0
-- Bolt
-- Replit
-- Windsurf
-
-Y los reemplazaré en los círculos correspondientes.
-
----
-
-## Sección Técnica
-
-**Dependencias:** Ninguna nueva requerida
-
-**Animación Float (keyframes):**
-```javascript
-float: {
-  '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
-  '50%': { transform: 'translateY(-12px) rotate(2deg)' },
-}
-```
-
-**Posicionamiento Responsive:**
-- Desktop: posiciones absolutas en porcentaje del contenedor
-- Tablet: posiciones ajustadas, tamaños reducidos
-- Móvil: solo 3-4 logos visibles, posiciones simplificadas
-
-**Placeholder temporal:**
-Cada logo mostrará la inicial o nombre corto del IDE en un círculo con gradiente hasta que subas las imágenes reales.
-
+## Resultado Esperado
+Un footer limpio y minimalista que cuenta una historia ("construido en frío en Canadá") mientras mantiene profesionalismo, siguiendo el estilo premium de Lovable/Linear.
