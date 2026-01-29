@@ -1,175 +1,121 @@
 
 
-# Plan: Animación de Explosión con Números y Reinicio del Ciclo
+# Plan: Corregir el flujo de transformación del ProfileFileCard
 
-## Resumen
-Después de que el ProfileFileCard se transforme en "Perfil Verificado", añadiremos una secuencia dramática:
-1. Aparecen líneas/números que suben hacia el perfil (simulando estadísticas/métricas)
-2. Una explosión visual
-3. Los logos son disparados de vuelta a sus posiciones originales
-4. El ciclo se reinicia automáticamente
+## Problema Identificado
 
-## Secuencia de Animación Completa
+El `ProfileFileCard` no se transforma a "Perfil Verificado" después de que todos los logos son absorbidos. La barra de progreso llega a 100% pero el card permanece mostrando el icono de folder.
+
+## Causa Raíz
+
+El problema está en el `useEffect` que maneja la transformación (líneas 79-91 de `ProfileFileCard.tsx`):
+
+```text
+useEffect(() => {
+  if (absorbedCount >= totalLogos && cardState === 'file') {
+    setCardState('transforming');
+    ...
+  }
+}, [absorbedCount, totalLogos, cardState]);
+```
+
+El issue es que React puede hacer batching de actualizaciones, y cuando el componente se renderiza con `absorbedCount = 10`, el efecto se ejecuta pero hay un problema de timing con los timeouts anidados.
+
+## Solución Propuesta
+
+Simplificar la lógica de transición de estados y usar una estructura más robusta:
+
+1. **Usar una sola cadena de timeouts** en lugar de timeouts anidados
+2. **Añadir console.logs temporales** para confirmar el flujo
+3. **Asegurar que el cleanup de efectos funcione correctamente**
+
+## Cambios Específicos
+
+### 1. `ProfileFileCard.tsx` - Refactorizar la lógica de transición
+
+**Problema actual:** Timeouts anidados dentro de un useEffect que pueden perderse en re-renders
+
+**Solución:** Usar un ref para manejar los timeouts y asegurar que se ejecuten en secuencia
+
+```text
+// Mantener una referencia a los timeouts activos
+const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+
+// Efecto para manejar la transformación completa
+useEffect(() => {
+  if (absorbedCount >= totalLogos && cardState === 'file') {
+    console.log('Starting transformation...'); // Debug
+    
+    // Limpiar timeouts anteriores
+    timeoutsRef.current.forEach(t => clearTimeout(t));
+    timeoutsRef.current = [];
+    
+    // Fase 1: Transforming
+    setCardState('transforming');
+    
+    // Fase 2: Verified (después de 500ms)
+    const t1 = setTimeout(() => {
+      setCardState('verified');
+    }, 500);
+    timeoutsRef.current.push(t1);
+    
+    // Fase 3: Counting (después de 1500ms total)
+    const t2 = setTimeout(() => {
+      setCardState('counting');
+      setShowNumbers(true);
+    }, 1500);
+    timeoutsRef.current.push(t2);
+    
+    // Fase 4: Exploding (después de 5500ms total)
+    const t3 = setTimeout(() => {
+      setShowNumbers(false);
+      setCardState('exploding');
+      setShowExplosion(true);
+      onCountingComplete?.();
+      onExplosion?.();
+    }, 5500);
+    timeoutsRef.current.push(t3);
+    
+    // Fase 5: Cleanup explosion (después de 6000ms)
+    const t4 = setTimeout(() => {
+      setShowExplosion(false);
+    }, 6000);
+    timeoutsRef.current.push(t4);
+  }
+  
+  return () => {
+    timeoutsRef.current.forEach(t => clearTimeout(t));
+  };
+}, [absorbedCount, totalLogos]); // Removido cardState de deps
+```
+
+### 2. Añadir log de debug temporal
+
+Para verificar que los valores están llegando correctamente, añadir un log:
+
+```text
+console.log('ProfileFileCard - absorbedCount:', absorbedCount, 'totalLogos:', totalLogos, 'cardState:', cardState);
+```
+
+## Secuencia de Timing Final
 
 ```text
 Tiempo    Evento
 ──────────────────────────────────────────────
-0-2s      Logos flotan en sus posiciones
-2-10s     Logos caen secuencialmente al file
-10-10.5s  File se transforma en Perfil Verificado
-10.5-15s  ✨ NUEVO: Números suben hacia el perfil
-15s       💥 NUEVO: Explosión + logos salen disparados
-15-16s    Logos regresan a posiciones originales
-16s+      Ciclo reinicia desde el principio
-```
-
-## Nuevos Estados del Sistema
-
-```text
-type AnimationPhase = 
-  | 'floating'      // Logos flotando
-  | 'falling'       // Logos cayendo al file
-  | 'verified'      // Perfil verificado mostrado
-  | 'counting'      // NUEVO: Números subiendo
-  | 'exploding'     // NUEVO: Explosión
-  | 'resetting'     // NUEVO: Logos regresando
-```
-
-## Cambios por Componente
-
-### 1. `ProfileFileCard.tsx` - Añadir fase de "counting" y explosión
-
-**Nuevos estados:**
-- `counting` - Muestra números animándose hacia arriba
-- `exploding` - Efecto de explosión visual
-
-**Nuevos elementos visuales:**
-- Números flotantes que suben (ej: +127, +89, +256)
-- Partículas de explosión
-- Flash de luz en la explosión
-
-### 2. `FloatingLogos.tsx` - Añadir animación de retorno
-
-**Nuevo estado de logo:**
-- `exploding` - Logo siendo disparado hacia afuera
-
-**Nueva animación:**
-- Los logos salen disparados desde el centro hacia sus posiciones originales
-- Efecto de "rebote" al llegar a su posición
-
-### 3. `tailwind.config.ts` - Nuevas animaciones
-
-**Nuevos keyframes:**
-- `number-rise` - Números subiendo y desvaneciéndose
-- `explode-out` - Logos disparados hacia afuera
-- `flash-explosion` - Flash de luz central
-- `particle-burst` - Partículas de explosión
-
-## Diseño Visual de los Números
-
-```text
-    +127 ↑     +89 ↑
-         ↘   ↙
-    ┌─────────────┐
-    │  ✓ Verified │  ← números convergen aquí
-    │   Profile   │
-    └─────────────┘
-         ↗   ↖
-    +256 ↑     +43 ↑
-```
-
-Los números aparecerán desde abajo del card, subirán hacia él, y se absorberán. Serán números aleatorios que simulan métricas de proyecto (commits, deploys, etc.)
-
-## Diseño Visual de la Explosión
-
-```text
-         ✦  ✧
-      ✧ ╲ | ╱ ✦
-   ✦ ─── 💥 ─── ✧
-      ✦ ╱ | ╲ ✧
-         ✧  ✦
-           ↓
-   Logos salen disparados en todas direcciones
+0ms       absorbedCount llega a 10 → setCardState('transforming')
+500ms     setCardState('verified')
+1500ms    setCardState('counting') + setShowNumbers(true)
+5500ms    setCardState('exploding') + onExplosion() 
+6000ms    setShowExplosion(false)
+6000ms+   FloatingLogos maneja el reset del ciclo
 ```
 
 ## Archivos a Modificar
 
-### 1. `tailwind.config.ts`
-Añadir nuevos keyframes:
-- `number-rise`: Números subiendo con fade
-- `explode-out`: Movimiento desde centro hacia afuera
-- `flash`: Flash blanco rápido
-- `particle`: Partículas dispersándose
-
-### 2. `src/components/ProfileFileCard.tsx`
-- Añadir estados `counting` y `exploding`
-- Crear componente de números animados
-- Crear efecto de partículas de explosión
-- Añadir callback `onExplosion` para sincronizar con FloatingLogos
-
-### 3. `src/components/FloatingLogos.tsx`
-- Añadir estado `exploding` para los logos
-- Crear animación de retorno (desde centro hacia posición original)
-- Sincronizar con ProfileFileCard via callbacks
-- Actualizar timing del ciclo para incluir nuevas fases
-
-### 4. `src/components/HeroSection.tsx`
-- Manejar el nuevo estado de fase de animación
-- Coordinar la sincronización entre componentes
-
-## Timing Detallado
-
-```text
-Constante                     Valor    Descripción
-─────────────────────────────────────────────────────
-FLOAT_DURATION               2000ms   Tiempo inicial flotando
-FALL_INTERVAL                 800ms   Entre cada caída
-FALL_DURATION                 800ms   Duración de caída
-VERIFIED_PAUSE               1000ms   Pausa mostrando verificado
-COUNTING_DURATION            3000ms   Números subiendo (NUEVO)
-EXPLOSION_DURATION            500ms   Explosión visual (NUEVO)
-RETURN_DURATION              1000ms   Logos regresando (NUEVO)
-RESET_PAUSE                   500ms   Pausa antes de reiniciar
-```
-
-## Implementación de Números Animados
-
-Los números serán generados dinámicamente:
-```text
-const randomNumbers = [
-  { value: '+127', delay: '0s', position: 'left' },
-  { value: '+89', delay: '0.3s', position: 'right' },
-  { value: '+256', delay: '0.6s', position: 'center' },
-  { value: '+43', delay: '0.9s', position: 'left' },
-  ...
-]
-```
-
-Cada número:
-- Aparece desde abajo del card
-- Sube flotando con movimiento ondulante
-- Se desvanece al llegar arriba
-- Tiene un color verde brillante para indicar "ganancia"
-
-## Implementación de la Explosión
-
-1. **Flash central**: Círculo blanco que se expande y desvanece
-2. **Partículas**: 8-12 pequeños círculos de colores que salen disparados
-3. **Onda de choque**: Anillo que se expande rápidamente
-
-## Consideraciones de Performance
-
-- Usar `transform` y `opacity` exclusivamente (GPU accelerated)
-- Limitar número de partículas a 8-10
-- Usar `will-change` solo durante la animación activa
-- Limpiar timeouts correctamente en cleanup
-
-## Orden de Implementación
-
-1. Añadir nuevos keyframes en Tailwind
-2. Actualizar ProfileFileCard con fase counting y explosión
-3. Actualizar FloatingLogos con animación de retorno
-4. Sincronizar timing en HeroSection
-5. Probar el ciclo completo
-6. Ajustar tiempos según se vea
+1. **`src/components/ProfileFileCard.tsx`**
+   - Añadir `useRef` para manejar timeouts
+   - Refactorizar los useEffects de transición en uno solo
+   - Quitar timeouts anidados
+   - Usar tiempos absolutos desde el inicio de la transformación
+   - Remover `cardState` de las dependencias del efecto principal
 
