@@ -1,0 +1,16 @@
+{
+  "cards": [
+    {
+      "title": "Presume tu Build",
+      "description": "Tus proyectos no merecen morir en una carpeta privada. Dales el escenario que merecen."
+    },
+    {
+      "title": "Feedback de Barrio",
+      "description": "Opiniones honestas de gente que entiende tu código, no de bots ni de RRHH."
+    },
+    {
+      "title": "Zona Builder",
+      "description": "Cero spam corporativo. Pura energía de creación y colaboración."
+    }
+  ]
+}

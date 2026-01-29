@@ -1,0 +1,11 @@
+{
+  "badge": "Construyendo en público",
+  "headline": "Menos bla bla bla. Más 'Mira lo que construí'.",
+  "subheadline": "El punto de encuentro para los que creamos con IA. Sin trajes, sin recruiters. Solo builders compartiendo sus proyectos y recibiendo feedback real.",
+  "form": {
+    "placeholder": "tucorreo@ejemplo.com",
+    "button": "Unirme al Club",
+    "success": "Anotado"
+  },
+  "socialProof": "Únete a los primeros fundadores en espera"
+}
