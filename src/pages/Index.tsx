@@ -11,6 +11,7 @@ const Index = () => {
         <WaveDivider fromColor="hsl(231, 99%, 62%)" toColor="#F6F5F4" />
         <BentoGrid />
       </main>
+      <WaveDivider fromColor="#F6F5F4" toColor="#1c1c1c" size="sm" />
       <Footer />
     </div>
   );
