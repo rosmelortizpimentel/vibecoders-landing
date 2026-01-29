@@ -1,77 +1,154 @@
 
-
-# Plan: Efecto de "Atravesar" el File al Absorber Logos
+# Plan: Rediseñar ProfileFileCard con Contadores y Color Azul de la Web
 
 ## Objetivo
-Modificar la animación de caída de los logos para que en lugar de simplemente caer y desaparecer en el file, creen un efecto visual de "atravesar por detrás" - entrando por un lado, saliendo ligeramente por el otro, y luego regresando antes de absorberse completamente.
+Transformar la vista de "Perfil Verificado" para mostrar:
+- Texto "Perfil" con checkmark
+- Contadores animados de vistas y likes
+- Usar el azul de la web (#3D5AFE / blue-600) para los iconos
 
-## Comportamiento Actual
+## Diseño Visual
+
 ```text
-Logo → cae directamente → escala a 0 → desaparece
+┌─────────────────────────────┐
+│ ● ● ●                       │  ← Barra macOS
+├─────────────────────────────┤
+│                             │
+│         ✓ Perfil            │  ← Checkmark azul + texto
+│                             │
+│   👁 12,847     ❤️ 3,256    │  ← Iconos azules + contadores
+│                             │
+└─────────────────────────────┘
 ```
 
-## Comportamiento Deseado
+## Colores
+- **Checkmark**: Azul (#3D5AFE) - `text-[#3D5AFE]`
+- **Icono Ojo (vistas)**: Azul (#3D5AFE) - `text-[#3D5AFE]`
+- **Icono Corazón (likes)**: Azul (#3D5AFE) - `text-[#3D5AFE]` con `fill-[#3D5AFE]`
+
+## Comportamiento de los Contadores
+
+### Función de Easing (Aceleración Progresiva)
+- Empieza muy lento y acelera hacia el final
+- Fórmula: `t³` (cúbica)
+- Duración: 5 segundos
+
+### Curva de Incremento
 ```text
-Logo → cae hacia el file → lo atraviesa ligeramente → rebota hacia atrás → desaparece
+Tiempo    Porcentaje del valor final
+─────────────────────────────────────
+0s        0%
+1s        0.8%    (muy lento)
+2s        6.4%    (lento)
+3s        21.6%   (acelerando)
+4s        51.2%   (rápido)
+5s        100%    (máximo)
 ```
 
-## Visualización del Efecto
+### Valores Finales
+- Vistas: 12,847
+- Likes: 3,256
+
+## Cambios Técnicos
+
+### Archivo: `src/components/ProfileFileCard.tsx`
+
+1. **Imports**: Añadir `Eye`, `Heart` de lucide-react
+
+2. **Nuevas constantes**:
+```typescript
+const FINAL_VIEWS = 12847;
+const FINAL_LIKES = 3256;
+const COUNTER_DURATION = 5000; // 5 segundos
+```
+
+3. **Nuevos estados**:
+```typescript
+const [viewCount, setViewCount] = useState(0);
+const [likeCount, setLikeCount] = useState(0);
+```
+
+4. **Animación con requestAnimationFrame**:
+```typescript
+const easeInCubic = (t: number) => t * t * t;
+
+useEffect(() => {
+  if (cardState === 'counting') {
+    const startTime = Date.now();
+    let animationId: number;
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / COUNTER_DURATION, 1);
+      const easedProgress = easeInCubic(progress);
+      
+      setViewCount(Math.floor(FINAL_VIEWS * easedProgress));
+      setLikeCount(Math.floor(FINAL_LIKES * easedProgress));
+      
+      if (progress < 1) {
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+    
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
+  }
+}, [cardState]);
+```
+
+5. **Nuevo diseño del contenido verificado** (con azul de la web):
+```tsx
+{cardState === 'verified' || cardState === 'counting' || cardState === 'exploding' ? (
+  <>
+    <div className="flex items-center gap-2 mb-3">
+      <CheckCircle className="w-5 h-5 text-[#3D5AFE]" />
+      <span className="text-sm md:text-base font-semibold text-gray-800">
+        Perfil
+      </span>
+    </div>
+    
+    <div className="flex items-center gap-4 text-gray-600">
+      <div className="flex items-center gap-1.5">
+        <Eye className="w-4 h-4 text-[#3D5AFE]" />
+        <span className="text-xs md:text-sm font-medium tabular-nums">
+          {viewCount.toLocaleString()}
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <Heart className="w-4 h-4 text-[#3D5AFE] fill-[#3D5AFE]" />
+        <span className="text-xs md:text-sm font-medium tabular-nums">
+          {likeCount.toLocaleString()}
+        </span>
+      </div>
+    </div>
+  </>
+)}
+```
+
+6. **Ajustar timings** (COUNTING_DURATION = 5000ms):
+   - Transforming: 0ms
+   - Verified: 500ms
+   - Counting: 1500ms (dura 5 segundos)
+   - Exploding: 6500ms (1500 + 5000)
+   - Cleanup: 7000ms
+
+7. **Eliminar**:
+   - `risingNumbers` y su useMemo
+   - `showNumbers` estado
+   - Lógica de números flotantes en el render
+
+## Timeline Final
 
 ```text
-Tiempo    Posición del Logo
+Tiempo    Evento
 ──────────────────────────────────────────
-0%        Posición inicial (flotando)
-50%       Llega al centro del file
-65%       Sale un poco por el otro lado (overshoot)
-85%       Regresa al centro del file
-100%      Escala a 0 y desaparece
+0ms       Todos los logos absorbidos → transforming
+500ms     Estado verified (muestra Perfil + contadores en 0)
+1500ms    Estado counting (contadores empiezan a subir)
+6500ms    Estado exploding (contadores en máximo, explosión)
+7000ms    Cleanup explosión
 ```
-
-## Cambio Técnico
-
-### Archivo: `tailwind.config.ts`
-
-Modificar el keyframe `fall-to-target` para incluir el efecto de rebote/overshoot:
-
-```text
-"fall-to-target": {
-  "0%": { 
-    transform: "translateY(0) translateX(0) scale(1) rotate(0deg)",
-    opacity: "1"
-  },
-  "50%": { 
-    // Llega al file
-    transform: "translateY(var(--fall-y)) translateX(var(--fall-x)) scale(0.5) rotate(180deg)",
-    opacity: "0.9"
-  },
-  "65%": { 
-    // Atraviesa ligeramente (overshoot 15%)
-    transform: "translateY(calc(var(--fall-y) * 1.15)) translateX(calc(var(--fall-x) * 1.15)) scale(0.4) rotate(220deg)",
-    opacity: "0.7"
-  },
-  "85%": { 
-    // Regresa al centro
-    transform: "translateY(var(--fall-y)) translateX(var(--fall-x)) scale(0.2) rotate(320deg)",
-    opacity: "0.4"
-  },
-  "100%": { 
-    // Desaparece
-    transform: "translateY(var(--fall-y)) translateX(var(--fall-x)) scale(0) rotate(360deg)",
-    opacity: "0"
-  },
-}
-```
-
-## Detalles del Efecto
-
-- **50%**: El logo llega al centro del file (destino original)
-- **65%**: El logo "sale" un 15% más allá del destino, creando el efecto de atravesar
-- **85%**: El logo regresa al centro del file
-- **100%**: El logo se escala a 0 y desaparece
-
-También ajustaré la curva de timing para que el rebote se sienta más natural usando `cubic-bezier`.
 
 ## Archivo a Modificar
 
-- `tailwind.config.ts` - Solo el keyframe `fall-to-target` y posiblemente el timing de la animación
-
+- `src/components/ProfileFileCard.tsx`
