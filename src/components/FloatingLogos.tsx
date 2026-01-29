@@ -147,7 +147,7 @@ const FloatingLogos = ({
               className={`
                 absolute ${isExploding ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : pos.position} ${pos.size} 
                 flex items-center justify-center rounded-full bg-white overflow-hidden shadow-lg
-                will-change-transform
+                will-change-transform z-20
                 ${state === 'floating' ? 'animate-float' : ''}
                 ${state === 'falling' ? 'animate-fall-to-target' : ''}
                 ${state === 'absorbed' ? 'opacity-0 pointer-events-none' : ''}
