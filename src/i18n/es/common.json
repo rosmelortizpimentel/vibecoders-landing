@@ -3,7 +3,12 @@
     "logo": "Vibecoders.la"
   },
   "footer": {
-    "madeIn": "Hecho una madrugada en Canadá",
-    "copyright": "© 2026 Vibecoders.la"
+    "copyright": "© 2026 Vibecoders.la",
+    "builtAt": "Construido a",
+    "temperature": "-13°C",
+    "inCanada": "en",
+    "by": "por",
+    "authorName": "Rosmel Ortiz",
+    "linkedIn": "https://www.linkedin.com/in/rosmelortiz/"
   }
 }
