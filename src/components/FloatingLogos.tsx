@@ -25,17 +25,17 @@ const logos = [
 // Desktop positions - 5 left, 5 right
 const desktopPositions = [
   // Left side
-  { position: 'top-[18%] left-[10%]', delay: '0s', size: 'h-24 w-24' },
-  { position: 'top-[34%] left-[6%]', delay: '0.5s', size: 'h-[76px] w-[76px]' },
-  { position: 'top-[50%] left-[12%]', delay: '1s', size: 'h-[72px] w-[72px]' },
-  { position: 'top-[66%] left-[8%]', delay: '0.7s', size: 'h-[76px] w-[76px]' },
-  { position: 'top-[80%] left-[14%]', delay: '1.2s', size: 'h-[68px] w-[68px]' },
+  { position: 'top-[18%] left-[10%]', delay: '0s', size: 'h-[106px] w-[106px]' },
+  { position: 'top-[34%] left-[6%]', delay: '0.5s', size: 'h-[84px] w-[84px]' },
+  { position: 'top-[50%] left-[12%]', delay: '1s', size: 'h-[79px] w-[79px]' },
+  { position: 'top-[66%] left-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]' },
+  { position: 'top-[80%] left-[14%]', delay: '1.2s', size: 'h-[82px] w-[82px]' },
   // Right side
-  { position: 'top-[18%] right-[10%]', delay: '0.3s', size: 'h-24 w-24' },
-  { position: 'top-[34%] right-[6%]', delay: '0.8s', size: 'h-[76px] w-[76px]' },
-  { position: 'top-[50%] right-[12%]', delay: '0.6s', size: 'h-[72px] w-[72px]' },
-  { position: 'top-[66%] right-[8%]', delay: '0.9s', size: 'h-[76px] w-[76px]' },
-  { position: 'top-[80%] right-[14%]', delay: '1.1s', size: 'h-[68px] w-[68px]' },
+  { position: 'top-[18%] right-[10%]', delay: '0.3s', size: 'h-[106px] w-[106px]' },
+  { position: 'top-[34%] right-[6%]', delay: '0.8s', size: 'h-[84px] w-[84px]' },
+  { position: 'top-[50%] right-[12%]', delay: '0.6s', size: 'h-[79px] w-[79px]' },
+  { position: 'top-[66%] right-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]' },
+  { position: 'top-[80%] right-[14%]', delay: '1.1s', size: 'h-[82px] w-[82px]' },
 ];
 
 const FloatingLogos = () => {
