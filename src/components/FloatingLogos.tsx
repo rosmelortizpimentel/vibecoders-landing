@@ -61,9 +61,9 @@ const FloatingLogos = ({
   const [logoStates, setLogoStates] = useState<LogoState[]>(
     logos.map(() => 'floating')
   );
-  const [localAbsorbedCount, setLocalAbsorbedCount] = useState(0);
   const [cycleKey, setCycleKey] = useState(0);
   const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const absorbedCountRef = useRef(0);
 
   const clearAllTimeouts = useCallback(() => {
     timeoutsRef.current.forEach(t => clearTimeout(t));
@@ -71,6 +71,8 @@ const FloatingLogos = ({
   }, []);
 
   const startFallingSequence = useCallback(() => {
+    absorbedCountRef.current = 0;
+    
     logos.forEach((_, index) => {
       // Start falling
       const fallStartTimer = setTimeout(() => {
@@ -89,11 +91,9 @@ const FloatingLogos = ({
           newStates[index] = 'absorbed';
           return newStates;
         });
-        setLocalAbsorbedCount(prev => {
-          const newCount = prev + 1;
-          onAbsorbedCountChange(newCount);
-          return newCount;
-        });
+        // Update absorbed count using ref to avoid stale closure
+        absorbedCountRef.current += 1;
+        onAbsorbedCountChange(absorbedCountRef.current);
       }, FLOAT_DURATION + (index * FALL_INTERVAL) + FALL_DURATION);
       timeoutsRef.current.push(absorbTimer);
     });
@@ -106,7 +106,7 @@ const FloatingLogos = ({
     // After explosion animation completes, reset everything
     const resetTimer = setTimeout(() => {
       setLogoStates(logos.map(() => 'floating'));
-      setLocalAbsorbedCount(0);
+      absorbedCountRef.current = 0;
       onAbsorbedCountChange(0);
       setCycleKey(prev => prev + 1);
       onExplosionComplete?.();
