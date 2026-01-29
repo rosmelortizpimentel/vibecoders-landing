@@ -105,9 +105,17 @@ export default {
             transform: "translateY(0) translateX(0) scale(1) rotate(0deg)",
             opacity: "1"
           },
-          "70%": { 
+          "50%": { 
             transform: "translateY(var(--fall-y)) translateX(var(--fall-x)) scale(0.5) rotate(180deg)",
-            opacity: "0.8"
+            opacity: "0.9"
+          },
+          "65%": { 
+            transform: "translateY(calc(var(--fall-y) * 1.15)) translateX(calc(var(--fall-x) * 1.15)) scale(0.4) rotate(220deg)",
+            opacity: "0.7"
+          },
+          "85%": { 
+            transform: "translateY(var(--fall-y)) translateX(var(--fall-x)) scale(0.2) rotate(320deg)",
+            opacity: "0.4"
           },
           "100%": { 
             transform: "translateY(var(--fall-y)) translateX(var(--fall-x)) scale(0) rotate(360deg)",
