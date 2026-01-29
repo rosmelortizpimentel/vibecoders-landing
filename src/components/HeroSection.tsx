@@ -70,10 +70,18 @@ const HeroSection = () => {
 
         {/* Subheadline */}
         <p 
-          className="mx-auto mb-10 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0 md:text-xl"
+          className="mx-auto mb-4 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0 md:text-xl"
           style={{ animationDelay: '0.3s' }}
         >
           {t.subheadline}
+        </p>
+
+        {/* Tagline */}
+        <p 
+          className="mx-auto mb-10 animate-fade-in text-lg font-semibold text-primary opacity-0 md:text-xl"
+          style={{ animationDelay: '0.35s' }}
+        >
+          {t.tagline}
         </p>
 
         {/* Email Form */}
