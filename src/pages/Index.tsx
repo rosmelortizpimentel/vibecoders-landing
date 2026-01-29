@@ -1,4 +1,5 @@
 import HeroSection from '@/components/HeroSection';
+import WaveDivider from '@/components/WaveDivider';
 import BentoGrid from '@/components/BentoGrid';
 import Footer from '@/components/Footer';
 
@@ -7,6 +8,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <main>
         <HeroSection />
+        <WaveDivider fromColor="#3B82F6" toColor="#F6F5F4" />
         <BentoGrid />
       </main>
       <Footer />
