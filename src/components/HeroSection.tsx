@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/hooks/useTranslation';
+import FloatingLogos from './FloatingLogos';
 
 const HeroSection = () => {
   const t = useTranslation('hero');
@@ -20,6 +21,9 @@ const HeroSection = () => {
 
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
+      {/* Floating IDE Logos */}
+      <FloatingLogos />
+
       {/* Large radial gradient orb - inspired by reference */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         {/* Outer blue/violet glow */}
