@@ -62,7 +62,7 @@ const HeroSection = () => {
 
         {/* Headline */}
         <h1 
-          className="mb-6 animate-fade-in text-4xl font-bold leading-tight tracking-tight text-foreground opacity-0 md:text-5xl lg:text-6xl"
+          className="mb-6 animate-fade-in text-4xl font-bold leading-tight tracking-tight text-white opacity-0 md:text-5xl lg:text-6xl"
           style={{ animationDelay: '0.2s' }}
         >
           {t.headline}
@@ -70,7 +70,7 @@ const HeroSection = () => {
 
         {/* Subheadline */}
         <p 
-          className="mx-auto mb-10 max-w-2xl animate-fade-in text-lg text-muted-foreground opacity-0 md:text-xl"
+          className="mx-auto mb-10 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0 md:text-xl"
           style={{ animationDelay: '0.3s' }}
         >
           {t.subheadline}
@@ -116,10 +116,10 @@ const HeroSection = () => {
 
         {/* Social Proof */}
         <p 
-          className="flex animate-fade-in items-center justify-center gap-2 text-sm text-muted-foreground opacity-0"
+          className="flex animate-fade-in items-center justify-center gap-2 text-sm text-white/70 opacity-0"
           style={{ animationDelay: '0.5s' }}
         >
-          <Users className="h-4 w-4 text-primary" />
+          <Users className="h-4 w-4 text-white/90" />
           {t.socialProof}
         </p>
       </div>
