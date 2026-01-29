@@ -4,12 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
 import FloatingLogos from './FloatingLogos';
+import ProfileFileCard from './ProfileFileCard';
+
+const TOTAL_LOGOS = 10;
 
 const HeroSection = () => {
   const t = useTranslation('hero');
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [absorbedCount, setAbsorbedCount] = useState(0);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,7 +48,7 @@ const HeroSection = () => {
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
       {/* Floating IDE Logos */}
-      <FloatingLogos />
+      <FloatingLogos onAbsorbedCountChange={setAbsorbedCount} />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         {/* Eyebrow - pequeño y simple */}
@@ -65,11 +69,23 @@ const HeroSection = () => {
 
         {/* Subheadline - descripción normal */}
         <p 
-          className="mx-auto mb-10 max-w-2xl animate-fade-in text-base text-white/80 opacity-0 md:text-lg"
+          className="mx-auto mb-8 max-w-2xl animate-fade-in text-base text-white/80 opacity-0 md:text-lg"
           style={{ animationDelay: '0.3s' }}
         >
           {t.subheadline}
         </p>
+
+        {/* Profile File Card - Centered */}
+        <div 
+          className="mb-8 flex justify-center animate-fade-in opacity-0"
+          style={{ animationDelay: '0.35s' }}
+        >
+          <ProfileFileCard 
+            absorbedCount={absorbedCount}
+            totalLogos={TOTAL_LOGOS}
+            className="w-[120px] h-[140px] md:w-[140px] md:h-[160px]"
+          />
+        </div>
 
         {/* Email Form */}
         <form 

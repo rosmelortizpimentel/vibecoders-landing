@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import lovableLogo from '@/assets/logos/lovable.svg';
 import replitLogo from '@/assets/logos/replit.svg';
 import windsurfLogo from '@/assets/logos/windsurf.svg';
@@ -9,7 +9,10 @@ import base44Logo from '@/assets/logos/base44.png';
 import boltLogo from '@/assets/logos/bolt.png';
 import kilocodeLogo from '@/assets/logos/kilocode.gif';
 import cursorLogo from '@/assets/logos/cursor.jpg';
-import ProfileFileCard from './ProfileFileCard';
+
+interface FloatingLogosProps {
+  onAbsorbedCountChange: (count: number) => void;
+}
 
 type LogoState = 'floating' | 'falling' | 'absorbed';
 
@@ -26,19 +29,19 @@ const logos = [
   { name: 'Kilocode', image: kilocodeLogo },
 ];
 
-// Desktop positions - 5 left, 5 right
+// Desktop positions - 5 left, 5 right - falling towards center (where ProfileFileCard is now)
 const desktopPositions = [
-  // Left side
-  { position: 'top-[18%] left-[10%]', delay: '0s', size: 'h-[106px] w-[106px]', fallX: '40vw', fallY: '35vh' },
-  { position: 'top-[34%] left-[6%]', delay: '0.5s', size: 'h-[84px] w-[84px]', fallX: '44vw', fallY: '20vh' },
+  // Left side → fall to center-right
+  { position: 'top-[18%] left-[10%]', delay: '0s', size: 'h-[106px] w-[106px]', fallX: '40vw', fallY: '37vh' },
+  { position: 'top-[34%] left-[6%]', delay: '0.5s', size: 'h-[84px] w-[84px]', fallX: '44vw', fallY: '21vh' },
   { position: 'top-[50%] left-[12%]', delay: '1s', size: 'h-[79px] w-[79px]', fallX: '38vw', fallY: '5vh' },
-  { position: 'top-[66%] left-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]', fallX: '42vw', fallY: '-10vh' },
+  { position: 'top-[66%] left-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]', fallX: '42vw', fallY: '-11vh' },
   { position: 'top-[80%] left-[14%]', delay: '1.2s', size: 'h-[82px] w-[82px]', fallX: '36vw', fallY: '-25vh' },
-  // Right side
-  { position: 'top-[18%] right-[10%]', delay: '0.3s', size: 'h-[106px] w-[106px]', fallX: '-40vw', fallY: '35vh' },
-  { position: 'top-[34%] right-[6%]', delay: '0.8s', size: 'h-[84px] w-[84px]', fallX: '-44vw', fallY: '20vh' },
+  // Right side → fall to center-left
+  { position: 'top-[18%] right-[10%]', delay: '0.3s', size: 'h-[106px] w-[106px]', fallX: '-40vw', fallY: '37vh' },
+  { position: 'top-[34%] right-[6%]', delay: '0.8s', size: 'h-[84px] w-[84px]', fallX: '-44vw', fallY: '21vh' },
   { position: 'top-[50%] right-[12%]', delay: '0.6s', size: 'h-[79px] w-[79px]', fallX: '-38vw', fallY: '5vh' },
-  { position: 'top-[66%] right-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]', fallX: '-42vw', fallY: '-10vh' },
+  { position: 'top-[66%] right-[8%]', delay: '0.7s', size: 'h-[84px] w-[84px]', fallX: '-42vw', fallY: '-11vh' },
   { position: 'top-[80%] right-[14%]', delay: '1.1s', size: 'h-[82px] w-[82px]', fallX: '-36vw', fallY: '-25vh' },
 ];
 
@@ -48,11 +51,11 @@ const FALL_DURATION = 800; // 0.8s for fall animation
 const VERIFIED_DISPLAY_DURATION = 3000; // 3s showing verified state
 const TOTAL_CYCLE_DURATION = FLOAT_DURATION + (logos.length * FALL_INTERVAL) + VERIFIED_DISPLAY_DURATION;
 
-const FloatingLogos = () => {
+const FloatingLogos = ({ onAbsorbedCountChange }: FloatingLogosProps) => {
   const [logoStates, setLogoStates] = useState<LogoState[]>(
     logos.map(() => 'floating')
   );
-  const [absorbedCount, setAbsorbedCount] = useState(0);
+  const [localAbsorbedCount, setLocalAbsorbedCount] = useState(0);
   const [cycleKey, setCycleKey] = useState(0);
 
   const startFallingSequence = useCallback(() => {
@@ -73,16 +76,21 @@ const FloatingLogos = () => {
           newStates[index] = 'absorbed';
           return newStates;
         });
-        setAbsorbedCount(prev => prev + 1);
+        setLocalAbsorbedCount(prev => {
+          const newCount = prev + 1;
+          onAbsorbedCountChange(newCount);
+          return newCount;
+        });
       }, FLOAT_DURATION + (index * FALL_INTERVAL) + FALL_DURATION);
     });
-  }, []);
+  }, [onAbsorbedCountChange]);
 
   const resetAnimation = useCallback(() => {
     setLogoStates(logos.map(() => 'floating'));
-    setAbsorbedCount(0);
+    setLocalAbsorbedCount(0);
+    onAbsorbedCountChange(0);
     setCycleKey(prev => prev + 1);
-  }, []);
+  }, [onAbsorbedCountChange]);
 
   useEffect(() => {
     startFallingSequence();
@@ -96,11 +104,6 @@ const FloatingLogos = () => {
       clearTimeout(cycleTimer);
     };
   }, [cycleKey, startFallingSequence, resetAnimation]);
-
-  const mobileAbsorbedCount = useMemo(() => {
-    // For mobile, calculate based on scroll position simulation
-    return absorbedCount;
-  }, [absorbedCount]);
 
   return (
     <>
@@ -136,29 +139,10 @@ const FloatingLogos = () => {
             </div>
           );
         })}
-
-        {/* Profile File Card - Desktop */}
-        <div className="absolute right-[8%] top-[50%] -translate-y-1/2 z-20">
-          <ProfileFileCard 
-            absorbedCount={absorbedCount}
-            totalLogos={logos.length}
-            className="w-[140px] h-[160px]"
-          />
-        </div>
       </div>
 
-      {/* Mobile: Carousel with file card */}
+      {/* Mobile: Carousel only (ProfileFileCard is now in HeroSection) */}
       <div className="md:hidden">
-        {/* Profile File Card - Mobile */}
-        <div className="absolute left-4 top-[35%] -translate-y-1/2 z-20">
-          <ProfileFileCard 
-            absorbedCount={mobileAbsorbedCount}
-            totalLogos={logos.length}
-            className="w-[100px] h-[120px]"
-          />
-        </div>
-
-        {/* Mobile carousel */}
         <div className="absolute bottom-24 left-0 right-0 overflow-hidden">
           <div className="flex animate-scroll-left">
             {/* Duplicate logos for seamless loop */}
