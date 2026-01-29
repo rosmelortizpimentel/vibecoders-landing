@@ -1,8 +1,7 @@
 import { useState, FormEvent } from 'react';
-import { Rocket, ArrowRight, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, Sparkles, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/hooks/useTranslation';
 import FloatingLogos from './FloatingLogos';
 
@@ -48,21 +47,15 @@ const HeroSection = () => {
       <FloatingLogos />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
-        {/* Badge */}
-        <div 
-          className="mb-8 inline-flex animate-fade-in opacity-0"
+        {/* Eyebrow - pequeño y simple */}
+        <p 
+          className="mb-6 animate-fade-in text-base font-medium text-white/90 opacity-0 md:text-lg"
           style={{ animationDelay: '0.1s' }}
         >
-          <Badge 
-            variant="outline" 
-            className="gap-2 border-primary/50 bg-primary/10 px-4 py-2 text-sm font-medium text-primary"
-          >
-            <Rocket className="h-4 w-4" />
-            {t.badge}
-          </Badge>
-        </div>
+          {t.badge}
+        </p>
 
-        {/* Headline */}
+        {/* Headline - grande y bold */}
         <h1 
           className="mb-6 animate-fade-in text-4xl font-bold leading-tight tracking-tight text-white opacity-0 md:text-5xl lg:text-6xl"
           style={{ animationDelay: '0.2s' }}
@@ -70,9 +63,9 @@ const HeroSection = () => {
           {t.headline}
         </h1>
 
-        {/* Subheadline */}
+        {/* Subheadline - descripción normal */}
         <p 
-          className="mx-auto mb-10 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0 md:text-xl"
+          className="mx-auto mb-10 max-w-2xl animate-fade-in text-base text-white/80 opacity-0 md:text-lg"
           style={{ animationDelay: '0.3s' }}
         >
           {t.subheadline}
@@ -91,8 +84,8 @@ const HeroSection = () => {
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
               disabled={isSubmitted}
-              className={`h-12 flex-1 border-border/50 bg-muted/50 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary ${
-                error ? 'border-destructive focus:border-destructive focus:ring-destructive' : ''
+              className={`h-12 flex-1 border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:border-white focus:ring-white ${
+                error ? 'border-white/70' : ''
               }`}
             />
             <Button
@@ -100,8 +93,8 @@ const HeroSection = () => {
               disabled={isSubmitted}
               className={`h-12 gap-2 px-6 font-semibold transition-all duration-300 ${
                 isSubmitted 
-                  ? 'bg-secondary text-secondary-foreground' 
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90 hover:glow-violet'
+                  ? 'bg-white/20 text-white' 
+                  : 'bg-black text-white hover:bg-black/80'
               }`}
             >
               {isSubmitted ? (
@@ -118,9 +111,9 @@ const HeroSection = () => {
             </Button>
           </div>
           
-          {/* Error Message */}
+          {/* Error Message - blanco */}
           {error && (
-            <p className="text-sm text-destructive animate-fade-in">
+            <p className="text-sm text-white animate-fade-in">
               {error}
             </p>
           )}
