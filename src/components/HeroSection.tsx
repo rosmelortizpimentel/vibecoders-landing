@@ -58,9 +58,9 @@ const HeroSection = () => {
     <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
       {/* Top gradient overlay - white fade */}
       <div 
-        className="pointer-events-none absolute inset-x-0 top-0 z-20 h-32 md:h-48"
+        className="pointer-events-none absolute inset-x-0 top-0 z-20 h-48 md:h-64"
         style={{
-          background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 0%, transparent 100%)'
+          background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.08) 40%, transparent 100%)'
         }}
       />
 
