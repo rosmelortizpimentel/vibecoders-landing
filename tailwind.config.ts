@@ -123,6 +123,65 @@ export default {
           "50%": { transform: "scale(1.2) rotate(10deg)" },
           "100%": { transform: "scale(1) rotate(0deg)" },
         },
+        "number-rise": {
+          "0%": { 
+            transform: "translateY(0) translateX(var(--rise-x, 0))", 
+            opacity: "0" 
+          },
+          "20%": { 
+            opacity: "1" 
+          },
+          "80%": { 
+            opacity: "1" 
+          },
+          "100%": { 
+            transform: "translateY(-80px) translateX(calc(var(--rise-x, 0) * 0.3))", 
+            opacity: "0" 
+          },
+        },
+        "explode-out": {
+          "0%": { 
+            transform: "translate(0, 0) scale(0)",
+            opacity: "0"
+          },
+          "20%": {
+            transform: "translate(calc(var(--explode-x) * 0.3), calc(var(--explode-y) * 0.3)) scale(1)",
+            opacity: "1"
+          },
+          "100%": { 
+            transform: "translate(var(--explode-x), var(--explode-y)) scale(1)",
+            opacity: "1"
+          },
+        },
+        "flash-explosion": {
+          "0%": { 
+            transform: "scale(0)", 
+            opacity: "1" 
+          },
+          "50%": { 
+            transform: "scale(1.5)", 
+            opacity: "0.8" 
+          },
+          "100%": { 
+            transform: "scale(2)", 
+            opacity: "0" 
+          },
+        },
+        "particle-burst": {
+          "0%": { 
+            transform: "translate(0, 0) scale(1)", 
+            opacity: "1" 
+          },
+          "100%": { 
+            transform: "translate(var(--particle-x), var(--particle-y)) scale(0)", 
+            opacity: "0" 
+          },
+        },
+        "shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "25%": { transform: "translateX(-3px)" },
+          "75%": { transform: "translateX(3px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -135,6 +194,11 @@ export default {
         "fall-to-target": "fall-to-target 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
         "pulse-absorb": "pulse-absorb 0.3s ease-out",
         "transform-verified": "transform-verified 0.5s ease-out",
+        "number-rise": "number-rise 1.5s ease-out forwards",
+        "explode-out": "explode-out 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+        "flash-explosion": "flash-explosion 0.4s ease-out forwards",
+        "particle-burst": "particle-burst 0.6s ease-out forwards",
+        "shake": "shake 0.3s ease-in-out",
       },
     },
   },
