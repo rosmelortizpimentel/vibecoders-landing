@@ -84,7 +84,7 @@ const HeroSection = () => {
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
               disabled={isSubmitted}
-              className={`h-12 flex-1 border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:border-white focus:ring-white ${
+              className={`h-12 flex-1 border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:border-[#1c1c1c] focus:ring-[#1c1c1c] ${
                 error ? 'border-white/70' : ''
               }`}
             />
@@ -94,7 +94,7 @@ const HeroSection = () => {
               className={`h-12 gap-2 px-6 font-semibold transition-all duration-300 ${
                 isSubmitted 
                   ? 'bg-white/20 text-white' 
-                  : 'bg-black text-white hover:bg-black/80'
+                  : 'bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/80'
               }`}
             >
               {isSubmitted ? (
