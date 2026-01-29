@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Folder, UserCheck, CheckCircle } from 'lucide-react';
 
 type CardState = 'file' | 'transforming' | 'verified' | 'counting' | 'exploding';
@@ -39,6 +39,11 @@ const ProfileFileCard = ({
   const [isPulsing, setIsPulsing] = useState(false);
   const [showNumbers, setShowNumbers] = useState(false);
   const [showExplosion, setShowExplosion] = useState(false);
+  
+  // Ref to track timeouts for proper cleanup
+  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  // Ref to track if transformation has started (prevents re-triggering)
+  const hasStartedTransformRef = useRef(false);
 
   // Generate random numbers for the counting phase
   const risingNumbers = useMemo<RisingNumber[]>(() => {
@@ -75,26 +80,37 @@ const ProfileFileCard = ({
     }
   }, [absorbedCount, totalLogos, cardState]);
 
-  // Transform to verified when all logos are absorbed
+  // Main transformation effect - uses absolute timing from start
   useEffect(() => {
-    if (absorbedCount >= totalLogos && cardState === 'file') {
+    if (absorbedCount >= totalLogos && !hasStartedTransformRef.current) {
+      console.log('ProfileFileCard: Starting transformation sequence...');
+      hasStartedTransformRef.current = true;
+      
+      // Clear any existing timeouts
+      timeoutsRef.current.forEach(t => clearTimeout(t));
+      timeoutsRef.current = [];
+      
+      // Phase 1: Transforming (immediate)
       setCardState('transforming');
-      const timer = setTimeout(() => {
+      
+      // Phase 2: Verified (after 500ms)
+      const t1 = setTimeout(() => {
+        console.log('ProfileFileCard: Phase 2 - Verified');
         setCardState('verified');
-        // Start counting phase after a brief pause
-        setTimeout(() => {
-          setCardState('counting');
-          setShowNumbers(true);
-        }, 1000);
       }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [absorbedCount, totalLogos, cardState]);
-
-  // Handle counting phase completion
-  useEffect(() => {
-    if (cardState === 'counting') {
-      const timer = setTimeout(() => {
+      timeoutsRef.current.push(t1);
+      
+      // Phase 3: Counting (after 1500ms total)
+      const t2 = setTimeout(() => {
+        console.log('ProfileFileCard: Phase 3 - Counting');
+        setCardState('counting');
+        setShowNumbers(true);
+      }, 1500);
+      timeoutsRef.current.push(t2);
+      
+      // Phase 4: Exploding (after 1500 + COUNTING_DURATION)
+      const t3 = setTimeout(() => {
+        console.log('ProfileFileCard: Phase 4 - Exploding');
         setShowNumbers(false);
         setCardState('exploding');
         setShowExplosion(true);
@@ -104,24 +120,32 @@ const ProfileFileCard = ({
         setTimeout(() => {
           onExplosion?.();
         }, 100);
-
-        // Clean up explosion
-        setTimeout(() => {
-          setShowExplosion(false);
-        }, EXPLOSION_DURATION);
-      }, COUNTING_DURATION);
-      return () => clearTimeout(timer);
+      }, 1500 + COUNTING_DURATION);
+      timeoutsRef.current.push(t3);
+      
+      // Phase 5: Cleanup explosion
+      const t4 = setTimeout(() => {
+        console.log('ProfileFileCard: Phase 5 - Cleanup');
+        setShowExplosion(false);
+      }, 1500 + COUNTING_DURATION + EXPLOSION_DURATION);
+      timeoutsRef.current.push(t4);
     }
-  }, [cardState, onExplosion, onCountingComplete]);
+    
+    return () => {
+      timeoutsRef.current.forEach(t => clearTimeout(t));
+    };
+  }, [absorbedCount, totalLogos, onExplosion, onCountingComplete]);
 
   // Reset state when animation cycle restarts
   useEffect(() => {
-    if (absorbedCount === 0 && cardState !== 'file') {
+    if (absorbedCount === 0 && hasStartedTransformRef.current) {
+      console.log('ProfileFileCard: Resetting to file state');
+      hasStartedTransformRef.current = false;
       setCardState('file');
       setShowNumbers(false);
       setShowExplosion(false);
     }
-  }, [absorbedCount, cardState]);
+  }, [absorbedCount]);
 
   return (
     <div 
