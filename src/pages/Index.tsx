@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
+import ManifestoSection from '@/components/ManifestoSection';
 import FeaturesGrid from '@/components/FeaturesGrid';
 import Footer from '@/components/Footer';
 
@@ -9,6 +10,7 @@ const Index = () => {
       <Navbar />
       <main>
         <HeroSection />
+        <ManifestoSection />
         <FeaturesGrid />
       </main>
       <Footer />
