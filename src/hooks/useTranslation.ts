@@ -4,6 +4,7 @@ import featuresEs from '@/i18n/es/features.json';
 
 type Language = 'es';
 
+// Re-export for type inference refresh
 const translations = {
   es: {
     common: commonEs,
