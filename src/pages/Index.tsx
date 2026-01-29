@@ -8,7 +8,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <main>
         <HeroSection />
-        <WaveDivider fromColor="#3B82F6" toColor="#F6F5F4" />
+        <WaveDivider fromColor="hsl(231, 99%, 62%)" toColor="#F6F5F4" />
         <BentoGrid />
       </main>
       <Footer />
