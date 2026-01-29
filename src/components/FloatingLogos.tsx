@@ -1,53 +1,51 @@
+import lovableLogo from '@/assets/logos/lovable.png';
+import replitLogo from '@/assets/logos/replit.svg';
+import windsurfLogo from '@/assets/logos/windsurf.svg';
+
 const logos = [
   { 
     name: 'Lovable', 
-    initials: 'L',
+    image: lovableLogo,
     position: 'top-[12%] left-1/2 -translate-x-1/2 md:top-[8%] md:left-[42%]', 
     delay: '0s',
-    gradient: 'from-pink-500 to-violet-600',
-    size: 'h-14 w-14 md:h-20 md:w-20'
+    size: 'h-12 w-auto md:h-16'
   },
   { 
     name: 'Cursor', 
-    initials: 'C',
+    initials: 'Cursor',
     position: 'top-[22%] left-[8%] md:top-[18%] md:left-[18%]', 
     delay: '0.5s',
-    gradient: 'from-slate-700 to-slate-900',
-    size: 'h-12 w-12 md:h-16 md:w-16'
+    size: 'h-10 md:h-12 px-3'
   },
   { 
     name: 'v0', 
     initials: 'v0',
     position: 'top-[18%] right-[8%] md:top-[15%] md:right-[18%]', 
     delay: '1s',
-    gradient: 'from-neutral-800 to-black',
-    size: 'h-12 w-12 md:h-16 md:w-16'
+    size: 'h-10 md:h-12 px-3'
   },
   { 
     name: 'Bolt', 
-    initials: '⚡',
+    initials: 'Bolt',
     position: 'top-[42%] left-[5%] md:top-[38%] md:left-[8%]', 
     delay: '0.3s',
-    gradient: 'from-yellow-400 to-orange-500',
-    size: 'h-11 w-11 md:h-14 md:w-14',
+    size: 'h-9 md:h-11 px-3',
     hidden: 'hidden sm:flex'
   },
   { 
     name: 'Replit', 
-    initials: 'R',
+    image: replitLogo,
     position: 'top-[38%] right-[5%] md:top-[35%] md:right-[10%]', 
     delay: '0.8s',
-    gradient: 'from-orange-500 to-red-600',
-    size: 'h-11 w-11 md:h-14 md:w-14',
+    size: 'h-8 w-auto md:h-10',
     hidden: 'hidden sm:flex'
   },
   { 
     name: 'Windsurf', 
-    initials: 'W',
+    image: windsurfLogo,
     position: 'bottom-[28%] left-[12%] md:bottom-[22%] md:left-[22%]', 
     delay: '0.6s',
-    gradient: 'from-cyan-400 to-blue-600',
-    size: 'h-10 w-10 md:h-14 md:w-14',
+    size: 'h-8 w-auto md:h-10',
     hidden: 'hidden md:flex'
   },
 ];
@@ -58,11 +56,19 @@ const FloatingLogos = () => {
       {logos.map((logo) => (
         <div
           key={logo.name}
-          className={`absolute ${logo.position} ${logo.size} ${logo.hidden || 'flex'} animate-float items-center justify-center rounded-full border-4 border-slate-900 bg-gradient-to-br ${logo.gradient} font-bold text-white shadow-lg`}
+          className={`absolute ${logo.position} ${logo.size} ${logo.hidden || 'flex'} animate-float items-center justify-center`}
           style={{ animationDelay: logo.delay }}
           title={logo.name}
         >
-          <span className="text-xs md:text-sm">{logo.initials}</span>
+          {logo.image ? (
+            <img 
+              src={logo.image} 
+              alt={logo.name} 
+              className="h-full w-auto object-contain"
+            />
+          ) : (
+            <span className="text-sm md:text-base font-bold text-white">{logo.initials}</span>
+          )}
         </div>
       ))}
     </>
