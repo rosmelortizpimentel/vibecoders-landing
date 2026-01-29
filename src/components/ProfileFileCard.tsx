@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Folder, CheckCircle, Eye, Heart } from 'lucide-react';
+import { Folder, Eye, Heart } from 'lucide-react';
+import profileAvatar from '@/assets/profile-avatar.png';
 
 type CardState = 'file' | 'transforming' | 'verified' | 'counting' | 'exploding';
 
@@ -208,16 +209,22 @@ const ProfileFileCard = ({
       <div className="flex flex-col items-center justify-center pt-6 pb-4 px-4">
         {cardState === 'verified' || cardState === 'counting' || cardState === 'exploding' ? (
           <>
-            {/* Profile with checkmark */}
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle className="w-5 h-5 text-[#3D5AFE]" />
-              <span className="text-sm md:text-base font-semibold text-gray-800">
-                Perfil
-              </span>
+            {/* Avatar circular */}
+            <div className="w-12 h-12 md:w-14 md:h-14 rounded-full overflow-hidden border-2 border-[#3D5AFE] mb-2">
+              <img 
+                src={profileAvatar} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+              />
             </div>
             
+            {/* Username */}
+            <span className="text-sm md:text-base font-semibold text-gray-800 mb-3">
+              @vibecoder
+            </span>
+            
             {/* Counters */}
-            <div className="flex items-center gap-4 text-gray-600">
+            <div className="flex items-center gap-4 text-gray-600 mt-2">
               <div className="flex items-center gap-1.5">
                 <Eye className="w-4 h-4 text-[#3D5AFE]" />
                 <span className="text-xs md:text-sm font-medium tabular-nums">
