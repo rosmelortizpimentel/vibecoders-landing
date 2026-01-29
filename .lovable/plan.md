@@ -1,135 +1,99 @@
 
-# Plan: Animación de Logos Cayendo al Profile Card
+
+# Plan: Reposicionar el ProfileFileCard al Centro
 
 ## Resumen
-Crear un efecto visual interactivo donde los logos flotantes caen secuencialmente hacia un "file/carpeta" que representa el perfil de Vibecoders.la. Una vez que todos los logos han sido "absorbidos", el ícono se transforma en un perfil verificado.
+Mover el ProfileFileCard desde su posición actual (derecha, absoluta) hacia el centro del contenido, ubicándolo entre el subtítulo (subheadline) y el formulario de email. Los logos seguirán cayendo hacia esta nueva posición centralizada.
 
-## Componentes del Efecto
+## Cambios Necesarios
 
-### Desktop
-- Carpeta/File posicionada en el lado derecho con el texto "vibecoders.la"
-- Los logos flotan inicialmente y luego caen uno a uno hacia la carpeta
-- Al caer, los logos se encogen y desaparecen al entrar a la carpeta
-- Después del último logo, la carpeta se transforma en un ícono de perfil verificado
+### 1. Modificar `HeroSection.tsx`
+- Importar el componente `ProfileFileCard` directamente en HeroSection
+- Añadir el ProfileFileCard entre el subheadline y el form
+- El card debe estar centrado y formar parte del flujo normal del contenido
+- Necesitaremos recibir los estados de animación desde FloatingLogos
 
-### Mobile
-- File posicionado a la izquierda del área de contenido
-- Los logos del carrusel se van insertando en el file mientras rotan
-- Misma transformación final a perfil verificado
+### 2. Modificar `FloatingLogos.tsx`
+- Remover el ProfileFileCard de este componente (ya no estará posicionado absolutamente a la derecha)
+- Exportar el estado `absorbedCount` y `totalLogos` para que HeroSection pueda usarlos
+- Actualizar las coordenadas de caída (`fallX`, `fallY`) para que los logos vayan hacia el centro (donde estará el nuevo card)
+- Los logos del lado izquierdo irán hacia la derecha-centro
+- Los logos del lado derecho irán hacia la izquierda-centro
 
-## Diagrama del Flujo de Animación
+### 3. Ajustar las coordenadas de caída
+Las nuevas trayectorias serán hacia el centro de la pantalla:
+
+**Logos izquierdos (índices 0-4):**
+- fallX: hacia la derecha (~40-45vw → 0vw center)
+- fallY: hacia la posición vertical del card (~55% de la pantalla)
+
+**Logos derechos (índices 5-9):**
+- fallX: hacia la izquierda (~-40-45vw → 0vw center)
+- fallY: hacia la posición vertical del card
+
+## Estructura del Layout Final
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│                      HERO SECTION                           │
+│  [Logo 1]       El portafolio oficial...         [Logo 6]  │
+│  [Logo 2]                                        [Logo 7]  │
+│  [Logo 3]    "Tus proyectos están dispersos"     [Logo 8]  │
+│  [Logo 4]                                        [Logo 9]  │
+│  [Logo 5]    Subheadline texto...                [Logo 10] │
 │                                                             │
-│  [Logo 1]  ←──┐                              ┌──→ [Logo 6] │
-│  [Logo 2]     │     "El portafolio..."       │    [Logo 7] │
-│  [Logo 3]     │                              │    [Logo 8] │
-│  [Logo 4]     │     Headline + Form          │    [Logo 9] │
-│  [Logo 5]     │                              │    [Logo 10]│
-│               │                              │             │
-│               └──────────────────────────────┘             │
-│                            ↓                               │
-│                   ┌─────────────────┐                      │
-│                   │  📁 File Card   │ ← Destino            │
-│                   │  vibecoders.la  │                      │
-│                   └─────────────────┘                      │
-│                            ↓                               │
-│                   ┌─────────────────┐                      │
-│                   │  ✓ Verified     │ ← Transformación     │
-│                   │    Profile      │                      │
-│                   └─────────────────┘                      │
+│                    ┌─────────────┐                         │
+│                    │  📁 File    │ ← Nuevo posición        │
+│                    │ vibecoders  │   centrada              │
+│                    └─────────────┘                         │
+│                                                             │
+│              [  email input  ] [ Unirme ]                  │
+│                                                             │
+│               👥 Únete a los primeros...                   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Archivos a Crear/Modificar
+## Detalles Técnicos
 
-### 1. Nuevo Componente: `ProfileFileCard.tsx`
-Crear el componente del file/carpeta que recibe los logos:
-- Diseño visual de carpeta/ventana de sistema de archivos
-- Texto "vibecoders.la" como label
-- Estado para saber cuántos logos han sido absorbidos
-- Animación de "pulseo" cuando un logo entra
-- Transformación final a perfil verificado con checkmark
+### Refactorización del Estado
+Crear un custom hook o elevar el estado para compartir entre componentes:
+- `absorbedCount` - necesario en HeroSection para ProfileFileCard
+- `logoStates` - permanece en FloatingLogos
+- `totalLogos` - constante (10 logos)
 
-### 2. Modificar: `FloatingLogos.tsx`
-Actualizar para manejar las animaciones de caída:
-- Añadir estado para controlar qué logos están visibles/cayendo/absorbidos
-- Calcular posición de destino (hacia el file card)
-- Animación de caída con rotación y escala decreciente
-- Efecto de desvanecimiento al llegar al destino
-- Comunicación con ProfileFileCard para sincronizar animaciones
+### Opción de Implementación: Props Callback
+- FloatingLogos recibe una función `onAbsorbedCountChange`
+- HeroSection mantiene el estado `absorbedCount`
+- ProfileFileCard recibe props desde HeroSection
 
-### 3. Modificar: `tailwind.config.ts`
-Agregar nuevas animaciones keyframes:
-- `fall-to-target`: Movimiento curvo hacia el destino
-- `shrink-fade`: Reducción de tamaño con desvanecimiento
-- `pulse-absorb`: Efecto de pulso al absorber logo
-- `transform-verified`: Transición de file a perfil verificado
-
-### 4. Modificar: `HeroSection.tsx`
-- Importar y posicionar el nuevo ProfileFileCard
-- Pasar props para coordinar las animaciones
-- Manejar el estado global del efecto
-
-## Detalles Técnicos de Implementación
-
-### Posicionamiento del File Card
-**Desktop:**
-- Posición fija en `right-[8%] top-[50%]` 
-- Tamaño aproximado: 180px x 200px
-- Z-index alto para que los logos "caigan encima"
-
-**Mobile:**
-- Posición en `left-[5%] top-[30%]`
-- Tamaño reducido: 100px x 120px
-- Los logos del carrusel se dirigen hacia él
-
-### Secuencia de Animación
-1. **0-2s**: Logos flotan normalmente (estado actual)
-2. **2s-12s**: Cada logo cae secuencialmente (1s de intervalo)
-3. **12s+**: Transformación a perfil verificado
-4. **Loop opcional**: Reiniciar animación después de 5s
-
-### Timing de Caída (Desktop)
+### Nuevas Coordenadas de Caída
 ```text
-Logo 1 (Lovable)   → cae a los 2s
-Logo 2 (Replit)    → cae a los 3s
-Logo 3 (Windsurf)  → cae a los 4s
+// Izquierda → Centro (fallX positivo pequeño, fallY hacia abajo)
+{ fallX: '35vw', fallY: '10vh' }  // Logo 1 (arriba-izq) → centro
+{ fallX: '40vw', fallY: '5vh' }   // Logo 2 → centro
 ...
-Logo 10 (Kilocode) → cae a los 11s
-Transformación     → a los 12s
+
+// Derecha → Centro (fallX negativo, fallY hacia abajo)  
+{ fallX: '-35vw', fallY: '10vh' } // Logo 6 (arriba-der) → centro
+{ fallX: '-40vw', fallY: '5vh' }  // Logo 7 → centro
+...
 ```
 
-### Curva de Movimiento
-- Usar `cubic-bezier(0.68, -0.55, 0.265, 1.55)` para efecto de "rebote"
-- Rotación sutil durante la caída (0° → 360°)
-- Escala decrece de 1 → 0.3 → 0 al llegar
+### Mobile
+- El ProfileFileCard se mostrará también centrado entre subheadline y form
+- Los logos del carrusel se desvanecen al ser "absorbidos"
+- Tamaño más pequeño en móvil
 
-### Estados del Componente
-```text
-type LogoState = 'floating' | 'falling' | 'absorbed'
-type CardState = 'file' | 'transforming' | 'verified'
-```
+## Archivos a Modificar
 
-### Diseño Visual del File Card
-- Fondo blanco con sombra
-- Header tipo "barra de título" con 3 puntos (estilo macOS)
-- Icono de carpeta/documento
-- Texto "vibecoders.la" debajo
-- Al transformarse: Icono de usuario con checkmark verde
+1. **`src/components/HeroSection.tsx`**
+   - Importar ProfileFileCard
+   - Añadir estado para absorbedCount
+   - Insertar ProfileFileCard entre subheadline y form
+   - Pasar callback a FloatingLogos
 
-## Consideraciones de Performance
-- Usar `transform` y `opacity` para animaciones (GPU accelerated)
-- Evitar re-renders innecesarios con `useMemo` para posiciones
-- Usar `will-change` en elementos animados
-- Limitar el ciclo de animación para no consumir recursos indefinidamente
+2. **`src/components/FloatingLogos.tsx`**
+   - Aceptar prop `onAbsorbedCountChange`
+   - Remover ProfileFileCard de este archivo
+   - Actualizar fallX/fallY para dirigirse al centro
+   - Mantener la lógica de animación existente
 
-## Orden de Implementación
-1. Crear las nuevas keyframes en Tailwind
-2. Crear el componente ProfileFileCard
-3. Modificar FloatingLogos para añadir lógica de caída
-4. Integrar ambos componentes en HeroSection
-5. Adaptar para mobile con el carrusel
-6. Probar y ajustar tiempos de animación
