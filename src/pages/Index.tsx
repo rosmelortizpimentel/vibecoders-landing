@@ -1,5 +1,5 @@
 import HeroSection from '@/components/HeroSection';
-import FeaturesGrid from '@/components/FeaturesGrid';
+import BentoGrid from '@/components/BentoGrid';
 import Footer from '@/components/Footer';
 
 const Index = () => {
@@ -7,8 +7,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <main>
         <HeroSection />
-        <FeaturesGrid />
-        <FeaturesGrid />
+        <BentoGrid />
       </main>
       <Footer />
     </div>
