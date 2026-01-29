@@ -24,30 +24,6 @@ const HeroSection = () => {
       {/* Floating IDE Logos */}
       <FloatingLogos />
 
-      {/* Large radial gradient orb - inspired by reference */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        {/* Outer blue/violet glow */}
-        <div 
-          className="absolute h-[800px] w-[800px] rounded-full opacity-80 blur-3xl md:h-[1000px] md:w-[1000px]"
-          style={{
-            background: 'radial-gradient(circle, hsl(187 80% 55% / 0.4) 0%, hsl(263 70% 58% / 0.6) 40%, transparent 70%)'
-          }}
-        />
-        {/* Inner magenta/violet core */}
-        <div 
-          className="absolute h-[500px] w-[500px] rounded-full opacity-90 blur-2xl md:h-[600px] md:w-[600px]"
-          style={{
-            background: 'radial-gradient(circle, hsl(320 80% 55% / 0.8) 0%, hsl(263 70% 58% / 0.6) 50%, transparent 80%)'
-          }}
-        />
-        {/* Hot center glow */}
-        <div 
-          className="absolute h-[300px] w-[300px] rounded-full opacity-70 blur-xl md:h-[400px] md:w-[400px]"
-          style={{
-            background: 'radial-gradient(circle, hsl(25 90% 55% / 0.7) 0%, hsl(340 80% 55% / 0.5) 60%, transparent 100%)'
-          }}
-        />
-      </div>
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         {/* Badge */}
