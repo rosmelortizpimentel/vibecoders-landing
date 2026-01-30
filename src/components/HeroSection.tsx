@@ -55,7 +55,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-16 overflow-hidden">
+    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-8 md:pt-16 overflow-hidden">
       {/* Top gradient overlay - white fade */}
       <div 
         className="pointer-events-none absolute inset-x-0 top-0 z-20 h-48 md:h-64"
@@ -90,7 +90,7 @@ const HeroSection = () => {
 
         {/* Subheadline - descripción normal */}
         <p 
-          className="mx-auto mb-8 max-w-2xl animate-fade-in text-base text-white/80 opacity-0 md:text-lg"
+          className="mx-auto mb-4 md:mb-8 max-w-2xl animate-fade-in text-base text-white/80 opacity-0 md:text-lg"
           style={{ animationDelay: '0.3s' }}
         >
           {t.subheadline}
