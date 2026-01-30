@@ -155,14 +155,11 @@ const FloatingLogos = ({
           const state = logoStates[index];
           const pos = desktopPositions[index];
           
-          // For exploding state, position at center first
-          const isExploding = state === 'exploding';
-          
           return (
             <div
               key={`${logo.name}-${cycleKey}`}
               className={`
-                absolute ${isExploding ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : pos.position} ${pos.size} 
+                absolute ${pos.position} ${pos.size} 
                 flex items-center justify-center rounded-full bg-white overflow-hidden shadow-lg
                 will-change-transform z-20
                 ${state === 'floating' ? 'animate-float' : ''}
