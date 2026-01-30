@@ -17,7 +17,7 @@ interface FloatingLogosProps {
   isMobileContainer?: boolean; // When true, renders only mobile logos positioned relative to parent
 }
 
-type LogoState = 'floating' | 'falling' | 'absorbed' | 'exploding';
+type LogoState = 'floating' | 'sliding' | 'falling' | 'absorbed' | 'exploding';
 
 const logos = [
   { name: 'Lovable', image: lovableLogo },
@@ -48,26 +48,31 @@ const desktopPositions = [
   { position: 'top-[80%] right-[14%]', delay: '1.1s', size: 'h-[82px] w-[82px]', fallX: '-36vw', fallY: '-25vh', explodeX: '36vw', explodeY: '25vh' },
 ];
 
-// Mobile positions - 10 logos distributed in a circle around the ProfileFileCard
-// Using a radius of ~85px to fit well on mobile screens without overflowing
+// Mobile positions - logos enter from left, slide to center, then fall down
+// startX is starting position (left), slideDelay is staggered timing
 const mobilePositions = [
-  { startX: '0px', startY: '-85px', delay: '0s' },      // top
-  { startX: '50px', startY: '-69px', delay: '0.15s' },   // top-right-1
-  { startX: '81px', startY: '-26px', delay: '0.3s' },    // right-top
-  { startX: '81px', startY: '26px', delay: '0.45s' },    // right-bottom
-  { startX: '50px', startY: '69px', delay: '0.6s' },     // bottom-right-1
-  { startX: '0px', startY: '85px', delay: '0.75s' },    // bottom
-  { startX: '-50px', startY: '69px', delay: '0.9s' },    // bottom-left-1
-  { startX: '-81px', startY: '26px', delay: '1.05s' },   // left-bottom
-  { startX: '-81px', startY: '-26px', delay: '1.2s' },   // left-top
-  { startX: '-50px', startY: '-69px', delay: '1.35s' },  // top-left-1
+  { startX: -160, slideDelay: 0 },
+  { startX: -180, slideDelay: 0.4 },
+  { startX: -150, slideDelay: 0.8 },
+  { startX: -170, slideDelay: 1.2 },
+  { startX: -155, slideDelay: 1.6 },
+  { startX: -175, slideDelay: 2.0 },
+  { startX: -160, slideDelay: 2.4 },
+  { startX: -165, slideDelay: 2.8 },
+  { startX: -180, slideDelay: 3.2 },
+  { startX: -150, slideDelay: 3.6 },
 ];
 
+// Desktop timing
 const FLOAT_DURATION = 2000; // 2s float before falling starts
 const FALL_INTERVAL = 800; // 0.8s between each logo falling
 const FALL_DURATION = 800; // 0.8s for fall animation
 const EXPLODE_DURATION = 800; // 0.8s for explode animation
 const RESET_PAUSE = 500; // 0.5s pause after explosion before reset
+
+// Mobile timing
+const MOBILE_SLIDE_DURATION = 600; // 0.6s slide from left to center
+const MOBILE_FALL_DURATION = 400; // 0.4s fall down to file
 
 const FloatingLogos = ({ 
   onAbsorbedCountChange, 
@@ -90,31 +95,71 @@ const FloatingLogos = ({
   const startFallingSequence = useCallback(() => {
     absorbedCountRef.current = 0;
     
-    logos.forEach((_, index) => {
-      // Start falling
-      const fallStartTimer = setTimeout(() => {
-        setLogoStates(prev => {
-          const newStates = [...prev];
-          newStates[index] = 'falling';
-          return newStates;
-        });
-      }, FLOAT_DURATION + (index * FALL_INTERVAL));
-      timeoutsRef.current.push(fallStartTimer);
+    // Desktop: original behavior
+    if (!isMobileContainer) {
+      logos.forEach((_, index) => {
+        // Start falling
+        const fallStartTimer = setTimeout(() => {
+          setLogoStates(prev => {
+            const newStates = [...prev];
+            newStates[index] = 'falling';
+            return newStates;
+          });
+        }, FLOAT_DURATION + (index * FALL_INTERVAL));
+        timeoutsRef.current.push(fallStartTimer);
 
-      // Mark as absorbed after fall animation completes
-      const absorbTimer = setTimeout(() => {
-        setLogoStates(prev => {
-          const newStates = [...prev];
-          newStates[index] = 'absorbed';
-          return newStates;
-        });
-        // Update absorbed count using ref to avoid stale closure
-        absorbedCountRef.current += 1;
-        onAbsorbedCountChange(absorbedCountRef.current);
-      }, FLOAT_DURATION + (index * FALL_INTERVAL) + FALL_DURATION);
-      timeoutsRef.current.push(absorbTimer);
-    });
-  }, [onAbsorbedCountChange]);
+        // Mark as absorbed after fall animation completes
+        const absorbTimer = setTimeout(() => {
+          setLogoStates(prev => {
+            const newStates = [...prev];
+            newStates[index] = 'absorbed';
+            return newStates;
+          });
+          absorbedCountRef.current += 1;
+          onAbsorbedCountChange(absorbedCountRef.current);
+        }, FLOAT_DURATION + (index * FALL_INTERVAL) + FALL_DURATION);
+        timeoutsRef.current.push(absorbTimer);
+      });
+    } else {
+      // Mobile: slide from left → center → fall down
+      logos.forEach((_, index) => {
+        const pos = mobilePositions[index];
+        const slideStartTime = pos.slideDelay * 1000;
+        
+        // Start sliding to center
+        const slideTimer = setTimeout(() => {
+          setLogoStates(prev => {
+            const newStates = [...prev];
+            newStates[index] = 'sliding';
+            return newStates;
+          });
+        }, slideStartTime);
+        timeoutsRef.current.push(slideTimer);
+
+        // Start falling after slide completes
+        const fallTimer = setTimeout(() => {
+          setLogoStates(prev => {
+            const newStates = [...prev];
+            newStates[index] = 'falling';
+            return newStates;
+          });
+        }, slideStartTime + MOBILE_SLIDE_DURATION);
+        timeoutsRef.current.push(fallTimer);
+
+        // Mark as absorbed after fall completes
+        const absorbTimer = setTimeout(() => {
+          setLogoStates(prev => {
+            const newStates = [...prev];
+            newStates[index] = 'absorbed';
+            return newStates;
+          });
+          absorbedCountRef.current += 1;
+          onAbsorbedCountChange(absorbedCountRef.current);
+        }, slideStartTime + MOBILE_SLIDE_DURATION + MOBILE_FALL_DURATION);
+        timeoutsRef.current.push(absorbTimer);
+      });
+    }
+  }, [onAbsorbedCountChange, isMobileContainer]);
 
   const triggerExplosionAnimation = useCallback(() => {
     // Set all logos to exploding state (they'll animate from center outward)
@@ -186,34 +231,53 @@ const FloatingLogos = ({
         })}
       </div>
 
-      {/* Mobile: Logos in circle - render based on context */}
-      {isMobileContainer ? (
-        // Render mobile logos directly when inside the mobile container
-        <>
+      {/* Mobile: Logos slide from left → center → fall down */}
+      {isMobileContainer && (
+        <div className="absolute inset-0 flex items-center justify-center overflow-visible">
           {logos.map((logo, index) => {
             const state = logoStates[index];
             const pos = mobilePositions[index];
+            
+            // Determine animation class based on state
+            const getAnimationClass = () => {
+              switch (state) {
+                case 'floating':
+                  return 'animate-float-left-mobile';
+                case 'sliding':
+                  return 'animate-slide-to-center-mobile';
+                case 'falling':
+                  return 'animate-fall-down-mobile';
+                case 'absorbed':
+                  return 'opacity-0 pointer-events-none';
+                case 'exploding':
+                  return 'animate-explode-left-mobile';
+                default:
+                  return '';
+              }
+            };
+            
+            // Calculate position based on state
+            const getTransform = () => {
+              if (state === 'floating') {
+                return `translateX(${pos.startX}px)`;
+              }
+              return undefined;
+            };
             
             return (
               <div
                 key={`${logo.name}-mobile-${cycleKey}`}
                 className={`
-                  absolute left-1/2 top-1/2
+                  absolute
                   h-10 w-10 flex items-center justify-center 
                   rounded-full bg-white overflow-hidden shadow-lg
                   will-change-transform
-                  ${state === 'floating' ? 'animate-float' : ''}
-                  ${state === 'falling' ? 'animate-fall-to-center-mobile' : ''}
-                  ${state === 'absorbed' ? 'opacity-0 pointer-events-none' : ''}
-                  ${state === 'exploding' ? 'animate-explode-from-center-mobile' : ''}
+                  ${getAnimationClass()}
                 `}
                 style={{
-                  '--start-x': pos.startX,
-                  '--start-y': pos.startY,
-                  transform: state === 'floating' 
-                    ? `translate(calc(-50% + ${pos.startX}), calc(-50% + ${pos.startY}))` 
-                    : undefined,
-                  animationDelay: state === 'floating' ? pos.delay : '0s',
+                  '--start-x': `${pos.startX}px`,
+                  '--slide-delay': `${pos.slideDelay}s`,
+                  transform: getTransform(),
                 } as React.CSSProperties}
                 title={logo.name}
               >
@@ -225,47 +289,6 @@ const FloatingLogos = ({
               </div>
             );
           })}
-        </>
-      ) : (
-        // Original mobile container for non-container usage (hidden on md+)
-        <div className="md:hidden absolute inset-0 pointer-events-none">
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            {logos.map((logo, index) => {
-              const state = logoStates[index];
-              const pos = mobilePositions[index];
-              
-              return (
-                <div
-                  key={`${logo.name}-mobile-fallback-${cycleKey}`}
-                  className={`
-                    absolute left-1/2 top-1/2
-                    h-10 w-10 flex items-center justify-center 
-                    rounded-full bg-white overflow-hidden shadow-lg
-                    will-change-transform
-                    ${state === 'floating' ? 'animate-float' : ''}
-                    ${state === 'falling' ? 'animate-fall-to-center-mobile' : ''}
-                    ${state === 'absorbed' ? 'opacity-0 pointer-events-none' : ''}
-                    ${state === 'exploding' ? 'animate-explode-from-center-mobile' : ''}
-                  `}
-                  style={{
-                    '--start-x': pos.startX,
-                    '--start-y': pos.startY,
-                    transform: state === 'floating' 
-                      ? `translate(calc(-50% + ${pos.startX}), calc(-50% + ${pos.startY}))` 
-                      : undefined,
-                    animationDelay: state === 'floating' ? pos.delay : '0s',
-                  } as React.CSSProperties}
-                  title={logo.name}
-                >
-                  <img 
-                    src={logo.image} 
-                    alt={logo.name} 
-                    className="h-3/4 w-3/4 object-contain"
-                  />
-                </div>
-              );
-            })}
-          </div>
         </div>
       )}
     </>
