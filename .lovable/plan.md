@@ -1,62 +1,96 @@
 
-## Diagnóstico (qué está pasando y por qué siempre te manda a la landing)
 
-El problema principal NO es Supabase ni la Edge Function (esa URL directa sí responde). El problema es el **router**:
+# Plan: Reestructurar Animacion de Logos en Mobile
 
-- En `App.tsx` tienes la ruta pública definida como: `"/@:username"`.
-- **React Router v6 no soporta parámetros con prefijo dentro del mismo segmento** (ej: `@` pegado al `:username`).
-- En la práctica, esa ruta se interpreta como **literal** `"/@:username"` (texto tal cual), así que `"/@founder"` **no matchea**.
-- Entonces cae en la ruta `path="*"` y por eso ejecuta `Navigate to="/"` → el navegador termina en la landing (URL base).
+## Resumen
+Modificar el comportamiento de los logos en mobile para que entren desde la izquierda, se muevan horizontalmente hacia el centro, y luego bajen hacia el ProfileFileCard que esta debajo. El desktop permanece intacto.
 
-Esto coincide perfecto con lo que dijiste: “todo lo que no sea /profile redirecciona al /”, porque tu catch-all `*` lo está haciendo, y `/@founder` hoy está cayendo ahí.
+## Cambios en Layout Mobile (HeroSection.tsx)
 
-## Objetivo
+### Nuevo orden de elementos:
+1. Logo VIBECODERS (arriba)
+2. Badge "El portafolio oficial para Vibecoders"
+3. Headline + Subheadline (texto completo)
+4. Zona de animacion con logos + file debajo
 
-- Que `/@founder` y `/@rosmelortiz` **sí** entren a la pantalla pública.
-- Que **cualquier otra ruta** (no `/profile` y no `/@...`) **siga redirigiendo** a `/`.
+### Estructura visual:
+```text
++---------------------------+
+|      <VIBECODERS_>        |
+|                           |
+| El portafolio oficial...  |
+|                           |
+| Construyes a la velocidad |
+| de la IA...               |
+|                           |
+|  [logo] [logo] ---> centro|
+|              |             |
+|              v             |
+|         [  FILE  ]        |
+|                           |
+|     [email input]         |
++---------------------------+
+```
 
-## Cambios propuestos (implementación)
+## Cambios en FloatingLogos.tsx
 
-### 1) Arreglar la ruta pública en `src/App.tsx`
-Reemplazar la ruta inválida:
-- Antes: `path="/@:username"`
-- Después: `path="/:handle"` (o `path="/:slug"`)
+### Nueva logica para mobile:
+- **Fase 1 (floating):** Logos posicionados a la izquierda, fuera de pantalla o al borde
+- **Fase 2 (sliding):** Logos se mueven horizontalmente hacia el centro (de izquierda a derecha)
+- **Fase 3 (falling):** Cuando llegan al centro, caen hacia abajo donde esta el ProfileFileCard
+- **Fase 4 (absorbed):** Desaparecen al ser absorbidos
+- **Fase 5 (exploding):** Explotan y vuelven a sus posiciones iniciales
 
-Esto hará que `/@founder` sí haga match, porque React Router sí soporta “un segmento cualquiera” como parámetro.
+### Nuevas posiciones mobile:
+```typescript
+const mobilePositions = [
+  { startX: '-150px', startY: '0px', delay: '0s' },
+  { startX: '-180px', startY: '0px', delay: '0.3s' },
+  // ... 10 logos escalonados
+];
+```
 
-Importante: mantener `/profile` y `/` como rutas explícitas. React Router prioriza rutas más específicas, así que `/profile` seguirá yendo a Profile.
+## Nuevas Animaciones (tailwind.config.ts)
 
-### 2) Validar que realmente sea un “handle público” dentro de `src/pages/PublicProfile.tsx`
-Como `/:handle` puede capturar cualquier cosa (ej: `/pricing`), dentro del componente haremos validación:
+### slide-right-mobile:
+```text
+0%   -> x: -150px (fuera izquierda)
+100% -> x: 0 (centro)
+```
 
-- Leer `handle` con `useParams()`. Para `/@founder`, `handle` será `"@founder"`.
-- Si `handle` no existe o **no empieza con `@`** → redirigir a `/` (cumple tu regla de “todo lo demás a la landing”).
-- Si empieza con `@` → quitar el `@` y usar el username real:
-  - `username = handle.slice(1)`
+### fall-down-mobile:
+```text
+0%   -> y: 0, scale: 1
+100% -> y: +80px (hacia el file), scale: 0
+```
 
-### 3) Llamada a datos (sin cambios grandes)
-`usePublicProfile(username)` seguirá igual, solo que ahora recibirá `"founder"` en vez de intentar leer un param que nunca llegaba.
+## Archivos a Modificar
 
-(Nota: tu Edge Function responde correctamente por URL directa, así que una vez que el router deje de bloquear el acceso, debería funcionar.)
+| Archivo | Cambio |
+|---------|--------|
+| `src/components/HeroSection.tsx` | Reestructurar orden de elementos en mobile: Logo -> Badge -> Headline/Subheadline -> Zona animacion (logos arriba, file abajo) |
+| `src/components/FloatingLogos.tsx` | Nueva logica de animacion mobile: entrar desde izquierda, moverse a centro, bajar al file |
+| `tailwind.config.ts` | Agregar keyframes: `slide-right-mobile`, `fall-down-mobile`, ajustar `explode-from-center-mobile` |
 
-## Verificación (pasos concretos de prueba)
+## Secuencia de Animacion Mobile
 
-1. Abrir la app y visitar:
-   - `/@founder` → debe mostrar la tarjeta pública.
-   - `/@rosmelortiz` → debe mostrar la tarjeta pública.
-2. Probar rutas “no permitidas”:
-   - `/cualquier-cosa` → debe redirigir a `/`.
-3. En la pestaña Network:
-   - Confirmar que aparece el request a:
-     - `.../functions/v1/get-public-profile?username=founder`
-4. Confirmar que el URL **no cambia** a `/` cuando visitas `/@founder` (salvo que sea inválido).
+```text
+t=0s     : Logos aparecen a la izquierda (escalonados)
+t=0-2s   : Logos flotan ligeramente mientras esperan
+t=2s     : Logo 1 empieza a moverse hacia el centro
+t=2.4s   : Logo 1 llega al centro y empieza a bajar
+t=2.8s   : Logo 1 es absorbido por el file
+t=3s     : Logo 2 empieza a moverse...
+...
+t=10s    : Todos absorbidos -> efecto profile
+t=10.5s  : Explosion -> logos vuelven a la izquierda
+t=11s    : Ciclo reinicia
+```
 
-## Archivos a tocar
+## Notas Tecnicas
 
-- `src/App.tsx`
-  - cambiar `"/@:username"` → `"/:handle"`
-- `src/pages/PublicProfile.tsx`
-  - usar `handle` param, validar prefijo `@`, extraer username real, redirigir si no aplica
+- El ProfileFileCard se posicionara debajo de la zona de logos (no al mismo nivel)
+- La zona de animacion tendra altura fija para acomodar el movimiento vertical
+- Los logos usaran `transform: translateX()` para el movimiento horizontal
+- Al llegar al centro, cambian a `transform: translateY()` para bajar
 
-## Consideración adicional (por si en Vercel también hay reglas)
-Si en tu Vercel (dashboard) tienes un **Redirect** global tipo `/(.*) -> /`, eso sí convertiría todo en landing a nivel servidor (y ni siquiera cargaría el route). En ese caso, hay que quitar ese Redirect y dejarlo como Rewrite SPA (o manejarlo solo en React Router como ya haces).
