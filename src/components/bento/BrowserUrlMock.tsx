@@ -16,7 +16,7 @@ const BrowserUrlMock = () => {
         <div className="flex-1 flex items-center gap-2 bg-white rounded-md px-3 py-1.5 border border-stone-200">
           <Lock className="w-3.5 h-3.5 text-stone-400" />
           <span className="text-sm text-stone-700 font-medium tracking-tight">
-            vibecoders.la/<span className="text-stone-900">@username</span>
+            https://vibecoders.la/<span className="text-stone-900">@username</span>
           </span>
         </div>
       </div>
