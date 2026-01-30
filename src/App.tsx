@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
+import PublicProfile from "./pages/PublicProfile";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/profile" element={<Profile />} />
+          {/* Public profile route - must be before catch-all */}
+          <Route path="/@:username" element={<PublicProfile />} />
           {/* Redirect all unknown routes to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
