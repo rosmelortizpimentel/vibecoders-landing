@@ -268,7 +268,7 @@ const HeroSection = () => {
               className="flex animate-fade-in items-center justify-center gap-2 text-sm text-white/70 opacity-0"
               style={{ animationDelay: '0.5s' }}
             >
-              <Users className="h-4 w-4 text-white/90" />
+              <span className="text-[#1c1c1c]">🔒</span>
               {t.socialProof}
             </p>
           </>
