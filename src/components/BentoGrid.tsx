@@ -35,7 +35,7 @@ const BentoGrid = () => {
     <section className="bg-[#F6F5F4] py-20 px-4 md:py-28">
       <div className="mx-auto max-w-5xl">
         {/* Bento Grid */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
           {features.map((feature) => (
             <div
               key={feature.id}
