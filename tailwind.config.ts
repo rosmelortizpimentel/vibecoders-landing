@@ -222,6 +222,24 @@ export default {
             opacity: "1"
           }
         },
+        // New mobile animations: slide left→center, fall down, explode back left
+        "float-left-mobile": {
+          "0%, 100%": { transform: "translateX(var(--start-x)) translateY(0)" },
+          "50%": { transform: "translateX(var(--start-x)) translateY(-8px)" },
+        },
+        "slide-to-center-mobile": {
+          "0%": { transform: "translateX(var(--start-x))", opacity: "1" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
+        },
+        "fall-down-mobile": {
+          "0%": { transform: "translateX(0) translateY(0) scale(1)", opacity: "1" },
+          "100%": { transform: "translateX(0) translateY(80px) scale(0)", opacity: "0" },
+        },
+        "explode-left-mobile": {
+          "0%": { transform: "translateX(0) translateY(80px) scale(0)", opacity: "0" },
+          "30%": { transform: "translateX(calc(var(--start-x) * 0.5)) translateY(40px) scale(1)", opacity: "1" },
+          "100%": { transform: "translateX(var(--start-x)) translateY(0) scale(1)", opacity: "1" },
+        },
         "cursor-blink": {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
@@ -245,6 +263,10 @@ export default {
         "shake": "shake 0.3s ease-in-out",
         "fall-to-center-mobile": "fall-to-center-mobile 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
         "explode-from-center-mobile": "explode-from-center-mobile 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+        "float-left-mobile": "float-left-mobile 2s ease-in-out infinite",
+        "slide-to-center-mobile": "slide-to-center-mobile 0.6s ease-out forwards",
+        "fall-down-mobile": "fall-down-mobile 0.4s ease-in forwards",
+        "explode-left-mobile": "explode-left-mobile 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
         "cursor-blink": "cursor-blink 1s step-end infinite",
       },
     },

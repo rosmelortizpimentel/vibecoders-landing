@@ -148,42 +148,46 @@ const HeroSection = () => {
           />
         </div>
 
-        {/* MÓVIL: Contenedor con logos + card - logos relativos a este contenedor */}
-        <div 
-          className="md:hidden relative h-[260px] w-full flex items-center justify-center mb-6 animate-fade-in opacity-0"
-          style={{ animationDelay: '0.15s' }}
-        >
-          {/* Logos móviles renderizados aquí */}
-          <FloatingLogos 
-            onAbsorbedCountChange={setAbsorbedCount}
-            triggerExplosion={triggerExplosion}
-            onExplosionComplete={handleExplosionComplete}
-            isMobileContainer={true}
-          />
-          
-          {/* ProfileFileCard en el centro */}
-          <ProfileFileCard 
-            absorbedCount={absorbedCount}
-            totalLogos={TOTAL_LOGOS}
-            className="w-[130px] h-[140px] z-10"
-            onExplosion={handleExplosion}
-          />
-        </div>
-
-        {/* MÓVIL: Headline → Subheadline (después del file) */}
+        {/* MÓVIL: Headline → Subheadline (antes de la animación) */}
         <div className="md:hidden">
           <h1 
             className="mb-4 animate-fade-in text-3xl font-bold leading-tight tracking-tight text-white opacity-0"
-            style={{ animationDelay: '0.25s' }}
+            style={{ animationDelay: '0.15s' }}
           >
             {t.headline}
           </h1>
           <p 
             className="mx-auto mb-6 max-w-2xl animate-fade-in text-base text-white/80 opacity-0"
-            style={{ animationDelay: '0.3s' }}
+            style={{ animationDelay: '0.2s' }}
           >
             {t.subheadline}
           </p>
+        </div>
+
+        {/* MÓVIL: Zona de animación - logos arriba, file abajo */}
+        <div 
+          className="md:hidden relative w-full flex flex-col items-center mb-6 animate-fade-in opacity-0"
+          style={{ animationDelay: '0.25s' }}
+        >
+          {/* Zona de logos que se mueven horizontalmente */}
+          <div className="relative h-[60px] w-full overflow-visible">
+            <FloatingLogos 
+              onAbsorbedCountChange={setAbsorbedCount}
+              triggerExplosion={triggerExplosion}
+              onExplosionComplete={handleExplosionComplete}
+              isMobileContainer={true}
+            />
+          </div>
+          
+          {/* ProfileFileCard debajo */}
+          <div className="mt-4">
+            <ProfileFileCard 
+              absorbedCount={absorbedCount}
+              totalLogos={TOTAL_LOGOS}
+              className="w-[130px] h-[140px]"
+              onExplosion={handleExplosion}
+            />
+          </div>
         </div>
 
         {/* Conditional: Logged in vs Not logged in */}
