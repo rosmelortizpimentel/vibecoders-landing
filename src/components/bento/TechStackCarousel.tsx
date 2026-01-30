@@ -32,12 +32,12 @@ const TechStackCarousel = () => {
         {duplicatedLogos.map((logo, index) => (
           <div
             key={`${logo.name}-${index}`}
-            className="flex-shrink-0 mx-3 flex items-center justify-center w-12 h-12 rounded-xl bg-white border border-stone-200 shadow-sm transition-all duration-300 hover:shadow-md hover:scale-110 group"
+            className="flex-shrink-0 mx-4 flex items-center justify-center w-14 h-14 transition-all duration-300 hover:scale-110 group"
           >
             <img 
               src={logo.src} 
               alt={logo.name} 
-              className="w-7 h-7 object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
+              className="w-14 h-14 object-contain grayscale group-hover:grayscale-0 transition-all duration-300"
             />
           </div>
         ))}
