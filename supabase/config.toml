@@ -2,3 +2,6 @@ project_id = "zkotnnmrehzqonlyeorv"
 
 [functions.get-public-profile]
 verify_jwt = false
+
+[functions.check-username-available]
+verify_jwt = false

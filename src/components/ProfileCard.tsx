@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
 import { CheckCircle, Edit3, Loader2, Lock, Check, X } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -43,6 +43,10 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
     setIsAvailable(null);
   };
 
+  // Ref para mantener referencia estable a checkUsernameAvailable
+  const checkUsernameAvailableRef = useRef(checkUsernameAvailable);
+  checkUsernameAvailableRef.current = checkUsernameAvailable;
+
   // Debounce de 2 segundos para validar disponibilidad
   useEffect(() => {
     // Si no hay username o es muy corto, resetear estado
@@ -52,29 +56,44 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
       return;
     }
 
+    // Normalizar para comparación
+    const normalizedUsername = username.toLowerCase();
+    const normalizedProfileUsername = profile?.username?.toLowerCase();
+
     // Si es el mismo username que ya tiene, marcar como disponible
-    if (username === profile?.username) {
+    if (normalizedUsername === normalizedProfileUsername) {
       setIsAvailable(true);
       setError(null);
       return;
     }
 
+    // Flag para evitar setState después de cleanup
+    let active = true;
+
     // Configurar debounce de 2 segundos
     const timer = setTimeout(async () => {
+      if (!active) return;
+      
       setIsChecking(true);
-      const available = await checkUsernameAvailable(username);
+      const available = await checkUsernameAvailableRef.current(username);
+      
+      if (!active) return;
+      
       setIsAvailable(available);
       setIsChecking(false);
       
       if (!available) {
-        setError('Este username ya está en uso');
+        setError('Username no disponible');
       } else {
         setError(null);
       }
     }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [username, profile?.username, checkUsernameAvailable]);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [username, profile?.username]);
 
   const handleSave = async () => {
     if (!username.trim()) {
@@ -88,8 +107,8 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
     // Verificar disponibilidad antes de guardar
     const available = await checkUsernameAvailable(username);
     
-    if (!available && username !== profile?.username) {
-      setError('Este username ya está en uso');
+    if (!available && username.toLowerCase() !== profile?.username?.toLowerCase()) {
+      setError('Username no disponible');
       setSaving(false);
       setIsAvailable(false);
       return;
@@ -102,6 +121,10 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
       setIsFlipped(false);
     } else {
       setError(result.error || 'Error al guardar');
+      // Si es error de duplicado, actualizar estado visual
+      if (result.error === 'Username no disponible') {
+        setIsAvailable(false);
+      }
     }
 
     setSaving(false);
