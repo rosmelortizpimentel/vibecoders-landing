@@ -47,6 +47,21 @@ const desktopPositions = [
   { position: 'top-[80%] right-[14%]', delay: '1.1s', size: 'h-[82px] w-[82px]', fallX: '-36vw', fallY: '-25vh', explodeX: '36vw', explodeY: '25vh' },
 ];
 
+// Mobile positions - 10 logos distributed in a circle around the ProfileFileCard
+// Using a radius of ~100px to fit well on mobile screens
+const mobilePositions = [
+  { startX: '0px', startY: '-100px', delay: '0s' },      // top
+  { startX: '59px', startY: '-81px', delay: '0.15s' },   // top-right-1
+  { startX: '95px', startY: '-31px', delay: '0.3s' },    // right-top
+  { startX: '95px', startY: '31px', delay: '0.45s' },    // right-bottom
+  { startX: '59px', startY: '81px', delay: '0.6s' },     // bottom-right-1
+  { startX: '0px', startY: '100px', delay: '0.75s' },    // bottom
+  { startX: '-59px', startY: '81px', delay: '0.9s' },    // bottom-left-1
+  { startX: '-95px', startY: '31px', delay: '1.05s' },   // left-bottom
+  { startX: '-95px', startY: '-31px', delay: '1.2s' },   // left-top
+  { startX: '-59px', startY: '-81px', delay: '1.35s' },  // top-left-1
+];
+
 const FLOAT_DURATION = 2000; // 2s float before falling starts
 const FALL_INTERVAL = 800; // 0.8s between each logo falling
 const FALL_DURATION = 800; // 0.8s for fall animation
@@ -172,36 +187,45 @@ const FloatingLogos = ({
         })}
       </div>
 
-      {/* Mobile: Carousel only (ProfileFileCard is now in HeroSection) */}
-      <div className="md:hidden">
-        <div className="absolute bottom-24 left-0 right-0 overflow-hidden">
-          <div className="flex animate-scroll-left">
-            {/* Duplicate logos for seamless loop */}
-            {[...logos, ...logos].map((logo, index) => {
-              const originalIndex = index % logos.length;
-              const state = logoStates[originalIndex];
-              
-              return (
-                <div
-                  key={`${logo.name}-mobile-${index}-${cycleKey}`}
-                  className={`
-                    flex-shrink-0 mx-3 h-14 w-14 flex items-center justify-center 
-                    rounded-full bg-white overflow-hidden shadow-lg
-                    transition-all duration-500
-                    ${state === 'absorbed' ? 'opacity-30 scale-75' : 'opacity-100 scale-100'}
-                    ${state === 'exploding' ? 'opacity-100 scale-100' : ''}
-                  `}
-                  title={logo.name}
-                >
-                  <img 
-                    src={logo.image} 
-                    alt={logo.name} 
-                    className="h-3/4 w-3/4 object-contain"
-                  />
-                </div>
-              );
-            })}
-          </div>
+      {/* Mobile: Logos in circle around center (ProfileFileCard is in HeroSection) */}
+      <div className="md:hidden absolute inset-0 pointer-events-none">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          {logos.map((logo, index) => {
+            const state = logoStates[index];
+            const pos = mobilePositions[index];
+            const isExploding = state === 'exploding';
+            
+            return (
+              <div
+                key={`${logo.name}-mobile-${cycleKey}`}
+                className={`
+                  absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                  h-10 w-10 flex items-center justify-center 
+                  rounded-full bg-white overflow-hidden shadow-lg
+                  will-change-transform
+                  ${state === 'floating' ? 'animate-float' : ''}
+                  ${state === 'falling' ? 'animate-fall-to-center-mobile' : ''}
+                  ${state === 'absorbed' ? 'opacity-0 pointer-events-none' : ''}
+                  ${state === 'exploding' ? 'animate-explode-from-center-mobile' : ''}
+                `}
+                style={{
+                  '--start-x': isExploding ? pos.startX : pos.startX,
+                  '--start-y': isExploding ? pos.startY : pos.startY,
+                  transform: state === 'floating' 
+                    ? `translate(calc(-50% + ${pos.startX}), calc(-50% + ${pos.startY}))` 
+                    : undefined,
+                  animationDelay: state === 'floating' ? pos.delay : '0s',
+                } as React.CSSProperties}
+                title={logo.name}
+              >
+                <img 
+                  src={logo.image} 
+                  alt={logo.name} 
+                  className="h-3/4 w-3/4 object-contain"
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </>

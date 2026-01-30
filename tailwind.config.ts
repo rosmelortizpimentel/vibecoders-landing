@@ -190,6 +190,38 @@ export default {
           "25%": { transform: "translateX(-3px)" },
           "75%": { transform: "translateX(3px)" },
         },
+        "fall-to-center-mobile": {
+          "0%": { 
+            transform: "translate(var(--start-x), var(--start-y)) scale(1)",
+            opacity: "1"
+          },
+          "60%": { 
+            transform: "translate(0, 0) scale(0.5)",
+            opacity: "0.8"
+          },
+          "80%": { 
+            transform: "translate(0, 0) scale(0.3)",
+            opacity: "0.5"
+          },
+          "100%": { 
+            transform: "translate(0, 0) scale(0)",
+            opacity: "0"
+          }
+        },
+        "explode-from-center-mobile": {
+          "0%": { 
+            transform: "translate(0, 0) scale(0)",
+            opacity: "0"
+          },
+          "30%": {
+            transform: "translate(calc(var(--start-x) * 0.4), calc(var(--start-y) * 0.4)) scale(1)",
+            opacity: "1"
+          },
+          "100%": { 
+            transform: "translate(var(--start-x), var(--start-y)) scale(1)",
+            opacity: "1"
+          }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -207,6 +239,8 @@ export default {
         "flash-explosion": "flash-explosion 0.4s ease-out forwards",
         "particle-burst": "particle-burst 0.6s ease-out forwards",
         "shake": "shake 0.3s ease-in-out",
+        "fall-to-center-mobile": "fall-to-center-mobile 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
+        "explode-from-center-mobile": "explode-from-center-mobile 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
       },
     },
   },
