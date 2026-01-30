@@ -1,37 +1,32 @@
-import { Layers, Code2, Timer, Briefcase } from 'lucide-react';
+import BrowserUrlMock from './bento/BrowserUrlMock';
+import TechStackCarousel from './bento/TechStackCarousel';
+import EcosystemHub from './bento/EcosystemHub';
+import VerifiedBadge from './bento/VerifiedBadge';
 
 const features = [
   {
-    icon: Layers,
-    iconColor: 'text-coral-500',
-    iconBg: 'bg-coral-50',
-    title: 'Tu Galería Centralizada',
-    body: 'Olvídate de tener tus proyectos perdidos. Crea tu perfil único y organiza todos tus deploys en una vitrina visual diseñada para impresionar.',
-    link: 'Ver ejemplo →',
+    id: 'url',
+    visual: <BrowserUrlMock />,
+    title: 'Tu URL Oficial',
+    body: 'Reclama tu nombre de usuario único. Un enlace limpio y profesional para compartir en tu bio de X o LinkedIn.',
   },
   {
-    icon: Code2,
-    iconColor: 'text-purple-500',
-    iconBg: 'bg-purple-50',
-    title: 'Stack Transparente',
-    body: 'Una captura no cuenta la historia. Declara tu receta: v0, Supabase, Cursor. Muestra exactamente cómo construiste tu solución.',
-    link: 'Ver stacks →',
+    id: 'stack',
+    visual: <TechStackCarousel />,
+    title: 'Transparencia de Stack',
+    body: 'No es magia, es ingeniería. Muestra los iconos de las herramientas exactas que usaste para construir cada proyecto.',
   },
   {
-    icon: Timer,
-    iconColor: 'text-blue-500',
-    iconBg: 'bg-blue-50',
-    title: 'Proof of Speed',
-    body: 'La velocidad es tu activo. Destaca tu \'Time-to-Build\' (ej. 4 horas) y demuestra que eres un builder de alto rendimiento.',
-    link: 'Saber más →',
+    id: 'ecosystem',
+    visual: <EcosystemHub />,
+    title: 'Conecta tu Ecosistema',
+    body: 'Deja de fragmentar tu identidad. Integra tus repos de GitHub, LinkedIn y tus perfiles de builder en un solo dashboard central.',
   },
   {
-    icon: Briefcase,
-    iconColor: 'text-teal-500',
-    iconBg: 'bg-teal-50',
+    id: 'reputation',
+    visual: <VerifiedBadge />,
     title: 'Reputación Profesional',
-    body: 'Deja de enviar PDFs. Comparte tu enlace de Vibecoders para validar tus habilidades con proyectos funcionales, no con promesas.',
-    link: 'Unirse ahora →',
+    body: 'Un portafolio visual listo para enviar a recruiters. Que te contraten por lo que has construido, no por un PDF.',
   },
 ];
 
@@ -46,38 +41,27 @@ const BentoGrid = () => {
 
         {/* Bento Grid */}
         <div className="grid gap-6 md:grid-cols-2">
-          {features.map((feature) => {
-            const IconComponent = feature.icon;
-            return (
-              <div
-                key={feature.title}
-                className="group rounded-2xl border border-stone-200 bg-white p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-              >
-                {/* Icon */}
-                <div className={`mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl ${feature.iconBg}`}>
-                  <IconComponent className={`h-6 w-6 ${feature.iconColor}`} />
-                </div>
-
-                {/* Title */}
-                <h3 className="mb-3 text-xl font-bold text-stone-900">
-                  {feature.title}
-                </h3>
-
-                {/* Body */}
-                <p className="mb-4 text-stone-600 leading-relaxed">
-                  {feature.body}
-                </p>
-
-                {/* Link */}
-                <a
-                  href="#"
-                  className="inline-flex items-center text-sm font-medium text-stone-900 transition-colors hover:text-stone-600"
-                >
-                  {feature.link}
-                </a>
+          {features.map((feature) => (
+            <div
+              key={feature.id}
+              className="group rounded-2xl border border-stone-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+            >
+              {/* Visual Component */}
+              <div className="mb-5">
+                {feature.visual}
               </div>
-            );
-          })}
+
+              {/* Title */}
+              <h3 className="mb-3 text-xl font-bold text-stone-900">
+                {feature.title}
+              </h3>
+
+              {/* Body */}
+              <p className="text-stone-600 leading-relaxed">
+                {feature.body}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
