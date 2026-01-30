@@ -1,87 +1,76 @@
 
-# Plan: Rediseño de navegación de usuario y página de perfil
+# Plan: Rediseño del menú de usuario profesional
 
-## Resumen
-Se implementará un menú de usuario en la esquina superior derecha que muestra la foto de perfil cuando el usuario está logueado, con opciones contextuales según la página actual. Además, se rediseñará la página de perfil para eliminar los colores naranjas y usar el esquema azul (#3D5AFE) del sitio.
+## Problema identificado
+El color morado proviene de las variables CSS globales del tema:
+- `--accent: 263 70% 58%` (morado) - usado en `focus:bg-accent`
+- `--border: 263 30% 25%` (borde morado)
+- `--popover: 222 47% 8%` (fondo oscuro)
+
+El `DropdownMenuItem` de shadcn/ui aplica `focus:bg-accent focus:text-accent-foreground` por defecto.
+
+## Solución
+Sobreescribir los estilos directamente en `UserMenu.tsx` con clases Tailwind específicas para ignorar las variables del tema y usar colores profesionales.
 
 ---
 
 ## Cambios a realizar
 
-### 1. Crear componente UserMenu
-Un nuevo componente que mostrará la foto del usuario en la esquina superior derecha con un menú desplegable:
+### Archivo: `src/components/UserMenu.tsx`
 
-- **En la landing (/)**: Opciones "Mi Perfil" y "Cerrar Sesión"
-- **En el perfil (/profile)**: Opciones "Volver al Inicio" y "Cerrar Sesión"
+**DropdownMenuContent:**
+```text
+Antes: className="w-48 bg-white border border-border shadow-lg"
+Después: className="w-48 bg-white border border-gray-200 shadow-lg rounded-lg"
+```
+- Cambiar `border-border` (morado) por `border-gray-200` (gris neutro)
+- Añadir `rounded-lg` para bordes más suaves
 
-El componente usará:
-- `useAuth` para obtener datos del usuario
-- `useLocation` de react-router para saber en qué página está
-- `DropdownMenu` de Radix UI (ya disponible)
-- `Avatar` para mostrar la foto
+**DropdownMenuItem (items normales):**
+```text
+Antes: className="cursor-pointer gap-2"
+Después: className="cursor-pointer gap-2 text-[#1c1c1c] focus:bg-[#3D5AFE] focus:text-white hover:bg-[#3D5AFE] hover:text-white transition-colors"
+```
+- Texto base: `#1c1c1c` (oscuro)
+- Hover/Focus: fondo `#3D5AFE` (azul del header) con texto blanco
 
-### 2. Integrar UserMenu en HeroSection
-Agregar el menú de usuario en posición absoluta (top-right) dentro del Hero, visible solo cuando hay sesión activa.
+**DropdownMenuItem (Cerrar Sesión):**
+```text
+Antes: className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
+Después: className="cursor-pointer gap-2 text-[#1c1c1c] focus:bg-[#3D5AFE] focus:text-white hover:bg-[#3D5AFE] hover:text-white transition-colors"
+```
+- Eliminar el rojo para mantener consistencia visual
+- Mismo estilo que los otros items (profesional y unificado)
 
-### 3. Rediseñar página Profile
-Cambios de estilo:
-- **Fondo**: De gradiente naranja a blanco (`bg-white`)
-- **Card del perfil**: Fondo azul sólido (`bg-[#3D5AFE]`)
-- **Textos**: Todo en blanco sobre el card azul
-- **Eliminar emojis**: Reemplazar "🎉" por icono de Lucide (CheckCircle o similar)
-- **Eliminar botones**: Ya no son necesarios porque la navegación está en el UserMenu
-
-### 4. Agregar UserMenu también a la página Profile
-Para mantener consistencia, el UserMenu se mostrará en la misma posición en la página de perfil.
+**DropdownMenuSeparator:**
+```text
+Añadir: className="bg-gray-200"
+```
+- Cambiar de `bg-muted` (oscuro) a gris claro
 
 ---
 
-## Detalles técnicos
+## Resultado visual esperado
 
-### Nuevo archivo: `src/components/UserMenu.tsx`
 ```text
-Estructura:
-├── Detecta si hay usuario logueado (useAuth)
-├── Detecta página actual (useLocation)
-├── Si no hay usuario → no renderiza nada
-├── Si hay usuario → Avatar clickeable con DropdownMenu
-    ├── Landing page:
-    │   ├── "Mi Perfil" → navega a /profile
-    │   └── "Cerrar Sesión" → signOut + navega a /
-    └── Profile page:
-        ├── "Volver al Inicio" → navega a /
-        └── "Cerrar Sesión" → signOut + navega a /
+┌─────────────────────────┐
+│  Mi Perfil          [→] │  ← texto #1c1c1c, hover: fondo azul, texto blanco
+├─────────────────────────┤  ← separador gris claro
+│  Cerrar Sesión      [→] │  ← mismo estilo que arriba
+└─────────────────────────┘
+     ↑ fondo blanco, borde gris neutro, sombra suave
 ```
 
-### Modificaciones en `src/components/HeroSection.tsx`
-- Importar y renderizar `<UserMenu />` en posición `fixed top-4 right-4 z-50`
-
-### Modificaciones en `src/pages/Profile.tsx`
-- Cambiar fondo de `bg-gradient-to-br from-[#FF6B35] via-[#FF8C42] to-[#FFA062]` a `bg-white`
-- Cambiar card de `bg-white/10 backdrop-blur-md` a `bg-[#3D5AFE]`
-- Mantener textos en `text-white` (funcionan sobre azul)
-- Reemplazar emoji "🎉" por icono `<CheckCircle />` de Lucide
-- Eliminar los botones de navegación (div con flex-col gap-3)
-- Agregar `<UserMenu />` en posición fija
-- Cambiar estado de carga para usar fondo blanco
-
-### Iconos a usar (Lucide)
-- `User` → Opción "Mi Perfil"
-- `ArrowLeft` → Opción "Volver al Inicio"
-- `LogOut` → Opción "Cerrar Sesión"
-- `CheckCircle` → Reemplaza el emoji en el mensaje de confirmación
-
 ---
 
-## Resultado esperado
+## Código final del componente
 
-**Antes (actual)**:
-- Página de perfil con fondo naranja agresivo
-- Botones de navegación dentro del card
-- Sin indicador de usuario logueado en la landing
+Las clases específicas a aplicar:
 
-**Después**:
-- Menú de usuario elegante en esquina superior derecha (ambas páginas)
-- Página de perfil con fondo blanco limpio y card azul consistente con la marca
-- Navegación unificada a través del avatar
-- Sin emojis, solo iconos de Lucide
+| Elemento | Clases nuevas |
+|----------|---------------|
+| `DropdownMenuContent` | `bg-white border-gray-200 rounded-lg` |
+| `DropdownMenuItem` | `text-[#1c1c1c] hover:bg-[#3D5AFE] hover:text-white focus:bg-[#3D5AFE] focus:text-white` |
+| `DropdownMenuSeparator` | `bg-gray-200` |
+
+Esto garantiza un menú limpio, profesional y consistente con la paleta del sitio (azul #3D5AFE para elementos destacados).
