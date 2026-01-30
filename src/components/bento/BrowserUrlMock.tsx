@@ -4,19 +4,19 @@ const BrowserUrlMock = () => {
   return (
     <div className="w-full rounded-xl bg-[#F8F8F8] shadow-sm border border-stone-200 overflow-hidden">
       {/* Browser Chrome */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-[#ECECEC] border-b border-stone-200">
-        {/* Traffic Lights */}
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 bg-[#ECECEC] border-b border-stone-200">
+        {/* Traffic Lights - hidden on mobile */}
+        <div className="hidden md:flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
           <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
           <div className="w-3 h-3 rounded-full bg-[#28CA41]" />
         </div>
         
-        {/* URL Bar */}
-        <div className="flex-1 flex items-center gap-2 bg-white rounded-md px-3 py-1.5 border border-stone-200">
-          <Lock className="w-3.5 h-3.5 text-stone-400" />
-          <span className="text-sm text-stone-700 font-medium tracking-tight">
-            https://vibecoders.la/<span className="text-stone-900">@username</span>
+        {/* URL Bar - left aligned, compact on mobile */}
+        <div className="flex items-center gap-1.5 md:gap-2 bg-white rounded-md px-2 md:px-3 py-1 md:py-1.5 border border-stone-200">
+          <Lock className="w-3 h-3 md:w-3.5 md:h-3.5 text-stone-400 flex-shrink-0" />
+          <span className="text-xs md:text-sm text-stone-700 font-medium tracking-tight truncate">
+            vibecoders.la/<span className="text-stone-900">@username</span>
           </span>
         </div>
       </div>
