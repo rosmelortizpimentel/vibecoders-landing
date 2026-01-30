@@ -15,7 +15,7 @@ const VerifiedBadge = () => {
           {/* Content */}
           <div className="flex items-center gap-3">
             {/* Checkmark Circle */}
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 rounded-full bg-[#3D5AFE] flex items-center justify-center shadow-lg">
               <Check className="w-5 h-5 text-white" strokeWidth={3} />
             </div>
             
