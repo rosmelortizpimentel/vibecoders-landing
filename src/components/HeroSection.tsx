@@ -1,10 +1,11 @@
 import { useState, FormEvent, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, Users, Loader2 } from 'lucide-react';
+import { ArrowRight, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 import FloatingLogos from './FloatingLogos';
 import ProfileFileCard from './ProfileFileCard';
 import WaitlistSuccessModal from './WaitlistSuccessModal';
@@ -17,6 +18,7 @@ const HeroSection = () => {
   const t = useTranslation('hero');
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -90,12 +92,14 @@ const HeroSection = () => {
         }}
       />
 
-      {/* Floating IDE Logos */}
-      <FloatingLogos 
-        onAbsorbedCountChange={setAbsorbedCount}
-        triggerExplosion={triggerExplosion}
-        onExplosionComplete={handleExplosionComplete}
-      />
+      {/* Floating IDE Logos - SOLO DESKTOP (evita conflicto de estados en mobile) */}
+      {!isMobile && (
+        <FloatingLogos 
+          onAbsorbedCountChange={setAbsorbedCount}
+          triggerExplosion={triggerExplosion}
+          onExplosionComplete={handleExplosionComplete}
+        />
+      )}
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         {/* Logo VIBECODERS */}
