@@ -200,7 +200,7 @@ const ProfileFileCard = ({
       )}
 
       {/* Content */}
-      <div className="flex flex-col items-center justify-center py-6 px-5">
+      <div className="flex flex-col items-center justify-center py-6 px-6 md:px-8">
         {cardState === 'verified' || cardState === 'counting' || cardState === 'exploding' ? (
           <>
             {/* Avatar circular */}
