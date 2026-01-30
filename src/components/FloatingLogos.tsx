@@ -163,6 +163,9 @@ const FloatingLogos = ({
   }, [onAbsorbedCountChange, isMobileContainer]);
 
   const triggerExplosionAnimation = useCallback(() => {
+    // Clear any pending fall/absorb timers to avoid state conflicts
+    clearAllTimeouts();
+    
     // Set all logos to exploding state (they'll animate from center outward)
     setLogoStates(logos.map(() => 'exploding'));
 
