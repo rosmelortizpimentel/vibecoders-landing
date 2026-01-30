@@ -168,7 +168,8 @@ const ProfileFileCard = ({
     <div 
       className={`
         relative flex flex-col items-center justify-center 
-        rounded-xl bg-white shadow-2xl overflow-visible
+        rounded-2xl bg-white shadow-2xl overflow-visible
+        border border-stone-200
         transition-all duration-300
         ${isPulsing ? 'animate-pulse-absorb' : ''}
         ${cardState === 'transforming' ? 'animate-transform-verified' : ''}
@@ -198,16 +199,8 @@ const ProfileFileCard = ({
         </div>
       )}
 
-      {/* macOS-style title bar */}
-      <div className="absolute top-0 left-0 right-0 h-6 bg-gray-100 flex items-center px-2 gap-1.5 z-10">
-        <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
-        <div className="w-2.5 h-2.5 rounded-full bg-yellow-400" />
-        <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
-      </div>
-
       {/* Content */}
-      {/* pt-8 gives more room for avatar in verified state */}
-      <div className="flex flex-col items-center justify-center pt-10 pb-4 px-5">
+      <div className="flex flex-col items-center justify-center py-6 px-5">
         {cardState === 'verified' || cardState === 'counting' || cardState === 'exploding' ? (
           <>
             {/* Avatar circular */}
