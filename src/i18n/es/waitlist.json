@@ -2,12 +2,12 @@
   "success": {
     "title": "¡Genial! Te avisaremos cuando esté listo.",
     "subtitle": "¿Quieres ir reservando tu nombre de usuario?",
-    "googleButton": "Continuar con Google"
+    "googleButton": "Apartar mi usuario"
   },
   "alreadyRegistered": {
     "title": "¡Ya estás en la lista!",
     "subtitle": "¿Listo para reservar tu nombre de usuario?",
-    "googleButton": "Continuar con Google"
+    "googleButton": "Apartar mi usuario"
   },
   "error": {
     "title": "Algo salió mal",

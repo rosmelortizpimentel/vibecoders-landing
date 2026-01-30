@@ -38,23 +38,23 @@ const Profile = () => {
     .slice(0, 2) || '?';
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-8 sm:py-0">
       <UserMenu />
       
-      <div className="w-full max-w-md rounded-2xl bg-[#3D5AFE] p-8 text-center shadow-2xl">
-        <Avatar className="mx-auto h-24 w-24 border-4 border-white/30 shadow-lg">
+      <div className="w-full max-w-sm sm:max-w-md rounded-2xl bg-[#3D5AFE] p-6 sm:p-8 text-center shadow-2xl">
+        <Avatar className="mx-auto h-20 w-20 sm:h-24 sm:w-24 border-4 border-white/30 shadow-lg">
           <AvatarImage src={avatarUrl} alt={fullName} />
-          <AvatarFallback className="bg-white/20 text-2xl text-white">
+          <AvatarFallback className="bg-white/20 text-xl sm:text-2xl text-white">
             {initials}
           </AvatarFallback>
         </Avatar>
 
-        <h1 className="mt-6 text-2xl font-bold text-white">{fullName}</h1>
-        <p className="mt-2 text-white/80">{email}</p>
+        <h1 className="mt-4 sm:mt-6 text-xl sm:text-2xl font-bold text-white break-words">{fullName}</h1>
+        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-white/80 break-all">{email}</p>
 
-        <div className="mt-8 rounded-lg bg-white/10 p-4">
-          <p className="flex items-center justify-center gap-2 text-sm text-white">
-            <CheckCircle className="h-4 w-4" />
+        <div className="mt-6 sm:mt-8 rounded-lg bg-white/10 p-3 sm:p-4">
+          <p className="flex items-center justify-center gap-2 text-xs sm:text-sm text-white">
+            <CheckCircle className="h-4 w-4 flex-shrink-0" />
             Tu nombre está reservado
           </p>
           <p className="mt-2 text-xs text-white/70">
