@@ -211,7 +211,7 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
                   <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
                 )}
                 {!isChecking && isAvailable === true && (
-                  <Check className="h-4 w-4 text-green-500" />
+                  <Check className="h-4 w-4 text-[#3D5AFE]" />
                 )}
                 {!isChecking && isAvailable === false && (
                   <X className="h-4 w-4 text-red-500" />
