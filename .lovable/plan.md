@@ -1,76 +1,85 @@
 
-# Plan: Rediseño del menú de usuario profesional
+# Plan: Mostrar contenido diferente para usuarios logueados en la landing
 
-## Problema identificado
-El color morado proviene de las variables CSS globales del tema:
-- `--accent: 263 70% 58%` (morado) - usado en `focus:bg-accent`
-- `--border: 263 30% 25%` (borde morado)
-- `--popover: 222 47% 8%` (fondo oscuro)
-
-El `DropdownMenuItem` de shadcn/ui aplica `focus:bg-accent focus:text-accent-foreground` por defecto.
+## Problema
+Actualmente el `HeroSection` siempre muestra el formulario de email para unirse a la waitlist, incluso cuando el usuario ya está autenticado. Esto no tiene sentido porque ya completó el flujo de registro.
 
 ## Solución
-Sobreescribir los estilos directamente en `UserMenu.tsx` con clases Tailwind específicas para ignorar las variables del tema y usar colores profesionales.
+Modificar `HeroSection.tsx` para:
+1. Usar el hook `useAuth` para detectar si hay un usuario logueado
+2. Mostrar contenido diferente según el estado de autenticación:
+   - **No logueado**: Formulario de email + social proof (como está ahora)
+   - **Logueado**: Mensaje de bienvenida + botón para ir al perfil
 
 ---
 
 ## Cambios a realizar
 
-### Archivo: `src/components/UserMenu.tsx`
+### Archivo: `src/components/HeroSection.tsx`
 
-**DropdownMenuContent:**
-```text
-Antes: className="w-48 bg-white border border-border shadow-lg"
-Después: className="w-48 bg-white border border-gray-200 shadow-lg rounded-lg"
+**1. Importar useAuth:**
+```typescript
+import { useAuth } from '@/hooks/useAuth';
 ```
-- Cambiar `border-border` (morado) por `border-gray-200` (gris neutro)
-- Añadir `rounded-lg` para bordes más suaves
 
-**DropdownMenuItem (items normales):**
-```text
-Antes: className="cursor-pointer gap-2"
-Después: className="cursor-pointer gap-2 text-[#1c1c1c] focus:bg-[#3D5AFE] focus:text-white hover:bg-[#3D5AFE] hover:text-white transition-colors"
+**2. Usar el hook en el componente:**
+```typescript
+const { user, loading } = useAuth();
 ```
-- Texto base: `#1c1c1c` (oscuro)
-- Hover/Focus: fondo `#3D5AFE` (azul del header) con texto blanco
 
-**DropdownMenuItem (Cerrar Sesión):**
-```text
-Antes: className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
-Después: className="cursor-pointer gap-2 text-[#1c1c1c] focus:bg-[#3D5AFE] focus:text-white hover:bg-[#3D5AFE] hover:text-white transition-colors"
+**3. Renderizado condicional en lugar del formulario:**
+
+Si el usuario está logueado, mostrar:
+```tsx
+<div className="mx-auto mb-8 flex max-w-md animate-fade-in flex-col items-center gap-4 opacity-0">
+  <p className="text-lg text-white/90">
+    ¡Hola, {user.user_metadata?.full_name?.split(' ')[0] || 'Vibecoder'}!
+  </p>
+  <Button
+    onClick={() => navigate('/profile')}
+    className="h-12 gap-2 px-6 font-semibold bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/80"
+  >
+    Ver mi perfil
+    <ArrowRight className="h-4 w-4" />
+  </Button>
+</div>
 ```
-- Eliminar el rojo para mantener consistencia visual
-- Mismo estilo que los otros items (profesional y unificado)
 
-**DropdownMenuSeparator:**
-```text
-Añadir: className="bg-gray-200"
-```
-- Cambiar de `bg-muted` (oscuro) a gris claro
+Si NO está logueado, mostrar el formulario actual + social proof.
 
----
-
-## Resultado visual esperado
-
-```text
-┌─────────────────────────┐
-│  Mi Perfil          [→] │  ← texto #1c1c1c, hover: fondo azul, texto blanco
-├─────────────────────────┤  ← separador gris claro
-│  Cerrar Sesión      [→] │  ← mismo estilo que arriba
-└─────────────────────────┘
-     ↑ fondo blanco, borde gris neutro, sombra suave
+**4. Importar useNavigate:**
+```typescript
+import { useNavigate } from 'react-router-dom';
 ```
 
 ---
 
-## Código final del componente
+## Estructura condicional
 
-Las clases específicas a aplicar:
+```text
+┌─────────────────────────────────────┐
+│  Si usuario NO está logueado:       │
+│  ┌─────────────────────────────────┐│
+│  │ [Email input] [Unirme a Waitlist]│
+│  └─────────────────────────────────┘│
+│  👥 Únete a los primeros fundadores │
+└─────────────────────────────────────┘
 
-| Elemento | Clases nuevas |
-|----------|---------------|
-| `DropdownMenuContent` | `bg-white border-gray-200 rounded-lg` |
-| `DropdownMenuItem` | `text-[#1c1c1c] hover:bg-[#3D5AFE] hover:text-white focus:bg-[#3D5AFE] focus:text-white` |
-| `DropdownMenuSeparator` | `bg-gray-200` |
+┌─────────────────────────────────────┐
+│  Si usuario ESTÁ logueado:          │
+│                                     │
+│  ¡Hola, {nombre}!                   │
+│  ┌─────────────────────────────────┐│
+│  │      Ver mi perfil  →           ││
+│  └─────────────────────────────────┘│
+└─────────────────────────────────────┘
+```
 
-Esto garantiza un menú limpio, profesional y consistente con la paleta del sitio (azul #3D5AFE para elementos destacados).
+---
+
+## Resultado esperado
+
+- **Usuario no autenticado**: Ve el formulario de email y el texto de social proof
+- **Usuario autenticado**: Ve un saludo personalizado y un botón para ir a su perfil
+- El UserMenu sigue funcionando igual (aparece arriba a la derecha cuando está logueado)
+- Experiencia fluida sin elementos redundantes
