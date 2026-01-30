@@ -1,45 +1,95 @@
 
-
-# Plan: Mejorar Footer en Móvil
+# Plan: Reorganizar Layout del Hero en Móvil
 
 ## Objetivo
-Ajustar el footer para que se vea mejor en dispositivos móviles (menos saturado/apretado) y cambiar la temperatura de -13°C a -20°C.
+Cambiar el orden de los elementos en móvil para que el efecto de los logos cayendo sea lo primero que llame la atención, manteniendo el layout actual en desktop.
+
+## Layout Actual vs Propuesto (Solo Móvil)
+
+```text
+ACTUAL (Móvil):                    PROPUESTO (Móvil):
+┌─────────────────────┐            ┌─────────────────────┐
+│ El portafolio...    │            │ El portafolio...    │  ← Badge (igual)
+│                     │            │                     │
+│ Construyes a la...  │            │     🔵  🟢  🔴      │  ← Logos + File 
+│                     │            │   🟣 [FILE] 🟠      │     (AHORA AQUÍ)
+│ Deja de enviar...   │            │     🔵  🟢  🔴      │
+│                     │            │                     │
+│     🔵  🟢  🔴      │            │ Construyes a la...  │  ← Headline (abajo)
+│   🟣 [FILE] 🟠      │            │                     │
+│     🔵  🟢  🔴      │            │ Deja de enviar...   │  ← Subheadline
+│                     │            │                     │
+│ [email] [button]    │            │ [email] [button]    │  ← Form
+│ Social proof        │            │ Social proof        │
+└─────────────────────┘            └─────────────────────┘
+```
+
+**Desktop permanece igual** - solo se reorganiza en móvil.
 
 ## Cambios Requeridos
 
-### 1. `src/i18n/es/common.json`
-- Cambiar la temperatura de `-13°C` a `-20°C`
+### Archivo: `src/components/HeroSection.tsx`
 
-### 2. `src/components/Footer.tsx`
-**Problema actual:** En móvil, todo el contenido está en una sola línea horizontal que se ve muy apretado.
+**Estrategia:** Crear dos secciones separadas - una para móvil y otra para desktop - usando clases `md:hidden` y `hidden md:block` para mostrar/ocultar según el breakpoint.
 
-**Solución:** 
-- Dividir el texto del footer en dos líneas en móvil
-- Aumentar el espaciado vertical
-- Centrar el contenido en móvil
+**Cambios específicos:**
 
-**Estructura propuesta para móvil:**
-```text
-┌─────────────────────────────────┐
-│                                 │
-│   Construido a -20°C en 🇨🇦    │  ← Primera línea
-│       por Rosmel Ortiz          │  ← Segunda línea  
-│                                 │
-│   © 2026 Vibecoders.la          │  ← Copyright abajo
-│                                 │
-└─────────────────────────────────┘
+1. **Badge (Eyebrow)**: Queda igual en ambas versiones, siempre primero
+
+2. **Sección de Logos + Card (Móvil)**:
+   - Crear un contenedor `md:hidden` que incluya el `ProfileFileCard` con los logos flotando alrededor
+   - Esta sección se muestra solo en móvil, justo después del badge
+
+3. **Headline y Subheadline**:
+   - En móvil: Aparecen DESPUÉS de los logos/file
+   - En desktop: Mantener la posición actual (antes del file)
+   - Usar clases condicionales para reordenar
+
+4. **ProfileFileCard (Desktop)**:
+   - Crear un contenedor `hidden md:block` para la versión desktop
+   - Mantiene su posición actual en desktop
+
+**Estructura de código propuesta:**
+
+```tsx
+<div className="relative z-10 mx-auto max-w-4xl text-center">
+  {/* Badge - siempre primero */}
+  <p className="mb-6 animate-fade-in ...">
+    {t.badge}
+  </p>
+
+  {/* DESKTOP: Headline → Subheadline → File (orden actual) */}
+  <div className="hidden md:block">
+    <h1 className="mb-6 ...">{t.headline}</h1>
+    <p className="mb-8 ...">{t.subheadline}</p>
+  </div>
+
+  {/* ProfileFileCard - visible en ambos, pero posición diferente por flex order */}
+  <div className="mb-8 flex justify-center ...">
+    <ProfileFileCard ... />
+  </div>
+
+  {/* MÓVIL: Headline → Subheadline después del file */}
+  <div className="md:hidden">
+    <h1 className="mb-4 ...">{t.headline}</h1>
+    <p className="mb-6 ...">{t.subheadline}</p>
+  </div>
+
+  {/* Form y Social Proof - igual en ambos */}
+  <form ...>...</form>
+  <p ...>{t.socialProof}</p>
+</div>
 ```
-
-**Cambios CSS:**
-- En móvil: `flex-col` con `text-center` para centrar todo
-- Separar "Construido a -20°C en 🇨🇦" y "por Rosmel Ortiz" en líneas separadas usando `flex-wrap`
-- Reducir el tamaño del texto si es necesario (`text-xs` en móvil)
-- Invertir el orden: primero la info de construcción, luego el copyright
 
 ## Archivos a Modificar
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/i18n/es/common.json` | Cambiar temperatura a `-20°C` |
-| `src/components/Footer.tsx` | Mejorar layout responsive para móvil |
+| `src/components/HeroSection.tsx` | Reorganizar orden de elementos usando `hidden`/`md:hidden` y `md:block` para crear layouts diferentes por breakpoint |
 
+## Notas Técnicas
+
+- Se duplica el contenido de headline/subheadline en el JSX (uno para móvil, otro para desktop), pero solo uno se renderiza visualmente
+- Los FloatingLogos ya tienen lógica separada para móvil/desktop, así que funcionarán correctamente
+- El ProfileFileCard puede quedar en un solo lugar ya que su posición visual cambia por el orden del flex
+- Se ajustarán los márgenes (`mb-`) para móvil vs desktop según sea necesario
