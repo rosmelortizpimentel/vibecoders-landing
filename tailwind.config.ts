@@ -149,15 +149,15 @@ export default {
         },
         "explode-out": {
           "0%": { 
-            transform: "translate(0, 0) scale(0)",
+            transform: "translate(var(--fall-x), var(--fall-y)) scale(0)",
             opacity: "0"
           },
           "20%": {
-            transform: "translate(calc(var(--explode-x) * 0.3), calc(var(--explode-y) * 0.3)) scale(1)",
+            transform: "translate(calc(var(--fall-x) * 0.7), calc(var(--fall-y) * 0.7)) scale(1)",
             opacity: "1"
           },
           "100%": { 
-            transform: "translate(var(--explode-x), var(--explode-y)) scale(1)",
+            transform: "translate(0, 0) scale(1)",
             opacity: "1"
           },
         },
@@ -210,15 +210,15 @@ export default {
         },
         "explode-from-center-mobile": {
           "0%": { 
-            transform: "translate(0, 0) scale(0)",
+            transform: "translate(-50%, -50%) scale(0)",
             opacity: "0"
           },
           "30%": {
-            transform: "translate(calc(var(--start-x) * 0.4), calc(var(--start-y) * 0.4)) scale(1)",
+            transform: "translate(calc(-50% + var(--start-x) * 0.4), calc(-50% + var(--start-y) * 0.4)) scale(1)",
             opacity: "1"
           },
           "100%": { 
-            transform: "translate(var(--start-x), var(--start-y)) scale(1)",
+            transform: "translate(calc(-50% + var(--start-x)), calc(-50% + var(--start-y))) scale(1)",
             opacity: "1"
           }
         },
