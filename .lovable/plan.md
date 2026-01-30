@@ -1,124 +1,80 @@
 
+## Objetivo
+Corregir el desfase y el “congelamiento” en **vista desktop**, donde el ProfileFileCard se transforma antes de que caiga el último logo y luego el ciclo se queda trabado.
 
-# Plan: Corregir Animacion Mobile de Logos y Contadores
+---
 
-## Problema Detectado
+## Diagnóstico (confirmado)
+En **desktop** se están montando (aunque estén ocultos por CSS) **dos** componentes que ejecutan lógica y timers:
 
-El problema tiene dos causas principales:
+1) **FloatingLogos mobile** dentro del bloque `md:hidden` (está oculto visualmente en desktop, pero igual corre JS y actualiza `absorbedCount`).
+2) **ProfileFileCard mobile** también se monta en desktop (oculto por CSS), y ejecuta la secuencia completa.
 
-### 1. Dos instancias de FloatingLogos ejecutandose simultaneamente en movil
+Esto se confirma con los logs duplicados:
+- `ProfileFileCard: Starting transformation sequence...` aparece 2 veces
+- Todas las fases (Verified / Counting / Exploding / Resetting) salen duplicadas
 
-En `HeroSection.tsx` hay dos llamadas a `FloatingLogos`:
+Ese doble montaje provoca:
+- `absorbedCount` se incrementa “antes de tiempo” (por la instancia oculta).
+- El card se transforma mientras visualmente aún falta el último logo.
+- Explosión/reset se disparan dos veces, y el estado queda desincronizado, generando el “no avanza”.
 
-- **Lineas 94-98**: Instancia principal (desktop) - aunque el contenedor hijo tiene `hidden md:block`, el componente sigue ejecutando su logica JavaScript y llamando a `setAbsorbedCount`
-- **Lineas 174-179**: Instancia mobile con `isMobileContainer={true}`
+---
 
-**Resultado**: Ambas instancias incrementan el mismo `absorbedCount`, causando que el contador llegue a 20 en lugar de 10, o que la transformacion se dispare multiples veces.
+## Cambios propuestos (mínimos y directos)
 
-### 2. Conflicto de estados en ProfileFileCard
+### 1) Montar SOLO el layout correcto (desktop o mobile) usando `isMobile`
+En `src/components/HeroSection.tsx`:
+- Donde hoy usamos clases tipo `hidden md:block` / `md:hidden`, vamos a **reemplazar o envolver** con render condicional:
+  - Desktop: renderizar únicamente si `!isMobile`
+  - Mobile: renderizar únicamente si `isMobile`
 
-Los logs muestran:
-```
-ProfileFileCard: Starting transformation sequence... (x2)
-ProfileFileCard: Phase 2 - Verified (x2)
-```
+Esto asegura que en desktop:
+- No exista el `<FloatingLogos isMobileContainer />` oculto.
+- No exista el `<ProfileFileCard />` mobile oculto.
+- Por lo tanto, desaparece el doble update de `absorbedCount` y la secuencia deja de duplicarse.
 
-La transformacion se inicia dos veces, lo que causa que los timeouts se sobrepongan y la fase de "Counting" (donde los contadores suben) nunca se ejecute correctamente.
+#### Qué bloques se ajustan:
+- FloatingLogos desktop: se queda con `!isMobile` (ya está bien).
+- Headline/subheadline desktop: pasar a `!isMobile` (hoy están con `hidden md:block`).
+- ProfileFileCard desktop: pasar a `!isMobile` (hoy `hidden md:flex`).
+- Headline/subheadline mobile: pasar a `isMobile` (hoy `md:hidden`).
+- Bloque completo de animación mobile (logos + file): pasar a `isMobile` (hoy `md:hidden`).
 
-## Solucion
+### 2) (Recomendado) Reset “limpio” al cambiar entre mobile/desktop
+Agregar un `useEffect` en `HeroSection.tsx` que, cuando `isMobile` cambie, haga:
+- `setAbsorbedCount(0)`
+- `setTriggerExplosion(false)`
 
-### Cambios en HeroSection.tsx
+Esto evita estados “arrastrados” si el usuario cambia el ancho de la ventana durante una animación.
 
-Separar completamente las instancias de FloatingLogos para desktop y mobile usando estados independientes:
+### 3) (Opcional, hardening) Proteger FloatingLogos al explotar
+En `src/components/FloatingLogos.tsx`, dentro de `triggerExplosionAnimation`, llamar primero a `clearAllTimeouts()` para evitar timers viejos si alguna vez la explosión se dispara antes de que terminen los “fall/absorb”.
 
-1. **Desktop (md+)**: Mantener FloatingLogos actual con `absorbedCount` propio
-2. **Mobile (<md)**: Usar FloatingLogos con `isMobileContainer={true}` con su propio contador
+No debería ser necesario una vez arreglado el montaje duplicado, pero lo hace más robusto.
 
-Esto significa:
-- Crear dos estados separados: `absorbedCountDesktop` y `absorbedCountMobile`
-- El ProfileFileCard de desktop usa `absorbedCountDesktop`
-- El ProfileFileCard de mobile usa `absorbedCountMobile`
-- Evitar que la instancia de desktop ejecute logica en mobile
+---
 
-### Estructura final simplificada
+## Resultado esperado (desktop)
+1) Los logos caen uno por uno.
+2) El **último logo cae completo** y recién ahí el file se transforma.
+3) Los contadores suben.
+4) Explosión alrededor del perfil.
+5) Reset limpio y el ciclo vuelve a iniciar sin quedarse congelado.
+6) En consola, cada fase del `ProfileFileCard` debe aparecer **solo una vez** (sin duplicados).
 
-```text
-+------------------+------------------+
-|     DESKTOP      |      MOBILE      |
-+------------------+------------------+
-| FloatingLogos    | [no se renderiza]|
-| (sin isMobile)   |                  |
-| → absorbedDesktop|                  |
-+------------------+------------------+
-| ProfileFileCard  | ProfileFileCard  |
-| (desktop size)   | (mobile size)    |
-| → absorbedDesktop| → absorbedMobile |
-+------------------+------------------+
-| [no se renderiza]| FloatingLogos    |
-|                  | (isMobile=true)  |
-|                  | → absorbedMobile |
-+------------------+------------------+
-```
+---
 
-### Alternativa mas simple (preferida)
+## Plan de verificación (rápido)
+1) Abrir en desktop (>768px).
+2) Mirar consola: ya no deben salir logs duplicados de `ProfileFileCard`.
+3) Confirmar visualmente que el card no cambia antes del último logo.
+4) Esperar 1-2 ciclos completos para confirmar que no se queda pegado.
+5) Repetir en mobile para asegurar que no se reintroduce el problema.
 
-En lugar de duplicar estados, hacer que el FloatingLogos principal NO se monte en mobile:
+---
 
-1. Mover el `<FloatingLogos />` principal (lineas 94-98) dentro del bloque `hidden md:block` de desktop
-2. Mantener el FloatingLogos mobile en su zona dedicada
-3. Usar un solo `absorbedCount` pero asegurar que solo UNA instancia lo modifique a la vez
-
-## Archivos a Modificar
-
-| Archivo | Cambio |
-|---------|--------|
-| `src/components/HeroSection.tsx` | Reestructurar para que solo una instancia de FloatingLogos este activa segun el viewport. Opcion: renderizar condicionalmente o mover la instancia desktop dentro de un wrapper que no ejecute JS en mobile |
-
-## Implementacion Detallada
-
-En `HeroSection.tsx`:
-
-1. Envolver el FloatingLogos principal (desktop) dentro de un componente que solo se monte en md+
-2. Usar `useIsMobile()` hook para determinar cual FloatingLogos activar
-3. O alternativamente: renderizar solo uno de los dos basado en una media query
-
-```typescript
-// Opcion con hook
-const isMobile = useIsMobile();
-
-return (
-  <>
-    {/* Desktop FloatingLogos - solo se monta si no es mobile */}
-    {!isMobile && (
-      <FloatingLogos 
-        onAbsorbedCountChange={setAbsorbedCount}
-        triggerExplosion={triggerExplosion}
-        onExplosionComplete={handleExplosionComplete}
-      />
-    )}
-    
-    {/* ... resto del layout ... */}
-    
-    {/* Mobile: Zona de animacion */}
-    {isMobile && (
-      <div className="relative w-full flex flex-col items-center mb-6">
-        <FloatingLogos 
-          onAbsorbedCountChange={setAbsorbedCount}
-          triggerExplosion={triggerExplosion}
-          onExplosionComplete={handleExplosionComplete}
-          isMobileContainer={true}
-        />
-        <ProfileFileCard ... />
-      </div>
-    )}
-  </>
-);
-```
-
-## Resultado Esperado
-
-1. En mobile: Los logos entran desde la izquierda, van al centro, bajan al file
-2. Cuando todos son absorbidos (10/10), el file se transforma en perfil
-3. Los contadores suben de 0 a 12,847 (views) y 3,256 (likes)
-4. Explosion y reinicio del ciclo
+## Archivos a tocar
+- `src/components/HeroSection.tsx` (principal)
+- `src/components/FloatingLogos.tsx` (opcional hardening)
 
