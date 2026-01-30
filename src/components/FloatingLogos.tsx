@@ -14,6 +14,7 @@ interface FloatingLogosProps {
   onAbsorbedCountChange: (count: number) => void;
   triggerExplosion?: boolean;
   onExplosionComplete?: () => void;
+  isMobileContainer?: boolean; // When true, renders only mobile logos positioned relative to parent
 }
 
 type LogoState = 'floating' | 'falling' | 'absorbed' | 'exploding';
@@ -48,18 +49,18 @@ const desktopPositions = [
 ];
 
 // Mobile positions - 10 logos distributed in a circle around the ProfileFileCard
-// Using a radius of ~100px to fit well on mobile screens
+// Using a radius of ~85px to fit well on mobile screens without overflowing
 const mobilePositions = [
-  { startX: '0px', startY: '-100px', delay: '0s' },      // top
-  { startX: '59px', startY: '-81px', delay: '0.15s' },   // top-right-1
-  { startX: '95px', startY: '-31px', delay: '0.3s' },    // right-top
-  { startX: '95px', startY: '31px', delay: '0.45s' },    // right-bottom
-  { startX: '59px', startY: '81px', delay: '0.6s' },     // bottom-right-1
-  { startX: '0px', startY: '100px', delay: '0.75s' },    // bottom
-  { startX: '-59px', startY: '81px', delay: '0.9s' },    // bottom-left-1
-  { startX: '-95px', startY: '31px', delay: '1.05s' },   // left-bottom
-  { startX: '-95px', startY: '-31px', delay: '1.2s' },   // left-top
-  { startX: '-59px', startY: '-81px', delay: '1.35s' },  // top-left-1
+  { startX: '0px', startY: '-85px', delay: '0s' },      // top
+  { startX: '50px', startY: '-69px', delay: '0.15s' },   // top-right-1
+  { startX: '81px', startY: '-26px', delay: '0.3s' },    // right-top
+  { startX: '81px', startY: '26px', delay: '0.45s' },    // right-bottom
+  { startX: '50px', startY: '69px', delay: '0.6s' },     // bottom-right-1
+  { startX: '0px', startY: '85px', delay: '0.75s' },    // bottom
+  { startX: '-50px', startY: '69px', delay: '0.9s' },    // bottom-left-1
+  { startX: '-81px', startY: '26px', delay: '1.05s' },   // left-bottom
+  { startX: '-81px', startY: '-26px', delay: '1.2s' },   // left-top
+  { startX: '-50px', startY: '-69px', delay: '1.35s' },  // top-left-1
 ];
 
 const FLOAT_DURATION = 2000; // 2s float before falling starts
@@ -71,7 +72,8 @@ const RESET_PAUSE = 500; // 0.5s pause after explosion before reset
 const FloatingLogos = ({ 
   onAbsorbedCountChange, 
   triggerExplosion = false,
-  onExplosionComplete
+  onExplosionComplete,
+  isMobileContainer = false
 }: FloatingLogosProps) => {
   const [logoStates, setLogoStates] = useState<LogoState[]>(
     logos.map(() => 'floating')
@@ -187,19 +189,19 @@ const FloatingLogos = ({
         })}
       </div>
 
-      {/* Mobile: Logos in circle around center (ProfileFileCard is in HeroSection) */}
-      <div className="md:hidden absolute inset-0 pointer-events-none">
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+      {/* Mobile: Logos in circle - render based on context */}
+      {isMobileContainer ? (
+        // Render mobile logos directly when inside the mobile container
+        <>
           {logos.map((logo, index) => {
             const state = logoStates[index];
             const pos = mobilePositions[index];
-            const isExploding = state === 'exploding';
             
             return (
               <div
                 key={`${logo.name}-mobile-${cycleKey}`}
                 className={`
-                  absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2
+                  absolute left-1/2 top-1/2
                   h-10 w-10 flex items-center justify-center 
                   rounded-full bg-white overflow-hidden shadow-lg
                   will-change-transform
@@ -209,8 +211,8 @@ const FloatingLogos = ({
                   ${state === 'exploding' ? 'animate-explode-from-center-mobile' : ''}
                 `}
                 style={{
-                  '--start-x': isExploding ? pos.startX : pos.startX,
-                  '--start-y': isExploding ? pos.startY : pos.startY,
+                  '--start-x': pos.startX,
+                  '--start-y': pos.startY,
                   transform: state === 'floating' 
                     ? `translate(calc(-50% + ${pos.startX}), calc(-50% + ${pos.startY}))` 
                     : undefined,
@@ -226,8 +228,49 @@ const FloatingLogos = ({
               </div>
             );
           })}
+        </>
+      ) : (
+        // Original mobile container for non-container usage (hidden on md+)
+        <div className="md:hidden absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            {logos.map((logo, index) => {
+              const state = logoStates[index];
+              const pos = mobilePositions[index];
+              
+              return (
+                <div
+                  key={`${logo.name}-mobile-fallback-${cycleKey}`}
+                  className={`
+                    absolute left-1/2 top-1/2
+                    h-10 w-10 flex items-center justify-center 
+                    rounded-full bg-white overflow-hidden shadow-lg
+                    will-change-transform
+                    ${state === 'floating' ? 'animate-float' : ''}
+                    ${state === 'falling' ? 'animate-fall-to-center-mobile' : ''}
+                    ${state === 'absorbed' ? 'opacity-0 pointer-events-none' : ''}
+                    ${state === 'exploding' ? 'animate-explode-from-center-mobile' : ''}
+                  `}
+                  style={{
+                    '--start-x': pos.startX,
+                    '--start-y': pos.startY,
+                    transform: state === 'floating' 
+                      ? `translate(calc(-50% + ${pos.startX}), calc(-50% + ${pos.startY}))` 
+                      : undefined,
+                    animationDelay: state === 'floating' ? pos.delay : '0s',
+                  } as React.CSSProperties}
+                  title={logo.name}
+                >
+                  <img 
+                    src={logo.image} 
+                    alt={logo.name} 
+                    className="h-3/4 w-3/4 object-contain"
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 };
