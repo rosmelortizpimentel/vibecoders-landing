@@ -102,18 +102,21 @@ export function useProfile() {
     }
   };
 
-  const checkUsernameAvailable = async (username: string): Promise<boolean> => {
+  const checkUsernameAvailable = useCallback(async (username: string): Promise<boolean> => {
     if (!user || !username) return false;
+
+    // Normalizar a minúsculas para validación consistente con updateUsername
+    const normalizedUsername = username.toLowerCase();
 
     const { data } = await supabase
       .from('profiles')
       .select('id')
-      .eq('username', username)
+      .eq('username', normalizedUsername)
       .neq('id', user.id)
       .maybeSingle();
 
     return !data;
-  };
+  }, [user]);
 
   return {
     profile,
