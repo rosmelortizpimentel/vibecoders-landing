@@ -1,72 +1,62 @@
 
+## Diagnóstico (qué está pasando y por qué siempre te manda a la landing)
 
-# Plan: Arreglar Perfiles Públicos
+El problema principal NO es Supabase ni la Edge Function (esa URL directa sí responde). El problema es el **router**:
 
-## Problema
-Las URLs públicas de perfil (`/@founder`, `/@rosmelortiz`) redirigen a la landing porque la Edge Function `get-public-profile` no está deployada en Supabase.
+- En `App.tsx` tienes la ruta pública definida como: `"/@:username"`.
+- **React Router v6 no soporta parámetros con prefijo dentro del mismo segmento** (ej: `@` pegado al `:username`).
+- En la práctica, esa ruta se interpreta como **literal** `"/@:username"` (texto tal cual), así que `"/@founder"` **no matchea**.
+- Entonces cae en la ruta `path="*"` y por eso ejecuta `Navigate to="/"` → el navegador termina en la landing (URL base).
 
-## Causa Raíz
-1. La Edge Function existe en el código pero no está activa en Supabase
-2. El deploy automático falló o nunca se ejecutó para esta función
+Esto coincide perfecto con lo que dijiste: “todo lo que no sea /profile redirecciona al /”, porque tu catch-all `*` lo está haciendo, y `/@founder` hoy está cayendo ahí.
 
-## Solución
+## Objetivo
 
-### Paso 1: Forzar Re-deploy de la Edge Function
-Hacer un cambio mínimo en el archivo `supabase/functions/get-public-profile/index.ts` para forzar el re-deploy automático del sistema.
+- Que `/@founder` y `/@rosmelortiz` **sí** entren a la pantalla pública.
+- Que **cualquier otra ruta** (no `/profile` y no `/@...`) **siga redirigiendo** a `/`.
 
-**Cambio:** Agregar un comentario con timestamp para que el sistema detecte el cambio:
-```typescript
-// Force deploy: 2026-01-30
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-```
+## Cambios propuestos (implementación)
 
-### Paso 2: Limpiar código duplicado en usePublicProfile.ts
-El hook tiene una llamada a `supabase.functions.invoke` que no se usa (líneas 36-39). Esto es código muerto que debe eliminarse:
+### 1) Arreglar la ruta pública en `src/App.tsx`
+Reemplazar la ruta inválida:
+- Antes: `path="/@:username"`
+- Después: `path="/:handle"` (o `path="/:slug"`)
 
-**Antes:**
-```typescript
-try {
-  const { data, error: fnError } = await supabase.functions.invoke('get-public-profile', {
-    body: null,
-    headers: {},
-  });
+Esto hará que `/@founder` sí haga match, porque React Router sí soporta “un segmento cualquiera” como parámetro.
 
-  // Use query params approach since we're calling via URL
-  const response = await fetch(
-    `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/get-public-profile?username=${encodeURIComponent(username)}`,
-    ...
-  );
-```
+Importante: mantener `/profile` y `/` como rutas explícitas. React Router prioriza rutas más específicas, así que `/profile` seguirá yendo a Profile.
 
-**Después:**
-```typescript
-try {
-  const response = await fetch(
-    `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/get-public-profile?username=${encodeURIComponent(username)}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-```
+### 2) Validar que realmente sea un “handle público” dentro de `src/pages/PublicProfile.tsx`
+Como `/:handle` puede capturar cualquier cosa (ej: `/pricing`), dentro del componente haremos validación:
 
-## Archivos a Modificar
+- Leer `handle` con `useParams()`. Para `/@founder`, `handle` será `"@founder"`.
+- Si `handle` no existe o **no empieza con `@`** → redirigir a `/` (cumple tu regla de “todo lo demás a la landing”).
+- Si empieza con `@` → quitar el `@` y usar el username real:
+  - `username = handle.slice(1)`
 
-| Archivo | Cambio |
-|---------|--------|
-| `supabase/functions/get-public-profile/index.ts` | Agregar comentario para forzar deploy |
-| `src/hooks/usePublicProfile.ts` | Eliminar código duplicado/muerto |
+### 3) Llamada a datos (sin cambios grandes)
+`usePublicProfile(username)` seguirá igual, solo que ahora recibirá `"founder"` en vez de intentar leer un param que nunca llegaba.
 
-## Verificación Post-Implementación
-1. Esperar 30 segundos después del cambio
-2. Probar la URL: `https://vibecoders.la/@founder`
-3. Debe mostrar la tarjeta del perfil con:
-   - Avatar del usuario
-   - Nombre
-   - Badge "Vibecoder"
+(Nota: tu Edge Function responde correctamente por URL directa, así que una vez que el router deje de bloquear el acceso, debería funcionar.)
 
-## Nota
-Si el deploy sigue fallando después de estos cambios, será necesario verificar el dashboard de Supabase manualmente para confirmar que la función existe.
+## Verificación (pasos concretos de prueba)
 
+1. Abrir la app y visitar:
+   - `/@founder` → debe mostrar la tarjeta pública.
+   - `/@rosmelortiz` → debe mostrar la tarjeta pública.
+2. Probar rutas “no permitidas”:
+   - `/cualquier-cosa` → debe redirigir a `/`.
+3. En la pestaña Network:
+   - Confirmar que aparece el request a:
+     - `.../functions/v1/get-public-profile?username=founder`
+4. Confirmar que el URL **no cambia** a `/` cuando visitas `/@founder` (salvo que sea inválido).
+
+## Archivos a tocar
+
+- `src/App.tsx`
+  - cambiar `"/@:username"` → `"/:handle"`
+- `src/pages/PublicProfile.tsx`
+  - usar `handle` param, validar prefijo `@`, extraer username real, redirigir si no aplica
+
+## Consideración adicional (por si en Vercel también hay reglas)
+Si en tu Vercel (dashboard) tienes un **Redirect** global tipo `/(.*) -> /`, eso sí convertiría todo en landing a nivel servidor (y ni siquiera cargaría el route). En ese caso, hay que quitar ese Redirect y dejarlo como Rewrite SPA (o manejarlo solo en React Router como ya haces).
