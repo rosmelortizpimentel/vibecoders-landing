@@ -96,15 +96,37 @@ const HeroSection = () => {
           </p>
         </div>
 
-        {/* Profile File Card - visible en ambos */}
+        {/* DESKTOP: Profile File Card */}
         <div 
-          className="mb-6 md:mb-8 flex justify-center animate-fade-in opacity-0"
+          className="hidden md:flex mb-8 justify-center animate-fade-in opacity-0"
           style={{ animationDelay: '0.15s' }}
         >
           <ProfileFileCard 
             absorbedCount={absorbedCount}
             totalLogos={TOTAL_LOGOS}
-            className="w-[130px] h-[140px] md:w-[150px] md:h-[160px]"
+            className="w-[150px] h-[160px]"
+            onExplosion={handleExplosion}
+          />
+        </div>
+
+        {/* MÓVIL: Contenedor con logos + card - logos relativos a este contenedor */}
+        <div 
+          className="md:hidden relative h-[260px] w-full flex items-center justify-center mb-6 animate-fade-in opacity-0"
+          style={{ animationDelay: '0.15s' }}
+        >
+          {/* Logos móviles renderizados aquí */}
+          <FloatingLogos 
+            onAbsorbedCountChange={setAbsorbedCount}
+            triggerExplosion={triggerExplosion}
+            onExplosionComplete={handleExplosionComplete}
+            isMobileContainer={true}
+          />
+          
+          {/* ProfileFileCard en el centro */}
+          <ProfileFileCard 
+            absorbedCount={absorbedCount}
+            totalLogos={TOTAL_LOGOS}
+            className="w-[130px] h-[140px] z-10"
             onExplosion={handleExplosion}
           />
         </div>
