@@ -1,168 +1,131 @@
 
-# Plan: Validacion en linea de username + Paginas publicas de perfil
+# Plan: Actualizar URL y Redireccion de Login
 
 ## Resumen
-Implementar dos funcionalidades:
-1. Validacion en tiempo real del username con debounce de 2 segundos
-2. Paginas publicas accesibles en `/@username` con tarjeta simple
+Tres cambios principales:
+1. Actualizar la URL en la barra del navegador a `https://vibecoders.la/@username`
+2. Agregar la URL en la vista frontal del perfil
+3. Redirigir usuarios autenticados automaticamente a /profile
 
 ---
 
-## Parte 1: Validacion en linea del username
+## Cambio 1: Actualizar URL del navegador mock
 
-### Cambios en `ProfileCard.tsx`
+### Archivo: `src/components/ProfileCard.tsx`
 
-Agregar logica de debounce para verificar disponibilidad del username mientras el usuario escribe:
+**Linea 137** - Cambiar la URL en la cara trasera (formulario):
+```tsx
+// Antes
+vibecoding.la/<span className="text-white font-bold">@{username || 'tu_username'}</span>
 
-```text
-Estado adicional:
-- isChecking: boolean (indica si esta verificando)
-- isAvailable: boolean | null (resultado de la verificacion)
-
-Flujo:
-1. Usuario escribe en el input
-2. Se inicia timer de 2 segundos
-3. Si escribe de nuevo, se reinicia el timer
-4. Cuando pasan 2 segundos sin escribir:
-   - Se llama a checkUsernameAvailable()
-   - Se muestra resultado (check verde o X roja)
+// Despues
+https://vibecoders.la/<span className="text-white font-bold">@{username || 'tu_username'}</span>
 ```
 
-### Indicadores visuales
+**Linea 94** - Cambiar la URL en la cara frontal:
+```tsx
+// Antes
+vibecoding.la/@{profile.username}
 
-```text
-+------------------------------------+
-| @ mi_username                    [?] |  <- Verificando (loader)
-+------------------------------------+
-
-+------------------------------------+
-| @ mi_username                    [✓] |  <- Disponible (check verde)
-+------------------------------------+
-
-+------------------------------------+
-| @ mi_username                    [✗] |  <- No disponible (X roja)
-+------------------------------------+
+// Despues  
+vibecoders.la/@{profile.username}
 ```
 
 ---
 
-## Parte 2: Paginas publicas de perfil
+## Cambio 2: Agregar URL en vista frontal del perfil
 
-### Migracion de base de datos
+### Archivo: `src/components/ProfileCard.tsx`
 
-Agregar campos `full_name` y `avatar_url` a la tabla `profiles` para poder mostrar datos publicamente sin depender de `auth.users`:
-
-```sql
-ALTER TABLE public.profiles 
-  ADD COLUMN full_name TEXT,
-  ADD COLUMN avatar_url TEXT;
-
--- Politica RLS para lectura publica de perfiles con username
-CREATE POLICY "Public profiles are viewable by everyone"
-  ON public.profiles
-  FOR SELECT
-  USING (username IS NOT NULL);
-```
-
-### Nueva ruta en `App.tsx`
-
-Agregar ruta dinamica para usernames:
+Agregar la URL debajo del email en la cara frontal, visible siempre que haya username configurado:
 
 ```tsx
-<Route path="/@:username" element={<PublicProfile />} />
+{profile?.username && (
+  <p className="mt-2 text-xs sm:text-sm text-white/70">
+    vibecoders.la/@{profile.username}
+  </p>
+)}
 ```
 
-### Nuevo componente `PublicProfile.tsx`
+Este codigo ya existe en la linea 92-96, solo necesita actualizarse el dominio.
 
-Pagina publica que muestra:
+---
 
-```text
-+----------------------------------+
-|                                  |
-|         [Avatar 80x80]           |
-|                                  |
-|        Nombre Completo           |
-|                                  |
-|    +------------------------+    |
-|    |     Vibecoder          |    |  <- Badge azul
-|    +------------------------+    |
-|                                  |
-+----------------------------------+
-```
+## Cambio 3: Redirigir usuarios autenticados a /profile
 
-### Nuevo hook `usePublicProfile.ts`
+### Archivo: `src/pages/Index.tsx`
 
-Hook para obtener perfil publico por username:
+Modificar para verificar autenticacion y redirigir:
 
-```typescript
-export function usePublicProfile(username: string) {
-  // Buscar perfil por username (sin autenticacion)
-  // Retorna: { profile, loading, error, notFound }
-}
-```
+```tsx
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+// ... otros imports
 
-### Sincronizacion de datos
+const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
-Actualizar `useProfile.ts` para guardar `full_name` y `avatar_url` cuando se actualiza el perfil:
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/profile');
+    }
+  }, [user, loading, navigate]);
 
-```typescript
-// Al crear/actualizar perfil, sincronizar datos de auth.users
-const { error: updateError } = await supabase
-  .from('profiles')
-  .update({ 
-    username,
-    full_name: user.user_metadata?.full_name,
-    avatar_url: user.user_metadata?.avatar_url
-  })
-  .eq('id', user.id);
+  // Si esta cargando o hay usuario, mostrar loading
+  if (loading || user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <div className="animate-pulse text-[#3D5AFE] text-lg">Cargando...</div>
+      </div>
+    );
+  }
+
+  return (
+    // ... landing normal
+  );
+};
 ```
 
 ---
 
-## Archivos a crear/modificar
+## Cambio 4: Actualizar BrowserUrlMock del landing
 
-| Archivo | Accion |
+### Archivo: `src/components/bento/BrowserUrlMock.tsx`
+
+Agregar `https://` al URL mock del landing para consistencia:
+
+```tsx
+// Linea 18-19, cambiar:
+vibecoders.la/<span className="text-stone-900">@username</span>
+
+// A:
+https://vibecoders.la/<span className="text-stone-900">@username</span>
+```
+
+---
+
+## Resumen de archivos a modificar
+
+| Archivo | Cambio |
 |---------|--------|
-| `supabase/migrations/xxx.sql` | Agregar full_name, avatar_url y RLS publica |
-| `src/components/ProfileCard.tsx` | Agregar debounce y feedback visual |
-| `src/pages/PublicProfile.tsx` | Nueva pagina publica |
-| `src/hooks/usePublicProfile.ts` | Nuevo hook para perfiles publicos |
-| `src/hooks/useProfile.ts` | Sincronizar full_name y avatar_url |
-| `src/App.tsx` | Agregar ruta /@:username |
+| `src/components/ProfileCard.tsx` | Actualizar URLs a vibecoders.la con https:// |
+| `src/pages/Index.tsx` | Agregar redireccion automatica si usuario autenticado |
+| `src/components/bento/BrowserUrlMock.tsx` | Agregar https:// para consistencia |
 
 ---
 
-## Flujo de validacion de username
+## Flujo de usuario despues del cambio
 
 ```text
-Usuario escribe "carlos"
-        |
-        v
-  [Timer 2 seg]  <-- Si escribe mas, reinicia
-        |
-        v
-  Consulta a DB: SELECT id FROM profiles WHERE username = 'carlos'
-        |
-        +---> Existe otro usuario --> Mostrar "No disponible" (rojo)
-        |
-        +---> No existe --> Mostrar "Disponible" (verde)
+Usuario NO autenticado:
+  / (landing) --> Muestra landing normal
+
+Usuario autenticado:
+  / (landing) --> Redirige automaticamente a /profile
+  /profile --> Muestra tarjeta de perfil
+
+Login con Google:
+  Clic en login --> OAuth Google --> Redirige a /profile
 ```
-
----
-
-## Diseno del badge "Vibecoder"
-
-```text
-+--------------------+
-|  ✦  Vibecoder     |   <- Fondo azul #3D5AFE, texto blanco
-+--------------------+       Icono de estrella/diamante
-```
-
----
-
-## Consideraciones tecnicas
-
-- El debounce usa `setTimeout` con cleanup en `useEffect`
-- La verificacion excluye el username actual del usuario si ya tiene uno
-- Los perfiles publicos solo son visibles si tienen username configurado
-- Se usa el componente `Badge` existente con estilo personalizado
