@@ -1,83 +1,96 @@
 
-# Plan: Reorganizar Layout del Hero en Móvil
 
-## Objetivo
-Cambiar el orden de los elementos en móvil para que el efecto de los logos cayendo sea lo primero que llame la atención, manteniendo el layout actual en desktop.
+# Plan: Corregir Animación de Logos en Móvil
 
-## Layout Actual vs Propuesto (Solo Móvil)
+## Problema Identificado
+Los logos móviles están posicionados con `absolute inset-0` relativo a toda la sección del Hero, pero usan `top-1/2 left-1/2` calculando desde la sección completa. Esto causa que los logos aparezcan en el centro del viewport en lugar de alrededor del ProfileFileCard.
+
+## Solución
+Mover los logos móviles DENTRO del contenedor del ProfileFileCard, haciéndolos relativos a la card en lugar del viewport.
+
+## Diagrama del Problema vs Solución
 
 ```text
-ACTUAL (Móvil):                    PROPUESTO (Móvil):
+ACTUAL (Problema):                  SOLUCIÓN:
 ┌─────────────────────┐            ┌─────────────────────┐
-│ El portafolio...    │            │ El portafolio...    │  ← Badge (igual)
+│  FloatingLogos      │            │ Badge               │
+│  (absolute inset-0) │            │                     │
+│  ┌ ─ ─ ─ ─ ─ ─ ─ ┐ │            │ ┌─ Container ─────┐ │
+│  │ top-1/2 left-1/2│ │            │ │  (relative)     │ │
+│  │  🔵 🟢 🔴      │ │            │ │  🔵 🟢 🔴      │ │
+│  │ 🟣[logos]🟠    │ ← (Centro   │ │ 🟣[FILE]🟠     │ │  
+│  │  🔵 🟢 🔴      │    viewport) │ │  🔵 🟢 🔴      │ │
+│  └ ─ ─ ─ ─ ─ ─ ─ ┘ │            │ └─────────────────┘ │
 │                     │            │                     │
-│ Construyes a la...  │            │     🔵  🟢  🔴      │  ← Logos + File 
-│                     │            │   🟣 [FILE] 🟠      │     (AHORA AQUÍ)
-│ Deja de enviar...   │            │     🔵  🟢  🔴      │
-│                     │            │                     │
-│     🔵  🟢  🔴      │            │ Construyes a la...  │  ← Headline (abajo)
-│   🟣 [FILE] 🟠      │            │                     │
-│     🔵  🟢  🔴      │            │ Deja de enviar...   │  ← Subheadline
-│                     │            │                     │
-│ [email] [button]    │            │ [email] [button]    │  ← Form
-│ Social proof        │            │ Social proof        │
-└─────────────────────┘            └─────────────────────┘
+│  z-10 Container     │            │ Headline            │
+│  ┌─────────────────┐│            │                     │
+│  │ Badge           ││            │ Subheadline         │
+│  │ [FILE] (aquí)   ││            │                     │
+│  │ Headline        ││            │ Form                │
+│  └─────────────────┘│            └─────────────────────┘
+└─────────────────────┘
 ```
-
-**Desktop permanece igual** - solo se reorganiza en móvil.
 
 ## Cambios Requeridos
 
-### Archivo: `src/components/HeroSection.tsx`
+### 1. `src/components/HeroSection.tsx`
 
-**Estrategia:** Crear dos secciones separadas - una para móvil y otra para desktop - usando clases `md:hidden` y `hidden md:block` para mostrar/ocultar según el breakpoint.
-
-**Cambios específicos:**
-
-1. **Badge (Eyebrow)**: Queda igual en ambas versiones, siempre primero
-
-2. **Sección de Logos + Card (Móvil)**:
-   - Crear un contenedor `md:hidden` que incluya el `ProfileFileCard` con los logos flotando alrededor
-   - Esta sección se muestra solo en móvil, justo después del badge
-
-3. **Headline y Subheadline**:
-   - En móvil: Aparecen DESPUÉS de los logos/file
-   - En desktop: Mantener la posición actual (antes del file)
-   - Usar clases condicionales para reordenar
-
-4. **ProfileFileCard (Desktop)**:
-   - Crear un contenedor `hidden md:block` para la versión desktop
-   - Mantiene su posición actual en desktop
-
-**Estructura de código propuesta:**
+Crear un contenedor `relative` alrededor del ProfileFileCard que incluya los logos móviles:
 
 ```tsx
-<div className="relative z-10 mx-auto max-w-4xl text-center">
-  {/* Badge - siempre primero */}
-  <p className="mb-6 animate-fade-in ...">
-    {t.badge}
-  </p>
-
-  {/* DESKTOP: Headline → Subheadline → File (orden actual) */}
-  <div className="hidden md:block">
-    <h1 className="mb-6 ...">{t.headline}</h1>
-    <p className="mb-8 ...">{t.subheadline}</p>
+{/* Profile File Card CON logos móviles alrededor */}
+<div 
+  className="mb-6 md:mb-8 flex justify-center animate-fade-in opacity-0 relative"
+  style={{ animationDelay: '0.15s' }}
+>
+  {/* Logos móviles - ahora relativos al ProfileFileCard */}
+  <div className="md:hidden absolute inset-0 flex items-center justify-center">
+    {/* Los logos se renderizan aquí, centrados en este contenedor */}
   </div>
+  
+  <ProfileFileCard 
+    absorbedCount={absorbedCount}
+    totalLogos={TOTAL_LOGOS}
+    className="w-[130px] h-[140px] md:w-[150px] md:h-[160px] z-10"
+    onExplosion={handleExplosion}
+  />
+</div>
+```
 
-  {/* ProfileFileCard - visible en ambos, pero posición diferente por flex order */}
-  <div className="mb-8 flex justify-center ...">
-    <ProfileFileCard ... />
-  </div>
+### 2. `src/components/FloatingLogos.tsx`
 
-  {/* MÓVIL: Headline → Subheadline después del file */}
-  <div className="md:hidden">
-    <h1 className="mb-4 ...">{t.headline}</h1>
-    <p className="mb-6 ...">{t.subheadline}</p>
-  </div>
+**Opción A (Preferida)**: Cambiar el componente para que los logos móviles se rendericen relativos a su contenedor padre en lugar del viewport:
 
-  {/* Form y Social Proof - igual en ambos */}
-  <form ...>...</form>
-  <p ...>{t.socialProof}</p>
+- Cambiar `absolute inset-0` por un contenedor que se posicione correctamente
+- Ajustar las coordenadas de los logos para que funcionen con el nuevo sistema
+- Agregar altura mínima al contenedor móvil para dar espacio a los logos
+
+**Cambios específicos:**
+1. El contenedor móvil debe tener `relative` con altura definida (ej: `h-[280px]`)
+2. Los logos se posicionan con `absolute` usando `left-1/2 top-1/2` dentro de ESE contenedor
+3. El ProfileFileCard va dentro del mismo contenedor, centrado
+
+### 3. Reestructuración del Layout Móvil
+
+El ProfileFileCard y los logos deben compartir el mismo contenedor padre:
+
+```tsx
+{/* Mobile: Contenedor con logos + card */}
+<div className="md:hidden relative h-[280px] w-full flex items-center justify-center mb-6">
+  {/* Logos flotantes alrededor */}
+  {logos.map((logo, index) => (
+    <div
+      className="absolute h-10 w-10 ..."
+      style={{
+        left: '50%',
+        top: '50%',
+        transform: `translate(calc(-50% + ${startX}), calc(-50% + ${startY}))`
+      }}
+    />
+  ))}
+  
+  {/* ProfileFileCard en el centro */}
+  <ProfileFileCard className="z-10" />
 </div>
 ```
 
@@ -85,11 +98,34 @@ ACTUAL (Móvil):                    PROPUESTO (Móvil):
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/components/HeroSection.tsx` | Reorganizar orden de elementos usando `hidden`/`md:hidden` y `md:block` para crear layouts diferentes por breakpoint |
+| `src/components/HeroSection.tsx` | Reestructurar el layout móvil para que el ProfileFileCard y los logos compartan contenedor |
+| `src/components/FloatingLogos.tsx` | Modificar la versión móvil para posicionarse relativo al contenedor, no al viewport |
 
-## Notas Técnicas
+## Ajustes Adicionales
 
-- Se duplica el contenido de headline/subheadline en el JSX (uno para móvil, otro para desktop), pero solo uno se renderiza visualmente
-- Los FloatingLogos ya tienen lógica separada para móvil/desktop, así que funcionarán correctamente
-- El ProfileFileCard puede quedar en un solo lugar ya que su posición visual cambia por el orden del flex
-- Se ajustarán los márgenes (`mb-`) para móvil vs desktop según sea necesario
+1. **Radio del círculo**: Reducir de 100px a ~80px para que los logos no se salgan del área visible
+2. **Tamaño de logos**: Mantener en 40px (h-10 w-10) para móvil
+3. **Altura del contenedor**: 280px para dar espacio al círculo de logos + ProfileFileCard
+4. **Z-index**: ProfileFileCard debe tener `z-10` para estar sobre los logos cuando caen
+
+## Resultado Esperado
+
+```text
+┌─────────────────────────────────┐
+│   El portafolio oficial para...│ ← Badge
+│                                 │
+│         🔵    🟢    🔴          │ 
+│       🟣 ┌─────────┐ 🟠        │ ← Logos alrededor
+│          │   📁    │           │    del ProfileFileCard
+│       🔵 │  Card   │ 🟢        │
+│          └─────────┘           │
+│         🟤    🟡    ⚪          │
+│                                 │
+│ Construyes a la velocidad...   │ ← Headline
+│ Deja de enviar links...        │ ← Subheadline
+│                                 │
+│   [     email input      ]     │
+│   [ Unirme a la Waitlist ]     │
+└─────────────────────────────────┘
+```
+
