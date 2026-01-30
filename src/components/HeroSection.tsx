@@ -6,6 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import FloatingLogos from './FloatingLogos';
 import ProfileFileCard from './ProfileFileCard';
 import WaitlistSuccessModal from './WaitlistSuccessModal';
+import UserMenu from './UserMenu';
 import { registerToWaitlist } from '@/lib/waitlist';
 
 const TOTAL_LOGOS = 10;
@@ -76,6 +77,7 @@ const HeroSection = () => {
 
   return (
     <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-8 md:pt-16 overflow-hidden">
+      <UserMenu />
       {/* Top gradient overlay - white fade */}
       <div 
         className="pointer-events-none absolute inset-x-0 top-0 z-20 h-48 md:h-64"
