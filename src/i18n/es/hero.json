@@ -4,12 +4,12 @@
   "subheadline": "Deja de enviar links sueltos. Crea una vitrina viva de tus proyectos en segundos.",
   "form": {
     "placeholder": "tucorreo@ejemplo.com",
-    "button": "Unirme a la Waitlist",
+    "button": "Reservar mi username",
     "success": "¡Estás dentro!",
     "error": {
       "empty": "Ingresa tu correo electrónico",
       "invalid": "Hmm, ese correo no parece válido"
     }
   },
-  "socialProof": "Únete a los primeros fundadores en espera"
+  "socialProof": "Tu @username quedará asegurado para el día del lanzamiento."
 }
