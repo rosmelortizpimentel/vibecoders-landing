@@ -34,11 +34,6 @@ const BentoGrid = () => {
   return (
     <section className="bg-[#F6F5F4] py-20 px-4 md:py-28">
       <div className="mx-auto max-w-5xl">
-        {/* Section Title */}
-        <h2 className="mb-12 text-center text-3xl font-bold text-stone-900 md:text-4xl lg:text-5xl">
-          Todo lo que tu portafolio necesitaba.
-        </h2>
-
         {/* Bento Grid */}
         <div className="grid gap-6 md:grid-cols-2">
           {features.map((feature) => (
@@ -46,8 +41,8 @@ const BentoGrid = () => {
               key={feature.id}
               className="group rounded-2xl border border-stone-200 bg-white p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
             >
-              {/* Visual Component */}
-              <div className="mb-5">
+              {/* Visual Component - Fixed height for alignment */}
+              <div className="h-44 flex items-center justify-center mb-5">
                 {feature.visual}
               </div>
 
