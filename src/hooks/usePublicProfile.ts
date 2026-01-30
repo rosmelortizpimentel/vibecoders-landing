@@ -33,12 +33,6 @@ export function usePublicProfile(username: string | undefined): UsePublicProfile
       setNotFound(false);
 
       try {
-        const { data, error: fnError } = await supabase.functions.invoke('get-public-profile', {
-          body: null,
-          headers: {},
-        });
-
-        // Use query params approach since we're calling via URL
         const response = await fetch(
           `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/get-public-profile?username=${encodeURIComponent(username)}`,
           {
