@@ -92,7 +92,20 @@ const HeroSection = () => {
       />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
-        {/* Badge - siempre primero */}
+        {/* Logo VIBECODERS */}
+        <div 
+          className="mb-8 animate-fade-in opacity-0"
+          style={{ animationDelay: '0.05s' }}
+        >
+          <span className="font-mono font-bold text-xl md:text-2xl tracking-tight inline-flex items-center gap-1 text-white">
+            <span className="text-white/60">{'<'}</span>
+            <span>VIBECODERS</span>
+            <span className="animate-pulse">_</span>
+            <span className="text-white/60">{'>'}</span>
+          </span>
+        </div>
+
+        {/* Badge */}
         <p 
           className="mb-6 animate-fade-in text-base font-medium text-white/90 opacity-0 md:text-lg"
           style={{ animationDelay: '0.1s' }}
