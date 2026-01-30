@@ -72,7 +72,7 @@ const HeroSection = () => {
       />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
-        {/* Eyebrow - pequeño y simple */}
+        {/* Badge - siempre primero */}
         <p 
           className="mb-6 animate-fade-in text-base font-medium text-white/90 opacity-0 md:text-lg"
           style={{ animationDelay: '0.1s' }}
@@ -80,26 +80,26 @@ const HeroSection = () => {
           {t.badge}
         </p>
 
-        {/* Headline - grande y bold */}
-        <h1 
-          className="mb-6 animate-fade-in text-4xl font-bold leading-tight tracking-tight text-white opacity-0 md:text-5xl lg:text-6xl"
-          style={{ animationDelay: '0.2s' }}
-        >
-          {t.headline}
-        </h1>
+        {/* DESKTOP: Headline → Subheadline (antes del file) */}
+        <div className="hidden md:block">
+          <h1 
+            className="mb-6 animate-fade-in text-5xl font-bold leading-tight tracking-tight text-white opacity-0 lg:text-6xl"
+            style={{ animationDelay: '0.2s' }}
+          >
+            {t.headline}
+          </h1>
+          <p 
+            className="mx-auto mb-8 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0"
+            style={{ animationDelay: '0.3s' }}
+          >
+            {t.subheadline}
+          </p>
+        </div>
 
-        {/* Subheadline - descripción normal */}
-        <p 
-          className="mx-auto mb-4 md:mb-8 max-w-2xl animate-fade-in text-base text-white/80 opacity-0 md:text-lg"
-          style={{ animationDelay: '0.3s' }}
-        >
-          {t.subheadline}
-        </p>
-
-        {/* Profile File Card - Centered */}
+        {/* Profile File Card - visible en ambos */}
         <div 
-          className="mb-8 flex justify-center animate-fade-in opacity-0"
-          style={{ animationDelay: '0.35s' }}
+          className="mb-6 md:mb-8 flex justify-center animate-fade-in opacity-0"
+          style={{ animationDelay: '0.15s' }}
         >
           <ProfileFileCard 
             absorbedCount={absorbedCount}
@@ -107,6 +107,22 @@ const HeroSection = () => {
             className="w-[130px] h-[140px] md:w-[150px] md:h-[160px]"
             onExplosion={handleExplosion}
           />
+        </div>
+
+        {/* MÓVIL: Headline → Subheadline (después del file) */}
+        <div className="md:hidden">
+          <h1 
+            className="mb-4 animate-fade-in text-3xl font-bold leading-tight tracking-tight text-white opacity-0"
+            style={{ animationDelay: '0.25s' }}
+          >
+            {t.headline}
+          </h1>
+          <p 
+            className="mx-auto mb-6 max-w-2xl animate-fade-in text-base text-white/80 opacity-0"
+            style={{ animationDelay: '0.3s' }}
+          >
+            {t.subheadline}
+          </p>
         </div>
 
         {/* Email Form */}
