@@ -1,4 +1,4 @@
-import { useState, FormEvent, useCallback } from 'react';
+import { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,12 @@ const HeroSection = () => {
   const [triggerExplosion, setTriggerExplosion] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+
+  // Reset animation state when switching between mobile/desktop
+  useEffect(() => {
+    setAbsorbedCount(0);
+    setTriggerExplosion(false);
+  }, [isMobile]);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -123,76 +129,76 @@ const HeroSection = () => {
           {t.badge}
         </p>
 
-        {/* DESKTOP: Headline → Subheadline (antes del file) */}
-        <div className="hidden md:block">
-          <h1 
-            className="mb-6 animate-fade-in text-5xl font-bold leading-tight tracking-tight text-white opacity-0 lg:text-6xl"
-            style={{ animationDelay: '0.2s' }}
-          >
-            {t.headline}
-          </h1>
-          <p 
-            className="mx-auto mb-8 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0"
-            style={{ animationDelay: '0.3s' }}
-          >
-            {t.subheadline}
-          </p>
-        </div>
+        {/* DESKTOP: Headline → Subheadline → ProfileFileCard */}
+        {!isMobile && (
+          <>
+            <h1 
+              className="mb-6 animate-fade-in text-5xl font-bold leading-tight tracking-tight text-white opacity-0 lg:text-6xl"
+              style={{ animationDelay: '0.2s' }}
+            >
+              {t.headline}
+            </h1>
+            <p 
+              className="mx-auto mb-8 max-w-2xl animate-fade-in text-lg text-white/80 opacity-0"
+              style={{ animationDelay: '0.3s' }}
+            >
+              {t.subheadline}
+            </p>
+            <div 
+              className="mb-8 flex justify-center animate-fade-in opacity-0"
+              style={{ animationDelay: '0.15s' }}
+            >
+              <ProfileFileCard 
+                absorbedCount={absorbedCount}
+                totalLogos={TOTAL_LOGOS}
+                className="w-[150px] h-[160px]"
+                onExplosion={handleExplosion}
+              />
+            </div>
+          </>
+        )}
 
-        {/* DESKTOP: Profile File Card */}
-        <div 
-          className="hidden md:flex mb-8 justify-center animate-fade-in opacity-0"
-          style={{ animationDelay: '0.15s' }}
-        >
-          <ProfileFileCard 
-            absorbedCount={absorbedCount}
-            totalLogos={TOTAL_LOGOS}
-            className="w-[150px] h-[160px]"
-            onExplosion={handleExplosion}
-          />
-        </div>
-
-        {/* MÓVIL: Headline → Subheadline (antes de la animación) */}
-        <div className="md:hidden">
-          <h1 
-            className="mb-4 animate-fade-in text-3xl font-bold leading-tight tracking-tight text-white opacity-0"
-            style={{ animationDelay: '0.15s' }}
-          >
-            {t.headline}
-          </h1>
-          <p 
-            className="mx-auto mb-6 max-w-2xl animate-fade-in text-base text-white/80 opacity-0"
-            style={{ animationDelay: '0.2s' }}
-          >
-            {t.subheadline}
-          </p>
-        </div>
-
-        {/* MÓVIL: Zona de animación - logos arriba, file abajo */}
-        <div 
-          className="md:hidden relative w-full flex flex-col items-center mb-6 animate-fade-in opacity-0"
-          style={{ animationDelay: '0.25s' }}
-        >
-          {/* Zona de logos que se mueven horizontalmente */}
-          <div className="relative h-[60px] w-full overflow-visible">
-            <FloatingLogos 
-              onAbsorbedCountChange={setAbsorbedCount}
-              triggerExplosion={triggerExplosion}
-              onExplosionComplete={handleExplosionComplete}
-              isMobileContainer={true}
-            />
-          </div>
-          
-          {/* ProfileFileCard debajo */}
-          <div className="mt-4">
-            <ProfileFileCard 
-              absorbedCount={absorbedCount}
-              totalLogos={TOTAL_LOGOS}
-              className="w-[130px] h-[140px]"
-              onExplosion={handleExplosion}
-            />
-          </div>
-        </div>
+        {/* MÓVIL: Headline → Subheadline → Zona de animación */}
+        {isMobile && (
+          <>
+            <h1 
+              className="mb-4 animate-fade-in text-3xl font-bold leading-tight tracking-tight text-white opacity-0"
+              style={{ animationDelay: '0.15s' }}
+            >
+              {t.headline}
+            </h1>
+            <p 
+              className="mx-auto mb-6 max-w-2xl animate-fade-in text-base text-white/80 opacity-0"
+              style={{ animationDelay: '0.2s' }}
+            >
+              {t.subheadline}
+            </p>
+            <div 
+              className="relative w-full flex flex-col items-center mb-6 animate-fade-in opacity-0"
+              style={{ animationDelay: '0.25s' }}
+            >
+              {/* Zona de logos que se mueven horizontalmente */}
+              <div className="relative h-[60px] w-full overflow-visible">
+                <FloatingLogos 
+                  onAbsorbedCountChange={setAbsorbedCount}
+                  triggerExplosion={triggerExplosion}
+                  onExplosionComplete={handleExplosionComplete}
+                  isMobileContainer={true}
+                />
+              </div>
+              
+              {/* ProfileFileCard debajo */}
+              <div className="mt-4">
+                <ProfileFileCard 
+                  absorbedCount={absorbedCount}
+                  totalLogos={TOTAL_LOGOS}
+                  className="w-[130px] h-[140px]"
+                  onExplosion={handleExplosion}
+                />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Conditional: Logged in vs Not logged in */}
         {user ? (
