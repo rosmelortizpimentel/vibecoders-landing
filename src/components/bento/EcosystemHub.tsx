@@ -1,3 +1,5 @@
+import lovableLogo from '@/assets/logos/lovable.svg';
+
 const EcosystemHub = () => {
   return (
     <div className="relative w-full h-40 flex items-center justify-center">
@@ -35,7 +37,7 @@ const EcosystemHub = () => {
 
       {/* Lovable - Right */}
       <div className="absolute top-1/2 right-4 -translate-y-1/2 w-10 h-10 rounded-full bg-white border border-stone-200 flex items-center justify-center shadow-sm hover:shadow-md transition-shadow">
-        <LovableIcon className="w-5 h-5" />
+        <img src={lovableLogo} alt="Lovable" className="w-6 h-6" />
       </div>
     </div>
   );
@@ -56,15 +58,6 @@ const LinkedInIcon = ({ className }: { className?: string }) => (
 const XIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-  </svg>
-);
-
-const LovableIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" className={className}>
-    <path
-      d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-      fill="#FF6B6B"
-    />
   </svg>
 );
 
