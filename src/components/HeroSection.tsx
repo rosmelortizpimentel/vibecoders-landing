@@ -1,27 +1,32 @@
 import { useState, FormEvent, useCallback } from 'react';
-import { ArrowRight, Sparkles, Users } from 'lucide-react';
+import { ArrowRight, Sparkles, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
 import FloatingLogos from './FloatingLogos';
 import ProfileFileCard from './ProfileFileCard';
+import WaitlistSuccessModal from './WaitlistSuccessModal';
+import { registerToWaitlist } from '@/lib/waitlist';
 
 const TOTAL_LOGOS = 10;
 
 const HeroSection = () => {
   const t = useTranslation('hero');
   const [email, setEmail] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
   const [absorbedCount, setAbsorbedCount] = useState(0);
   const [triggerExplosion, setTriggerExplosion] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     
@@ -37,8 +42,23 @@ const HeroSection = () => {
       return;
     }
     
-    console.log('Email submitted:', trimmedEmail);
-    setIsSubmitted(true);
+    setIsSubmitting(true);
+    
+    try {
+      const result = await registerToWaitlist(trimmedEmail);
+      
+      if (result.success) {
+        setIsSubmitted(true);
+        setAlreadyRegistered(result.alreadyExists);
+        setShowModal(true);
+      } else {
+        setError(result.error || 'Error al registrar');
+      }
+    } catch (err) {
+      setError('Error al conectar con el servidor');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleEmailChange = (value: string) => {
@@ -166,14 +186,19 @@ const HeroSection = () => {
             />
             <Button
               type="submit"
-              disabled={isSubmitted}
+              disabled={isSubmitted || isSubmitting}
               className={`h-12 gap-2 px-6 font-semibold transition-all duration-300 ${
                 isSubmitted 
                   ? 'bg-white/20 text-white' 
                   : 'bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/80'
               }`}
             >
-              {isSubmitted ? (
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Registrando...
+                </>
+              ) : isSubmitted ? (
                 <>
                   <Sparkles className="h-4 w-4" />
                   {t.form.success}
@@ -204,6 +229,12 @@ const HeroSection = () => {
           {t.socialProof}
         </p>
       </div>
+
+      <WaitlistSuccessModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        alreadyRegistered={alreadyRegistered}
+      />
     </section>
   );
 };

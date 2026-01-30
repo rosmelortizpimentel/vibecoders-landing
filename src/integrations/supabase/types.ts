@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      waitlist: {
+        Row: {
+          browser_name: string | null
+          browser_version: string | null
+          created_at: string | null
+          device_type: string | null
+          email: string
+          id: string
+          language: string | null
+          os_name: string | null
+          os_version: string | null
+          referrer: string | null
+          screen_height: number | null
+          screen_width: number | null
+          timezone: string | null
+          updated_at: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          viewport_height: number | null
+          viewport_width: number | null
+        }
+        Insert: {
+          browser_name?: string | null
+          browser_version?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          email: string
+          id?: string
+          language?: string | null
+          os_name?: string | null
+          os_version?: string | null
+          referrer?: string | null
+          screen_height?: number | null
+          screen_width?: number | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
+        }
+        Update: {
+          browser_name?: string | null
+          browser_version?: string | null
+          created_at?: string | null
+          device_type?: string | null
+          email?: string
+          id?: string
+          language?: string | null
+          os_name?: string | null
+          os_version?: string | null
+          referrer?: string | null
+          screen_height?: number | null
+          screen_width?: number | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          viewport_height?: number | null
+          viewport_width?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

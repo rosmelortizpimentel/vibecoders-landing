@@ -1,6 +1,7 @@
 import commonEs from '@/i18n/es/common.json';
 import heroEs from '@/i18n/es/hero.json';
 import featuresEs from '@/i18n/es/features.json';
+import waitlistEs from '@/i18n/es/waitlist.json';
 
 type Language = 'es';
 
@@ -10,6 +11,7 @@ const translations = {
     common: commonEs,
     hero: heroEs,
     features: featuresEs,
+    waitlist: waitlistEs,
   },
 } as const;
 
