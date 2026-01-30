@@ -222,8 +222,11 @@ export default {
             opacity: "1"
           }
         },
+        "cursor-blink": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0" },
+        },
       },
-      animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out forwards",
@@ -241,6 +244,7 @@ export default {
         "shake": "shake 0.3s ease-in-out",
         "fall-to-center-mobile": "fall-to-center-mobile 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
         "explode-from-center-mobile": "explode-from-center-mobile 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards",
+        "cursor-blink": "cursor-blink 1s step-end infinite",
       },
     },
   },

@@ -100,7 +100,7 @@ const HeroSection = () => {
           <span className="font-mono font-bold text-xl md:text-2xl tracking-tight inline-flex items-center gap-1 text-white">
             <span className="text-white/60">{'<'}</span>
             <span>VIBECODERS</span>
-            <span className="animate-pulse">_</span>
+            <span className="animate-cursor-blink">_</span>
             <span className="text-white/60">{'>'}</span>
           </span>
         </div>
