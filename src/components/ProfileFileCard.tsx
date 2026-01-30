@@ -237,7 +237,7 @@ const ProfileFileCard = ({
           <>
             <Folder className="w-12 h-12 md:w-16 md:h-16 text-blue-500" />
             <span className="mt-2 text-xs md:text-sm font-medium text-gray-700">
-              Mis Proyectos
+              Mis Apps
             </span>
             {/* Progress indicator */}
             <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
