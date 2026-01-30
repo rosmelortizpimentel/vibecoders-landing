@@ -18,8 +18,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/profile" element={<Profile />} />
-          {/* Public profile route - must be before catch-all */}
-          <Route path="/@:username" element={<PublicProfile />} />
+          {/* Public profile route - captures /@username, validated in component */}
+          <Route path="/:handle" element={<PublicProfile />} />
           {/* Redirect all unknown routes to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
