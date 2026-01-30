@@ -29,8 +29,7 @@ function PublicProfileContent({ username }: { username: string }) {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{ background: '#3D5AFE' }}
+      className="min-h-screen flex items-center justify-center p-4 bg-white"
     >
       {loading ? (
         <div className="w-full max-w-sm mx-auto">
