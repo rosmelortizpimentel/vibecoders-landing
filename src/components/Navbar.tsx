@@ -9,9 +9,12 @@ const Navbar = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <a 
           href="/" 
-          className="text-xl font-bold tracking-tight text-white transition-colors hover:text-primary md:text-2xl"
+          className="font-mono font-bold text-xl tracking-tight flex items-center gap-1 text-slate-900 transition-colors hover:opacity-80"
         >
-          {t.navbar.logo}
+          <span className="text-slate-400/80">{'<'}</span>
+          <span>VIBECODERS</span>
+          <span className="animate-pulse">_</span>
+          <span className="text-slate-400/80">{'>'}</span>
         </a>
 
         <a
