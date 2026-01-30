@@ -1,8 +1,10 @@
 import { useState, FormEvent, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Users, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/hooks/useAuth';
 import FloatingLogos from './FloatingLogos';
 import ProfileFileCard from './ProfileFileCard';
 import WaitlistSuccessModal from './WaitlistSuccessModal';
@@ -13,6 +15,8 @@ const TOTAL_LOGOS = 10;
 
 const HeroSection = () => {
   const t = useTranslation('hero');
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -182,67 +186,89 @@ const HeroSection = () => {
           </p>
         </div>
 
-        {/* Email Form */}
-        <form 
-          onSubmit={handleSubmit}
-          className="mx-auto mb-8 flex max-w-md animate-fade-in flex-col gap-3 opacity-0"
-          style={{ animationDelay: '0.4s' }}
-        >
-          <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-            <Input
-              type="text"
-              placeholder={t.form.placeholder}
-              value={email}
-              onChange={(e) => handleEmailChange(e.target.value)}
-              disabled={isSubmitted}
-              className={`h-12 flex-1 border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:border-white focus:ring-white/50 ${
-                error ? 'border-white/70' : ''
-              }`}
-            />
+        {/* Conditional: Logged in vs Not logged in */}
+        {user ? (
+          /* Usuario logueado: Saludo + botón perfil */
+          <div 
+            className="mx-auto mb-8 flex max-w-md animate-fade-in flex-col items-center gap-4 opacity-0"
+            style={{ animationDelay: '0.4s' }}
+          >
+            <p className="text-lg text-white/90">
+              ¡Hola, {user.user_metadata?.full_name?.split(' ')[0] || 'Vibecoder'}!
+            </p>
             <Button
-              type="submit"
-              disabled={isSubmitted || isSubmitting}
-              className={`h-12 gap-2 px-6 font-semibold transition-all duration-300 ${
-                isSubmitted 
-                  ? 'bg-white/20 text-white' 
-                  : 'bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/80'
-              }`}
+              onClick={() => navigate('/profile')}
+              className="h-12 gap-2 px-6 font-semibold bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/80"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Registrando...
-                </>
-              ) : isSubmitted ? (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  {t.form.success}
-                </>
-              ) : (
-                <>
-                  {t.form.button}
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
+              Ver mi perfil
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
-          
-          {/* Error Message - blanco */}
-          {error && (
-            <p className="text-sm text-white animate-fade-in">
-              {error}
-            </p>
-          )}
-        </form>
+        ) : (
+          /* Usuario no logueado: Formulario + social proof */
+          <>
+            <form 
+              onSubmit={handleSubmit}
+              className="mx-auto mb-8 flex max-w-md animate-fade-in flex-col gap-3 opacity-0"
+              style={{ animationDelay: '0.4s' }}
+            >
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
+                <Input
+                  type="text"
+                  placeholder={t.form.placeholder}
+                  value={email}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  disabled={isSubmitted}
+                  className={`h-12 flex-1 border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:border-white focus:ring-white/50 ${
+                    error ? 'border-white/70' : ''
+                  }`}
+                />
+                <Button
+                  type="submit"
+                  disabled={isSubmitted || isSubmitting}
+                  className={`h-12 gap-2 px-6 font-semibold transition-all duration-300 ${
+                    isSubmitted 
+                      ? 'bg-white/20 text-white' 
+                      : 'bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/80'
+                  }`}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Registrando...
+                    </>
+                  ) : isSubmitted ? (
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      {t.form.success}
+                    </>
+                  ) : (
+                    <>
+                      {t.form.button}
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+              
+              {/* Error Message - blanco */}
+              {error && (
+                <p className="text-sm text-white animate-fade-in">
+                  {error}
+                </p>
+              )}
+            </form>
 
-        {/* Social Proof */}
-        <p 
-          className="flex animate-fade-in items-center justify-center gap-2 text-sm text-white/70 opacity-0"
-          style={{ animationDelay: '0.5s' }}
-        >
-          <Users className="h-4 w-4 text-white/90" />
-          {t.socialProof}
-        </p>
+            {/* Social Proof */}
+            <p 
+              className="flex animate-fade-in items-center justify-center gap-2 text-sm text-white/70 opacity-0"
+              style={{ animationDelay: '0.5s' }}
+            >
+              <Users className="h-4 w-4 text-white/90" />
+              {t.socialProof}
+            </p>
+          </>
+        )}
       </div>
 
       <WaitlistSuccessModal
