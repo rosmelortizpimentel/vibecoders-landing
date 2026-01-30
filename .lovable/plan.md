@@ -1,160 +1,180 @@
 
-## Diagnóstico (por qué pasa hoy)
+# Plan: Corregir el Salto de Reubicación de Logos
 
-### 1) La “validación de disponibilidad” está mal por RLS
-La tabla `profiles` tiene RLS que permite **SELECT solo del propio perfil**:
-- “Users can view own profile” (SELECT usando `auth.uid() = id`)
+## Problema Identificado
 
-Eso significa que desde el frontend (con la sesión del usuario) **NO puedes leer filas de otros usuarios** para saber si un `username` ya existe. Por eso:
-- `checkUsernameAvailable()` siempre “cree” que está disponible (no ve a otros usuarios)
-- El UI muestra el check (azul)
-- Al guardar, Postgres sí aplica la constraint única y falla con:
-  `23505 duplicate key value violates unique constraint "profiles_username_key"`
+Cuando los logos terminan la animación de explosión y cambian al estado `floating`, hay un **salto visual de ~40 píxeles** antes de que empiecen a flotar nuevamente. Esto ocurre porque:
 
-### 2) El mensaje de error es genérico
-`updateUsername()` en `useProfile.ts` cae en el catch y devuelve “Error al guardar” porque no está mapeando el código `23505` a un mensaje amigable.
+### Flujo Actual (Mobile)
+```text
+1. Estado: exploding
+   → Animación termina en: translate(var(--start-x), var(--start-y)) scale(1)
+   → Es decir: translate(50px, -69px) - relativo al centro absoluto
 
-### 3) “Consulta a cada rato / bucle”
-Aunque el debounce existe, si la función de validación o sus dependencias cambian, el `useEffect` puede re-programar timers y parecer un “bucle”.
-Además, aunque lo arreglemos, mientras la validación sea contra `profiles` desde el cliente (bloqueada por RLS), seguirá “pasando” y luego “fallando” al guardar, dando la sensación de inconsistencia constante.
-
----
-
-## Objetivo
-- Validación de disponibilidad **correcta** (realmente detecta si el username ya existe).
-- El check azul solo aparece cuando de verdad está disponible.
-- Si se intenta guardar y el username ya está tomado, mostrar: **“Username no disponible”** (no “Error al guardar”).
-- Mantener emails seguros: **no exponer correos al frontend**.
-
----
-
-## Solución propuesta (100% segura para emails)
-Crear una **Edge Function** exclusiva para disponibilidad de usernames (sin devolver PII):
-- Usa `SUPABASE_SERVICE_ROLE_KEY` para poder consultar `profiles` sin RLS
-- Devuelve únicamente: `{ available: boolean }`
-- Requiere JWT (solo usuarios logueados) para evitar scraping público
-
-Luego:
-- `checkUsernameAvailable()` en el frontend llama a esa Edge Function
-- `updateUsername()` mapea `23505` → “Username no disponible”
-- El debounce queda estable y sin loops
-
----
-
-## Cambios concretos
-
-### A) Backend: nueva Edge Function `check-username-available`
-**Archivo nuevo**: `supabase/functions/check-username-available/index.ts`
-
-**Comportamiento:**
-- Input: `username` (en body JSON)
-- Validación server-side: regex `^[a-zA-Z0-9_]{1,20}$` + normalizar a lowercase
-- Query (service role): buscar en `profiles` por `username = lower(username)`
-- Respuesta:
-  - 200: `{ success: true, available: true/false }`
-  - 400: `{ success: false, error: 'Invalid username' }`
-  - 500: `{ success: false, error: 'Database error' }`
-
-**Seguridad:**
-- No retorna emails ni IDs de otros usuarios
-- Solo devuelve un boolean
-
-### B) Config: exigir JWT en la Edge Function
-**Editar**: `supabase/config.toml`
-
-Agregar:
-```toml
-[functions.check-username-available]
-verify_jwt = true
+2. Estado cambia a: floating  
+   → Se aplica transform inline: translate(calc(-50% + 50px), calc(-50% + -69px))
+   → El -50% adicional causa un desplazamiento de ~20px (50% de 40px de ancho del logo)
+   
+3. SALTO VISIBLE entre posición final de explosión y posición inicial de floating
 ```
 
-Esto hace que solo usuarios autenticados puedan consultar disponibilidad.
+### Flujo Actual (Desktop)
+Similar problema: los logos en `exploding` se posicionan en el centro (`top-1/2 left-1/2`), pero al cambiar a `floating` saltan a sus posiciones originales (`top-[18%] left-[10%]`, etc.) antes de empezar la animación.
 
 ---
 
-### C) Frontend: `useProfile.ts`
-**Editar**: `src/hooks/useProfile.ts`
+## Solución
 
-1) Reemplazar `checkUsernameAvailable`:
-- Dejar de consultar `profiles` directo (eso falla por RLS)
-- Usar `supabase.functions.invoke('check-username-available', { body: { username } })`
-- Normalizar `username` a lowercase antes de enviarlo
-- Manejar errores: si la function falla, retornar `false` o manejarlo como “no disponible” (para no permitir guardar a ciegas)
+Agregar una animación de transición suave desde la posición final de explosión hacia la posición de floating, eliminando el salto abrupto.
 
-2) Arreglar `updateUsername` para mensaje correcto:
-- Eliminar el “pre-check” contra `profiles` (también está roto por RLS)
-- Hacer el update directamente
-- Si falla con `code === '23505'`, devolver:
-  - `error: 'Username no disponible'`
-- Mantener mensajes existentes para formato inválido
-- (Opcional) Siempre normalizar `username = username.trim().toLowerCase()` dentro de `updateUsername` para blindaje
+### Cambios Necesarios
 
-**Resultado esperado**: aunque ocurra una carrera (raro), el backend siempre impedirá duplicados y el usuario verá el mensaje correcto.
+#### 1. Nueva Animación: `return-to-position-mobile`
 
----
+En `tailwind.config.ts`, agregar un keyframe que hace la transición suave:
 
-### D) UI: `ProfileCard.tsx`
-**Editar**: `src/components/ProfileCard.tsx`
+```typescript
+"return-to-position-mobile": {
+  "0%": { 
+    // Posición final de la explosión (desde el centro)
+    transform: "translate(-50%, -50%) translate(var(--start-x), var(--start-y)) scale(1)",
+    opacity: "1"
+  },
+  "100%": { 
+    // Posición final de floating (incluye el -50% del centrado + offset)
+    transform: "translate(calc(-50% + var(--start-x)), calc(-50% + var(--start-y))) scale(1)",
+    opacity: "1"
+  }
+}
+```
 
-1) Mensajería:
-- Donde hoy dice: `Este username ya está en uso`
-- Cambiar a: **`Username no disponible`**
-- Donde hoy cae en `result.error || 'Error al guardar'`, queremos que casi siempre venga ya:
-  - `result.error === 'Username no disponible'` cuando sea duplicado
+**Corrección simplificada**: En realidad, el problema es que la animación `explode-from-center-mobile` usa `translate(var(--start-x), var(--start-y))` SIN el `-50%` de offset, pero cuando cambia a `floating`, el transform inline incluye `-50%`.
 
-2) Evitar “bucle” en el debounce:
-- Asegurar que el efecto de debounce no se re-dispare por referencias cambiantes.
-- Implementación robusta:
-  - Mantener un `useRef` a `checkUsernameAvailable` para no depender de la identidad de la función en el `useEffect`.
-  - En el callback async usar un flag `active` para evitar setState cuando el efecto ya se limpió (usuario siguió escribiendo o cambió de pantalla).
+La solución más limpia es **hacer que la animación de explosión termine exactamente en la misma posición que usa el estado floating**.
 
-3) Consistencia visual:
-- Confirmar check en azul (ya está en `text-[#3D5AFE]`)
-- Si el guardado devuelve “Username no disponible”, setear `setIsAvailable(false)` para que cambie a la X roja y se deshabilite Guardar.
+#### 2. Modificar `explode-from-center-mobile`
 
----
+Cambiar la animación para que el frame final coincida con la posición que tendrá en estado `floating`:
 
-## Archivos a tocar
+```typescript
+"explode-from-center-mobile": {
+  "0%": { 
+    transform: "translate(-50%, -50%) scale(0)",
+    opacity: "0"
+  },
+  "30%": {
+    transform: "translate(calc(-50% + calc(var(--start-x) * 0.4)), calc(-50% + calc(var(--start-y) * 0.4))) scale(1)",
+    opacity: "1"
+  },
+  "100%": { 
+    transform: "translate(calc(-50% + var(--start-x)), calc(-50% + var(--start-y))) scale(1)",
+    opacity: "1"
+  }
+}
+```
 
-1) **Crear**
-- `supabase/functions/check-username-available/index.ts`
+#### 3. Modificar `explode-out` (Desktop)
 
-2) **Editar**
-- `supabase/config.toml`
-- `src/hooks/useProfile.ts`
-- `src/components/ProfileCard.tsx`
+El problema en desktop es diferente: los logos en estado `exploding` se posicionan en el centro con clases CSS, pero al cambiar a `floating` vuelven a sus posiciones originales (ej: `top-[18%] left-[10%]`).
 
----
+Para desktop, necesitamos que la animación `explode-out` termine en la posición original del logo, no relativa al centro.
 
-## Criterios de aceptación (cómo probamos que quedó bien)
+Pero hay un problema: actualmente los logos en `exploding` se mueven al centro con `top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`, y la animación usa `--explode-x/y` para ir DESDE el centro HACIA afuera.
 
-1) Username existente:
-- Escribir `rosmelortiz`
-- Esperar ~2s sin teclear
-- Debe aparecer **X roja** y texto **“Username no disponible”**
-- Botón Guardar debe quedar deshabilitado
+**Solución Desktop**: 
+- NO mover los logos al centro cuando están en `exploding`
+- Iniciar la animación desde la posición absorbida (ya están invisibles ahí)
+- Animar hacia su posición original
 
-2) Username nuevo:
-- Escribir uno que no exista
-- Esperar ~2s sin teclear
-- Debe aparecer **check azul**
-- Guardar debe funcionar sin error
+Pero eso es más complejo. Una alternativa más simple:
 
-3) Caso de carrera / duplicado:
-- Si por cualquier razón el update devuelve `23505`, debe mostrarse:
-  - **“Username no disponible”**
-  - No “Error al guardar”
-  - Y el UI debe reflejarlo con X roja
-
-4) “No bucle”:
-- Al dejar de escribir, debe consultarse **una vez**
-- Si vuelves a escribir, se cancela el timer anterior y se programa uno nuevo
-- No debe hacer requests “cada rato” con el mismo username sin cambios
+**Mantener la animación actual pero agregar un estado intermedio `returning`** que hace una transición suave desde la posición de explosión a la posición de floating.
 
 ---
 
-## Nota importante de seguridad
-Esta solución mantiene el backend seguro:
-- El frontend nunca recibe emails (ni los consulta)
-- La Edge Function solo devuelve un boolean (no PII)
-- `verify_jwt=true` reduce enumeración pública de usernames (solo usuarios logueados)
+## Solución Simplificada (Recomendada)
+
+En lugar de agregar más animaciones, la solución más simple es:
+
+### Opción A: Hacer que la posición final de la explosión sea idéntica a la posición de floating
+
+Esto requiere modificar las animaciones CSS para que sus frames finales coincidan exactamente con el `transform` que se aplica en estado `floating`.
+
+**Para Mobile**:
+- El estado `floating` aplica: `transform: translate(calc(-50% + ${pos.startX}), calc(-50% + ${pos.startY}))`
+- La animación `explode-from-center-mobile` debe terminar en exactamente eso
+
+**Para Desktop**:
+- No cambiar la posición CSS entre estados (quitar `top-1/2 left-1/2` del estado exploding)
+- Ajustar la animación `explode-out` para que inicie desde el centro (donde terminaron absorbidos) y termine en la posición original
+
+---
+
+## Archivos a Modificar
+
+| Archivo | Cambio |
+|---------|--------|
+| `tailwind.config.ts` | Ajustar keyframes de `explode-from-center-mobile` y `explode-out` |
+| `src/components/FloatingLogos.tsx` | Ajustar lógica de posicionamiento para estado `exploding` en desktop |
+
+---
+
+## Detalle de Cambios
+
+### A) `tailwind.config.ts`
+
+#### 1. Corregir `explode-from-center-mobile` (líneas 211-224)
+
+El frame final debe incluir el offset `-50%` para que coincida con el transform de `floating`:
+
+```typescript
+"explode-from-center-mobile": {
+  "0%": { 
+    transform: "translate(-50%, -50%) scale(0)",
+    opacity: "0"
+  },
+  "30%": {
+    transform: "translate(calc(-50% + var(--start-x) * 0.4), calc(-50% + var(--start-y) * 0.4)) scale(1)",
+    opacity: "1"
+  },
+  "100%": { 
+    transform: "translate(calc(-50% + var(--start-x)), calc(-50% + var(--start-y))) scale(1)",
+    opacity: "1"
+  }
+}
+```
+
+### B) `src/components/FloatingLogos.tsx`
+
+#### 1. Desktop: No mover al centro durante explosión
+
+Cambiar la lógica del estado `exploding` para que los logos NO se reposicionen al centro. En cambio, mantenerlos en su posición original y usar una animación que los haga aparecer desde el centro.
+
+Línea 165, cambiar:
+```tsx
+// Antes
+className={`
+  absolute ${isExploding ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : pos.position} ...
+`}
+
+// Después
+className={`
+  absolute ${pos.position} ...
+`}
+```
+
+Y ajustar la animación `explode-out` para que:
+- Frame 0%: `translate(var(--fall-x), var(--fall-y))` (posición del centro, donde terminó absorbido)
+- Frame 100%: `translate(0, 0)` (posición original)
+
+Esto requiere invertir los valores de explode: usar `--fall-x/y` en lugar de `--explode-x/y`, ya que `--fall-x/y` representa la distancia al centro.
+
+---
+
+## Resultado Esperado
+
+Después de estos cambios:
+1. Los logos explotan desde el centro hacia afuera
+2. Terminan exactamente en su posición de floating
+3. No hay salto ni reubicación visible
+4. El ciclo se repite suavemente
