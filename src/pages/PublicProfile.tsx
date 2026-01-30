@@ -30,9 +30,7 @@ function PublicProfileContent({ username }: { username: string }) {
   return (
     <div 
       className="min-h-screen flex items-center justify-center p-4"
-      style={{ 
-        background: 'linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)' 
-      }}
+      style={{ background: '#3D5AFE' }}
     >
       {loading ? (
         <div className="w-full max-w-sm mx-auto">
