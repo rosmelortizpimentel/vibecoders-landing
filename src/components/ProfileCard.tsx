@@ -47,7 +47,7 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
   const checkUsernameAvailableRef = useRef(checkUsernameAvailable);
   checkUsernameAvailableRef.current = checkUsernameAvailable;
 
-  // Debounce de 2 segundos para validar disponibilidad
+  // Debounce de 1 segundo para validar disponibilidad
   useEffect(() => {
     // Si no hay username o es muy corto, resetear estado
     if (!username.trim() || username.length < 3) {
@@ -70,7 +70,7 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
     // Flag para evitar setState después de cleanup
     let active = true;
 
-    // Configurar debounce de 2 segundos
+    // Configurar debounce de 1 segundo
     const timer = setTimeout(async () => {
       if (!active) return;
       
@@ -87,7 +87,7 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
       } else {
         setError(null);
       }
-    }, 2000);
+    }, 1000);
 
     return () => {
       active = false;
