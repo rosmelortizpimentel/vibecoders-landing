@@ -169,10 +169,9 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
 
             <div className="mt-4 sm:mt-6 flex gap-2 sm:gap-3 justify-end">
               <Button
-                variant="outline"
                 onClick={handleFlipToFront}
                 disabled={saving}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
+                className="bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/90 text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
               >
                 Cancelar
               </Button>
