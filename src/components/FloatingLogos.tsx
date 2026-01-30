@@ -7,7 +7,7 @@ import v0Logo from '@/assets/logos/v0.png';
 import stitchLogo from '@/assets/logos/stitch.png';
 import base44Logo from '@/assets/logos/base44.png';
 import boltLogo from '@/assets/logos/bolt.png';
-import kilocodeLogo from '@/assets/logos/kilocode.gif';
+import kilocodeLogo from '@/assets/logos/kilocode.jpg';
 import cursorLogo from '@/assets/logos/cursor.jpg';
 
 interface FloatingLogosProps {
@@ -48,19 +48,20 @@ const desktopPositions = [
   { position: 'top-[80%] right-[14%]', delay: '1.1s', size: 'h-[82px] w-[82px]', fallX: '-36vw', fallY: '-25vh', explodeX: '36vw', explodeY: '25vh' },
 ];
 
-// Mobile positions - logos enter from left, slide to center, then fall down
-// startX is starting position (left), slideDelay is staggered timing
+// Mobile positions - logos stack on top of each other (front to back based on z-index)
+// Front logos (higher z-index) enter first, back logos enter last
+// Each logo has a unique startX for slight variation and z-index for stacking
 const mobilePositions = [
-  { startX: -160, slideDelay: 0 },
-  { startX: -180, slideDelay: 0.4 },
-  { startX: -150, slideDelay: 0.8 },
-  { startX: -170, slideDelay: 1.2 },
-  { startX: -155, slideDelay: 1.6 },
-  { startX: -175, slideDelay: 2.0 },
-  { startX: -160, slideDelay: 2.4 },
-  { startX: -165, slideDelay: 2.8 },
-  { startX: -180, slideDelay: 3.2 },
-  { startX: -150, slideDelay: 3.6 },
+  { startX: -120, slideDelay: 0, zIndex: 10 },     // Logo 0 - front (enters first)
+  { startX: -130, slideDelay: 0.4, zIndex: 9 },   // Logo 1
+  { startX: -125, slideDelay: 0.8, zIndex: 8 },   // Logo 2
+  { startX: -135, slideDelay: 1.2, zIndex: 7 },   // Logo 3
+  { startX: -128, slideDelay: 1.6, zIndex: 6 },   // Logo 4
+  { startX: -132, slideDelay: 2.0, zIndex: 5 },   // Logo 5
+  { startX: -126, slideDelay: 2.4, zIndex: 4 },   // Logo 6
+  { startX: -130, slideDelay: 2.8, zIndex: 3 },   // Logo 7
+  { startX: -124, slideDelay: 3.2, zIndex: 2 },   // Logo 8
+  { startX: -128, slideDelay: 3.6, zIndex: 1 },   // Logo 9 - back (enters last)
 ];
 
 // Desktop timing
@@ -278,6 +279,7 @@ const FloatingLogos = ({
                   '--start-x': `${pos.startX}px`,
                   '--slide-delay': `${pos.slideDelay}s`,
                   transform: getTransform(),
+                  zIndex: pos.zIndex,
                 } as React.CSSProperties}
                 title={logo.name}
               >
