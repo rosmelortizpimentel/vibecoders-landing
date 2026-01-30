@@ -4,7 +4,22 @@ import { PublicProfileCard } from '@/components/PublicProfileCard';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function PublicProfile() {
-  const { username } = useParams<{ username: string }>();
+  const { handle } = useParams<{ handle: string }>();
+
+  // Validate: must start with @ to be a public profile
+  // Otherwise redirect to landing (fulfills "everything else to /" rule)
+  if (!handle || !handle.startsWith('@')) {
+    return <Navigate to="/" replace />;
+  }
+
+  // Extract username without the @ prefix
+  const username = handle.slice(1);
+
+  return <PublicProfileContent username={username} />;
+}
+
+// Separated component to use hooks after validation
+function PublicProfileContent({ username }: { username: string }) {
   const { profile, loading, error, notFound } = usePublicProfile(username);
 
   // If profile doesn't exist, redirect to landing
