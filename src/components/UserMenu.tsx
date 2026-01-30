@@ -49,21 +49,21 @@ const UserMenu = () => {
         </DropdownMenuTrigger>
         <DropdownMenuContent 
           align="end" 
-          className="w-48 bg-white border border-border shadow-lg"
+          className="w-48 bg-white border border-gray-200 shadow-lg rounded-lg"
         >
           {isProfilePage ? (
             <>
               <DropdownMenuItem 
                 onClick={() => navigate('/')}
-                className="cursor-pointer gap-2"
+                className="cursor-pointer gap-2 text-[#1c1c1c] hover:bg-[#3D5AFE] hover:text-white focus:bg-[#3D5AFE] focus:text-white transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Volver al Inicio
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-gray-200" />
               <DropdownMenuItem 
                 onClick={handleSignOut}
-                className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
+                className="cursor-pointer gap-2 text-[#1c1c1c] hover:bg-[#3D5AFE] hover:text-white focus:bg-[#3D5AFE] focus:text-white transition-colors"
               >
                 <LogOut className="h-4 w-4" />
                 Cerrar Sesión
@@ -73,15 +73,15 @@ const UserMenu = () => {
             <>
               <DropdownMenuItem 
                 onClick={() => navigate('/profile')}
-                className="cursor-pointer gap-2"
+                className="cursor-pointer gap-2 text-[#1c1c1c] hover:bg-[#3D5AFE] hover:text-white focus:bg-[#3D5AFE] focus:text-white transition-colors"
               >
                 <User className="h-4 w-4" />
                 Mi Perfil
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-gray-200" />
               <DropdownMenuItem 
                 onClick={handleSignOut}
-                className="cursor-pointer gap-2 text-red-600 focus:text-red-600"
+                className="cursor-pointer gap-2 text-[#1c1c1c] hover:bg-[#3D5AFE] hover:text-white focus:bg-[#3D5AFE] focus:text-white transition-colors"
               >
                 <LogOut className="h-4 w-4" />
                 Cerrar Sesión
