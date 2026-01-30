@@ -7,26 +7,26 @@ const features = [
   {
     id: 'url',
     visual: <BrowserUrlMock />,
-    title: 'Tu URL Oficial',
-    body: 'Reclama tu nombre de usuario único. Un enlace limpio y profesional para compartir en tu bio de X o LinkedIn.',
+    title: 'Asegura tu @username',
+    body: 'Los mejores nombres vuelan rápido. Reclama tu identidad única antes de que alguien más se la lleve. Es tu nueva tarjeta de presentación.',
   },
   {
     id: 'stack',
     visual: <TechStackCarousel />,
-    title: 'Transparencia de Stack',
-    body: 'No es magia, es ingeniería. Muestra los iconos de las herramientas exactas que usaste para construir cada proyecto.',
+    title: 'Presume tu "Killer Combo"',
+    body: 'Una captura no dice nada. Revela tu receta secreta: v0 + Supabase + Cursor. Demuestra que no solo copias código, sino que dominas el stack moderno.',
   },
   {
     id: 'ecosystem',
     visual: <EcosystemHub />,
-    title: 'Conecta tu Ecosistema',
-    body: 'Deja de fragmentar tu identidad. Integra tus repos de GitHub, LinkedIn y tus perfiles de builder en un solo dashboard central.',
+    title: 'El fin del caos',
+    body: 'Tu código vive en GitHub. Tu red en LinkedIn. Tus demos en Vercel. Vibecoders es el pegamento que une todo tu caos creativo en un solo lugar.',
   },
   {
     id: 'reputation',
     visual: <VerifiedBadge />,
-    title: 'Reputación Profesional',
-    body: 'Un portafolio visual listo para enviar a recruiters. Que te contraten por lo que has construido, no por un PDF.',
+    title: 'Demuestra que eres Builder',
+    body: 'Sepárate de los que solo escriben prompts. Un perfil verificado con proyectos funcionales vale más que mil currículums. Muestra resultados, cierra tratos.',
   },
 ];
 
