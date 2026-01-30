@@ -2,7 +2,7 @@ import arcLogo from '@/assets/logos/arc.png';
 import base44Logo from '@/assets/logos/base44.png';
 import boltLogo from '@/assets/logos/bolt.png';
 import cursorLogo from '@/assets/logos/cursor.jpg';
-import kilocodeLogo from '@/assets/logos/kilocode.gif';
+import kilocodeLogo from '@/assets/logos/kilocode.jpg';
 import lovableLogo from '@/assets/logos/lovable.png';
 import replitLogo from '@/assets/logos/replit.svg';
 import stitchLogo from '@/assets/logos/stitch.png';

@@ -1,6 +1,6 @@
 import { useState, FormEvent, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowRight, Sparkles, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -272,7 +272,9 @@ const HeroSection = () => {
               className="flex animate-fade-in items-center justify-center gap-2 text-sm text-white/70 opacity-0"
               style={{ animationDelay: '0.5s' }}
             >
-              <span className="text-[#1c1c1c]">🔒</span>
+              <span className="inline-flex items-center justify-center h-5 w-5 rounded bg-white">
+                <Lock className="h-3 w-3 text-[#1c1c1c]" />
+              </span>
               {t.socialProof}
             </p>
           </>
