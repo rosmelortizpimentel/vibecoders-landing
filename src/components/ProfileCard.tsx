@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { CheckCircle, Edit3, Loader2, Lock } from 'lucide-react';
+import { CheckCircle, Edit3, Loader2, Lock, Check, X } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,11 +12,13 @@ interface ProfileCardProps {
 }
 
 const ProfileCard = ({ user }: ProfileCardProps) => {
-  const { profile, loading: profileLoading, updateUsername } = useProfile();
+  const { profile, loading: profileLoading, updateUsername, checkUsernameAvailable } = useProfile();
   const [isFlipped, setIsFlipped] = useState(false);
   const [username, setUsername] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
 
   const avatarUrl = user.user_metadata?.avatar_url;
   const fullName = user.user_metadata?.full_name || user.email;
@@ -31,13 +33,48 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
   const handleFlipToBack = () => {
     setUsername(profile?.username || '');
     setError(null);
+    setIsAvailable(profile?.username ? true : null);
     setIsFlipped(true);
   };
 
   const handleFlipToFront = () => {
     setIsFlipped(false);
     setError(null);
+    setIsAvailable(null);
   };
+
+  // Debounce de 2 segundos para validar disponibilidad
+  useEffect(() => {
+    // Si no hay username o es muy corto, resetear estado
+    if (!username.trim() || username.length < 3) {
+      setIsAvailable(null);
+      setError(null);
+      return;
+    }
+
+    // Si es el mismo username que ya tiene, marcar como disponible
+    if (username === profile?.username) {
+      setIsAvailable(true);
+      setError(null);
+      return;
+    }
+
+    // Configurar debounce de 2 segundos
+    const timer = setTimeout(async () => {
+      setIsChecking(true);
+      const available = await checkUsernameAvailable(username);
+      setIsAvailable(available);
+      setIsChecking(false);
+      
+      if (!available) {
+        setError('Este username ya está en uso');
+      } else {
+        setError(null);
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [username, profile?.username, checkUsernameAvailable]);
 
   const handleSave = async () => {
     if (!username.trim()) {
@@ -47,6 +84,16 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
 
     setSaving(true);
     setError(null);
+
+    // Verificar disponibilidad antes de guardar
+    const available = await checkUsernameAvailable(username);
+    
+    if (!available && username !== profile?.username) {
+      setError('Este username ya está en uso');
+      setSaving(false);
+      setIsAvailable(false);
+      return;
+    }
 
     const result = await updateUsername(username.trim().toLowerCase());
 
@@ -65,6 +112,7 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
     if (value.length <= 20) {
       setUsername(value);
       setError(null);
+      setIsAvailable(null); // Resetear estado al escribir
     }
   };
 
@@ -154,9 +202,21 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
                 value={username}
                 onChange={handleUsernameChange}
                 placeholder="tu_username"
-                className="pl-7 sm:pl-8 h-10 sm:h-12 text-sm sm:text-base border-gray-300 bg-white text-gray-900 placeholder:text-gray-400"
+                className="pl-7 sm:pl-8 pr-10 h-10 sm:h-12 text-sm sm:text-base border-gray-300 bg-white text-gray-900 placeholder:text-gray-400"
                 disabled={saving}
               />
+              {/* Indicador de estado a la derecha */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {isChecking && (
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                )}
+                {!isChecking && isAvailable === true && (
+                  <Check className="h-4 w-4 text-green-500" />
+                )}
+                {!isChecking && isAvailable === false && (
+                  <X className="h-4 w-4 text-red-500" />
+                )}
+              </div>
             </div>
 
             {error && (
@@ -177,7 +237,7 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
               </Button>
               <Button
                 onClick={handleSave}
-                disabled={saving || !username.trim()}
+                disabled={saving || !username.trim() || isChecking || isAvailable === false}
                 className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4"
               >
                 {saving ? (
