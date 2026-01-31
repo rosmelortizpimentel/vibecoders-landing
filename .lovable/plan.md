@@ -1,57 +1,132 @@
 
-# Plan: Corregir Estilos de Redes Sociales
+# Plan: Rediseño Premium de Tabs (Segmented Control)
 
-## Problemas Identificados
+## Objetivo
 
-1. **Input de redes sociales**: El texto aparece blanco porque no tiene un color explícito definido
-2. **Botón seleccionado**: Usa color magenta `#E91E63` en lugar de `#1c1c1c`
-3. **Iconos en vista previa**: Tienen fondo semi-transparente `bg-white/10` en lugar de fondo blanco sólido
+Transformar los tabs actuales en un control segmentado moderno estilo Linear/Apple con una estética premium y minimalista.
 
 ---
 
-## Cambios a Realizar
+## Diseño Actual vs. Nuevo
 
-### 1. `src/components/me/ProfileSocials.tsx`
-
-**Input con texto legible:**
-```tsx
-// Agregar text-[#1c1c1c] al Input
-className="flex-1 bg-white border border-gray-200 text-[#1c1c1c] focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
-```
-
-**Botón seleccionado con color oscuro:**
-```tsx
-// Cambiar de bg-[#E91E63] a bg-[#1c1c1c]
-isSelected
-  ? 'bg-[#1c1c1c] text-white shadow-md'
-  : hasValue
-    ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-    : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
-```
-
-### 2. `src/components/me/ProfilePreview.tsx`
-
-**Iconos de redes sociales con fondo blanco:**
-```tsx
-// Cambiar de bg-white/10 hover:bg-white/20 a bg-white
-className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white hover:bg-white/90 transition-colors"
-
-// Cambiar color de iconos de text-white a color oscuro
-<Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#1c1c1c]" />
-```
+| Aspecto | Actual | Nuevo |
+|---------|--------|-------|
+| Contenedor | `flex-1` ancho completo, borde visible | `w-fit` compacto, pill-shaped, sin borde |
+| Fondo contenedor | `bg-gray-100` con `border-gray-200` | `bg-slate-100` sutil, sin borde |
+| Tab activo | Bloque azul sólido `bg-[#3D5AFE]` | Píldora blanca flotante con `shadow-sm` |
+| Texto activo | Blanco | Oscuro `text-slate-900` con icono azul |
+| Tab inactivo | Fondo gris hover | Sin fondo, texto sutil `text-slate-500` |
+| Forma | `rounded-lg` | `rounded-full` (píldora) |
 
 ---
 
-## Archivos a Modificar
+## Cambios en `src/components/me/MeTabs.tsx`
 
-| Archivo | Cambios |
-|---------|---------|
-| `src/components/me/ProfileSocials.tsx` | Agregar `text-[#1c1c1c]` al Input, cambiar color seleccionado a `#1c1c1c` |
-| `src/components/me/ProfilePreview.tsx` | Fondo blanco sólido para iconos, texto oscuro |
+### Contenedor Principal
+```tsx
+<div className="inline-flex gap-1 p-1.5 bg-slate-100/80 rounded-full">
+```
+- `inline-flex` en lugar de `flex` para ajuste automático
+- `rounded-full` para forma de píldora
+- `bg-slate-100/80` para fondo sutil semi-transparente
+- Sin borde
+
+### Tab Activo
+```tsx
+isActive
+  ? 'bg-white text-slate-900 shadow-sm font-medium'
+  : 'text-slate-500 hover:text-slate-700'
+```
+- Fondo blanco con sombra suave
+- Texto oscuro profesional
+- Sin el azul sólido
+
+### Icono Dinámico
+```tsx
+<Icon className={cn(
+  "h-4 w-4 transition-colors",
+  isActive ? "text-[#3D5AFE]" : "text-slate-400"
+)} />
+```
+- Icono azul solo cuando está activo
+- Gris sutil cuando está inactivo
+
+### Transiciones Suaves
+```tsx
+className={cn(
+  'flex items-center justify-center gap-2 px-5 py-2 rounded-full text-sm transition-all duration-200',
+  // ... estados
+)}
+```
+- `transition-all duration-200` para animación fluida
+- `px-5 py-2` para padding cómodo
+- `rounded-full` para cada tab
+
+---
+
+## Código Final Propuesto
+
+```tsx
+export function MeTabs() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const activeTab = tabs.find(tab => location.pathname === tab.path)?.id || 'profile';
+
+  return (
+    <div className="inline-flex gap-1 p-1.5 bg-slate-100/80 rounded-full">
+      {tabs.map(tab => {
+        const Icon = tab.icon;
+        const isActive = activeTab === tab.id;
+        
+        return (
+          <button
+            key={tab.id}
+            onClick={() => navigate(tab.path)}
+            className={cn(
+              'flex items-center justify-center gap-2 px-5 py-2 rounded-full text-sm transition-all duration-200',
+              isActive
+                ? 'bg-white text-slate-900 shadow-sm font-medium'
+                : 'text-slate-500 hover:text-slate-700'
+            )}
+          >
+            <Icon className={cn(
+              "h-4 w-4 transition-colors",
+              isActive ? "text-[#3D5AFE]" : "text-slate-400 group-hover:text-slate-500"
+            )} />
+            <span>{tab.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+```
 
 ---
 
 ## Resultado Visual Esperado
 
-- **Editor de redes**: Input con texto negro legible, botón seleccionado en gris oscuro profesional
-- **Vista previa**: Iconos de redes sociales con círculo blanco sólido que destaca sobre el fondo azul
+```text
+┌─────────────────────────────────────────────────┐
+│  Fondo gris muy sutil (slate-100/80)            │
+│  ┌─────────────────┐                            │
+│  │ 🔵 Perfil       │  Apps      Branding        │
+│  │ (píldora blanca │  (gris)    (gris)          │
+│  │  con sombra)    │                            │
+│  └─────────────────┘                            │
+└─────────────────────────────────────────────────┘
+```
+
+- Control compacto centrado (no ocupa todo el ancho)
+- El tab activo "flota" visualmente sobre el fondo
+- Transición suave al cambiar de tab
+- Iconos con colores dinámicos (azul activo, gris inactivo)
+
+---
+
+## Archivo a Modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/components/me/MeTabs.tsx` | Rediseño completo de estilos |
