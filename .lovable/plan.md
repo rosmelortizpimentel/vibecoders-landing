@@ -1,80 +1,66 @@
 
 ## Objetivo
-Corregir el desfase y el “congelamiento” en **vista desktop**, donde el ProfileFileCard se transforma antes de que caiga el último logo y luego el ciclo se queda trabado.
+Asignar automáticamente un username basado en el email cuando el usuario se registra. Por ejemplo, si el correo es `abc@yopmail.com`, el username por defecto será `abc`.
 
 ---
 
-## Diagnóstico (confirmado)
-En **desktop** se están montando (aunque estén ocultos por CSS) **dos** componentes que ejecutan lógica y timers:
+## Flujo propuesto
 
-1) **FloatingLogos mobile** dentro del bloque `md:hidden` (está oculto visualmente en desktop, pero igual corre JS y actualiza `absorbedCount`).
-2) **ProfileFileCard mobile** también se monta en desktop (oculto por CSS), y ejecuta la secuencia completa.
-
-Esto se confirma con los logs duplicados:
-- `ProfileFileCard: Starting transformation sequence...` aparece 2 veces
-- Todas las fases (Verified / Counting / Exploding / Resetting) salen duplicadas
-
-Ese doble montaje provoca:
-- `absorbedCount` se incrementa “antes de tiempo” (por la instancia oculta).
-- El card se transforma mientras visualmente aún falta el último logo.
-- Explosión/reset se disparan dos veces, y el estado queda desincronizado, generando el “no avanza”.
+1. Usuario se registra con Google (o email)
+2. Al cargar el perfil por primera vez, si no existe:
+   - Extraer la parte local del email (antes del @)
+   - Limpiar caracteres no permitidos (solo letras, numeros, guion bajo)
+   - Truncar a 20 caracteres maximo
+   - Verificar disponibilidad usando la Edge Function existente
+   - Si esta disponible, crear el perfil con ese username
+   - Si no esta disponible, crear el perfil sin username (el usuario lo elige despues)
+3. La card muestra el username asignado y la URL correspondiente
 
 ---
 
-## Cambios propuestos (mínimos y directos)
+## Cambios
 
-### 1) Montar SOLO el layout correcto (desktop o mobile) usando `isMobile`
-En `src/components/HeroSection.tsx`:
-- Donde hoy usamos clases tipo `hidden md:block` / `md:hidden`, vamos a **reemplazar o envolver** con render condicional:
-  - Desktop: renderizar únicamente si `!isMobile`
-  - Mobile: renderizar únicamente si `isMobile`
+### 1. Archivo: `src/hooks/useProfile.ts`
 
-Esto asegura que en desktop:
-- No exista el `<FloatingLogos isMobileContainer />` oculto.
-- No exista el `<ProfileFileCard />` mobile oculto.
-- Por lo tanto, desaparece el doble update de `absorbedCount` y la secuencia deja de duplicarse.
+Agregar funcion helper para extraer username del email:
 
-#### Qué bloques se ajustan:
-- FloatingLogos desktop: se queda con `!isMobile` (ya está bien).
-- Headline/subheadline desktop: pasar a `!isMobile` (hoy están con `hidden md:block`).
-- ProfileFileCard desktop: pasar a `!isMobile` (hoy `hidden md:flex`).
-- Headline/subheadline mobile: pasar a `isMobile` (hoy `md:hidden`).
-- Bloque completo de animación mobile (logos + file): pasar a `isMobile` (hoy `md:hidden`).
+```typescript
+const extractUsernameFromEmail = (email: string): string => {
+  // Obtener parte antes del @
+  const localPart = email.split('@')[0] || '';
+  // Limpiar: solo letras, numeros y guion bajo, minusculas
+  const cleaned = localPart.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  // Truncar a 20 caracteres
+  return cleaned.slice(0, 20);
+};
+```
 
-### 2) (Recomendado) Reset “limpio” al cambiar entre mobile/desktop
-Agregar un `useEffect` en `HeroSection.tsx` que, cuando `isMobile` cambie, haga:
-- `setAbsorbedCount(0)`
-- `setTriggerExplosion(false)`
+Modificar la logica de creacion de perfil (lineas 36-44) para:
+1. Extraer username candidato del email del usuario
+2. Verificar disponibilidad con la Edge Function
+3. Insertar perfil con username si esta disponible, o sin username si no lo esta
 
-Esto evita estados “arrastrados” si el usuario cambia el ancho de la ventana durante una animación.
+### 2. Archivo: `src/components/ProfileCard.tsx`
 
-### 3) (Opcional, hardening) Proteger FloatingLogos al explotar
-En `src/components/FloatingLogos.tsx`, dentro de `triggerExplosionAnimation`, llamar primero a `clearAllTimeouts()` para evitar timers viejos si alguna vez la explosión se dispara antes de que terminen los “fall/absorb”.
-
-No debería ser necesario una vez arreglado el montaje duplicado, pero lo hace más robusto.
+Actualizar el mensaje de la card frontal:
+- Si tiene username: mostrar "Tu @username esta reservado" con la URL
+- Si no tiene username: mantener el mensaje generico actual
 
 ---
 
-## Resultado esperado (desktop)
-1) Los logos caen uno por uno.
-2) El **último logo cae completo** y recién ahí el file se transforma.
-3) Los contadores suben.
-4) Explosión alrededor del perfil.
-5) Reset limpio y el ciclo vuelve a iniciar sin quedarse congelado.
-6) En consola, cada fase del `ProfileFileCard` debe aparecer **solo una vez** (sin duplicados).
+## Consideraciones tecnicas
+
+- La verificacion de disponibilidad requiere un usuario autenticado, por lo que se usara directamente una query con service role desde el frontend (o se hara un intento de insert con manejo de error de constraint)
+- Si el username extraido del email contiene caracteres invalidos o esta vacio despues de limpiar, se crea el perfil sin username
+- El username minimo debe tener al menos 1 caracter valido
 
 ---
 
-## Plan de verificación (rápido)
-1) Abrir en desktop (>768px).
-2) Mirar consola: ya no deben salir logs duplicados de `ProfileFileCard`.
-3) Confirmar visualmente que el card no cambia antes del último logo.
-4) Esperar 1-2 ciclos completos para confirmar que no se queda pegado.
-5) Repetir en mobile para asegurar que no se reintroduce el problema.
+## Resultado esperado
 
----
-
-## Archivos a tocar
-- `src/components/HeroSection.tsx` (principal)
-- `src/components/FloatingLogos.tsx` (opcional hardening)
-
+Cuando un usuario con email `rosmel@betto.today` se registra:
+1. Se extrae "rosmel" como username candidato
+2. Se verifica si "rosmel" esta disponible
+3. Si esta disponible, el perfil se crea con username "rosmel"
+4. La card muestra: "Tu @rosmel esta reservado" y la URL `vibecoders.la/@rosmel`
+5. El usuario puede cambiar su username en cualquier momento usando el boton "Cambiar username"
