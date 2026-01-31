@@ -1,132 +1,229 @@
 
-# Plan: Rediseño Premium de Tabs (Segmented Control)
+# Plan: Rediseño Completo del Perfil Preview (Estilo App Móvil)
 
-## Objetivo
+## Resumen
 
-Transformar los tabs actuales en un control segmentado moderno estilo Linear/Apple con una estética premium y minimalista.
-
----
-
-## Diseño Actual vs. Nuevo
-
-| Aspecto | Actual | Nuevo |
-|---------|--------|-------|
-| Contenedor | `flex-1` ancho completo, borde visible | `w-fit` compacto, pill-shaped, sin borde |
-| Fondo contenedor | `bg-gray-100` con `border-gray-200` | `bg-slate-100` sutil, sin borde |
-| Tab activo | Bloque azul sólido `bg-[#3D5AFE]` | Píldora blanca flotante con `shadow-sm` |
-| Texto activo | Blanco | Oscuro `text-slate-900` con icono azul |
-| Tab inactivo | Fondo gris hover | Sin fondo, texto sutil `text-slate-500` |
-| Forma | `rounded-lg` | `rounded-full` (píldora) |
+Transformar el preview del perfil de un estilo "navegador web con fondo azul pesado" a un diseño limpio tipo app móvil inspirado en la imagen de referencia: header con hamburger menu, fondo blanco, banner customizable, y secciones que se ocultan automáticamente cuando están vacías.
 
 ---
 
-## Cambios en `src/components/me/MeTabs.tsx`
+## Cambios Principales
 
-### Contenedor Principal
-```tsx
-<div className="inline-flex gap-1 p-1.5 bg-slate-100/80 rounded-full">
-```
-- `inline-flex` en lugar de `flex` para ajuste automático
-- `rounded-full` para forma de píldora
-- `bg-slate-100/80` para fondo sutil semi-transparente
-- Sin borde
+### 1. Nuevo Header del Preview (Estilo App)
+- **Izquierda**: Icono de menú hamburguesa
+- **Centro**: Logo "VIBECODERS" (solo texto, sin icono)
+- **Derecha**: Vacío (sin icono de usuario)
 
-### Tab Activo
-```tsx
-isActive
-  ? 'bg-white text-slate-900 shadow-sm font-medium'
-  : 'text-slate-500 hover:text-slate-700'
-```
-- Fondo blanco con sombra suave
-- Texto oscuro profesional
-- Sin el azul sólido
+### 2. Eliminar Fondo Azul Gradiente
+- Remover el gradiente azul `#4F46E5 → #3D5AFE → #2563EB`
+- Usar fondo blanco limpio para toda la tarjeta
 
-### Icono Dinámico
-```tsx
-<Icon className={cn(
-  "h-4 w-4 transition-colors",
-  isActive ? "text-[#3D5AFE]" : "text-slate-400"
-)} />
-```
-- Icono azul solo cuando está activo
-- Gris sutil cuando está inactivo
+### 3. Banner Personalizable
+- Añadir campo `banner_url` a ProfileData
+- Crear sección en ProfileTab para cargar banner
+- Mostrar banner en la parte superior del perfil (similar a la imagen)
+- El avatar se posiciona semi-superpuesto al banner
 
-### Transiciones Suaves
-```tsx
-className={cn(
-  'flex items-center justify-center gap-2 px-5 py-2 rounded-full text-sm transition-all duration-200',
-  // ... estados
-)}
+### 4. Reorganización del Contenido
+```text
+┌────────────────────────────────────────┐
+│  ≡     VIBECODERS                      │  ← Header
+├────────────────────────────────────────┤
+│                                        │
+│  [        BANNER IMAGE         ]       │  ← Banner (si existe)
+│       ┌──────┐                         │
+│       │ AVT  │ (superpuesto)           │
+└───────┴──────┴─────────────────────────┘
+│                                        │
+│  Rosmel Ortiz                          │  ← Nombre
+│  @username                             │  ← Username
+│  ○ ○ ○ ○ ○ ○                           │  ← Iconos redes sociales
+│                                        │
+│  Always building.                      │  ← Bio (si existe)
+│  📍 Ontario, Canada                    │  ← Location (si existe)
+│  🔗 rosmelortiz.com                    │  ← Website (si existe)
+│                                        │
+├────────────────────────────────────────┤
+│  [App Cards - como actualmente]        │  ← Apps
+└────────────────────────────────────────┘
 ```
-- `transition-all duration-200` para animación fluida
-- `px-5 py-2` para padding cómodo
-- `rounded-full` para cada tab
+
+### 5. Secciones Condicionales (Sin Espacios Vacíos)
+Cada sección solo se renderiza si tiene contenido:
+- **Bio**: Solo si `profile.bio` tiene valor
+- **Location**: Solo si `profile.location` tiene valor  
+- **Website**: Solo si `profile.website` tiene valor
+- **Social Icons**: Solo si hay al menos una red activa
+- **Apps**: Solo si hay apps visibles
 
 ---
 
-## Código Final Propuesto
+## Cambios por Archivo
 
-```tsx
-export function MeTabs() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  const activeTab = tabs.find(tab => location.pathname === tab.path)?.id || 'profile';
-
-  return (
-    <div className="inline-flex gap-1 p-1.5 bg-slate-100/80 rounded-full">
-      {tabs.map(tab => {
-        const Icon = tab.icon;
-        const isActive = activeTab === tab.id;
-        
-        return (
-          <button
-            key={tab.id}
-            onClick={() => navigate(tab.path)}
-            className={cn(
-              'flex items-center justify-center gap-2 px-5 py-2 rounded-full text-sm transition-all duration-200',
-              isActive
-                ? 'bg-white text-slate-900 shadow-sm font-medium'
-                : 'text-slate-500 hover:text-slate-700'
-            )}
-          >
-            <Icon className={cn(
-              "h-4 w-4 transition-colors",
-              isActive ? "text-[#3D5AFE]" : "text-slate-400 group-hover:text-slate-500"
-            )} />
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
+### 1. `src/hooks/useProfileEditor.ts`
+Agregar campo `banner_url` a la interfaz `ProfileData`:
+```typescript
+export interface ProfileData {
+  // ... campos existentes
+  banner_url: string | null;  // NUEVO
 }
 ```
+Actualizar `saveProfile` para incluir `banner_url`.
+
+### 2. Base de datos (Migración SQL)
+Añadir columna `banner_url` a la tabla `profiles`:
+```sql
+ALTER TABLE profiles ADD COLUMN banner_url TEXT;
+```
+
+### 3. `src/integrations/supabase/types.ts`
+Actualizar tipos para incluir `banner_url` en profiles.
+
+### 4. `src/components/me/ProfileTab.tsx`
+Añadir sección para cargar banner:
+```tsx
+{/* Banner Upload */}
+<section className="space-y-4">
+  <Label>Banner</Label>
+  <div className="relative h-32 bg-gray-100 rounded-lg overflow-hidden">
+    {profile.banner_url ? (
+      <img src={profile.banner_url} className="w-full h-full object-cover" />
+    ) : (
+      <div className="flex items-center justify-center h-full">
+        <Camera className="h-8 w-8 text-gray-400" />
+      </div>
+    )}
+    <button onClick={handleBannerClick}>Cambiar</button>
+  </div>
+</section>
+```
+
+### 5. `src/components/me/ProfilePreview.tsx`
+Rediseño completo:
+
+**Header nuevo:**
+```tsx
+<div className="flex items-center justify-between px-4 py-3 bg-white border-b">
+  <Menu className="h-5 w-5 text-gray-600" />
+  <span className="font-semibold text-gray-900">VIBECODERS</span>
+  <div className="w-5" /> {/* Spacer for alignment */}
+</div>
+```
+
+**Banner + Avatar:**
+```tsx
+{profile.banner_url && (
+  <div className="relative h-24 md:h-32">
+    <img src={profile.banner_url} className="w-full h-full object-cover" />
+  </div>
+)}
+<Avatar className="h-20 w-20 mx-auto -mt-10 border-4 border-white">
+  ...
+</Avatar>
+```
+
+**Contenido condicional:**
+```tsx
+{/* Nombre - siempre visible */}
+<h2 className="text-xl font-bold text-gray-900">{profile.name}</h2>
+
+{/* Username */}
+{profile.username && (
+  <p className="text-gray-500">@{profile.username}</p>
+)}
+
+{/* Social Icons Row - solo si hay activas */}
+{activeSocials.length > 0 && (
+  <div className="flex justify-center gap-2">
+    {activeSocials.map(...)}
+  </div>
+)}
+
+{/* Bio - solo si existe */}
+{profile.bio && (
+  <p className="text-gray-600 text-center">{profile.bio}</p>
+)}
+
+{/* Location - solo si existe */}
+{profile.location && (
+  <div className="flex items-center gap-2 text-gray-500">
+    <MapPin className="h-4 w-4" />
+    <span>{profile.location}</span>
+  </div>
+)}
+
+{/* Website - solo si existe */}
+{profile.website && (
+  <div className="flex items-center gap-2 text-gray-500">
+    <Link className="h-4 w-4" />
+    <a href={profile.website}>{profile.website}</a>
+  </div>
+)}
+```
+
+**Apps - mantener estilo actual pero con fondo blanco:**
+```tsx
+{visibleApps.length > 0 && (
+  <div className="border-t pt-4">
+    {/* Cards de apps como actualmente */}
+  </div>
+)}
+```
+
+---
+
+## Paleta de Colores Nueva
+
+| Elemento | Actual | Nuevo |
+|----------|--------|-------|
+| Fondo principal | Gradiente azul | `bg-white` |
+| Texto nombre | `text-white` | `text-gray-900` |
+| Texto secundario | `text-white/70` | `text-gray-500` |
+| Iconos redes | `bg-white` sobre azul | `bg-gray-100` sobre blanco |
+| Apps section | `bg-white/10` translúcido | `bg-gray-50` sólido |
+
+---
+
+## Archivos a Modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| `supabase/migrations/XXXXX_add_banner.sql` | Nueva migración para `banner_url` |
+| `src/integrations/supabase/types.ts` | Añadir `banner_url` a profiles |
+| `src/hooks/useProfileEditor.ts` | Añadir `banner_url` a ProfileData y saveProfile |
+| `src/components/me/ProfileTab.tsx` | Sección para subir banner |
+| `src/components/me/ProfilePreview.tsx` | Rediseño completo del preview |
 
 ---
 
 ## Resultado Visual Esperado
 
 ```text
-┌─────────────────────────────────────────────────┐
-│  Fondo gris muy sutil (slate-100/80)            │
-│  ┌─────────────────┐                            │
-│  │ 🔵 Perfil       │  Apps      Branding        │
-│  │ (píldora blanca │  (gris)    (gris)          │
-│  │  con sombra)    │                            │
-│  └─────────────────┘                            │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│  ≡        VIBECODERS                │  ← Header minimalista
+├─────────────────────────────────────┤
+│ [░░░░░░░░░░ BANNER ░░░░░░░░░░░]    │  ← Banner (opcional)
+│        ┌───────┐                    │
+│        │ AVATAR│ (borde blanco)     │
+│        └───────┘                    │
+│                                     │
+│      Rosmel Ortiz                   │  ← Nombre grande
+│      @rosmelortiz                   │  ← Username gris
+│                                     │
+│   ○ ○ ○ ○ ○ ○  (iconos sociales)   │  ← Redes debajo del nombre
+│                                     │
+│   Always building.                  │  ← Bio
+│                                     │
+│   📍 Ontario, Canada 🍁             │  ← Location
+│   🔗 rosmelortiz.com                │  ← Website
+│                                     │
+├─────────────────────────────────────┤
+│   [Card App 1]                      │  ← Apps
+│   [Card App 2]                      │
+└─────────────────────────────────────┘
 ```
 
-- Control compacto centrado (no ocupa todo el ancho)
-- El tab activo "flota" visualmente sobre el fondo
-- Transición suave al cambiar de tab
-- Iconos con colores dinámicos (azul activo, gris inactivo)
-
----
-
-## Archivo a Modificar
-
-| Archivo | Cambios |
-|---------|---------|
-| `src/components/me/MeTabs.tsx` | Rediseño completo de estilos |
+- Fondo completamente blanco
+- Sin gradiente azul pesado
+- Secciones vacías no ocupan espacio
+- Estética limpia tipo app móvil
