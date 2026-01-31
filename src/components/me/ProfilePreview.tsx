@@ -63,7 +63,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
   return (
     <div 
-      className="rounded-2xl overflow-hidden shadow-xl"
+      className="rounded-2xl overflow-hidden shadow-xl w-full"
       style={{ fontFamily }}
     >
       {/* Browser Chrome */}
@@ -75,8 +75,8 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           <div className="w-3 h-3 rounded-full bg-[#28CA41]" />
         </div>
         
-        {/* URL Bar */}
-        <div className="flex items-center gap-1.5 md:gap-2 bg-white rounded-md px-2 md:px-3 py-1 md:py-1.5 border border-stone-200">
+        {/* URL Bar - full width */}
+        <div className="flex-1 flex items-center gap-1.5 md:gap-2 bg-white rounded-md px-2 md:px-3 py-1 md:py-1.5 border border-stone-200">
           <Lock className="w-3 h-3 md:w-3.5 md:h-3.5 text-stone-400 flex-shrink-0" />
           <span className="text-xs md:text-sm text-stone-700 font-medium tracking-tight truncate">
             vibecoders.la/<span className="text-stone-900">@{username}</span>
@@ -86,49 +86,49 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
       {/* Main Content */}
       <div 
-        className="px-8 py-10 text-center"
+        className="px-4 md:px-8 py-6 md:py-10 text-center"
         style={{ 
           background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
         }}
       >
         {/* Avatar */}
-        <Avatar className="h-24 w-24 mx-auto border-4 border-white/30">
+        <Avatar className="h-16 w-16 md:h-24 md:w-24 mx-auto border-4 border-white/30">
           <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
           <AvatarFallback 
-            className="text-3xl font-bold bg-white/20 text-white"
+            className="text-xl md:text-3xl font-bold bg-white/20 text-white"
           >
             {profile.name?.charAt(0) || '?'}
           </AvatarFallback>
         </Avatar>
 
         {/* Name */}
-        <h2 className="mt-5 text-2xl font-bold text-white">
+        <h2 className="mt-4 md:mt-5 text-lg md:text-2xl font-bold text-white">
           {profile.name || 'Tu Nombre'}
         </h2>
         
         {/* Tagline */}
         {profile.tagline && (
-          <p className="mt-2 text-sm text-white/70">
+          <p className="mt-1 md:mt-2 text-xs md:text-sm text-white/70">
             {profile.tagline}
           </p>
         )}
 
         {/* Bio */}
         {profile.bio && (
-          <p className="mt-4 text-sm text-white/80 leading-relaxed max-w-xs mx-auto">
+          <p className="mt-3 md:mt-4 text-xs md:text-sm text-white/80 leading-relaxed max-w-xs mx-auto">
             {profile.bio}
           </p>
         )}
 
         {/* Location & Website */}
-        <div className="mt-6 space-y-1">
+        <div className="mt-4 md:mt-6 space-y-1">
           {profile.location && (
-            <p className="text-sm text-white/60">
+            <p className="text-xs md:text-sm text-white/60">
               {profile.location}
             </p>
           )}
           {profile.website && (
-            <p className="text-sm text-white/60">
+            <p className="text-xs md:text-sm text-white/60">
               {profile.website.replace(/^https?:\/\//, '')}
             </p>
           )}
@@ -140,7 +140,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           if (activeSocials.length === 0) return null;
           
           return (
-            <div className="mt-6 flex items-center justify-center gap-3">
+            <div className="mt-4 md:mt-6 flex items-center justify-center gap-2 md:gap-3">
               {activeSocials.map(({ key, icon: Icon, getUrl }) => {
                 const value = profile[key as keyof ProfileData] as string;
                 return (
@@ -149,79 +149,74 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
                     href={getUrl(value)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                    className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                   >
-                    <Icon className="h-4 w-4 text-white" />
+                    <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
                   </a>
                 );
               })}
             </div>
           );
         })()}
-      </div>
 
-      {/* Apps Section */}
-      {visibleApps.length > 0 && (
-        <div 
-          className="mx-6 mb-6 -mt-4 p-4 rounded-xl bg-white/10 backdrop-blur-sm"
-          style={{ 
-            background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
-          }}
-        >
-          <p className="text-xs font-medium text-white/60 uppercase tracking-wide mb-3">
-            Apps
-          </p>
-          <div className="space-y-2">
-            {visibleApps.slice(0, 3).map(app => (
-              <a 
-                key={app.id}
-                href={getAppUrl(app.url)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-              >
-                {app.logo_url ? (
-                  <img 
-                    src={app.logo_url} 
-                    alt={app.name || ''} 
-                    className="w-8 h-8 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                    <span className="text-xs font-medium text-white/60">
-                      {app.name?.charAt(0) || '?'}
-                    </span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-white truncate">
-                    {app.name || new URL(app.url).hostname}
-                  </p>
-                  {app.tagline && (
-                    <p className="text-xs text-white/60 truncate">
-                      {app.tagline}
-                    </p>
+        {/* Apps Section - Integrated */}
+        {visibleApps.length > 0 && (
+          <div className="mt-6 md:mt-8 p-3 md:p-4 rounded-xl bg-white/10 backdrop-blur-sm">
+            <p className="text-xs font-medium text-white/60 uppercase tracking-wide mb-2 md:mb-3 text-left">
+              Apps
+            </p>
+            <div className="space-y-2">
+              {visibleApps.slice(0, 3).map(app => (
+                <a 
+                  key={app.id}
+                  href={getAppUrl(app.url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 md:gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  {app.logo_url ? (
+                    <img 
+                      src={app.logo_url} 
+                      alt={app.name || ''} 
+                      className="w-7 h-7 md:w-8 md:h-8 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                      <span className="text-xs font-medium text-white/60">
+                        {app.name?.charAt(0) || '?'}
+                      </span>
+                    </div>
                   )}
-                </div>
-              </a>
-            ))}
-            {visibleApps.length > 3 && (
-              <p className="text-xs text-center text-white/50 pt-1">
-                +{visibleApps.length - 3} más
-              </p>
-            )}
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-xs md:text-sm font-medium text-white truncate">
+                      {app.name || new URL(app.url).hostname}
+                    </p>
+                    {app.tagline && (
+                      <p className="text-[10px] md:text-xs text-white/60 truncate">
+                        {app.tagline}
+                      </p>
+                    )}
+                  </div>
+                </a>
+              ))}
+              {visibleApps.length > 3 && (
+                <p className="text-[10px] md:text-xs text-center text-white/50 pt-1">
+                  +{visibleApps.length - 3} más
+                </p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Footer */}
       <div 
-        className="py-4 text-center border-t border-white/10"
+        className="py-3 md:py-4 text-center border-t border-white/10"
         style={{ 
           background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
         }}
       >
-        <span className="text-xs text-white/50">
+        <span className="text-[10px] md:text-xs text-white/50">
           vibecoders.la/@{username}
         </span>
       </div>
