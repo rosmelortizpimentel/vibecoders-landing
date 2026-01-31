@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { User } from '@supabase/supabase-js';
-import { CheckCircle, Edit3, Loader2, Lock, Check, X } from 'lucide-react';
+import { CheckCircle, Edit3, Loader2, Lock, Check, X, ExternalLink } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -161,9 +161,17 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
           <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-base text-white/80 break-all">{email}</p>
 
           {profile?.username && (
-            <p className="mt-2 text-xs sm:text-sm text-white/70">
-              https://vibecoders.la/@{profile.username}
-            </p>
+            <a 
+              href={`https://vibecoders.la/@${profile.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 text-xs sm:text-sm text-white/70 font-mono hover:text-white transition-colors group"
+            >
+              <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+              <span className="group-hover:underline underline-offset-2">
+                https://vibecoders.la/@{profile.username}
+              </span>
+            </a>
           )}
 
           <div className="mt-4 sm:mt-6 md:mt-8 rounded-lg bg-white/10 p-3 sm:p-4">
