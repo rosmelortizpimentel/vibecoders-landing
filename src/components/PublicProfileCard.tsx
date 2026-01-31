@@ -6,18 +6,8 @@ interface PublicProfileCardProps {
   profile: PublicProfile;
 }
 
-// Generate a simulated member number based on username hash
-const getMemberNumber = (username: string): number => {
-  let hash = 0;
-  for (let i = 0; i < username.length; i++) {
-    hash = ((hash << 5) - hash) + username.charCodeAt(i);
-    hash = hash & hash;
-  }
-  return Math.abs(hash % 900) + 1; // Number between 1-900
-};
-
 export function PublicProfileCard({ profile }: PublicProfileCardProps) {
-  const memberNumber = getMemberNumber(profile.username);
+  const memberNumber = profile.member_number;
 
   return (
     <div className="w-full max-w-md mx-auto space-y-6">

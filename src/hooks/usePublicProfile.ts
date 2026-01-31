@@ -5,6 +5,7 @@ export interface PublicProfile {
   username: string;
   avatar_url: string | null;
   first_name: string;
+  member_number: number;
 }
 
 interface UsePublicProfileResult {

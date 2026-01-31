@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     // 1. Search profile by username (case-insensitive)
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id, username')
+      .select('id, username, member_number')
       .eq('username', username.toLowerCase())
       .maybeSingle()
 
@@ -92,13 +92,17 @@ Deno.serve(async (req) => {
     console.log(`[get-public-profile] Returning safe profile data for: ${profile.username}`)
 
     // 4. Return safe response (NO email, NO sensitive data)
+    // Add 11 to member_number to make it look less empty at the start
+    const displayMemberNumber = (profile.member_number || 1) + 11
+
     return new Response(
       JSON.stringify({
         success: true,
         profile: {
           username: profile.username,
           avatar_url: avatarUrl,
-          first_name: firstName
+          first_name: firstName,
+          member_number: displayMemberNumber
         }
       }),
       { 
