@@ -15,7 +15,7 @@ export function MeTabs() {
   const activeTab = tabs.find(tab => location.pathname === tab.path)?.id || 'profile';
 
   return (
-    <div className="flex gap-1 p-1 bg-gray-100 rounded-lg border border-gray-200">
+    <div className="inline-flex gap-1 p-1.5 bg-slate-100/80 rounded-full">
       {tabs.map(tab => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -25,13 +25,16 @@ export function MeTabs() {
             key={tab.id}
             onClick={() => navigate(tab.path)}
             className={cn(
-              'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all',
+              'flex items-center justify-center gap-2 px-5 py-2 rounded-full text-sm transition-all duration-200',
               isActive
-                ? 'bg-[#3D5AFE] text-white shadow-sm font-semibold'
-                : 'text-gray-600 hover:text-[#1c1c1c] hover:bg-white'
+                ? 'bg-white text-slate-900 shadow-sm font-medium'
+                : 'text-slate-500 hover:text-slate-700'
             )}
           >
-            <Icon className="h-4 w-4" />
+            <Icon className={cn(
+              "h-4 w-4 transition-colors",
+              isActive ? "text-[#3D5AFE]" : "text-slate-400"
+            )} />
             <span>{tab.label}</span>
           </button>
         );
