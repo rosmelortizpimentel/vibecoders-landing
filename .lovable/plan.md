@@ -1,95 +1,98 @@
 
-# Plan: Corregir Perfil y Rediseñar Redes Sociales
+# Plan: Corregir Formularios y Rediseñar Preview Premium
 
 ## Problemas Identificados
 
-1. **Nombre y avatar no cargan**: Los datos de Google (`user_metadata.full_name`, `user_metadata.avatar_url`) no se están usando como valores por defecto
-2. **Redes sociales muestran inputs vacíos**: Diseño actual muestra todos los campos aunque estén vacíos. La referencia muestra iconos clickeables que se expanden solo al seleccionar
-3. **Botones con texto gris ilegible**: Los botones azules tienen texto gris plomo difícil de leer. Debe ser blanco
+1. **Textarea de Bio con borde grueso y rojizo**: El problema está en el `focus-visible:ring-2` del componente `Textarea`, que muestra un anillo violeta/rojo al enfocar. El anillo de 2px se ve muy grueso.
+
+2. **Botones de redes sociales con estilo muy cargado**: El input tiene un color de fondo azul (viene del global CSS `--input`) y el botón de basura usa estilos azules.
+
+3. **Preview horrible**: El diseño actual usa `bg-card` (oscuro), iconos pequeños y una estructura poco elegante. Debe ser un diseño premium sin iconos, similar al `PublicProfileCard` (Founder Pass).
 
 ---
 
 ## Cambios a Realizar
 
-### 1. `src/hooks/useProfileEditor.ts` - Usar datos de Google
+### 1. `src/components/me/ProfileTab.tsx` - Corregir estilos de inputs
 
-Modificar el hook para:
-- Acceder a `user.user_metadata` de Supabase Auth
-- Si `profile.name` está vacío, usar `user_metadata.full_name`
-- Si `profile.avatar_url` está vacío, usar `user_metadata.avatar_url` (foto de Google)
+Cambiar las clases del `Textarea` para usar un borde delgado sin anillo de focus exagerado:
 
-```typescript
-// En fetchProfile(), después de obtener data:
-const googleName = user.user_metadata?.full_name;
-const googleAvatar = user.user_metadata?.avatar_url;
+```tsx
+// Antes
+className="min-h-[120px] resize-none border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
 
-setProfile({
-  ...DEFAULT_PROFILE,
-  ...data,
-  // Usar datos de Google si no hay datos en DB
-  name: data.name || googleName || null,
-  avatar_url: data.avatar_url || googleAvatar || null,
-} as ProfileData);
+// Después - sin ring, solo borde sutil
+className="min-h-[120px] resize-none border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
 ```
 
-### 2. `src/components/me/ProfileSocials.tsx` - Rediseño completo
+Aplicar el mismo patrón a todos los `Input` del componente.
 
-Nuevo diseño basado en la referencia:
-- **Fila de iconos**: Mostrar todos los iconos de redes en fila horizontal
-- **Estado visual**: 
-  - Icono gris = sin datos
-  - Icono con check verde = tiene datos
-  - Icono seleccionado = fondo rosa/magenta (activo para editar)
-- **Input expandible**: Solo mostrar el input cuando se selecciona un icono
-- **Botón eliminar**: Trash icon para borrar el valor
+### 2. `src/components/me/ProfileSocials.tsx` - Estilos minimalistas
 
-Estructura del componente:
-```
-┌──────────────────────────────────────────────────────────────┐
-│  [🐦] [🐙] [♪] [📷] [▶] [in] [✉]                            │  ← Iconos clickeables
-│                                                              │
-│  Twitter                                                     │
-│  ┌────────────────────────────────────────────────┐  [🗑]   │  ← Input + delete
-│  │ https://twitter.com/usuario                     │         │
-│  └────────────────────────────────────────────────┘         │
-└──────────────────────────────────────────────────────────────┘
+- Input con fondo blanco explícito (`bg-white`)
+- Borde gris claro (`border-gray-200`)
+- Sin ring de focus exagerado
+- Botón de eliminar con estilo outline sutil (gris, hover rojo)
+
+```tsx
+<Input
+  className="flex-1 bg-white border-gray-200 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
+/>
+<Button
+  className="shrink-0 bg-white border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50"
+>
 ```
 
-Estados de los iconos:
-- Sin valor: fondo gris claro (`bg-gray-100`)
-- Con valor guardado: fondo gris con check overlay
-- Seleccionado/activo: fondo magenta (`bg-[#E91E63]`) con icono blanco
+### 3. `src/components/me/ProfilePreview.tsx` - Rediseño premium completo
 
-### 3. `src/components/me/MeTabs.tsx` - Texto blanco en botones
+Rediseñar el preview para que sea elegante y premium, inspirado en el `PublicProfileCard`:
 
-El botón activo ya tiene `text-white`, pero revisar que se aplique correctamente.
+**Estructura nueva:**
+- **Fondo**: Gradiente azul premium (como Founder Pass)
+- **Avatar**: Grande, centrado, con borde blanco semi-transparente
+- **Nombre**: Blanco, grande, bold
+- **Tagline**: Blanco con opacidad
+- **Bio**: Blanco con opacidad, sin HTML complejo
+- **Ubicación y Website**: Texto simple, sin iconos
+- **Redes sociales**: Mostrar solo texto de las redes activas (ej: "Twitter, LinkedIn")
+- **Apps**: Lista simple con nombres, sin iconos de external link
+- **Footer**: URL del perfil en texto pequeño
 
-### 4. Otros componentes - Verificar colores de botones
-
-Revisar que todos los botones con fondo azul (`bg-[#3D5AFE]`) tengan texto blanco (`text-white`).
+**Sin iconos** - Todo el preview usará texto limpio y tipografía elegante.
 
 ---
 
-## Diseño Visual de ProfileSocials
+## Diseño Visual del Nuevo Preview
 
 ```
-ANTES (actual):
-┌────────────────────────────────────────┐
-│ [🐦] │ @usuario                    │   │ ← Siempre visible
-│ [🐙] │ username                    │   │
-│ [♪]  │ @usuario                    │   │
-│ ...todos los campos...                 │
-└────────────────────────────────────────┘
-
-DESPUÉS (referencia):
-┌────────────────────────────────────────┐
-│ [🐦✓] [🐙] [♪✓] [📷] [▶] [in] [✉]     │ ← Solo iconos
-│                                        │   (check si tiene valor)
-│ Twitter                                │
-│ ┌──────────────────────────────┐ [🗑] │ ← Solo el seleccionado
-│ │ https://twitter.com/user     │      │
-│ └──────────────────────────────┘      │
-└────────────────────────────────────────┘
+┌───────────────────────────────────────────┐
+│                                           │
+│       ┌──────────────────────────┐        │
+│       │      GRADIENTE AZUL      │        │
+│       │                          │        │
+│       │         (AVATAR)         │        │
+│       │           ⬤              │        │
+│       │                          │        │
+│       │     Rosmel Ortiz         │        │
+│       │                          │        │
+│       │  SaaS Builder & Tech...  │        │
+│       │                          │        │
+│       │  I build products...     │        │
+│       │                          │        │
+│       │  Ontario, Canada         │        │
+│       │  rosmelortiz.com         │        │
+│       │                          │        │
+│       │  LinkedIn · Twitter      │  ← Sin iconos
+│       │                          │        │
+│       ├──────────────────────────┤        │
+│       │  APPS                    │        │
+│       │  • App 1                 │  ← Sin iconos
+│       │  • App 2                 │        │
+│       ├──────────────────────────┤        │
+│       │  vibecoders.io/@user     │        │
+│       └──────────────────────────┘        │
+│                                           │
+└───────────────────────────────────────────┘
 ```
 
 ---
@@ -98,21 +101,31 @@ DESPUÉS (referencia):
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/hooks/useProfileEditor.ts` | Usar `user_metadata` para name y avatar por defecto |
-| `src/components/me/ProfileSocials.tsx` | Rediseño completo: iconos + input expandible |
-| `src/components/me/MeTabs.tsx` | Verificar `text-white` en botón activo |
+| `src/components/me/ProfileTab.tsx` | Reemplazar clases de focus ring por border subtle |
+| `src/components/me/ProfileSocials.tsx` | Estilos minimalistas: bg-white, border-gray-200, sin ring |
+| `src/components/me/ProfilePreview.tsx` | Rediseño completo: gradiente azul premium, sin iconos, tipografía elegante |
 
 ---
 
-## Flujo de Usuario - Redes Sociales
+## Paleta de Colores del Preview Premium
 
-1. Usuario ve fila de iconos de redes sociales
-2. Iconos con datos tienen un check o indicador visual
-3. Al hacer clic en un icono:
-   - Se selecciona (fondo magenta)
-   - Aparece input debajo con el label de la red
-   - Si ya tiene valor, se muestra para editar
-   - Botón de eliminar (trash) a la derecha
-4. Al escribir, se auto-guarda con debounce
-5. Al hacer clic en trash, se borra el valor
-6. Al hacer clic en otro icono, cambia la selección
+| Elemento | Color |
+|----------|-------|
+| Fondo gradiente | `#4F46E5 → #3D5AFE → #2563EB` |
+| Avatar border | `rgba(255,255,255,0.3)` |
+| Nombre | `#FFFFFF` |
+| Tagline | `rgba(255,255,255,0.7)` |
+| Bio | `rgba(255,255,255,0.8)` |
+| Ubicación/Website | `rgba(255,255,255,0.6)` |
+| Redes sociales | `rgba(255,255,255,0.5)` |
+| Apps section | Fondo blanco semi-transparente |
+| Footer URL | `rgba(255,255,255,0.5)` |
+
+---
+
+## Regla de Diseño
+
+**Sin iconos en la aplicación** - Se usará texto limpio y tipografía para indicar información. Por ejemplo:
+- En lugar de icono de ubicación: solo "Ontario, Canada"
+- En lugar de iconos de redes: "LinkedIn · Twitter · GitHub"
+- En lugar de icono de link externo en apps: solo el nombre de la app
