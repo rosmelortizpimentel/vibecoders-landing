@@ -194,6 +194,7 @@ export type Database = {
           instagram: string | null
           linkedin: string | null
           location: string | null
+          lovable: string | null
           member_number: number
           name: string | null
           primary_color: string | null
@@ -218,6 +219,7 @@ export type Database = {
           instagram?: string | null
           linkedin?: string | null
           location?: string | null
+          lovable?: string | null
           member_number?: number
           name?: string | null
           primary_color?: string | null
@@ -242,6 +244,7 @@ export type Database = {
           instagram?: string | null
           linkedin?: string | null
           location?: string | null
+          lovable?: string | null
           member_number?: number
           name?: string | null
           primary_color?: string | null

@@ -70,16 +70,6 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
         </SelectContent>
       </Select>
 
-      {/* Preview */}
-      <div 
-        className="p-4 rounded-lg border border-gray-200 bg-gray-50"
-        style={{ fontFamily: value }}
-      >
-        <p className="text-lg font-semibold text-[#1c1c1c]">The quick brown fox jumps over the lazy dog</p>
-        <p className="text-sm text-gray-500 mt-1">
-          ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789
-        </p>
-      </div>
     </div>
   );
 }
