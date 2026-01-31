@@ -111,10 +111,10 @@ export function TechStackSelector({
           sideOffset={4}
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          <Command shouldFilter={false}>
-            <CommandList className="max-h-[300px] overflow-y-auto">
+          <Command shouldFilter={false} className="bg-white">
+            <CommandList className="max-h-[300px] overflow-y-auto bg-white">
               {!hasResults ? (
-                <CommandEmpty className="py-6 text-center text-sm text-gray-500">
+                <CommandEmpty className="py-6 text-center text-sm text-gray-500 bg-white">
                   No se encontraron tecnologías.
                 </CommandEmpty>
               ) : (
@@ -124,7 +124,7 @@ export function TechStackSelector({
                     <CommandGroup 
                       key={group} 
                       heading={group}
-                      className="[&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-gray-500 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2"
+                      className="bg-white [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:text-gray-500 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:bg-white"
                     >
                       {items.map(stack => {
                         const isSelected = selectedIds.includes(stack.id);
@@ -137,7 +137,7 @@ export function TechStackSelector({
                               setSearchQuery('');
                             }}
                             className={cn(
-                              "flex items-center gap-3 px-3 py-2 cursor-pointer",
+                              "flex items-center gap-3 px-3 py-2 cursor-pointer bg-white hover:bg-gray-50 data-[selected=true]:bg-gray-100",
                               isSelected && "bg-[#3D5AFE]/5"
                             )}
                           >
