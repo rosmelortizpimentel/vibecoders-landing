@@ -37,20 +37,20 @@ export function CardStyleSelector({ value, onChange }: CardStyleSelectorProps) {
           className={cn(
             'p-4 rounded-lg border-2 transition-all text-left',
             value === style.id
-              ? 'border-primary bg-primary/5'
-              : 'border-transparent bg-muted/30 hover:bg-muted/50'
+              ? 'border-[#3D5AFE] bg-[#3D5AFE]/5'
+              : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
           )}
         >
           {/* Preview Card */}
-          <div className={cn('w-full h-16 rounded-md mb-3', style.previewClass)}>
+          <div className={cn('w-full h-16 rounded-md mb-3 bg-white border border-gray-200', style.previewClass)}>
             <div className="p-2">
-              <div className="w-8 h-1.5 bg-foreground/30 rounded mb-1" />
-              <div className="w-12 h-1 bg-foreground/20 rounded" />
+              <div className="w-8 h-1.5 bg-gray-300 rounded mb-1" />
+              <div className="w-12 h-1 bg-gray-200 rounded" />
             </div>
           </div>
           
-          <p className="font-medium text-sm">{style.label}</p>
-          <p className="text-xs text-muted-foreground">{style.description}</p>
+          <p className="font-medium text-sm text-[#1c1c1c]">{style.label}</p>
+          <p className="text-xs text-gray-500">{style.description}</p>
         </button>
       ))}
     </div>

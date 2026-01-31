@@ -14,7 +14,7 @@ const tabs = [
 
 export function MeTabs({ activeTab, onTabChange }: MeTabsProps) {
   return (
-    <div className="flex gap-1 p-1 bg-muted rounded-lg">
+    <div className="flex gap-1 p-1 bg-gray-100 rounded-lg border border-gray-200">
       {tabs.map(tab => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -26,8 +26,8 @@ export function MeTabs({ activeTab, onTabChange }: MeTabsProps) {
             className={cn(
               'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all',
               isActive
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                ? 'bg-[#3D5AFE] text-white shadow-sm'
+                : 'text-gray-600 hover:text-[#1c1c1c] hover:bg-white'
             )}
           >
             <Icon className="h-4 w-4" />

@@ -31,20 +31,20 @@ export function AppCard({ app, onExpand, onToggleVisibility }: AppCardProps) {
 
   return (
     <div 
-      className="group flex items-center gap-4 p-4 border border-border rounded-lg bg-card hover:border-primary/50 transition-colors cursor-pointer"
+      className="group flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-white hover:border-[#3D5AFE]/50 transition-colors cursor-pointer shadow-sm"
       onClick={onExpand}
     >
       {/* Drag Handle */}
-      <div className="flex-shrink-0 text-muted-foreground/50 cursor-grab">
+      <div className="flex-shrink-0 text-gray-400 cursor-grab">
         <GripVertical className="h-5 w-5" />
       </div>
 
       {/* Logo */}
-      <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
+      <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
         {app.logo_url ? (
           <img src={app.logo_url} alt={app.name || 'App'} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-lg font-semibold text-muted-foreground">
+          <span className="text-lg font-semibold text-gray-500">
             {app.name?.charAt(0) || app.url.charAt(0).toUpperCase()}
           </span>
         )}
@@ -53,7 +53,7 @@ export function AppCard({ app, onExpand, onToggleVisibility }: AppCardProps) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <h3 className="font-medium text-foreground truncate">
+          <h3 className="font-medium text-[#1c1c1c] truncate">
             {app.name || new URL(app.url).hostname}
           </h3>
           <a
@@ -61,14 +61,14 @@ export function AppCard({ app, onExpand, onToggleVisibility }: AppCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
-            className="text-muted-foreground hover:text-primary"
+            className="text-gray-400 hover:text-[#3D5AFE]"
           >
             <ExternalLink className="h-4 w-4" />
           </a>
         </div>
         
         {app.tagline && (
-          <p className="text-sm text-muted-foreground truncate">{app.tagline}</p>
+          <p className="text-sm text-gray-500 truncate">{app.tagline}</p>
         )}
 
         {/* Tags */}
@@ -83,7 +83,7 @@ export function AppCard({ app, onExpand, onToggleVisibility }: AppCardProps) {
             </span>
           )}
           {category && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">
               {category.name}
             </span>
           )}

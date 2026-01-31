@@ -39,12 +39,12 @@ export function ColorPicker({ label, value, onChange }: ColorPickerProps) {
 
   return (
     <div className="space-y-3">
-      <Label>{label}</Label>
+      <Label className="text-[#1c1c1c]">{label}</Label>
       
       <div className="flex items-center gap-3">
         {/* Color Preview */}
         <div
-          className="w-12 h-12 rounded-lg border border-border shadow-sm flex-shrink-0"
+          className="w-12 h-12 rounded-lg border border-gray-200 shadow-sm flex-shrink-0"
           style={{ backgroundColor: value }}
         />
         
@@ -53,7 +53,7 @@ export function ColorPicker({ label, value, onChange }: ColorPickerProps) {
           value={inputValue}
           onChange={e => handleInputChange(e.target.value)}
           placeholder="#3D5AFE"
-          className="flex-1 font-mono uppercase"
+          className="flex-1 font-mono uppercase border-gray-300 bg-white text-[#1c1c1c] focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
           maxLength={7}
         />
       </div>
@@ -67,7 +67,7 @@ export function ColorPicker({ label, value, onChange }: ColorPickerProps) {
             onClick={() => handlePresetClick(color)}
             className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${
               value.toLowerCase() === color.toLowerCase()
-                ? 'border-foreground scale-110'
+                ? 'border-[#1c1c1c] scale-110'
                 : 'border-transparent'
             }`}
             style={{ backgroundColor: color }}

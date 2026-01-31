@@ -42,9 +42,9 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
         <div className="flex items-start gap-6">
           {/* Avatar */}
           <div className="relative group">
-            <Avatar className="h-24 w-24 cursor-pointer" onClick={handleAvatarClick}>
+            <Avatar className="h-24 w-24 cursor-pointer border-2 border-gray-200" onClick={handleAvatarClick}>
               <AvatarImage src={profile.avatar_url || ''} alt={profile.name || 'Avatar'} />
-              <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+              <AvatarFallback className="text-2xl bg-[#3D5AFE]/10 text-[#3D5AFE]">
                 {profile.name?.charAt(0) || profile.username?.charAt(0) || '?'}
               </AvatarFallback>
             </Avatar>
@@ -65,56 +65,57 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
 
           {/* Name */}
           <div className="flex-1 space-y-2">
-            <Label htmlFor="name">Nombre *</Label>
+            <Label htmlFor="name" className="text-[#1c1c1c]">Nombre *</Label>
             <Input
               id="name"
               value={profile.name || ''}
               onChange={e => onUpdate({ name: e.target.value })}
               placeholder="Tu nombre completo"
-              className="text-lg"
+              className="text-lg border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             />
           </div>
         </div>
 
         {/* Tagline */}
         <div className="space-y-2">
-          <Label htmlFor="tagline">Tagline</Label>
+          <Label htmlFor="tagline" className="text-[#1c1c1c]">Tagline</Label>
           <Input
             id="tagline"
             value={profile.tagline || ''}
             onChange={e => onUpdate({ tagline: e.target.value.slice(0, 100) })}
             placeholder="Una frase que te defina"
             maxLength={100}
+            className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
           />
-          <p className="text-xs text-muted-foreground text-right">{profile.tagline?.length || 0}/100</p>
+          <p className="text-xs text-gray-500 text-right">{profile.tagline?.length || 0}/100</p>
         </div>
 
         {/* Bio */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="bio">Bio</Label>
-            <span className="text-xs text-muted-foreground">Soporta **negritas**, *italica* y listas</span>
+            <Label htmlFor="bio" className="text-[#1c1c1c]">Bio</Label>
+            <span className="text-xs text-gray-500">Soporta **negritas**, *italica* y listas</span>
           </div>
           <Textarea
             id="bio"
             value={profile.bio || ''}
             onChange={e => onUpdate({ bio: e.target.value.slice(0, 500) })}
             placeholder="Cuéntanos sobre ti, tus proyectos, tu experiencia..."
-            className="min-h-[120px] resize-none"
+            className="min-h-[120px] resize-none border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             maxLength={500}
           />
-          <p className="text-xs text-muted-foreground text-right">{bioLength}/500</p>
+          <p className="text-xs text-gray-500 text-right">{bioLength}/500</p>
         </div>
       </section>
 
       {/* Divider */}
-      <hr className="border-border" />
+      <hr className="border-gray-200" />
 
       {/* Location & Website */}
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="location" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
+          <Label htmlFor="location" className="flex items-center gap-2 text-[#1c1c1c]">
+            <MapPin className="h-4 w-4 text-gray-500" />
             Ubicación
           </Label>
           <Input
@@ -122,12 +123,13 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
             value={profile.location || ''}
             onChange={e => onUpdate({ location: e.target.value })}
             placeholder="Ciudad, País"
+            className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="website" className="flex items-center gap-2">
-            <Globe className="h-4 w-4" />
+          <Label htmlFor="website" className="flex items-center gap-2 text-[#1c1c1c]">
+            <Globe className="h-4 w-4 text-gray-500" />
             Website
           </Label>
           <Input
@@ -136,16 +138,17 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
             onChange={e => onUpdate({ website: e.target.value })}
             placeholder="https://tuwebsite.com"
             type="url"
+            className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
           />
         </div>
       </section>
 
       {/* Divider */}
-      <hr className="border-border" />
+      <hr className="border-gray-200" />
 
       {/* Social Networks */}
       <section>
-        <h3 className="text-sm font-medium mb-4">Redes Sociales</h3>
+        <h3 className="text-sm font-medium mb-4 text-[#1c1c1c]">Redes Sociales</h3>
         <ProfileSocials profile={profile} onUpdate={onUpdate} />
       </section>
     </div>

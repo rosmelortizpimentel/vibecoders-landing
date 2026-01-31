@@ -63,25 +63,25 @@ export function AppsTab({ appsHook }: AppsTabProps) {
         <Button
           onClick={() => setIsCreating(true)}
           variant="outline"
-          className="w-full border-dashed border-2 h-14 hover:border-primary hover:bg-primary/5"
+          className="w-full border-dashed border-2 border-gray-300 h-14 hover:border-[#3D5AFE] hover:bg-[#3D5AFE]/5 text-gray-600 hover:text-[#3D5AFE]"
         >
           <Plus className="h-5 w-5 mr-2" />
           Agregar App
         </Button>
       ) : (
-        <div className="flex gap-2 p-4 border-2 border-primary rounded-lg bg-primary/5">
+        <div className="flex gap-2 p-4 border-2 border-[#3D5AFE] rounded-lg bg-[#3D5AFE]/5">
           <Input
             value={newUrl}
             onChange={e => setNewUrl(e.target.value)}
             placeholder="https://tu-app.com"
-            className="flex-1"
+            className="flex-1 border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400"
             autoFocus
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
           />
-          <Button onClick={handleCreate} disabled={!newUrl.trim()}>
+          <Button onClick={handleCreate} disabled={!newUrl.trim()} className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90">
             Agregar
           </Button>
-          <Button variant="ghost" onClick={() => { setIsCreating(false); setNewUrl(''); }}>
+          <Button variant="ghost" onClick={() => { setIsCreating(false); setNewUrl(''); }} className="text-gray-600 hover:text-[#1c1c1c]">
             Cancelar
           </Button>
         </div>
@@ -89,7 +89,7 @@ export function AppsTab({ appsHook }: AppsTabProps) {
 
       {/* Apps List */}
       {apps.length === 0 && !isCreating ? (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-gray-500">
           <p>No tienes apps todavía</p>
           <p className="text-sm mt-1">Agrega tu primer proyecto para mostrarlo en tu perfil</p>
         </div>
