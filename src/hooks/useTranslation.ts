@@ -2,6 +2,7 @@ import commonEs from '@/i18n/es/common.json';
 import heroEs from '@/i18n/es/hero.json';
 import featuresEs from '@/i18n/es/features.json';
 import waitlistEs from '@/i18n/es/waitlist.json';
+import legalEs from '@/i18n/es/legal.json';
 
 type Language = 'es';
 
@@ -12,6 +13,7 @@ const translations = {
     hero: heroEs,
     features: featuresEs,
     waitlist: waitlistEs,
+    legal: legalEs,
   },
 } as const;
 

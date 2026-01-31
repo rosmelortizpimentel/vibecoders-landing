@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import canadaFlag from '@/assets/canada-flag.png';
 
@@ -7,9 +8,27 @@ const Footer = () => {
   return (
     <footer className="bg-[#1c1c1c] px-4 py-8 sm:py-8">
       <div className="container mx-auto flex flex-col-reverse items-center justify-between gap-4 text-xs sm:flex-row sm:text-sm">
-        <p className="text-white/70">{t.footer.copyright}</p>
+        {/* Left: Copyright + Legal links */}
+        <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
+          <p className="text-white/70">{t.footer.copyright}</p>
+          <div className="flex items-center gap-3">
+            <Link 
+              to="/privacy" 
+              className="text-white/70 hover:text-white transition-colors"
+            >
+              {t.footer.privacy}
+            </Link>
+            <span className="text-white/40">·</span>
+            <Link 
+              to="/terms" 
+              className="text-white/70 hover:text-white transition-colors"
+            >
+              {t.footer.terms}
+            </Link>
+          </div>
+        </div>
         
-        {/* Mobile: Stack in two lines, Desktop: Single line */}
+        {/* Right: Built info */}
         <div className="flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-1.5">
           <p className="flex items-center gap-1.5 text-white/70">
             {t.footer.builtAt}{' '}
