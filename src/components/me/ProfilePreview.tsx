@@ -2,14 +2,7 @@ import { useEffect } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  Twitter, 
-  Github, 
-  Instagram, 
-  Youtube, 
-  Linkedin, 
-  Mail
-} from 'lucide-react';
+import { Lock, Twitter, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
 
 // TikTok icon (not in lucide-react)
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -55,17 +48,49 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
   if (!profile) return null;
 
   const fontFamily = profile.font_family || 'Inter';
+  const username = profile.username || 'username';
+
+  // Generate app URL with ref
+  const getAppUrl = (appUrl: string) => {
+    try {
+      const url = new URL(appUrl);
+      url.searchParams.set('ref', 'vibecoders.la');
+      return url.toString();
+    } catch {
+      return appUrl;
+    }
+  };
 
   return (
     <div 
       className="rounded-2xl overflow-hidden shadow-xl"
-      style={{ 
-        fontFamily,
-        background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
-      }}
+      style={{ fontFamily }}
     >
+      {/* Browser Chrome */}
+      <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 bg-[#ECECEC] border-b border-stone-200">
+        {/* Traffic Lights - hidden on mobile */}
+        <div className="hidden md:flex items-center gap-1.5">
+          <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
+          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
+          <div className="w-3 h-3 rounded-full bg-[#28CA41]" />
+        </div>
+        
+        {/* URL Bar */}
+        <div className="flex items-center gap-1.5 md:gap-2 bg-white rounded-md px-2 md:px-3 py-1 md:py-1.5 border border-stone-200">
+          <Lock className="w-3 h-3 md:w-3.5 md:h-3.5 text-stone-400 flex-shrink-0" />
+          <span className="text-xs md:text-sm text-stone-700 font-medium tracking-tight truncate">
+            vibecoders.la/<span className="text-stone-900">@{username}</span>
+          </span>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <div className="px-8 py-10 text-center">
+      <div 
+        className="px-8 py-10 text-center"
+        style={{ 
+          background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
+        }}
+      >
         {/* Avatar */}
         <Avatar className="h-24 w-24 mx-auto border-4 border-white/30">
           <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
@@ -137,15 +162,23 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
       {/* Apps Section */}
       {visibleApps.length > 0 && (
-        <div className="mx-6 mb-6 p-4 rounded-xl bg-white/10 backdrop-blur-sm">
+        <div 
+          className="mx-6 mb-6 -mt-4 p-4 rounded-xl bg-white/10 backdrop-blur-sm"
+          style={{ 
+            background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
+          }}
+        >
           <p className="text-xs font-medium text-white/60 uppercase tracking-wide mb-3">
             Apps
           </p>
           <div className="space-y-2">
             {visibleApps.slice(0, 3).map(app => (
-              <div 
+              <a 
                 key={app.id}
-                className="flex items-center gap-3 p-2 rounded-lg bg-white/5"
+                href={getAppUrl(app.url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
               >
                 {app.logo_url ? (
                   <img 
@@ -170,7 +203,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
                     </p>
                   )}
                 </div>
-              </div>
+              </a>
             ))}
             {visibleApps.length > 3 && (
               <p className="text-xs text-center text-white/50 pt-1">
@@ -182,9 +215,14 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
       )}
 
       {/* Footer */}
-      <div className="py-4 text-center border-t border-white/10">
+      <div 
+        className="py-4 text-center border-t border-white/10"
+        style={{ 
+          background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
+        }}
+      >
         <span className="text-xs text-white/50">
-          vibecoders.io/@{profile.username || 'username'}
+          vibecoders.la/@{username}
         </span>
       </div>
     </div>

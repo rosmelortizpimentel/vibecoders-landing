@@ -1,11 +1,14 @@
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { ProfileSocials } from './ProfileSocials';
+import { UsernameEditor } from './UsernameEditor';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Camera, MapPin, Globe } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProfileTabProps {
   profile: ProfileData | null;
@@ -14,6 +17,7 @@ interface ProfileTabProps {
 }
 
 export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProps) {
+  const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!profile) return null;
@@ -63,16 +67,26 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
             />
           </div>
 
-          {/* Name */}
-          <div className="flex-1 space-y-2">
-            <Label htmlFor="name" className="text-[#1c1c1c]">Nombre *</Label>
-            <Input
-              id="name"
-              value={profile.name || ''}
-              onChange={e => onUpdate({ name: e.target.value })}
-              placeholder="Tu nombre completo"
-              className="text-lg border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
-            />
+          {/* Name and Username */}
+          <div className="flex-1 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-[#1c1c1c]">Nombre *</Label>
+              <Input
+                id="name"
+                value={profile.name || ''}
+                onChange={e => onUpdate({ name: e.target.value })}
+                placeholder="Tu nombre completo"
+                className="text-lg border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
+              />
+            </div>
+            
+            {user && (
+              <UsernameEditor 
+                currentUsername={profile.username}
+                onUpdate={(username) => onUpdate({ username })}
+                userId={user.id}
+              />
+            )}
           </div>
         </div>
 
