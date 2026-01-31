@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown } from 'lucide-react';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 interface MeHeaderProps {
   profile: ProfileData | null;
@@ -38,8 +39,12 @@ export function MeHeader({ profile, isSaving, lastSaved, error, onSignOut }: MeH
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
       <div className="container flex h-14 items-center justify-between px-4">
         {/* Logo */}
-        <a href="/" className="text-lg font-semibold text-[#1c1c1c] hover:text-[#3D5AFE] transition-colors">
-          vibecoders
+        <a href="/" className="flex items-center">
+          <img 
+            src={vibecodersLogo} 
+            alt="Vibecoders" 
+            className="h-9 w-9 rounded-full border-2 border-gray-200 hover:border-[#3D5AFE] transition-colors"
+          />
         </a>
         
         <div className="flex items-center gap-4">
