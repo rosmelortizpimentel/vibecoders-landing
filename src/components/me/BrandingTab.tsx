@@ -16,8 +16,8 @@ export function BrandingTab({ profile, onUpdate }: BrandingTabProps) {
       {/* Typography */}
       <section className="space-y-4">
         <div>
-          <h3 className="text-sm font-medium">Tipografía</h3>
-          <p className="text-xs text-muted-foreground mt-1">
+          <h3 className="text-sm font-medium text-[#1c1c1c]">Tipografía</h3>
+          <p className="text-xs text-gray-500 mt-1">
             Esta fuente se aplicará a tu perfil público
           </p>
         </div>
@@ -27,13 +27,13 @@ export function BrandingTab({ profile, onUpdate }: BrandingTabProps) {
         />
       </section>
 
-      <hr className="border-border" />
+      <hr className="border-gray-200" />
 
       {/* Colors */}
       <section className="space-y-4">
         <div>
-          <h3 className="text-sm font-medium">Colores</h3>
-          <p className="text-xs text-muted-foreground mt-1">
+          <h3 className="text-sm font-medium text-[#1c1c1c]">Colores</h3>
+          <p className="text-xs text-gray-500 mt-1">
             Personaliza los colores de tu perfil
           </p>
         </div>
@@ -51,13 +51,13 @@ export function BrandingTab({ profile, onUpdate }: BrandingTabProps) {
         </div>
       </section>
 
-      <hr className="border-border" />
+      <hr className="border-gray-200" />
 
       {/* Card Style */}
       <section className="space-y-4">
         <div>
-          <h3 className="text-sm font-medium">Estilo de Tarjetas</h3>
-          <p className="text-xs text-muted-foreground mt-1">
+          <h3 className="text-sm font-medium text-[#1c1c1c]">Estilo de Tarjetas</h3>
+          <p className="text-xs text-gray-500 mt-1">
             Elige cómo se verán las tarjetas de tus apps
           </p>
         </div>

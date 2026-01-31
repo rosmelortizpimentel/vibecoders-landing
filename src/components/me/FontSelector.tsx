@@ -58,7 +58,7 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
   return (
     <div className="space-y-3">
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full">
+        <SelectTrigger className="w-full border-gray-300 bg-white text-[#1c1c1c]">
           <SelectValue placeholder="Selecciona una fuente" />
         </SelectTrigger>
         <SelectContent>
@@ -72,11 +72,11 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
 
       {/* Preview */}
       <div 
-        className="p-4 rounded-lg border border-border bg-muted/30"
+        className="p-4 rounded-lg border border-gray-200 bg-gray-50"
         style={{ fontFamily: value }}
       >
-        <p className="text-lg font-semibold">The quick brown fox jumps over the lazy dog</p>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-lg font-semibold text-[#1c1c1c]">The quick brown fox jumps over the lazy dog</p>
+        <p className="text-sm text-gray-500 mt-1">
           ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz 0123456789
         </p>
       </div>

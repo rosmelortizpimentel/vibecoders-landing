@@ -26,11 +26,11 @@ export function MeLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Header with save status */}
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
         <div className="container flex h-14 items-center justify-between px-4">
-          <a href="/" className="text-lg font-semibold text-foreground hover:text-primary transition-colors">
+          <a href="/" className="text-lg font-semibold text-[#1c1c1c] hover:text-[#3D5AFE] transition-colors">
             vibecoders
           </a>
           
@@ -39,18 +39,18 @@ export function MeLayout() {
             <div className="flex items-center gap-2 text-sm">
               {isSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Guardando...</span>
+                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <span className="text-gray-500">Guardando...</span>
                 </>
               ) : error ? (
                 <>
-                  <AlertCircle className="h-4 w-4 text-destructive" />
-                  <span className="text-destructive">Error</span>
+                  <AlertCircle className="h-4 w-4 text-red-500" />
+                  <span className="text-red-500">Error</span>
                 </>
               ) : lastSaved ? (
                 <>
                   <Check className="h-4 w-4 text-green-500" />
-                  <span className="text-muted-foreground hidden sm:inline">Guardado</span>
+                  <span className="text-gray-500 hidden sm:inline">Guardado</span>
                 </>
               ) : null}
             </div>
@@ -61,7 +61,7 @@ export function MeLayout() {
                 href={`/@${profile.username}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-[#3D5AFE] hover:underline"
               >
                 @{profile.username}
               </a>
