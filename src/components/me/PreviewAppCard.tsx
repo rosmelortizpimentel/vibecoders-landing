@@ -16,10 +16,11 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
     ? statuses.find(s => s.id === app.status_id) 
     : null;
 
-  // Find the tech stacks for this app (max 4)
+  // Find the tech stacks for this app (max 4, sorted alphabetically)
   const appStacks = (app.stacks || [])
     .map(stackId => stacks.find(s => s.id === stackId))
     .filter((s): s is TechStack => s !== undefined)
+    .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 4);
 
   return (
