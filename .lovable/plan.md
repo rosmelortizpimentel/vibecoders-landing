@@ -1,66 +1,124 @@
 
-## Objetivo
-Asignar automáticamente un username basado en el email cuando el usuario se registra. Por ejemplo, si el correo es `abc@yopmail.com`, el username por defecto será `abc`.
+# Plan: Solucionar OAuth de Google en Navegador Embebido de LinkedIn (iOS)
 
----
+## Contexto del Problema
 
-## Flujo propuesto
+Cuando un usuario abre tu sitio desde un link en la app de LinkedIn en iOS, se abre en un **navegador embebido (WebView)**. Google bloquea OAuth en estos navegadores por seguridad, mostrando el error:
 
-1. Usuario se registra con Google (o email)
-2. Al cargar el perfil por primera vez, si no existe:
-   - Extraer la parte local del email (antes del @)
-   - Limpiar caracteres no permitidos (solo letras, numeros, guion bajo)
-   - Truncar a 20 caracteres maximo
-   - Verificar disponibilidad usando la Edge Function existente
-   - Si esta disponible, crear el perfil con ese username
-   - Si no esta disponible, crear el perfil sin username (el usuario lo elige despues)
-3. La card muestra el username asignado y la URL correspondiente
-
----
-
-## Cambios
-
-### 1. Archivo: `src/hooks/useProfile.ts`
-
-Agregar funcion helper para extraer username del email:
-
-```typescript
-const extractUsernameFromEmail = (email: string): string => {
-  // Obtener parte antes del @
-  const localPart = email.split('@')[0] || '';
-  // Limpiar: solo letras, numeros y guion bajo, minusculas
-  const cleaned = localPart.toLowerCase().replace(/[^a-z0-9_]/g, '');
-  // Truncar a 20 caracteres
-  return cleaned.slice(0, 20);
-};
+```
+Error 403: disallowed_useragent
 ```
 
-Modificar la logica de creacion de perfil (lineas 36-44) para:
-1. Extraer username candidato del email del usuario
-2. Verificar disponibilidad con la Edge Function
-3. Insertar perfil con username si esta disponible, o sin username si no lo esta
-
-### 2. Archivo: `src/components/ProfileCard.tsx`
-
-Actualizar el mensaje de la card frontal:
-- Si tiene username: mostrar "Tu @username esta reservado" con la URL
-- Si no tiene username: mantener el mensaje generico actual
+En Android funciona porque LinkedIn usa Chrome Custom Tabs que Google sí permite.
 
 ---
 
-## Consideraciones tecnicas
+## Solución Propuesta
 
-- La verificacion de disponibilidad requiere un usuario autenticado, por lo que se usara directamente una query con service role desde el frontend (o se hara un intento de insert con manejo de error de constraint)
-- Si el username extraido del email contiene caracteres invalidos o esta vacio despues de limpiar, se crea el perfil sin username
-- El username minimo debe tener al menos 1 caracter valido
+Detectar si el usuario está en el navegador embebido de LinkedIn en iOS y:
+
+1. **Opción A (Recomendada)**: Redirigir automáticamente a Safari usando el esquema `x-safari-` (disponible desde iOS 17+)
+2. **Opción B (Fallback)**: Mostrar un mensaje indicando al usuario que abra el enlace en Safari manualmente
 
 ---
 
-## Resultado esperado
+## Implementación
 
-Cuando un usuario con email `rosmel@betto.today` se registra:
-1. Se extrae "rosmel" como username candidato
-2. Se verifica si "rosmel" esta disponible
-3. Si esta disponible, el perfil se crea con username "rosmel"
-4. La card muestra: "Tu @rosmel esta reservado" y la URL `vibecoders.la/@rosmel`
-5. El usuario puede cambiar su username en cualquier momento usando el boton "Cambiar username"
+### 1. Crear utilidad de detección de navegador embebido
+
+Crear un nuevo archivo `src/lib/inAppBrowser.ts` con funciones para:
+- Detectar si es navegador embebido de LinkedIn en iOS
+- Redirigir a Safari automáticamente
+- Fallback para versiones anteriores a iOS 17
+
+```text
+┌─────────────────────────────────────────┐
+│ Usuario abre link desde LinkedIn (iOS)  │
+└─────────────────┬───────────────────────┘
+                  ▼
+┌─────────────────────────────────────────┐
+│ ¿Es LinkedInApp + iOS?                  │
+└──────────┬──────────────────┬───────────┘
+           │ SÍ               │ NO
+           ▼                  ▼
+┌─────────────────────┐  ┌────────────────┐
+│ Redirigir a Safari  │  │ Continuar      │
+│ (x-safari-URL)      │  │ normalmente    │
+└─────────────────────┘  └────────────────┘
+```
+
+### 2. Implementar redirección al inicio de la app
+
+Modificar `src/main.tsx` o agregar un componente wrapper que ejecute la verificación **antes** de que React renderice la app.
+
+La lógica verificará:
+```javascript
+const userAgent = navigator.userAgent;
+const isLinkedInIOS = userAgent.includes('Mobile') && 
+                      (userAgent.includes('iPhone') || userAgent.includes('iPad')) && 
+                      userAgent.includes('LinkedInApp');
+
+if (isLinkedInIOS) {
+  window.location.href = 'x-safari-' + window.location.href;
+}
+```
+
+### 3. Alternativa: Mostrar mensaje amigable
+
+Si la redirección automática falla (iOS < 17), mostrar un modal/mensaje:
+
+> "Para continuar con Google, abre este enlace en Safari. Toca el ícono de Safari o copia el enlace."
+
+Con un botón para copiar la URL al portapapeles.
+
+---
+
+## Archivos a Modificar/Crear
+
+| Archivo | Acción | Descripción |
+|---------|--------|-------------|
+| `src/lib/inAppBrowser.ts` | Crear | Utilidades para detectar y manejar navegadores embebidos |
+| `src/main.tsx` | Modificar | Agregar verificación al inicio antes de renderizar |
+| `src/components/InAppBrowserWarning.tsx` | Crear | Componente de fallback con instrucciones manuales |
+
+---
+
+## Detalles Técnicos
+
+### Detección del User Agent de LinkedIn iOS
+
+LinkedIn en iOS tiene un user agent como:
+```
+Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) 
+AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [LinkedInApp]/9.30.1317
+```
+
+La clave es detectar `LinkedInApp` + `iPhone`/`iPad` + `Mobile`.
+
+### Esquema x-safari-
+
+El esquema `x-safari-https://...` abre Safari directamente desde un WebView. Solo funciona en iOS 17+, pero la mayoría de usuarios ya tienen esta versión.
+
+### Fallback para iOS < 17
+
+Para usuarios con versiones anteriores, mostrar un mensaje con:
+- Instrucciones claras
+- Botón "Copiar enlace"
+- Opción de abrir en navegador del sistema (si está disponible)
+
+---
+
+## Resultado Esperado
+
+- Usuarios que llegan desde LinkedIn en iOS serán redirigidos automáticamente a Safari
+- En Safari, el OAuth de Google funcionará sin problemas
+- Si la redirección falla, verán instrucciones claras para continuar
+
+---
+
+## Nota Importante
+
+Esta solución es específica para LinkedIn. Si en el futuro tienes problemas con otros navegadores embebidos (Facebook, Twitter, Instagram), la misma lógica puede extenderse detectando sus user agents:
+- Facebook: `FBAN` o `FBAV` en el user agent
+- Instagram: `Instagram`
+- Twitter/X: `Twitter`
