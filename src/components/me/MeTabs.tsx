@@ -1,18 +1,19 @@
+import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Layers, Palette } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-interface MeTabsProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}
-
 const tabs = [
-  { id: 'profile', label: 'Perfil', icon: User },
-  { id: 'apps', label: 'Apps', icon: Layers },
-  { id: 'branding', label: 'Branding', icon: Palette },
+  { id: 'profile', label: 'Perfil', icon: User, path: '/me/profile' },
+  { id: 'apps', label: 'Apps', icon: Layers, path: '/me/apps' },
+  { id: 'branding', label: 'Branding', icon: Palette, path: '/me/branding' },
 ];
 
-export function MeTabs({ activeTab, onTabChange }: MeTabsProps) {
+export function MeTabs() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const activeTab = tabs.find(tab => location.pathname === tab.path)?.id || 'profile';
+
   return (
     <div className="flex gap-1 p-1 bg-gray-100 rounded-lg border border-gray-200">
       {tabs.map(tab => {
@@ -22,7 +23,7 @@ export function MeTabs({ activeTab, onTabChange }: MeTabsProps) {
         return (
           <button
             key={tab.id}
-            onClick={() => onTabChange(tab.id)}
+            onClick={() => navigate(tab.path)}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all',
               isActive

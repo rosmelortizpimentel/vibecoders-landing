@@ -23,7 +23,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/me" element={<Me />} />
+          {/* Me dashboard routes with sub-paths */}
+          <Route path="/me" element={<Navigate to="/me/profile" replace />} />
+          <Route path="/me/profile" element={<Me />} />
+          <Route path="/me/apps" element={<Me />} />
+          <Route path="/me/branding" element={<Me />} />
           {/* Legal pages - must be before /:handle to avoid conflicts */}
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
