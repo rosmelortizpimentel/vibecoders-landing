@@ -45,6 +45,7 @@ export function useProfileEditor() {
     const { error } = await supabase
       .from('profiles')
       .update({
+        username: data.username,
         name: data.name,
         tagline: data.tagline,
         bio: data.bio,
