@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
+import { Menu, MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
@@ -85,7 +85,8 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
       style={{ fontFamily }}
     >
       {/* App-style Header */}
-      <div className="flex items-center px-4 py-2 bg-white border-b border-gray-100">
+      <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-gray-100">
+        <Menu className="h-5 w-5 text-gray-600" />
         <img 
           src={vibecodersLogo} 
           alt="Vibecoders" 
@@ -107,8 +108,8 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           <div className="h-16 md:h-20 w-full bg-gradient-to-r from-gray-100 to-gray-50" />
         )}
         
-        {/* Avatar overlapping banner */}
-        <div className="absolute left-1/2 -translate-x-1/2 -bottom-10 md:-bottom-12">
+        {/* Avatar aligned to the left */}
+        <div className="absolute left-4 -bottom-10 md:-bottom-12">
           <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-white shadow-md">
             <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
             <AvatarFallback className="text-xl md:text-2xl font-bold bg-gray-100 text-gray-600">
@@ -119,7 +120,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
       </div>
 
       {/* Main Content */}
-      <div className="pt-12 md:pt-14 pb-6 px-4 md:px-6 text-center space-y-3">
+      <div className="pt-12 md:pt-14 pb-6 px-4 md:px-6 text-left space-y-3">
         {/* Name - always visible */}
         <h2 className="text-lg md:text-xl font-bold text-gray-900">
           {profile.name || 'Tu Nombre'}
@@ -135,7 +136,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
         {/* Social Icons Row - only if there are active socials */}
         {activeSocials.length > 0 && (
-          <div className="flex items-center justify-center gap-2 pt-1">
+          <div className="flex items-center gap-2 pt-1">
             {activeSocials.map(({ key, icon: Icon, getUrl }) => {
               const value = profile[key as keyof ProfileData] as string;
               return (
@@ -153,17 +154,16 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           </div>
         )}
 
-        {/* Location & Website - only if exist */}
         {(profile.location || profile.website) && (
           <div className="space-y-1 pt-2">
             {profile.location && (
-              <div className="flex items-center justify-center gap-1.5 text-sm text-gray-500">
+              <div className="flex items-center gap-1.5 text-sm text-gray-500">
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{profile.location}</span>
               </div>
             )}
             {profile.website && (
-              <div className="flex items-center justify-center gap-1.5 text-sm text-gray-500">
+              <div className="flex items-center gap-1.5 text-sm text-gray-500">
                 <LinkIcon className="h-3.5 w-3.5" />
                 <a 
                   href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
