@@ -98,7 +98,7 @@ export function ProfileSocials({ profile, onUpdate }: ProfileSocialsProps) {
               value={(profile[selectedField.key] as string) || ''}
               onChange={e => onUpdate({ [selectedField.key]: e.target.value })}
               placeholder={selectedField.placeholder}
-              className="flex-1 border-gray-200 focus:ring-[#3D5AFE] focus:border-[#3D5AFE]"
+              className="flex-1 bg-white border border-gray-200 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
               autoFocus
             />
             <Button
@@ -106,7 +106,7 @@ export function ProfileSocials({ profile, onUpdate }: ProfileSocialsProps) {
               variant="outline"
               size="icon"
               onClick={() => handleDelete(selectedField.key)}
-              className="shrink-0 border-gray-200 text-gray-500 hover:text-red-500 hover:border-red-200 hover:bg-red-50"
+              className="shrink-0 bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-300 hover:bg-red-50"
               aria-label={`Eliminar ${selectedField.label}`}
             >
               <Trash2 className="h-4 w-4" />

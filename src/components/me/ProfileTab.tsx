@@ -71,7 +71,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
               value={profile.name || ''}
               onChange={e => onUpdate({ name: e.target.value })}
               placeholder="Tu nombre completo"
-              className="text-lg border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-lg border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
             />
           </div>
         </div>
@@ -85,7 +85,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
             onChange={e => onUpdate({ tagline: e.target.value.slice(0, 100) })}
             placeholder="Una frase que te defina"
             maxLength={100}
-            className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
           />
           <p className="text-xs text-gray-500 text-right">{profile.tagline?.length || 0}/100</p>
         </div>
@@ -101,7 +101,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
             value={profile.bio || ''}
             onChange={e => onUpdate({ bio: e.target.value.slice(0, 500) })}
             placeholder="Cuéntanos sobre ti, tus proyectos, tu experiencia..."
-            className="min-h-[120px] resize-none border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+            className="min-h-[120px] resize-none border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
             maxLength={500}
           />
           <p className="text-xs text-gray-500 text-right">{bioLength}/500</p>
@@ -123,7 +123,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
             value={profile.location || ''}
             onChange={e => onUpdate({ location: e.target.value })}
             placeholder="Ciudad, País"
-            className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
           />
         </div>
 
@@ -138,7 +138,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
             onChange={e => onUpdate({ website: e.target.value })}
             placeholder="https://tuwebsite.com"
             type="url"
-            className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
           />
         </div>
       </section>

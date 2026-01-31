@@ -1,41 +1,22 @@
 import { useEffect } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
-import { parseMarkdown } from '@/lib/markdown';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { 
-  MapPin, 
-  Globe, 
-  Twitter, 
-  Github, 
-  Instagram, 
-  Youtube, 
-  Linkedin, 
-  Mail,
-  ExternalLink
-} from 'lucide-react';
-
-// TikTok icon
-const TikTokIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
-  </svg>
-);
 
 interface ProfilePreviewProps {
   profile: ProfileData | null;
   apps: AppData[];
 }
 
-const socialIcons = {
-  twitter: Twitter,
-  github: Github,
-  tiktok: TikTokIcon,
-  instagram: Instagram,
-  youtube: Youtube,
-  linkedin: Linkedin,
-  email_public: Mail,
-} as const;
+const socialLabels: Record<string, string> = {
+  twitter: 'Twitter',
+  github: 'GitHub',
+  tiktok: 'TikTok',
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+  linkedin: 'LinkedIn',
+  email_public: 'Email',
+};
 
 export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
   const visibleApps = apps.filter(app => app.is_visible);
@@ -58,143 +39,113 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
   if (!profile) return null;
 
-  const primaryColor = profile.primary_color || '#3D5AFE';
-  const accentColor = profile.accent_color || '#1c1c1c';
   const fontFamily = profile.font_family || 'Inter';
-  const cardStyle = profile.card_style || 'minimal';
 
-  const getCardClass = () => {
-    switch (cardStyle) {
-      case 'elevated':
-        return 'border-0 shadow-lg';
-      case 'outlined':
-        return 'border-2';
-      default:
-        return 'border';
-    }
-  };
-
-  const activeSocials = Object.entries(socialIcons).filter(
-    ([key]) => profile[key as keyof ProfileData]
-  );
+  // Get active social networks as text list
+  const activeSocials = Object.entries(socialLabels)
+    .filter(([key]) => profile[key as keyof ProfileData])
+    .map(([, label]) => label);
 
   return (
     <div 
-      className="rounded-xl border border-border bg-card overflow-hidden"
-      style={{ fontFamily }}
+      className="rounded-2xl overflow-hidden shadow-xl"
+      style={{ 
+        fontFamily,
+        background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
+      }}
     >
-      {/* Header */}
-      <div 
-        className="h-20"
-        style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}CC)` }}
-      />
-
-      {/* Profile Info */}
-      <div className="px-6 pb-6">
-        <Avatar className="h-20 w-20 -mt-10 border-4 border-card">
+      {/* Main Content */}
+      <div className="px-8 py-10 text-center">
+        {/* Avatar */}
+        <Avatar className="h-24 w-24 mx-auto border-4 border-white/30">
           <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
           <AvatarFallback 
-            className="text-2xl"
-            style={{ backgroundColor: `${primaryColor}20`, color: primaryColor }}
+            className="text-3xl font-bold bg-white/20 text-white"
           >
             {profile.name?.charAt(0) || '?'}
           </AvatarFallback>
         </Avatar>
 
-        <div className="mt-3 space-y-2">
-          <h2 className="text-xl font-semibold" style={{ color: accentColor }}>
-            {profile.name || 'Tu Nombre'}
-          </h2>
-          
-          {profile.tagline && (
-            <p className="text-sm" style={{ color: `${accentColor}99` }}>
-              {profile.tagline}
+        {/* Name */}
+        <h2 className="mt-5 text-2xl font-bold text-white">
+          {profile.name || 'Tu Nombre'}
+        </h2>
+        
+        {/* Tagline */}
+        {profile.tagline && (
+          <p className="mt-2 text-sm text-white/70">
+            {profile.tagline}
+          </p>
+        )}
+
+        {/* Bio */}
+        {profile.bio && (
+          <p className="mt-4 text-sm text-white/80 leading-relaxed max-w-xs mx-auto">
+            {profile.bio}
+          </p>
+        )}
+
+        {/* Location & Website */}
+        <div className="mt-6 space-y-1">
+          {profile.location && (
+            <p className="text-sm text-white/60">
+              {profile.location}
             </p>
           )}
-
-          {profile.bio && (
-            <div 
-              className="text-sm mt-3"
-              style={{ color: `${accentColor}CC` }}
-              dangerouslySetInnerHTML={{ __html: parseMarkdown(profile.bio) }}
-            />
-          )}
-
-          {/* Location & Website */}
-          <div className="flex flex-wrap gap-3 mt-4 text-sm" style={{ color: `${accentColor}99` }}>
-            {profile.location && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
-                {profile.location}
-              </span>
-            )}
-            {profile.website && (
-              <a 
-                href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                className="flex items-center gap-1 hover:underline"
-                style={{ color: primaryColor }}
-              >
-                <Globe className="h-4 w-4" />
-                {profile.website.replace(/^https?:\/\//, '')}
-              </a>
-            )}
-          </div>
-
-          {/* Socials */}
-          {activeSocials.length > 0 && (
-            <div className="flex gap-2 mt-4">
-              {activeSocials.map(([key, Icon]) => (
-                <div
-                  key={key}
-                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: `${primaryColor}15` }}
-                >
-                  <Icon className="h-4 w-4" style={{ color: primaryColor }} />
-                </div>
-              ))}
-            </div>
+          {profile.website && (
+            <p className="text-sm text-white/60">
+              {profile.website.replace(/^https?:\/\//, '')}
+            </p>
           )}
         </div>
+
+        {/* Social Networks - Text only */}
+        {activeSocials.length > 0 && (
+          <p className="mt-4 text-xs text-white/50">
+            {activeSocials.join(' · ')}
+          </p>
+        )}
       </div>
 
-      {/* Apps */}
+      {/* Apps Section */}
       {visibleApps.length > 0 && (
-        <div className="px-6 pb-6">
-          <h3 className="text-sm font-medium mb-3" style={{ color: accentColor }}>
+        <div className="mx-6 mb-6 p-4 rounded-xl bg-white/10 backdrop-blur-sm">
+          <p className="text-xs font-medium text-white/60 uppercase tracking-wide mb-3">
             Apps
-          </h3>
+          </p>
           <div className="space-y-2">
             {visibleApps.slice(0, 3).map(app => (
               <div 
                 key={app.id}
-                className={`p-3 rounded-lg bg-muted/30 ${getCardClass()}`}
+                className="flex items-center gap-3 p-2 rounded-lg bg-white/5"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {app.logo_url ? (
-                      <img src={app.logo_url} alt={app.name || ''} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-sm font-medium" style={{ color: `${accentColor}66` }}>
-                        {app.name?.charAt(0) || '?'}
-                      </span>
-                    )}
+                {app.logo_url ? (
+                  <img 
+                    src={app.logo_url} 
+                    alt={app.name || ''} 
+                    className="w-8 h-8 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                    <span className="text-xs font-medium text-white/60">
+                      {app.name?.charAt(0) || '?'}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate" style={{ color: accentColor }}>
-                      {app.name || new URL(app.url).hostname}
+                )}
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-white truncate">
+                    {app.name || new URL(app.url).hostname}
+                  </p>
+                  {app.tagline && (
+                    <p className="text-xs text-white/60 truncate">
+                      {app.tagline}
                     </p>
-                    {app.tagline && (
-                      <p className="text-xs truncate" style={{ color: `${accentColor}99` }}>
-                        {app.tagline}
-                      </p>
-                    )}
-                  </div>
-                  <ExternalLink className="h-4 w-4 flex-shrink-0" style={{ color: `${accentColor}66` }} />
+                  )}
                 </div>
               </div>
             ))}
             {visibleApps.length > 3 && (
-              <p className="text-xs text-center" style={{ color: `${accentColor}66` }}>
+              <p className="text-xs text-center text-white/50 pt-1">
                 +{visibleApps.length - 3} más
               </p>
             )}
@@ -203,8 +154,8 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
       )}
 
       {/* Footer */}
-      <div className="px-6 py-3 border-t border-border/50 text-center">
-        <span className="text-xs" style={{ color: `${accentColor}66` }}>
+      <div className="py-4 text-center border-t border-white/10">
+        <span className="text-xs text-white/50">
           vibecoders.io/@{profile.username || 'username'}
         </span>
       </div>
