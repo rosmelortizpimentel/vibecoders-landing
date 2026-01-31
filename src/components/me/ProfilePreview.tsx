@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Menu, MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 // X icon (current logo)
 const XIcon = ({ className }: { className?: string }) => (
@@ -84,10 +85,12 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
       style={{ fontFamily }}
     >
       {/* App-style Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
-        <Menu className="h-5 w-5 text-gray-600" />
-        <span className="font-semibold text-gray-900 tracking-wide">VIBECODERS</span>
-        <div className="w-5" /> {/* Spacer for alignment */}
+      <div className="flex items-center px-4 py-2 bg-white border-b border-gray-100">
+        <img 
+          src={vibecodersLogo} 
+          alt="Vibecoders" 
+          className="h-10 w-10 rounded-full border-2 border-gray-200"
+        />
       </div>
 
       {/* Banner + Avatar */}
@@ -129,10 +132,6 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           </p>
         )}
 
-        {/* Username */}
-        {profile.username && (
-          <p className="text-sm text-gray-500">@{profile.username}</p>
-        )}
 
         {/* Social Icons Row - only if there are active socials */}
         {activeSocials.length > 0 && (
