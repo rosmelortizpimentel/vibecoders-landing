@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
+import Me from "./pages/Me";
 import PublicProfile from "./pages/PublicProfile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/me" element={<Me />} />
           {/* Legal pages - must be before /:handle to avoid conflicts */}
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
