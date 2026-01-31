@@ -9,6 +9,13 @@ interface Profile {
   updated_at: string;
 }
 
+// Helper para extraer username del email
+const extractUsernameFromEmail = (email: string): string => {
+  const localPart = email.split('@')[0] || '';
+  const cleaned = localPart.toLowerCase().replace(/[^a-z0-9_]/g, '');
+  return cleaned.slice(0, 20);
+};
+
 export function useProfile() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -32,11 +39,34 @@ export function useProfile() {
 
       if (fetchError) throw fetchError;
 
-      // Si no existe el perfil, lo creamos
+      // Si no existe el perfil, lo creamos con username derivado del email
       if (!data) {
+        let usernameToInsert: string | null = null;
+        
+        // Extraer username candidato del email
+        if (user.email) {
+          const candidateUsername = extractUsernameFromEmail(user.email);
+          
+          // Solo intentar si tiene al menos 1 caracter válido
+          if (candidateUsername.length >= 1) {
+            // Verificar disponibilidad usando la Edge Function
+            try {
+              const { data: availabilityData } = await supabase.functions.invoke('check-username-available', {
+                body: { username: candidateUsername }
+              });
+              
+              if (availabilityData?.success && availabilityData?.available) {
+                usernameToInsert = candidateUsername;
+              }
+            } catch (err) {
+              console.log('Could not check username availability, creating profile without username');
+            }
+          }
+        }
+        
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
-          .insert({ id: user.id })
+          .insert({ id: user.id, username: usernameToInsert })
           .select()
           .single();
 

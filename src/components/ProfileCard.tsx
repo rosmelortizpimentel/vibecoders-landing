@@ -169,7 +169,11 @@ const ProfileCard = ({ user }: ProfileCardProps) => {
           <div className="mt-4 sm:mt-6 md:mt-8 rounded-lg bg-white/10 p-3 sm:p-4">
             <p className="flex items-center justify-center gap-2 text-xs sm:text-sm text-white">
               <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-              Tu nombre está reservado
+              {profile?.username ? (
+                <>Tu @{profile.username} está reservado</>
+              ) : (
+                <>Tu nombre está reservado</>
+              )}
             </p>
             <p className="mt-2 text-[10px] sm:text-xs text-white/70">
               Te avisaremos cuando todo esté listo para que puedas crear tu portafolio.
