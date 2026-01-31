@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
+import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 
 const queryClient = new QueryClient();
 
@@ -14,6 +15,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <InAppBrowserWarning />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
