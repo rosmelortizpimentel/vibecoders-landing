@@ -60,28 +60,27 @@ export function AppsTab({ appsHook }: AppsTabProps) {
     <div className="space-y-4">
       {/* Add App Button */}
       {!isCreating ? (
-        <Button
+        <button
           onClick={() => setIsCreating(true)}
-          variant="outline"
-          className="w-full border-dashed border-2 border-gray-300 h-14 hover:border-[#3D5AFE] hover:bg-[#3D5AFE]/5 text-gray-600 hover:text-[#3D5AFE]"
+          className="w-full border border-dashed border-gray-300 rounded-lg h-14 hover:border-gray-400 hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
         >
-          <Plus className="h-5 w-5 mr-2" />
+          <Plus className="h-4 w-4" />
           Agregar App
-        </Button>
+        </button>
       ) : (
-        <div className="flex gap-2 p-4 border-2 border-[#3D5AFE] rounded-lg bg-[#3D5AFE]/5">
+        <div className="flex gap-2 p-4 border border-gray-200 rounded-lg bg-white">
           <Input
             value={newUrl}
             onChange={e => setNewUrl(e.target.value)}
             placeholder="https://tu-app.com"
-            className="flex-1 border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400"
+            className="flex-1 border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-0"
             autoFocus
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
           />
-          <Button onClick={handleCreate} disabled={!newUrl.trim()} className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90">
+          <Button onClick={handleCreate} disabled={!newUrl.trim()} className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white">
             Agregar
           </Button>
-          <Button variant="ghost" onClick={() => { setIsCreating(false); setNewUrl(''); }} className="text-gray-600 hover:text-[#1c1c1c]">
+          <Button variant="ghost" onClick={() => { setIsCreating(false); setNewUrl(''); }} className="text-gray-500 hover:text-[#1c1c1c]">
             Cancelar
           </Button>
         </div>
