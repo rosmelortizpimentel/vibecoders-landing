@@ -2,7 +2,6 @@ import { useState, useEffect, FormEvent, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Sparkles, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -223,51 +222,58 @@ const HeroSection = () => {
           <>
             <form 
               onSubmit={handleSubmit}
-              className="mx-auto mb-8 flex max-w-md animate-fade-in flex-col gap-3 opacity-0"
+              className="mx-auto mb-8 w-full max-w-xl animate-fade-in opacity-0"
               style={{ animationDelay: '0.4s' }}
             >
-              <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
-                <Input
-                  type="text"
-                  placeholder={t.form.placeholder}
-                  value={email}
-                  onChange={(e) => handleEmailChange(e.target.value)}
-                  disabled={isSubmitted}
-                  className={`h-12 flex-1 border-white/30 bg-white/10 text-white placeholder:text-white/60 focus:border-white focus:ring-white/50 ${
-                    error ? 'border-white/70' : ''
-                  }`}
-                />
+              {/* Contenedor principal con fondo oscuro */}
+              <div className="flex flex-col gap-2 rounded-2xl bg-[#1c1c1c] p-2 sm:flex-row sm:gap-0">
+                {/* Input con prefijo */}
+                <div className="flex flex-1 items-center rounded-xl bg-[#1c1c1c] px-4">
+                  <span className="whitespace-nowrap text-sm text-white/50 font-medium">
+                    {t.form.prefix}
+                  </span>
+                  <input
+                    type="text"
+                    placeholder={t.form.placeholder}
+                    value={email}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    disabled={isSubmitted}
+                    className="h-12 w-full bg-transparent text-white placeholder:text-white/40 focus:outline-none text-base"
+                  />
+                </div>
+                
+                {/* Botón CTA azul */}
                 <Button
                   type="submit"
                   disabled={isSubmitted || isSubmitting}
-                  className={`h-12 gap-2 px-6 font-semibold transition-all duration-300 ${
+                  className={`h-12 whitespace-nowrap rounded-xl px-6 font-semibold transition-all duration-300 sm:px-8 ${
                     isSubmitted 
                       ? 'bg-white/20 text-white' 
-                      : 'bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/80'
+                      : 'bg-[#3D5AFE] text-white hover:bg-[#3D5AFE]/90'
                   }`}
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Registrando...
+                      <span className="ml-2">Registrando...</span>
                     </>
                   ) : isSubmitted ? (
                     <>
                       <Sparkles className="h-4 w-4" />
-                      {t.form.success}
+                      <span className="ml-2">{t.form.success}</span>
                     </>
                   ) : (
                     <>
-                      {t.form.button}
-                      <ArrowRight className="h-4 w-4" />
+                      <span>{t.form.button}</span>
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </>
                   )}
                 </Button>
               </div>
               
-              {/* Error Message - blanco */}
+              {/* Error Message */}
               {error && (
-                <p className="text-sm text-white animate-fade-in">
+                <p className="mt-3 text-center text-sm text-white animate-fade-in">
                   {error}
                 </p>
               )}
