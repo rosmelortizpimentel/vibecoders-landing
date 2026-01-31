@@ -3,9 +3,8 @@
   "headline": "Construyes a la velocidad de la IA. Tu portafolio debería seguirte el ritmo.",
   "subheadline": "Deja de enviar links sueltos. Crea una vitrina viva de tus proyectos en segundos.",
   "form": {
-    "prefix": "vibecoders.la/",
-    "placeholder": "tunombre",
-    "button": "Reservar mi página",
+    "placeholder": "tucorreo@ejemplo.com",
+    "button": "Reservar mi username",
     "success": "¡Estás dentro!",
     "error": {
       "empty": "Ingresa tu correo electrónico",

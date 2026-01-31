@@ -1,91 +1,138 @@
 
+# Plan: Validar emails con alias (+) en Waitlist
 
-# Plan: Rediseñar el Formulario del Hero
+## Problema
 
-## Cambio Visual Solicitado
+Actualmente un usuario puede registrarse múltiples veces usando aliases de email:
+- `cesaras@gmail.com` ✓
+- `cesaras+1@gmail.com` ✓ (no debería permitirse)
+- `cesaras+2@gmail.com` ✓ (no debería permitirse)
 
-Transformar el formulario actual de email + botón al estilo del diseño de referencia:
+Gmail (y otros proveedores) ignoran todo lo que está después del `+`, así que todos llegan al mismo buzón.
 
-**Diseño actual:**
-- Input transparente con borde
-- Botón negro separado
+## Solución
 
-**Nuevo diseño:**
-- Input oscuro (#1c1c1c) con prefijo "vibecoders.la/" incorporado
-- Botón azul brillante (#3D5AFE) prominente
-- Todo dentro de un contenedor con bordes redondeados más pronunciados
-
-## Cambios Visuales Específicos
+Normalizar emails removiendo el alias `+algo` antes de verificar/guardar, y hacer una verificación previa contra la base de datos para detectar duplicados con alias.
 
 ```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                                                                             │
-│  ┌────────────────────────────────────┐  ┌─────────────────────────────┐  │
-│  │ vibecoders.la/ tunombre            │  │   RESERVAR MI PÁGINA  →    │  │
-│  │                                    │  │        (azul #3D5AFE)       │  │
-│  └────────────────────────────────────┘  └─────────────────────────────┘  │
-│           (fondo #1c1c1c)                                                  │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────┐
+│ Usuario ingresa: cesaras+1@gmail.com  │
+└─────────────────┬─────────────────────┘
+                  ▼
+┌───────────────────────────────────────┐
+│ Normalizar: cesaras@gmail.com         │
+│ (remover +algo del local part)        │
+└─────────────────┬─────────────────────┘
+                  ▼
+┌───────────────────────────────────────┐
+│ ¿Existe email normalizado en BD?      │
+└──────────┬─────────────────┬──────────┘
+           │ SÍ              │ NO
+           ▼                 ▼
+┌─────────────────────┐  ┌────────────────────┐
+│ Mostrar modal:      │  │ Registrar email    │
+│ "¡Ya estás en       │  │ normalizado en BD  │
+│ la lista!"          │  └────────────────────┘
+└─────────────────────┘
+```
+
+## Implementación
+
+### 1. Agregar función de normalización en `src/lib/waitlist.ts`
+
+```typescript
+/**
+ * Normaliza un email removiendo aliases (+algo)
+ * cesaras+test@gmail.com → cesaras@gmail.com
+ */
+function normalizeEmail(email: string): string {
+  const [localPart, domain] = email.toLowerCase().trim().split('@');
+  if (!domain) return email.toLowerCase().trim();
+  
+  // Remover todo después del + en la parte local
+  const normalizedLocal = localPart.split('+')[0];
+  return `${normalizedLocal}@${domain}`;
+}
+```
+
+### 2. Modificar `registerToWaitlist()` en `src/lib/waitlist.ts`
+
+Antes de insertar:
+1. Normalizar el email ingresado
+2. Verificar si ya existe el email normalizado en la BD
+3. Si existe → retornar `alreadyExists: true`
+4. Si no existe → insertar con el email normalizado
+
+```typescript
+export async function registerToWaitlist(email: string): Promise<WaitlistResult> {
+  const deviceInfo = collectDeviceInfo();
+  const normalizedEmail = normalizeEmail(email);
+
+  // Verificar si ya existe (por email normalizado)
+  const exists = await checkEmailExists(normalizedEmail);
+  if (exists) {
+    return { success: true, alreadyExists: true };
+  }
+
+  // Insertar con email normalizado
+  const { error } = await supabase
+    .from('waitlist')
+    .insert({
+      email: normalizedEmail,
+      ...deviceInfo,
+    });
+
+  if (error) {
+    if (error.code === '23505') {
+      return { success: true, alreadyExists: true };
+    }
+    return { success: false, alreadyExists: false, error: error.message };
+  }
+
+  return { success: true, alreadyExists: false };
+}
+```
+
+### 3. Actualizar `checkEmailExists()` en `src/lib/waitlist.ts`
+
+También usar email normalizado para la verificación:
+
+```typescript
+export async function checkEmailExists(email: string): Promise<boolean> {
+  const normalizedEmail = normalizeEmail(email);
+  
+  const { data, error } = await supabase
+    .from('waitlist')
+    .select('id')
+    .eq('email', normalizedEmail)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error checking email:', error);
+    return false;
+  }
+
+  return !!data;
+}
 ```
 
 ## Archivos a Modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/HeroSection.tsx` | Rediseñar la estructura del formulario con el nuevo estilo visual |
-| `src/i18n/es/hero.json` | Cambiar texto del botón a "Reservar mi página" y ajustar placeholder |
+| `src/lib/waitlist.ts` | Agregar `normalizeEmail()` y usarla en `registerToWaitlist()` y `checkEmailExists()` |
 
-## Detalles de Implementación
+## Comportamiento Final
 
-### 1. Rediseño del formulario (HeroSection.tsx)
+| Email ingresado | Email guardado/buscado | Resultado |
+|-----------------|------------------------|-----------|
+| `cesaras@gmail.com` | `cesaras@gmail.com` | ✓ Registrado |
+| `cesaras+1@gmail.com` | `cesaras@gmail.com` | Ya existe |
+| `cesaras+test@gmail.com` | `cesaras@gmail.com` | Ya existe |
+| `otro@gmail.com` | `otro@gmail.com` | ✓ Registrado |
 
-**Estructura nueva:**
-- Contenedor padre con fondo `#1c1c1c`, bordes muy redondeados (`rounded-xl` o `rounded-2xl`), y borde sutil
-- Input con prefijo visual "vibecoders.la/" en texto gris, seguido del input para email
-- Botón con fondo azul `#3D5AFE` (color principal del hero), texto blanco en mayúsculas/semibold
+El modal de "¡Ya estás en la lista!" aparecerá automáticamente porque `alreadyExists: true` activa ese flujo existente.
 
-**Estilos del Input:**
-- Fondo transparente (hereda del contenedor oscuro)
-- Sin borde visible
-- Prefijo "vibecoders.la/" como texto estático antes del input
-- Placeholder: "tunombre" o similar
+## Nota sobre datos existentes
 
-**Estilos del Botón:**
-- Fondo: `#3D5AFE` (azul del hero)
-- Texto: blanco, font-semibold, uppercase (o capitalizado)
-- Bordes redondeados que coincidan con el contenedor
-- Hover: versión más clara del azul
-
-### 2. Actualizar textos (hero.json)
-
-```json
-{
-  "form": {
-    "placeholder": "tunombre",
-    "button": "Reservar mi página",
-    ...
-  }
-}
-```
-
-### 3. Mantener funcionalidad
-
-- La lógica de validación de email permanece igual
-- Los estados de loading, success, y error permanecen
-- La funcionalidad de registro a waitlist no cambia
-
-## Adaptación Móvil
-
-En móvil, el diseño será:
-- Elementos apilados verticalmente
-- El contenedor se adapta al ancho completo
-- El input y botón mantienen la misma estética pero en columna
-
-## Resultado Esperado
-
-Un formulario con aspecto más moderno y premium, siguiendo el estilo del diseño de referencia pero usando los colores de la marca:
-- Negro `#1c1c1c` para el fondo del input
-- Azul `#3D5AFE` para el botón CTA
-- Tipografía CameraPlain existente
-
+Si ya hay emails con `+` en la base de datos, esos registros quedarán como están. Solo los nuevos registros serán normalizados. Si deseas limpiar los existentes, se puede hacer una migración SQL separada.
