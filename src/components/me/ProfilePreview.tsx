@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
+import { useStatuses } from '@/hooks/useStatuses';
+import { useTechStacks } from '@/hooks/useTechStacks';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Menu, MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
-
+import { PreviewAppCard } from './PreviewAppCard';
 // X icon (current logo)
 const XIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -42,6 +44,8 @@ const socialConfig = [
 ] as const;
 
 export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
+  const { statuses } = useStatuses();
+  const { stacks } = useTechStacks();
   const visibleApps = apps.filter(app => app.is_visible);
 
   // Load font dynamically
@@ -67,17 +71,6 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
   // Get active socials
   const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof ProfileData]);
-
-  // Generate app URL with ref
-  const getAppUrl = (appUrl: string) => {
-    try {
-      const url = new URL(appUrl);
-      url.searchParams.set('ref', 'vibecoders.la');
-      return url.toString();
-    } catch {
-      return appUrl;
-    }
-  };
 
   return (
     <div 
@@ -186,39 +179,28 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
             Apps
           </p>
           <div className="space-y-2">
-            {visibleApps.slice(0, 3).map(app => (
-              <a 
-                key={app.id}
-                href={getAppUrl(app.url)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 p-2.5 rounded-lg bg-white border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer"
-              >
-                {app.logo_url ? (
-                  <img 
-                    src={app.logo_url} 
-                    alt={app.name || ''} 
-                    className="w-8 h-8 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                    <span className="text-xs font-medium text-gray-500">
-                      {app.name?.charAt(0) || '?'}
-                    </span>
-                  </div>
-                )}
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {app.name || new URL(app.url).hostname}
-                  </p>
-                  {app.tagline && (
-                    <p className="text-xs text-gray-500 truncate">
-                      {app.tagline}
-                    </p>
-                  )}
-                </div>
-              </a>
-            ))}
+            {visibleApps.slice(0, 3).map(app => {
+              // Generate app URL with ref
+              const appUrl = (() => {
+                try {
+                  const url = new URL(app.url);
+                  url.searchParams.set('ref', 'vibecoders.la');
+                  return url.toString();
+                } catch {
+                  return app.url;
+                }
+              })();
+              
+              return (
+                <PreviewAppCard 
+                  key={app.id}
+                  app={app}
+                  statuses={statuses}
+                  stacks={stacks}
+                  appUrl={appUrl}
+                />
+              );
+            })}
             {visibleApps.length > 3 && (
               <p className="text-xs text-center text-gray-400 pt-1">
                 +{visibleApps.length - 3} más
