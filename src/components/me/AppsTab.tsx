@@ -12,14 +12,52 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { SortableAppCard } from './SortableAppCard';
 
 interface AppsTabProps {
   appsHook: ReturnType<typeof useApps>;
 }
 
 export function AppsTab({ appsHook }: AppsTabProps) {
-  const { apps, loading, createApp, updateApp, deleteApp, uploadAppLogo } = appsHook;
+  const { apps, loading, createApp, updateApp, deleteApp, uploadAppLogo, reorderApps } = appsHook;
   const [isCreating, setIsCreating] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = apps.findIndex((app) => app.id === active.id);
+      const newIndex = apps.findIndex((app) => app.id === over.id);
+      const reordered = arrayMove(apps, oldIndex, newIndex);
+      reorderApps(reordered);
+    }
+  };
   const [newUrl, setNewUrl] = useState('');
   const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -93,27 +131,38 @@ export function AppsTab({ appsHook }: AppsTabProps) {
           <p className="text-sm mt-1">Agrega tu primer proyecto para mostrarlo en tu perfil</p>
         </div>
       ) : (
-        <div className="space-y-3">
-          {apps.map(app => (
-            <div key={app.id}>
-              {expandedAppId === app.id ? (
-                <AppEditor
-                  app={app}
-                  onUpdate={updateApp}
-                  onUploadLogo={uploadAppLogo}
-                  onDelete={() => setDeleteConfirmId(app.id)}
-                  onCollapse={() => setExpandedAppId(null)}
-                />
-              ) : (
-                <AppCard
-                  app={app}
-                  onExpand={() => setExpandedAppId(app.id)}
-                  onToggleVisibility={() => updateApp(app.id, { is_visible: !app.is_visible })}
-                />
-              )}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={apps.map(app => app.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-3">
+              {apps.map(app => (
+                <div key={app.id}>
+                  {expandedAppId === app.id ? (
+                    <AppEditor
+                      app={app}
+                      onUpdate={updateApp}
+                      onUploadLogo={uploadAppLogo}
+                      onDelete={() => setDeleteConfirmId(app.id)}
+                      onCollapse={() => setExpandedAppId(null)}
+                    />
+                  ) : (
+                    <SortableAppCard
+                      app={app}
+                      onExpand={() => setExpandedAppId(app.id)}
+                      onToggleVisibility={() => updateApp(app.id, { is_visible: !app.is_visible })}
+                    />
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Delete Confirmation Dialog */}
