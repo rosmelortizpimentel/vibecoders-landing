@@ -13,6 +13,7 @@ export interface ProfileData {
   location: string | null;
   website: string | null;
   avatar_url: string | null;
+  lovable: string | null;
   twitter: string | null;
   github: string | null;
   tiktok: string | null;
@@ -52,6 +53,7 @@ export function useProfileEditor() {
         location: data.location,
         website: data.website,
         avatar_url: data.avatar_url,
+        lovable: data.lovable,
         twitter: data.twitter,
         github: data.github,
         tiktok: data.tiktok,

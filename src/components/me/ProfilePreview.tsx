@@ -2,7 +2,15 @@ import { useEffect } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Lock, Twitter, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
+import { Lock, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
+import lovableIcon from '@/assets/logos/lovable-icon.png';
+
+// X icon (current logo)
+const XIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
 
 // TikTok icon (not in lucide-react)
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -11,18 +19,24 @@ const TikTokIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// Lovable icon component
+const LovableIcon = ({ className }: { className?: string }) => (
+  <img src={lovableIcon} alt="Lovable" className={className} />
+);
+
 interface ProfilePreviewProps {
   profile: ProfileData | null;
   apps: AppData[];
 }
 
 const socialConfig = [
-  { key: 'twitter', icon: Twitter, getUrl: (v: string) => v.startsWith('http') ? v : `https://twitter.com/${v}` },
-  { key: 'github', icon: Github, getUrl: (v: string) => v.startsWith('http') ? v : `https://github.com/${v}` },
-  { key: 'tiktok', icon: TikTokIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://tiktok.com/@${v}` },
+  { key: 'lovable', icon: LovableIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://lovable.dev/@${v}` },
+  { key: 'linkedin', icon: Linkedin, getUrl: (v: string) => v.startsWith('http') ? v : `https://linkedin.com/in/${v}` },
+  { key: 'twitter', icon: XIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://x.com/${v}` },
   { key: 'instagram', icon: Instagram, getUrl: (v: string) => v.startsWith('http') ? v : `https://instagram.com/${v}` },
   { key: 'youtube', icon: Youtube, getUrl: (v: string) => v.startsWith('http') ? v : `https://youtube.com/@${v}` },
-  { key: 'linkedin', icon: Linkedin, getUrl: (v: string) => v.startsWith('http') ? v : `https://linkedin.com/in/${v}` },
+  { key: 'tiktok', icon: TikTokIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://tiktok.com/@${v}` },
+  { key: 'github', icon: Github, getUrl: (v: string) => v.startsWith('http') ? v : `https://github.com/${v}` },
   { key: 'email_public', icon: Mail, getUrl: (v: string) => `mailto:${v}` },
 ] as const;
 
@@ -216,9 +230,17 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
         }}
       >
-        <span className="text-[10px] md:text-xs text-white/50">
-          vibecoders.la/@{username}
-        </span>
+        <p className="text-[10px] md:text-xs text-white/70">
+          Vista previa de tu nuevo hogar.{' '}
+          <a 
+            href={`https://vibecoders.la/@${username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-white underline hover:no-underline"
+          >
+            Echarle un vistazo
+          </a>
+        </p>
       </div>
     </div>
   );

@@ -3,7 +3,6 @@ import { ProfileData } from '@/hooks/useProfileEditor';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
-  Twitter, 
   Github, 
   Instagram, 
   Youtube, 
@@ -13,6 +12,14 @@ import {
   Check
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import lovableIcon from '@/assets/logos/lovable-icon.png';
+
+// X icon (current logo)
+const XIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
 
 // TikTok icon (not in lucide-react)
 const TikTokIcon = ({ className }: { className?: string }) => (
@@ -21,18 +28,24 @@ const TikTokIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// Lovable icon component
+const LovableIcon = ({ className }: { className?: string }) => (
+  <img src={lovableIcon} alt="Lovable" className={className} />
+);
+
 interface ProfileSocialsProps {
   profile: ProfileData;
   onUpdate: (updates: Partial<ProfileData>) => void;
 }
 
 const socialFields = [
-  { key: 'twitter', label: 'Twitter', icon: Twitter, placeholder: 'https://twitter.com/usuario' },
-  { key: 'github', label: 'GitHub', icon: Github, placeholder: 'https://github.com/usuario' },
-  { key: 'tiktok', label: 'TikTok', icon: TikTokIcon, placeholder: 'https://tiktok.com/@usuario' },
+  { key: 'lovable', label: 'Lovable', icon: LovableIcon, placeholder: 'https://lovable.dev/@usuario' },
+  { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, placeholder: 'https://linkedin.com/in/usuario' },
+  { key: 'twitter', label: 'X', icon: XIcon, placeholder: 'https://x.com/usuario' },
   { key: 'instagram', label: 'Instagram', icon: Instagram, placeholder: 'https://instagram.com/usuario' },
   { key: 'youtube', label: 'YouTube', icon: Youtube, placeholder: 'https://youtube.com/@canal' },
-  { key: 'linkedin', label: 'LinkedIn', icon: Linkedin, placeholder: 'https://linkedin.com/in/usuario' },
+  { key: 'tiktok', label: 'TikTok', icon: TikTokIcon, placeholder: 'https://tiktok.com/@usuario' },
+  { key: 'github', label: 'GitHub', icon: Github, placeholder: 'https://github.com/usuario' },
   { key: 'email_public', label: 'Email', icon: Mail, placeholder: 'email@ejemplo.com' },
 ] as const;
 
