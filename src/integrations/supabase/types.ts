@@ -184,6 +184,7 @@ export type Database = {
         Row: {
           accent_color: string | null
           avatar_url: string | null
+          banner_url: string | null
           bio: string | null
           card_style: string | null
           created_at: string | null
@@ -209,6 +210,7 @@ export type Database = {
         Insert: {
           accent_color?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           card_style?: string | null
           created_at?: string | null
@@ -234,6 +236,7 @@ export type Database = {
         Update: {
           accent_color?: string | null
           avatar_url?: string | null
+          banner_url?: string | null
           bio?: string | null
           card_style?: string | null
           created_at?: string | null

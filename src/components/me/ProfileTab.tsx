@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Camera, MapPin, Globe } from 'lucide-react';
+import { Camera, MapPin, Globe, ImagePlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -14,16 +14,22 @@ interface ProfileTabProps {
   profile: ProfileData | null;
   onUpdate: (updates: Partial<ProfileData>) => void;
   onUploadAvatar: (file: File) => Promise<string>;
+  onUploadBanner: (file: File) => Promise<string>;
 }
 
-export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProps) {
+export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner }: ProfileTabProps) {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   if (!profile) return null;
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleBannerClick = () => {
+    bannerInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,10 +43,53 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar }: ProfileTabProp
     }
   };
 
+  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        await onUploadBanner(file);
+      } catch (error) {
+        console.error('Error uploading banner:', error);
+      }
+    }
+  };
+
   const bioLength = profile.bio?.length || 0;
 
   return (
     <div className="space-y-8">
+      {/* Banner Upload */}
+      <section className="space-y-2">
+        <Label className="text-[#1c1c1c]">Banner</Label>
+        <div 
+          className="relative h-32 bg-gray-100 rounded-lg overflow-hidden cursor-pointer group"
+          onClick={handleBannerClick}
+        >
+          {profile.banner_url ? (
+            <img 
+              src={profile.banner_url} 
+              alt="Banner" 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <ImagePlus className="h-8 w-8 mb-2" />
+              <span className="text-sm">Añadir banner</span>
+            </div>
+          )}
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Camera className="h-6 w-6 text-white" />
+          </div>
+          <input
+            ref={bannerInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleBannerChange}
+          />
+        </div>
+      </section>
+
       {/* Basic Info */}
       <section className="space-y-6">
         <div className="flex items-start gap-6">
