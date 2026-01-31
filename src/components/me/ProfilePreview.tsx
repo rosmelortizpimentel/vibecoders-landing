@@ -154,13 +154,6 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           </p>
         )}
 
-        {/* Bio - only if exists */}
-        {profile.bio && (
-          <p className="text-sm text-gray-600 leading-relaxed max-w-xs mx-auto">
-            {profile.bio}
-          </p>
-        )}
-
         {/* Location & Website - only if exist */}
         {(profile.location || profile.website) && (
           <div className="space-y-1 pt-2">
