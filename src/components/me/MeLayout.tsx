@@ -60,6 +60,7 @@ export function MeLayout() {
                   profile={profile} 
                   onUpdate={profileEditor.updateProfile}
                   onUploadAvatar={profileEditor.uploadAvatar}
+                  onUploadBanner={profileEditor.uploadBanner}
                 />
               )}
               {activeTab === 'apps' && (

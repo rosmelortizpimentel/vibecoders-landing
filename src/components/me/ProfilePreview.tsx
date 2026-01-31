@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Lock, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
+import { Menu, MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 
 // X icon (current logo)
@@ -64,6 +64,9 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
   const fontFamily = profile.font_family || 'Inter';
   const username = profile.username || 'username';
 
+  // Get active socials
+  const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof ProfileData]);
+
   // Generate app URL with ref
   const getAppUrl = (appUrl: string) => {
     try {
@@ -77,168 +80,172 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
   return (
     <div 
-      className="rounded-2xl overflow-hidden shadow-xl w-full"
+      className="rounded-2xl overflow-hidden shadow-xl w-full bg-white"
       style={{ fontFamily }}
     >
-      {/* Browser Chrome */}
-      <div className="flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-3 bg-[#ECECEC] border-b border-stone-200">
-        {/* Traffic Lights - hidden on mobile */}
-        <div className="hidden md:flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
-          <div className="w-3 h-3 rounded-full bg-[#FFBD2E]" />
-          <div className="w-3 h-3 rounded-full bg-[#28CA41]" />
-        </div>
+      {/* App-style Header */}
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-gray-100">
+        <Menu className="h-5 w-5 text-gray-600" />
+        <span className="font-semibold text-gray-900 tracking-wide">VIBECODERS</span>
+        <div className="w-5" /> {/* Spacer for alignment */}
+      </div>
+
+      {/* Banner + Avatar */}
+      <div className="relative">
+        {profile.banner_url ? (
+          <div className="h-24 md:h-32 w-full">
+            <img 
+              src={profile.banner_url} 
+              alt="Banner" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="h-16 md:h-20 w-full bg-gradient-to-r from-gray-100 to-gray-50" />
+        )}
         
-        {/* URL Bar - full width */}
-        <div className="flex-1 flex items-center gap-1.5 md:gap-2 bg-white rounded-md px-2 md:px-3 py-1 md:py-1.5 border border-stone-200">
-          <Lock className="w-3 h-3 md:w-3.5 md:h-3.5 text-stone-400 flex-shrink-0" />
-          <span className="text-xs md:text-sm text-stone-700 font-medium tracking-tight truncate">
-            vibecoders.la/<span className="text-stone-900">@{username}</span>
-          </span>
+        {/* Avatar overlapping banner */}
+        <div className="absolute left-1/2 -translate-x-1/2 -bottom-10 md:-bottom-12">
+          <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-white shadow-md">
+            <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
+            <AvatarFallback className="text-xl md:text-2xl font-bold bg-gray-100 text-gray-600">
+              {profile.name?.charAt(0) || '?'}
+            </AvatarFallback>
+          </Avatar>
         </div>
       </div>
 
       {/* Main Content */}
-      <div 
-        className="px-4 md:px-8 py-6 md:py-10 text-center"
-        style={{ 
-          background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
-        }}
-      >
-        {/* Avatar */}
-        <Avatar className="h-16 w-16 md:h-24 md:w-24 mx-auto border-4 border-white/30">
-          <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
-          <AvatarFallback 
-            className="text-xl md:text-3xl font-bold bg-white/20 text-white"
-          >
-            {profile.name?.charAt(0) || '?'}
-          </AvatarFallback>
-        </Avatar>
-
-        {/* Name */}
-        <h2 className="mt-4 md:mt-5 text-lg md:text-2xl font-bold text-white">
+      <div className="pt-12 md:pt-14 pb-6 px-4 md:px-6 text-center space-y-3">
+        {/* Name - always visible */}
+        <h2 className="text-lg md:text-xl font-bold text-gray-900">
           {profile.name || 'Tu Nombre'}
         </h2>
-        
+
+        {/* Username */}
+        {profile.username && (
+          <p className="text-sm text-gray-500">@{profile.username}</p>
+        )}
+
+        {/* Social Icons Row - only if there are active socials */}
+        {activeSocials.length > 0 && (
+          <div className="flex items-center justify-center gap-2 pt-1">
+            {activeSocials.map(({ key, icon: Icon, getUrl }) => {
+              const value = profile[key as keyof ProfileData] as string;
+              return (
+                <a
+                  key={key}
+                  href={getUrl(value)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  <Icon className="h-3.5 w-3.5 text-gray-700" />
+                </a>
+              );
+            })}
+          </div>
+        )}
+
         {/* Tagline */}
         {profile.tagline && (
-          <p className="mt-1 md:mt-2 text-xs md:text-sm text-white/70">
+          <p className="text-sm text-gray-600 italic">
             {profile.tagline}
           </p>
         )}
 
-        {/* Bio */}
+        {/* Bio - only if exists */}
         {profile.bio && (
-          <p className="mt-3 md:mt-4 text-xs md:text-sm text-white/80 leading-relaxed max-w-xs mx-auto">
+          <p className="text-sm text-gray-600 leading-relaxed max-w-xs mx-auto">
             {profile.bio}
           </p>
         )}
 
-        {/* Location & Website */}
-        <div className="mt-4 md:mt-6 space-y-1">
-          {profile.location && (
-            <p className="text-xs md:text-sm text-white/60">
-              {profile.location}
-            </p>
-          )}
-          {profile.website && (
-            <p className="text-xs md:text-sm text-white/60">
-              {profile.website.replace(/^https?:\/\//, '')}
-            </p>
-          )}
-        </div>
-
-        {/* Social Networks - Icon links */}
-        {(() => {
-          const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof ProfileData]);
-          if (activeSocials.length === 0) return null;
-          
-          return (
-            <div className="mt-4 md:mt-6 flex items-center justify-center gap-2 md:gap-3">
-              {activeSocials.map(({ key, icon: Icon, getUrl }) => {
-                const value = profile[key as keyof ProfileData] as string;
-                return (
-                  <a
-                    key={key}
-                    href={getUrl(value)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-white hover:bg-white/90 transition-colors"
-                  >
-                    <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-[#1c1c1c]" />
-                  </a>
-                );
-              })}
-            </div>
-          );
-        })()}
-
-        {/* Apps Section - Integrated */}
-        {visibleApps.length > 0 && (
-          <div className="mt-6 md:mt-8 p-3 md:p-4 rounded-xl bg-white/10 backdrop-blur-sm">
-            <p className="text-xs font-medium text-white/60 uppercase tracking-wide mb-2 md:mb-3 text-left">
-              Apps
-            </p>
-            <div className="space-y-2">
-              {visibleApps.slice(0, 3).map(app => (
+        {/* Location & Website - only if exist */}
+        {(profile.location || profile.website) && (
+          <div className="space-y-1 pt-2">
+            {profile.location && (
+              <div className="flex items-center justify-center gap-1.5 text-sm text-gray-500">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>{profile.location}</span>
+              </div>
+            )}
+            {profile.website && (
+              <div className="flex items-center justify-center gap-1.5 text-sm text-gray-500">
+                <LinkIcon className="h-3.5 w-3.5" />
                 <a 
-                  key={app.id}
-                  href={getAppUrl(app.url)}
+                  href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 md:gap-3 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+                  className="hover:text-gray-700 hover:underline"
                 >
-                  {app.logo_url ? (
-                    <img 
-                      src={app.logo_url} 
-                      alt={app.name || ''} 
-                      className="w-7 h-7 md:w-8 md:h-8 rounded-lg object-cover"
-                    />
-                  ) : (
-                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                      <span className="text-xs font-medium text-white/60">
-                        {app.name?.charAt(0) || '?'}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-xs md:text-sm font-medium text-white truncate">
-                      {app.name || new URL(app.url).hostname}
-                    </p>
-                    {app.tagline && (
-                      <p className="text-[10px] md:text-xs text-white/60 truncate">
-                        {app.tagline}
-                      </p>
-                    )}
-                  </div>
+                  {profile.website.replace(/^https?:\/\//, '')}
                 </a>
-              ))}
-              {visibleApps.length > 3 && (
-                <p className="text-[10px] md:text-xs text-center text-white/50 pt-1">
-                  +{visibleApps.length - 3} más
-                </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>
 
+      {/* Apps Section - only if there are visible apps */}
+      {visibleApps.length > 0 && (
+        <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+            Apps
+          </p>
+          <div className="space-y-2">
+            {visibleApps.slice(0, 3).map(app => (
+              <a 
+                key={app.id}
+                href={getAppUrl(app.url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-2.5 rounded-lg bg-white border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all cursor-pointer"
+              >
+                {app.logo_url ? (
+                  <img 
+                    src={app.logo_url} 
+                    alt={app.name || ''} 
+                    className="w-8 h-8 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                    <span className="text-xs font-medium text-gray-500">
+                      {app.name?.charAt(0) || '?'}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {app.name || new URL(app.url).hostname}
+                  </p>
+                  {app.tagline && (
+                    <p className="text-xs text-gray-500 truncate">
+                      {app.tagline}
+                    </p>
+                  )}
+                </div>
+              </a>
+            ))}
+            {visibleApps.length > 3 && (
+              <p className="text-xs text-center text-gray-400 pt-1">
+                +{visibleApps.length - 3} más
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Footer */}
-      <div 
-        className="py-3 md:py-4 text-center border-t border-white/10"
-        style={{ 
-          background: 'linear-gradient(135deg, #4F46E5 0%, #3D5AFE 50%, #2563EB 100%)'
-        }}
-      >
-        <p className="text-[10px] md:text-xs text-white/70">
-          Vista previa de tu nuevo hogar.{' '}
+      <div className="py-3 text-center border-t border-gray-100 bg-white">
+        <p className="text-[10px] md:text-xs text-gray-400">
           <a 
             href={`https://vibecoders.la/@${username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-white underline hover:no-underline"
+            className="text-gray-500 hover:text-gray-700 hover:underline"
           >
-            Echarle un vistazo
+            vibecoders.la/@{username}
           </a>
         </p>
       </div>
