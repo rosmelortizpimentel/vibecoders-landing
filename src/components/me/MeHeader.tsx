@@ -79,9 +79,9 @@ export function MeHeader({ profile, isSaving, lastSaved, error, onSignOut }: MeH
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-48 bg-[#1c1c1c] border-[#1c1c1c] p-1">
               {publicProfileUrl && (
-                <DropdownMenuItem asChild>
+                <DropdownMenuItem asChild className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white">
                   <a 
                     href={publicProfileUrl}
                     target="_blank"
@@ -93,10 +93,10 @@ export function MeHeader({ profile, isSaving, lastSaved, error, onSignOut }: MeH
                   </a>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
+              <DropdownMenuSeparator className="bg-white/20" />
               <DropdownMenuItem 
                 onClick={onSignOut}
-                className="flex items-center gap-2 text-red-600 focus:text-red-600 cursor-pointer"
+                className="flex items-center gap-2 text-white hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Cerrar Sesión</span>
