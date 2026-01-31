@@ -7,13 +7,33 @@ export interface WaitlistResult {
   error?: string;
 }
 
+/**
+ * Normaliza un email removiendo aliases (+algo)
+ * cesaras+test@gmail.com → cesaras@gmail.com
+ */
+function normalizeEmail(email: string): string {
+  const [localPart, domain] = email.toLowerCase().trim().split('@');
+  if (!domain) return email.toLowerCase().trim();
+  
+  // Remover todo después del + en la parte local
+  const normalizedLocal = localPart.split('+')[0];
+  return `${normalizedLocal}@${domain}`;
+}
+
 export async function registerToWaitlist(email: string): Promise<WaitlistResult> {
   const deviceInfo = collectDeviceInfo();
+  const normalizedEmail = normalizeEmail(email);
+
+  // Verificar si ya existe (por email normalizado)
+  const exists = await checkEmailExists(normalizedEmail);
+  if (exists) {
+    return { success: true, alreadyExists: true };
+  }
 
   const { error } = await supabase
     .from('waitlist')
     .insert({
-      email: email.toLowerCase().trim(),
+      email: normalizedEmail,
       ...deviceInfo,
     });
 
@@ -29,10 +49,12 @@ export async function registerToWaitlist(email: string): Promise<WaitlistResult>
 }
 
 export async function checkEmailExists(email: string): Promise<boolean> {
+  const normalizedEmail = normalizeEmail(email);
+  
   const { data, error } = await supabase
     .from('waitlist')
     .select('id')
-    .eq('email', email.toLowerCase().trim())
+    .eq('email', normalizedEmail)
     .maybeSingle();
 
   if (error) {
