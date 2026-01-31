@@ -1,229 +1,114 @@
 
-# Plan: Rediseño Completo del Perfil Preview (Estilo App Móvil)
+# Plan: Enhanced App Cards Design for Profile Preview
 
-## Resumen
-
-Transformar el preview del perfil de un estilo "navegador web con fondo azul pesado" a un diseño limpio tipo app móvil inspirado en la imagen de referencia: header con hamburger menu, fondo blanco, banner customizable, y secciones que se ocultan automáticamente cuando están vacías.
+## Summary
+Redesign the app cards in the "Apps" section of the profile preview to display richer metadata including status badges, tech stack icons, and a clear CTA button, while maintaining a clean and premium aesthetic.
 
 ---
 
-## Cambios Principales
+## Current State
+The app cards in `ProfilePreview.tsx` (lines 189-220) show:
+- App logo
+- App name
+- Tagline (optional)
 
-### 1. Nuevo Header del Preview (Estilo App)
-- **Izquierda**: Icono de menú hamburguesa
-- **Centro**: Logo "VIBECODERS" (solo texto, sin icono)
-- **Derecha**: Vacío (sin icono de usuario)
+The data model already supports:
+- `status_id` - linked to `app_statuses` table with colors and icons
+- `stacks` - array of tech stack IDs linked to `tech_stacks` table with logos
+- `url` - for the visit button
 
-### 2. Eliminar Fondo Azul Gradiente
-- Remover el gradiente azul `#4F46E5 → #3D5AFE → #2563EB`
-- Usar fondo blanco limpio para toda la tarjeta
+---
 
-### 3. Banner Personalizable
-- Añadir campo `banner_url` a ProfileData
-- Crear sección en ProfileTab para cargar banner
-- Mostrar banner en la parte superior del perfil (similar a la imagen)
-- El avatar se posiciona semi-superpuesto al banner
+## Visual Design
 
-### 4. Reorganización del Contenido
 ```text
-┌────────────────────────────────────────┐
-│  ≡     VIBECODERS                      │  ← Header
-├────────────────────────────────────────┤
-│                                        │
-│  [        BANNER IMAGE         ]       │  ← Banner (si existe)
-│       ┌──────┐                         │
-│       │ AVT  │ (superpuesto)           │
-└───────┴──────┴─────────────────────────┘
-│                                        │
-│  Rosmel Ortiz                          │  ← Nombre
-│  @username                             │  ← Username
-│  ○ ○ ○ ○ ○ ○                           │  ← Iconos redes sociales
-│                                        │
-│  Always building.                      │  ← Bio (si existe)
-│  📍 Ontario, Canada                    │  ← Location (si existe)
-│  🔗 rosmelortiz.com                    │  ← Website (si existe)
-│                                        │
-├────────────────────────────────────────┤
-│  [App Cards - como actualmente]        │  ← Apps
-└────────────────────────────────────────┘
++------------------------------------------------------------+
+|  [Logo]  App Name               [Status Badge]    [Visitar]|
+|          Description/tagline text here                     |
+|          [React] [Tailwind] [Supabase]                     |
++------------------------------------------------------------+
 ```
 
-### 5. Secciones Condicionales (Sin Espacios Vacíos)
-Cada sección solo se renderiza si tiene contenido:
-- **Bio**: Solo si `profile.bio` tiene valor
-- **Location**: Solo si `profile.location` tiene valor  
-- **Website**: Solo si `profile.website` tiene valor
-- **Social Icons**: Solo si hay al menos una red activa
-- **Apps**: Solo si hay apps visibles
+**Design Principles:**
+- Status badge: Pill-shaped with colored dot + text, positioned right of title
+- Tech stack row: Small grey badges with logo icons (max 4 shown)
+- Visit button: Subtle, right-aligned with external link icon
+- Matte, professional colors (no bright/neon tones)
 
 ---
 
-## Cambios por Archivo
+## Implementation Steps
 
-### 1. `src/hooks/useProfileEditor.ts`
-Agregar campo `banner_url` a la interfaz `ProfileData`:
-```typescript
-export interface ProfileData {
-  // ... campos existentes
-  banner_url: string | null;  // NUEVO
+### Step 1: Create a New Enhanced App Card Component
+
+**File:** `src/components/me/PreviewAppCard.tsx`
+
+This component will:
+- Accept `app`, `statuses`, and `techStacks` as props
+- Render the enhanced card layout with all metadata
+- Handle the "Visitar" CTA button
+
+### Step 2: Update ProfilePreview Component
+
+**File:** `src/components/me/ProfilePreview.tsx`
+
+Changes:
+- Import `useStatuses` and `useTechStacks` hooks
+- Pass statuses and stacks data to the new card component
+- Replace the inline app card rendering with the new component
+
+---
+
+## Technical Details
+
+### PreviewAppCard Component Structure
+
+```tsx
+interface PreviewAppCardProps {
+  app: AppData;
+  statuses: Status[];
+  stacks: TechStack[];
 }
 ```
-Actualizar `saveProfile` para incluir `banner_url`.
 
-### 2. Base de datos (Migración SQL)
-Añadir columna `banner_url` a la tabla `profiles`:
-```sql
-ALTER TABLE profiles ADD COLUMN banner_url TEXT;
-```
+**Status Badge Implementation:**
+- Find status by `app.status_id`
+- Display colored dot (using status.color) + status name
+- Use matte background: `bg-gray-100` with colored text
 
-### 3. `src/integrations/supabase/types.ts`
-Actualizar tipos para incluir `banner_url` en profiles.
+**Tech Stack Row Implementation:**
+- Filter `stacks` by `app.stacks` array (stack IDs)
+- Display up to 4 tech icons with small logos from `logo_url`
+- Use subtle grey badges: `bg-gray-100 text-gray-600`
 
-### 4. `src/components/me/ProfileTab.tsx`
-Añadir sección para cargar banner:
-```tsx
-{/* Banner Upload */}
-<section className="space-y-4">
-  <Label>Banner</Label>
-  <div className="relative h-32 bg-gray-100 rounded-lg overflow-hidden">
-    {profile.banner_url ? (
-      <img src={profile.banner_url} className="w-full h-full object-cover" />
-    ) : (
-      <div className="flex items-center justify-center h-full">
-        <Camera className="h-8 w-8 text-gray-400" />
-      </div>
-    )}
-    <button onClick={handleBannerClick}>Cambiar</button>
-  </div>
-</section>
-```
+**Visit Button Implementation:**
+- Positioned on the right side of the card
+- Uses `ExternalLink` icon from lucide-react
+- Text: "Visitar" with hover effect
+- Opens app URL in new tab with ref parameter
 
-### 5. `src/components/me/ProfilePreview.tsx`
-Rediseño completo:
-
-**Header nuevo:**
-```tsx
-<div className="flex items-center justify-between px-4 py-3 bg-white border-b">
-  <Menu className="h-5 w-5 text-gray-600" />
-  <span className="font-semibold text-gray-900">VIBECODERS</span>
-  <div className="w-5" /> {/* Spacer for alignment */}
-</div>
-```
-
-**Banner + Avatar:**
-```tsx
-{profile.banner_url && (
-  <div className="relative h-24 md:h-32">
-    <img src={profile.banner_url} className="w-full h-full object-cover" />
-  </div>
-)}
-<Avatar className="h-20 w-20 mx-auto -mt-10 border-4 border-white">
-  ...
-</Avatar>
-```
-
-**Contenido condicional:**
-```tsx
-{/* Nombre - siempre visible */}
-<h2 className="text-xl font-bold text-gray-900">{profile.name}</h2>
-
-{/* Username */}
-{profile.username && (
-  <p className="text-gray-500">@{profile.username}</p>
-)}
-
-{/* Social Icons Row - solo si hay activas */}
-{activeSocials.length > 0 && (
-  <div className="flex justify-center gap-2">
-    {activeSocials.map(...)}
-  </div>
-)}
-
-{/* Bio - solo si existe */}
-{profile.bio && (
-  <p className="text-gray-600 text-center">{profile.bio}</p>
-)}
-
-{/* Location - solo si existe */}
-{profile.location && (
-  <div className="flex items-center gap-2 text-gray-500">
-    <MapPin className="h-4 w-4" />
-    <span>{profile.location}</span>
-  </div>
-)}
-
-{/* Website - solo si existe */}
-{profile.website && (
-  <div className="flex items-center gap-2 text-gray-500">
-    <Link className="h-4 w-4" />
-    <a href={profile.website}>{profile.website}</a>
-  </div>
-)}
-```
-
-**Apps - mantener estilo actual pero con fondo blanco:**
-```tsx
-{visibleApps.length > 0 && (
-  <div className="border-t pt-4">
-    {/* Cards de apps como actualmente */}
-  </div>
-)}
-```
+### Color Palette (Matte/Professional)
+- Background: `bg-white`
+- Borders: `border-gray-200`
+- Text primary: `text-gray-900`
+- Text secondary: `text-gray-500`
+- Badge background: `bg-gray-100`
+- Status badge: Uses status color with 20% opacity background
 
 ---
 
-## Paleta de Colores Nueva
+## Files to Modify
 
-| Elemento | Actual | Nuevo |
-|----------|--------|-------|
-| Fondo principal | Gradiente azul | `bg-white` |
-| Texto nombre | `text-white` | `text-gray-900` |
-| Texto secundario | `text-white/70` | `text-gray-500` |
-| Iconos redes | `bg-white` sobre azul | `bg-gray-100` sobre blanco |
-| Apps section | `bg-white/10` translúcido | `bg-gray-50` sólido |
+| File | Action |
+|------|--------|
+| `src/components/me/PreviewAppCard.tsx` | Create new component |
+| `src/components/me/ProfilePreview.tsx` | Update to use new component and hooks |
 
 ---
 
-## Archivos a Modificar
+## Considerations
 
-| Archivo | Cambios |
-|---------|---------|
-| `supabase/migrations/XXXXX_add_banner.sql` | Nueva migración para `banner_url` |
-| `src/integrations/supabase/types.ts` | Añadir `banner_url` a profiles |
-| `src/hooks/useProfileEditor.ts` | Añadir `banner_url` a ProfileData y saveProfile |
-| `src/components/me/ProfileTab.tsx` | Sección para subir banner |
-| `src/components/me/ProfilePreview.tsx` | Rediseño completo del preview |
-
----
-
-## Resultado Visual Esperado
-
-```text
-┌─────────────────────────────────────┐
-│  ≡        VIBECODERS                │  ← Header minimalista
-├─────────────────────────────────────┤
-│ [░░░░░░░░░░ BANNER ░░░░░░░░░░░]    │  ← Banner (opcional)
-│        ┌───────┐                    │
-│        │ AVATAR│ (borde blanco)     │
-│        └───────┘                    │
-│                                     │
-│      Rosmel Ortiz                   │  ← Nombre grande
-│      @rosmelortiz                   │  ← Username gris
-│                                     │
-│   ○ ○ ○ ○ ○ ○  (iconos sociales)   │  ← Redes debajo del nombre
-│                                     │
-│   Always building.                  │  ← Bio
-│                                     │
-│   📍 Ontario, Canada 🍁             │  ← Location
-│   🔗 rosmelortiz.com                │  ← Website
-│                                     │
-├─────────────────────────────────────┤
-│   [Card App 1]                      │  ← Apps
-│   [Card App 2]                      │
-└─────────────────────────────────────┘
-```
-
-- Fondo completamente blanco
-- Sin gradiente azul pesado
-- Secciones vacías no ocupan espacio
-- Estética limpia tipo app móvil
+- **Performance:** The hooks `useStatuses` and `useTechStacks` will be called in ProfilePreview. Since these are cached queries, minimal impact expected.
+- **Responsive Design:** Card layout will adapt for mobile with stack wrap.
+- **Empty States:** If no status or stacks, those sections will be hidden gracefully.
+- **No Emojis:** Only Lucide icons and tech stack logos will be used.
