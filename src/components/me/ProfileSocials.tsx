@@ -81,7 +81,7 @@ export function ProfileSocials({ profile, onUpdate }: ProfileSocialsProps) {
               className={cn(
                 'relative w-12 h-12 flex items-center justify-center rounded-xl transition-all',
                 isSelected
-                  ? 'bg-[#E91E63] text-white shadow-md'
+                  ? 'bg-[#1c1c1c] text-white shadow-md'
                   : hasValue
                     ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600'
@@ -111,7 +111,7 @@ export function ProfileSocials({ profile, onUpdate }: ProfileSocialsProps) {
               value={(profile[selectedField.key] as string) || ''}
               onChange={e => onUpdate({ [selectedField.key]: e.target.value })}
               placeholder={selectedField.placeholder}
-              className="flex-1 bg-white border border-gray-200 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
+              className="flex-1 bg-white border border-gray-200 text-[#1c1c1c] focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
               autoFocus
             />
             <Button
