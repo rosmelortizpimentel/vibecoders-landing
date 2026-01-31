@@ -2,21 +2,36 @@ import { useEffect } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { 
+  Twitter, 
+  Github, 
+  Instagram, 
+  Youtube, 
+  Linkedin, 
+  Mail
+} from 'lucide-react';
+
+// TikTok icon (not in lucide-react)
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
+  </svg>
+);
 
 interface ProfilePreviewProps {
   profile: ProfileData | null;
   apps: AppData[];
 }
 
-const socialLabels: Record<string, string> = {
-  twitter: 'Twitter',
-  github: 'GitHub',
-  tiktok: 'TikTok',
-  instagram: 'Instagram',
-  youtube: 'YouTube',
-  linkedin: 'LinkedIn',
-  email_public: 'Email',
-};
+const socialConfig = [
+  { key: 'twitter', icon: Twitter, getUrl: (v: string) => v.startsWith('http') ? v : `https://twitter.com/${v}` },
+  { key: 'github', icon: Github, getUrl: (v: string) => v.startsWith('http') ? v : `https://github.com/${v}` },
+  { key: 'tiktok', icon: TikTokIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://tiktok.com/@${v}` },
+  { key: 'instagram', icon: Instagram, getUrl: (v: string) => v.startsWith('http') ? v : `https://instagram.com/${v}` },
+  { key: 'youtube', icon: Youtube, getUrl: (v: string) => v.startsWith('http') ? v : `https://youtube.com/@${v}` },
+  { key: 'linkedin', icon: Linkedin, getUrl: (v: string) => v.startsWith('http') ? v : `https://linkedin.com/in/${v}` },
+  { key: 'email_public', icon: Mail, getUrl: (v: string) => `mailto:${v}` },
+] as const;
 
 export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
   const visibleApps = apps.filter(app => app.is_visible);
@@ -40,11 +55,6 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
   if (!profile) return null;
 
   const fontFamily = profile.font_family || 'Inter';
-
-  // Get active social networks as text list
-  const activeSocials = Object.entries(socialLabels)
-    .filter(([key]) => profile[key as keyof ProfileData])
-    .map(([, label]) => label);
 
   return (
     <div 
@@ -99,12 +109,30 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           )}
         </div>
 
-        {/* Social Networks - Text only */}
-        {activeSocials.length > 0 && (
-          <p className="mt-4 text-xs text-white/50">
-            {activeSocials.join(' · ')}
-          </p>
-        )}
+        {/* Social Networks - Icon links */}
+        {(() => {
+          const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof ProfileData]);
+          if (activeSocials.length === 0) return null;
+          
+          return (
+            <div className="mt-6 flex items-center justify-center gap-3">
+              {activeSocials.map(({ key, icon: Icon, getUrl }) => {
+                const value = profile[key as keyof ProfileData] as string;
+                return (
+                  <a
+                    key={key}
+                    href={getUrl(value)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                  >
+                    <Icon className="h-4 w-4 text-white" />
+                  </a>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Apps Section */}
