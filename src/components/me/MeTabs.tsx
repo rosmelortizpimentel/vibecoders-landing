@@ -26,7 +26,7 @@ export function MeTabs({ activeTab, onTabChange }: MeTabsProps) {
             className={cn(
               'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all',
               isActive
-                ? 'bg-[#3D5AFE] text-white shadow-sm'
+                ? 'bg-[#3D5AFE] text-white shadow-sm font-semibold'
                 : 'text-gray-600 hover:text-[#1c1c1c] hover:bg-white'
             )}
           >
