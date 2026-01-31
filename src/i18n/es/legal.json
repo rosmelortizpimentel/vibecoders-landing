@@ -1,0 +1,164 @@
+{
+  "privacy": {
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: 31 de enero de 2026",
+    "sections": [
+      {
+        "title": "1. Introducción",
+        "content": "Vibecoders.la (\"nosotros\", \"nuestro\" o \"la Plataforma\") es una comunidad que conecta a desarrolladores y creadores que construyen con herramientas de vibe coding. Tu privacidad es importante para nosotros. Esta política describe cómo recopilamos, usamos y protegemos tu información personal."
+      },
+      {
+        "title": "2. Información que Recopilamos",
+        "content": "Recopilamos los siguientes tipos de información:",
+        "list": [
+          "Información de cuenta: Cuando inicias sesión con Google, recibimos tu nombre, dirección de correo electrónico y foto de perfil.",
+          "Información de perfil: El nombre de usuario que eliges para tu página pública en vibecoders.la.",
+          "Información técnica: Datos del dispositivo, navegador y sistema operativo para mejorar tu experiencia.",
+          "Información de uso: Cómo interactúas con la plataforma para mejorar nuestros servicios."
+        ]
+      },
+      {
+        "title": "3. Autenticación con Google",
+        "content": "Utilizamos Google Sign-In para ofrecerte una experiencia segura sin necesidad de crear contraseñas. Solo accedemos a la información básica de tu perfil (nombre, email y foto). No accedemos a tu cuenta de Google Drive, contactos, calendario ni ningún otro servicio de Google."
+      },
+      {
+        "title": "4. Cómo Usamos tu Información",
+        "content": "Utilizamos tu información para:",
+        "list": [
+          "Crear y mantener tu cuenta en vibecoders.la",
+          "Permitirte reservar tu página personalizada",
+          "Comunicarnos contigo sobre actualizaciones del servicio",
+          "Mejorar y personalizar tu experiencia",
+          "Prevenir fraude y uso indebido"
+        ]
+      },
+      {
+        "title": "5. Almacenamiento y Seguridad",
+        "content": "Tu información se almacena de forma segura en servidores protegidos. Utilizamos Supabase como proveedor de infraestructura, que cumple con estándares de seguridad de la industria. Implementamos medidas técnicas y organizativas para proteger tus datos."
+      },
+      {
+        "title": "6. Compartir Información",
+        "content": "No vendemos ni alquilamos tu información personal. Solo compartimos datos con:",
+        "list": [
+          "Proveedores de servicios esenciales (hosting, autenticación)",
+          "Cuando la ley lo requiera",
+          "Con tu consentimiento explícito"
+        ]
+      },
+      {
+        "title": "7. Tus Derechos",
+        "content": "Tienes derecho a:",
+        "list": [
+          "Acceder a tus datos personales",
+          "Corregir información incorrecta",
+          "Eliminar tu cuenta y datos",
+          "Exportar tus datos"
+        ],
+        "footer": "Para ejercer estos derechos, contáctanos."
+      },
+      {
+        "title": "8. Cookies",
+        "content": "Usamos cookies esenciales para el funcionamiento del sitio y la autenticación. No utilizamos cookies de seguimiento de terceros con fines publicitarios."
+      },
+      {
+        "title": "9. Cambios a esta Política",
+        "content": "Podemos actualizar esta política ocasionalmente. Te notificaremos de cambios significativos por correo electrónico o mediante un aviso en la plataforma."
+      },
+      {
+        "title": "10. Contacto",
+        "content": "Para preguntas sobre privacidad:",
+        "email": "contacto@vibecoders.la"
+      }
+    ]
+  },
+  "terms": {
+    "title": "Términos de Servicio",
+    "lastUpdated": "Última actualización: 31 de enero de 2026",
+    "sections": [
+      {
+        "title": "1. Aceptación de los Términos",
+        "content": "Al acceder o utilizar vibecoders.la, aceptas estos términos de servicio. Si no estás de acuerdo, por favor no uses la plataforma."
+      },
+      {
+        "title": "2. Descripción del Servicio",
+        "content": "Vibecoders.la es una comunidad para desarrolladores y creadores que construyen productos digitales utilizando herramientas de inteligencia artificial y vibe coding. Ofrecemos:",
+        "list": [
+          "Páginas de perfil personalizadas",
+          "Directorio de la comunidad de vibecoders",
+          "Recursos y conexiones para creadores"
+        ]
+      },
+      {
+        "title": "3. Registro y Cuenta",
+        "content": "Al registrarte, aceptas que:",
+        "list": [
+          "Debes proporcionar información veraz al registrarte",
+          "Eres responsable de mantener la seguridad de tu cuenta",
+          "Debes tener al menos 13 años de edad",
+          "Una persona puede tener solo una cuenta"
+        ]
+      },
+      {
+        "title": "4. Nombres de Usuario",
+        "content": "Respecto a los nombres de usuario:",
+        "list": [
+          "Los nombres de usuario deben ser apropiados y no ofensivos",
+          "No puedes usar nombres que infrinjan marcas registradas",
+          "No puedes suplantar a otras personas o entidades",
+          "Nos reservamos el derecho de reclamar nombres de usuario inactivos o que violen estas políticas"
+        ]
+      },
+      {
+        "title": "5. Uso Aceptable",
+        "content": "Te comprometes a no:",
+        "list": [
+          "Violar leyes o regulaciones aplicables",
+          "Publicar contenido ofensivo, difamatorio o ilegal",
+          "Intentar acceder a cuentas de otros usuarios",
+          "Interferir con el funcionamiento de la plataforma",
+          "Usar la plataforma para spam o actividades fraudulentas"
+        ]
+      },
+      {
+        "title": "6. Propiedad Intelectual",
+        "content": "Respecto a la propiedad intelectual:",
+        "list": [
+          "El contenido que publiques sigue siendo tuyo",
+          "Nos otorgas licencia para mostrar tu contenido en la plataforma",
+          "Respeta los derechos de propiedad intelectual de terceros",
+          "El diseño y código de vibecoders.la son propiedad nuestra"
+        ]
+      },
+      {
+        "title": "7. Limitación de Responsabilidad",
+        "content": "La plataforma se proporciona \"tal cual\". No garantizamos disponibilidad continua o libre de errores. No somos responsables de:",
+        "list": [
+          "Pérdidas derivadas del uso de la plataforma",
+          "Contenido publicado por otros usuarios",
+          "Interrupciones del servicio"
+        ]
+      },
+      {
+        "title": "8. Modificaciones del Servicio",
+        "content": "Podemos modificar, suspender o descontinuar cualquier aspecto del servicio en cualquier momento. Te notificaremos de cambios significativos con antelación razonable."
+      },
+      {
+        "title": "9. Terminación",
+        "content": "Podemos suspender o terminar tu cuenta si violas estos términos. Puedes eliminar tu cuenta en cualquier momento desde tu perfil."
+      },
+      {
+        "title": "10. Ley Aplicable",
+        "content": "Estos términos se rigen por las leyes aplicables en la jurisdicción donde opera vibecoders.la."
+      },
+      {
+        "title": "11. Contacto",
+        "content": "Para preguntas sobre estos términos:",
+        "email": "contacto@vibecoders.la"
+      }
+    ]
+  },
+  "common": {
+    "backToHome": "Volver al inicio",
+    "logo": "vibecoders.la"
+  }
+}
