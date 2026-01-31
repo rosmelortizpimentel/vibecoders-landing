@@ -37,13 +37,13 @@ export function MeHeader({ profile, isSaving, lastSaved, error, onSignOut }: MeH
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
-      <div className="container flex h-14 items-center justify-between px-4">
+      <div className="container flex h-18 items-center justify-between px-4">
         {/* Logo */}
         <a href="/" className="flex items-center">
           <img 
             src={vibecodersLogo} 
             alt="Vibecoders" 
-            className="h-9 w-9 rounded-full border-2 border-gray-200 hover:border-[#3D5AFE] transition-colors"
+            className="h-14 w-14 rounded-full border-2 border-gray-200 hover:border-[#3D5AFE] transition-colors"
           />
         </a>
         
