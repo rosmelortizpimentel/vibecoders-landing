@@ -87,9 +87,15 @@ export function useProfileEditor() {
 
         if (error) throw error;
         
+        // Use Google metadata as fallback for name and avatar
+        const googleName = user.user_metadata?.full_name;
+        const googleAvatar = user.user_metadata?.avatar_url;
+        
         setProfile({
           ...DEFAULT_PROFILE,
           ...data,
+          name: data.name || googleName || null,
+          avatar_url: data.avatar_url || googleAvatar || null,
         } as ProfileData);
       } catch (err) {
         console.error('Error fetching profile:', err);
