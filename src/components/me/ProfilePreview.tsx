@@ -122,6 +122,13 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           {profile.name || 'Tu Nombre'}
         </h2>
 
+        {/* Tagline - directly below name */}
+        {profile.tagline && (
+          <p className="text-sm text-gray-600 italic">
+            {profile.tagline}
+          </p>
+        )}
+
         {/* Username */}
         {profile.username && (
           <p className="text-sm text-gray-500">@{profile.username}</p>
@@ -145,13 +152,6 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
               );
             })}
           </div>
-        )}
-
-        {/* Tagline */}
-        {profile.tagline && (
-          <p className="text-sm text-gray-600 italic">
-            {profile.tagline}
-          </p>
         )}
 
         {/* Location & Website - only if exist */}
