@@ -1,124 +1,138 @@
 
-# Plan: Solucionar OAuth de Google en Navegador Embebido de LinkedIn (iOS)
+# Plan: Validar emails con alias (+) en Waitlist
 
-## Contexto del Problema
+## Problema
 
-Cuando un usuario abre tu sitio desde un link en la app de LinkedIn en iOS, se abre en un **navegador embebido (WebView)**. Google bloquea OAuth en estos navegadores por seguridad, mostrando el error:
+Actualmente un usuario puede registrarse múltiples veces usando aliases de email:
+- `cesaras@gmail.com` ✓
+- `cesaras+1@gmail.com` ✓ (no debería permitirse)
+- `cesaras+2@gmail.com` ✓ (no debería permitirse)
 
+Gmail (y otros proveedores) ignoran todo lo que está después del `+`, así que todos llegan al mismo buzón.
+
+## Solución
+
+Normalizar emails removiendo el alias `+algo` antes de verificar/guardar, y hacer una verificación previa contra la base de datos para detectar duplicados con alias.
+
+```text
+┌───────────────────────────────────────┐
+│ Usuario ingresa: cesaras+1@gmail.com  │
+└─────────────────┬─────────────────────┘
+                  ▼
+┌───────────────────────────────────────┐
+│ Normalizar: cesaras@gmail.com         │
+│ (remover +algo del local part)        │
+└─────────────────┬─────────────────────┘
+                  ▼
+┌───────────────────────────────────────┐
+│ ¿Existe email normalizado en BD?      │
+└──────────┬─────────────────┬──────────┘
+           │ SÍ              │ NO
+           ▼                 ▼
+┌─────────────────────┐  ┌────────────────────┐
+│ Mostrar modal:      │  │ Registrar email    │
+│ "¡Ya estás en       │  │ normalizado en BD  │
+│ la lista!"          │  └────────────────────┘
+└─────────────────────┘
 ```
-Error 403: disallowed_useragent
-```
-
-En Android funciona porque LinkedIn usa Chrome Custom Tabs que Google sí permite.
-
----
-
-## Solución Propuesta
-
-Detectar si el usuario está en el navegador embebido de LinkedIn en iOS y:
-
-1. **Opción A (Recomendada)**: Redirigir automáticamente a Safari usando el esquema `x-safari-` (disponible desde iOS 17+)
-2. **Opción B (Fallback)**: Mostrar un mensaje indicando al usuario que abra el enlace en Safari manualmente
-
----
 
 ## Implementación
 
-### 1. Crear utilidad de detección de navegador embebido
+### 1. Agregar función de normalización en `src/lib/waitlist.ts`
 
-Crear un nuevo archivo `src/lib/inAppBrowser.ts` con funciones para:
-- Detectar si es navegador embebido de LinkedIn en iOS
-- Redirigir a Safari automáticamente
-- Fallback para versiones anteriores a iOS 17
-
-```text
-┌─────────────────────────────────────────┐
-│ Usuario abre link desde LinkedIn (iOS)  │
-└─────────────────┬───────────────────────┘
-                  ▼
-┌─────────────────────────────────────────┐
-│ ¿Es LinkedInApp + iOS?                  │
-└──────────┬──────────────────┬───────────┘
-           │ SÍ               │ NO
-           ▼                  ▼
-┌─────────────────────┐  ┌────────────────┐
-│ Redirigir a Safari  │  │ Continuar      │
-│ (x-safari-URL)      │  │ normalmente    │
-└─────────────────────┘  └────────────────┘
-```
-
-### 2. Implementar redirección al inicio de la app
-
-Modificar `src/main.tsx` o agregar un componente wrapper que ejecute la verificación **antes** de que React renderice la app.
-
-La lógica verificará:
-```javascript
-const userAgent = navigator.userAgent;
-const isLinkedInIOS = userAgent.includes('Mobile') && 
-                      (userAgent.includes('iPhone') || userAgent.includes('iPad')) && 
-                      userAgent.includes('LinkedInApp');
-
-if (isLinkedInIOS) {
-  window.location.href = 'x-safari-' + window.location.href;
+```typescript
+/**
+ * Normaliza un email removiendo aliases (+algo)
+ * cesaras+test@gmail.com → cesaras@gmail.com
+ */
+function normalizeEmail(email: string): string {
+  const [localPart, domain] = email.toLowerCase().trim().split('@');
+  if (!domain) return email.toLowerCase().trim();
+  
+  // Remover todo después del + en la parte local
+  const normalizedLocal = localPart.split('+')[0];
+  return `${normalizedLocal}@${domain}`;
 }
 ```
 
-### 3. Alternativa: Mostrar mensaje amigable
+### 2. Modificar `registerToWaitlist()` en `src/lib/waitlist.ts`
 
-Si la redirección automática falla (iOS < 17), mostrar un modal/mensaje:
+Antes de insertar:
+1. Normalizar el email ingresado
+2. Verificar si ya existe el email normalizado en la BD
+3. Si existe → retornar `alreadyExists: true`
+4. Si no existe → insertar con el email normalizado
 
-> "Para continuar con Google, abre este enlace en Safari. Toca el ícono de Safari o copia el enlace."
+```typescript
+export async function registerToWaitlist(email: string): Promise<WaitlistResult> {
+  const deviceInfo = collectDeviceInfo();
+  const normalizedEmail = normalizeEmail(email);
 
-Con un botón para copiar la URL al portapapeles.
+  // Verificar si ya existe (por email normalizado)
+  const exists = await checkEmailExists(normalizedEmail);
+  if (exists) {
+    return { success: true, alreadyExists: true };
+  }
 
----
+  // Insertar con email normalizado
+  const { error } = await supabase
+    .from('waitlist')
+    .insert({
+      email: normalizedEmail,
+      ...deviceInfo,
+    });
 
-## Archivos a Modificar/Crear
+  if (error) {
+    if (error.code === '23505') {
+      return { success: true, alreadyExists: true };
+    }
+    return { success: false, alreadyExists: false, error: error.message };
+  }
 
-| Archivo | Acción | Descripción |
-|---------|--------|-------------|
-| `src/lib/inAppBrowser.ts` | Crear | Utilidades para detectar y manejar navegadores embebidos |
-| `src/main.tsx` | Modificar | Agregar verificación al inicio antes de renderizar |
-| `src/components/InAppBrowserWarning.tsx` | Crear | Componente de fallback con instrucciones manuales |
-
----
-
-## Detalles Técnicos
-
-### Detección del User Agent de LinkedIn iOS
-
-LinkedIn en iOS tiene un user agent como:
+  return { success: true, alreadyExists: false };
+}
 ```
-Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) 
-AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [LinkedInApp]/9.30.1317
+
+### 3. Actualizar `checkEmailExists()` en `src/lib/waitlist.ts`
+
+También usar email normalizado para la verificación:
+
+```typescript
+export async function checkEmailExists(email: string): Promise<boolean> {
+  const normalizedEmail = normalizeEmail(email);
+  
+  const { data, error } = await supabase
+    .from('waitlist')
+    .select('id')
+    .eq('email', normalizedEmail)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error checking email:', error);
+    return false;
+  }
+
+  return !!data;
+}
 ```
 
-La clave es detectar `LinkedInApp` + `iPhone`/`iPad` + `Mobile`.
+## Archivos a Modificar
 
-### Esquema x-safari-
+| Archivo | Cambio |
+|---------|--------|
+| `src/lib/waitlist.ts` | Agregar `normalizeEmail()` y usarla en `registerToWaitlist()` y `checkEmailExists()` |
 
-El esquema `x-safari-https://...` abre Safari directamente desde un WebView. Solo funciona en iOS 17+, pero la mayoría de usuarios ya tienen esta versión.
+## Comportamiento Final
 
-### Fallback para iOS < 17
+| Email ingresado | Email guardado/buscado | Resultado |
+|-----------------|------------------------|-----------|
+| `cesaras@gmail.com` | `cesaras@gmail.com` | ✓ Registrado |
+| `cesaras+1@gmail.com` | `cesaras@gmail.com` | Ya existe |
+| `cesaras+test@gmail.com` | `cesaras@gmail.com` | Ya existe |
+| `otro@gmail.com` | `otro@gmail.com` | ✓ Registrado |
 
-Para usuarios con versiones anteriores, mostrar un mensaje con:
-- Instrucciones claras
-- Botón "Copiar enlace"
-- Opción de abrir en navegador del sistema (si está disponible)
+El modal de "¡Ya estás en la lista!" aparecerá automáticamente porque `alreadyExists: true` activa ese flujo existente.
 
----
+## Nota sobre datos existentes
 
-## Resultado Esperado
-
-- Usuarios que llegan desde LinkedIn en iOS serán redirigidos automáticamente a Safari
-- En Safari, el OAuth de Google funcionará sin problemas
-- Si la redirección falla, verán instrucciones claras para continuar
-
----
-
-## Nota Importante
-
-Esta solución es específica para LinkedIn. Si en el futuro tienes problemas con otros navegadores embebidos (Facebook, Twitter, Instagram), la misma lógica puede extenderse detectando sus user agents:
-- Facebook: `FBAN` o `FBAV` en el user agent
-- Instagram: `Instagram`
-- Twitter/X: `Twitter`
+Si ya hay emails con `+` en la base de datos, esos registros quedarán como están. Solo los nuevos registros serán normalizados. Si deseas limpiar los existentes, se puede hacer una migración SQL separada.
