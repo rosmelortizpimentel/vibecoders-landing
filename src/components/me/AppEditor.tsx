@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { AppData } from '@/hooks/useApps';
 import { useCategories } from '@/hooks/useCategories';
 import { useStatuses } from '@/hooks/useStatuses';
@@ -15,7 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Check } from 'lucide-react';
+import { TechStackSelector } from './TechStackSelector';
+import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 
 interface AppEditorProps {
@@ -265,40 +266,12 @@ export function AppEditor({ app, onUpdate, onUploadLogo, onDelete, onCollapse }:
         </div>
 
         {/* Tech Stack */}
-        <div className="space-y-3">
-          <Label className="text-[#1c1c1c]">Tech Stack</Label>
-          <div className="space-y-4">
-            {Object.entries(groupedStacks).map(([group, items]) => {
-              if (items.length === 0) return null;
-              return (
-                <div key={group}>
-                  <p className="text-xs text-gray-500 mb-2">{group}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {items.map(stack => {
-                      const isSelected = localApp.stacks?.includes(stack.id);
-                      return (
-                        <button
-                          key={stack.id}
-                          type="button"
-                          onClick={() => handleStackToggle(stack.id)}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition-colors ${
-                            isSelected
-                              ? 'border-[#3D5AFE] bg-[#3D5AFE]/10 text-[#3D5AFE]'
-                              : 'border-gray-300 text-gray-600 hover:border-[#3D5AFE]/50'
-                          }`}
-                        >
-                          <img src={stack.logo_url} alt={stack.name} className="w-4 h-4" />
-                          {stack.name}
-                          {isSelected && <Check className="h-3 w-3" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <TechStackSelector
+          stacks={stacks}
+          groupedStacks={groupedStacks}
+          selectedIds={localApp.stacks || []}
+          onToggle={handleStackToggle}
+        />
 
         {/* Delete */}
         <div className="pt-4 border-t border-gray-200">
