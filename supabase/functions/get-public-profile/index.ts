@@ -1,4 +1,4 @@
-// Force deploy: 2026-01-30
+// Force deploy: 2026-02-01
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -37,10 +37,15 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // 1. Search profile by username (case-insensitive)
+    // 1. Search profile by username (case-insensitive) with all public fields
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id, username, member_number, is_pioneer')
+      .select(`
+        id, username, member_number, is_pioneer, show_pioneer_badge,
+        name, tagline, location, website, banner_url, avatar_url,
+        accent_color, font_family,
+        lovable, twitter, github, linkedin, instagram, youtube, tiktok, email_public
+      `)
       .eq('username', username.toLowerCase())
       .maybeSingle()
 
@@ -68,30 +73,55 @@ Deno.serve(async (req) => {
 
     console.log(`[get-public-profile] Found profile with id: ${profile.id}`)
 
-    // 2. Get user data from auth.users (only possible with service_role)
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(profile.id)
+    // 2. Get visible apps for this user
+    const { data: appsData, error: appsError } = await supabaseAdmin
+      .from('apps')
+      .select(`
+        id, url, name, tagline, logo_url, status_id, display_order,
+        app_stacks(stack_id)
+      `)
+      .eq('user_id', profile.id)
+      .eq('is_visible', true)
+      .order('display_order', { ascending: true })
+      .limit(6)
 
-    if (userError || !userData?.user) {
-      console.error(`[get-public-profile] User fetch error:`, userError)
-      return new Response(
-        JSON.stringify({ success: false, error: 'User not found' }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+    if (appsError) {
+      console.error(`[get-public-profile] Apps query error:`, appsError)
+      // Continue without apps - not critical
     }
 
-    const user = userData.user
+    // 3. Get statuses and stacks to resolve IDs
+    const { data: statuses } = await supabaseAdmin.from('app_statuses').select('id, name, slug')
+    const { data: stacks } = await supabaseAdmin.from('tech_stacks').select('id, name, logo_url')
 
-    // 3. Extract ONLY safe data - NEVER include email or sensitive info
-    const fullName = user.user_metadata?.full_name || ''
-    const firstName = fullName.split(' ')[0] || 'Vibecoder'
-    const avatarUrl = user.user_metadata?.avatar_url || null
+    // 4. Map apps with resolved status and stacks
+    const apps = (appsData || []).map(app => {
+      const status = app.status_id && statuses 
+        ? statuses.find(s => s.id === app.status_id) 
+        : null
 
-    console.log(`[get-public-profile] Returning safe profile data for: ${profile.username}`)
+      const appStacks = (app.app_stacks || [])
+        .map((as: { stack_id: string }) => {
+          const stack = stacks?.find(s => s.id === as.stack_id)
+          return stack ? { id: stack.id, name: stack.name, logo_url: stack.logo_url } : null
+        })
+        .filter(Boolean)
+        .slice(0, 4) // Max 4 stacks per app
 
-    // 4. Return safe response (NO email, NO sensitive data)
+      return {
+        id: app.id,
+        url: app.url,
+        name: app.name,
+        tagline: app.tagline,
+        logo_url: app.logo_url,
+        status: status ? { name: status.name, slug: status.slug } : null,
+        stacks: appStacks
+      }
+    })
+
+    console.log(`[get-public-profile] Returning profile with ${apps.length} apps`)
+
+    // 5. Return safe response (NO email, NO sensitive data)
     // Add 11 to member_number to make it look less empty at the start
     const displayMemberNumber = (profile.member_number || 1) + 11
 
@@ -100,10 +130,28 @@ Deno.serve(async (req) => {
         success: true,
         profile: {
           username: profile.username,
-          avatar_url: avatarUrl,
-          first_name: firstName,
+          avatar_url: profile.avatar_url,
+          banner_url: profile.banner_url,
+          name: profile.name,
+          tagline: profile.tagline,
+          location: profile.location,
+          website: profile.website,
+          accent_color: profile.accent_color,
+          font_family: profile.font_family,
           member_number: displayMemberNumber,
-          is_pioneer: profile.is_pioneer || false
+          is_pioneer: profile.is_pioneer || false,
+          show_pioneer_badge: profile.show_pioneer_badge ?? true,
+          // Socials
+          lovable: profile.lovable,
+          twitter: profile.twitter,
+          github: profile.github,
+          linkedin: profile.linkedin,
+          instagram: profile.instagram,
+          youtube: profile.youtube,
+          tiktok: profile.tiktok,
+          email_public: profile.email_public,
+          // Apps
+          apps
         }
       }),
       { 
