@@ -1,4 +1,5 @@
 import { Lock } from 'lucide-react';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 const BrowserUrlMock = () => {
   return (
@@ -24,7 +25,9 @@ const BrowserUrlMock = () => {
       {/* Browser Content Preview */}
       <div className="px-4 py-6 bg-gradient-to-b from-[#F8F8F8] to-white">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-stone-200 to-stone-300" />
+          <div className="w-10 h-10 rounded-full border-2 border-stone-900 overflow-hidden shadow-sm">
+            <img src={vibecodersLogo} alt="Vibecoders" className="w-full h-full object-cover" />
+          </div>
           <div className="space-y-1">
             <div className="h-3 w-24 bg-stone-200 rounded" />
             <div className="h-2 w-16 bg-stone-100 rounded" />
