@@ -55,15 +55,17 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
               {app.name || new URL(app.url).hostname}
             </h4>
             
-            {/* Status Badge */}
+            {/* Status Badge - Soft Brand Blue theme */}
             {status && (
               <span 
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100"
-                style={{ color: status.color }}
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700"
               >
                 <span 
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: status.color }}
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    status.slug === 'active' || status.slug === 'live' 
+                      ? 'bg-cyan-500' 
+                      : 'bg-blue-500'
+                  }`}
                 />
                 {status.name}
               </span>
