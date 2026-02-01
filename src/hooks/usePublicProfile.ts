@@ -17,11 +17,13 @@ export interface PublicApp {
 }
 
 export interface PublicProfile {
+  id: string;
   username: string;
   avatar_url: string | null;
   banner_url: string | null;
   name: string | null;
   tagline: string | null;
+  bio: string | null;
   location: string | null;
   website: string | null;
   accent_color: string | null;

@@ -1,4 +1,4 @@
-// Force deploy: 2026-02-01
+// Force deploy: 2026-02-01-v2
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
       .from('profiles')
       .select(`
         id, username, member_number, is_pioneer, show_pioneer_badge,
-        name, tagline, location, website, banner_url, avatar_url,
+        name, tagline, bio, location, website, banner_url, avatar_url,
         accent_color, font_family,
         lovable, twitter, github, linkedin, instagram, youtube, tiktok, email_public
       `)
@@ -129,11 +129,13 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         profile: {
+          id: profile.id,
           username: profile.username,
           avatar_url: profile.avatar_url,
           banner_url: profile.banner_url,
           name: profile.name,
           tagline: profile.tagline,
+          bio: profile.bio,
           location: profile.location,
           website: profile.website,
           accent_color: profile.accent_color,

@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink } from 'lucide-react';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
 import { PioneerBadge } from '@/components/PioneerBadge';
-import vibecodersLogo from '@/assets/vibecoders-logo.png';
+import { PublicProfileHeader } from '@/components/PublicProfileHeader';
+import { FollowButton } from '@/components/FollowButton';
+import { useFollow } from '@/hooks/useFollow';
+import { useAuth } from '@/hooks/useAuth';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import {
   Tooltip,
@@ -150,6 +152,12 @@ function PublicAppCard({ app }: { app: PublicApp }) {
 }
 
 export function PublicProfileCard({ profile }: PublicProfileCardProps) {
+  const { user } = useAuth();
+  const { isFollowing, isLoading: followLoading, followersCount, followingCount, toggleFollow } = useFollow(profile.id);
+
+  // Check if viewing own profile
+  const isOwnProfile = user?.id === profile.id;
+
   // Load font dynamically
   useEffect(() => {
     if (!profile?.font_family) return;
@@ -178,132 +186,174 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
       className="w-full min-h-screen bg-white"
       style={{ fontFamily }}
     >
-      {/* Header - Solo logo que lleva a home */}
-      <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-gray-100">
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <img 
-            src={vibecodersLogo} 
-            alt="Vibecoders" 
-            className="h-10 w-10 rounded-full border-2 border-gray-200"
-          />
-        </Link>
-      </div>
+      {/* Header - Shows user menu if logged in */}
+      <PublicProfileHeader profileUsername={profile.username} />
 
-      {/* Banner + Avatar */}
-      <div className="relative">
-        {profile.banner_url ? (
-          <div className="h-24 md:h-40 w-full">
-            <img 
-              src={profile.banner_url} 
-              alt="Banner" 
-              className="w-full h-full object-cover"
-            />
+      {/* Content container - centered on desktop */}
+      <div className="w-full max-w-4xl mx-auto">
+        {/* Banner + Avatar */}
+        <div className="relative">
+          {profile.banner_url ? (
+            <div className="h-24 md:h-48 w-full md:mt-4 md:mx-auto md:rounded-2xl overflow-hidden">
+              <img 
+                src={profile.banner_url} 
+                alt="Banner" 
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div className="h-16 md:h-32 w-full md:mt-4 md:mx-auto md:rounded-2xl bg-gradient-to-r from-gray-100 to-gray-50" />
+          )}
+          
+          {/* Avatar aligned to the left */}
+          <div className="absolute left-4 md:left-6 -bottom-10 md:-bottom-14">
+            <Avatar 
+              className="h-20 w-20 md:h-28 md:w-28 shadow-md"
+              style={{ border: `4px solid ${avatarBorderColor}` }}
+            >
+              <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
+              <AvatarFallback className="text-xl md:text-3xl font-bold bg-gray-100 text-gray-600">
+                {profile.name?.charAt(0) || '?'}
+              </AvatarFallback>
+            </Avatar>
           </div>
-        ) : (
-          <div className="h-16 md:h-24 w-full bg-gradient-to-r from-gray-100 to-gray-50" />
-        )}
-        
-        {/* Avatar aligned to the left */}
-        <div className="absolute left-4 -bottom-10 md:-bottom-14">
-          <Avatar 
-            className="h-20 w-20 md:h-28 md:w-28 shadow-md"
-            style={{ border: `4px solid ${avatarBorderColor}` }}
-          >
-            <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
-            <AvatarFallback className="text-xl md:text-3xl font-bold bg-gray-100 text-gray-600">
-              {profile.name?.charAt(0) || '?'}
-            </AvatarFallback>
-          </Avatar>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="pt-12 md:pt-16 pb-6 px-4 md:px-6 text-left space-y-3">
-        {/* Name + Pioneer Badge */}
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-            {profile.name || 'Vibecoder'}
-          </h1>
-          {profile.is_pioneer && profile.show_pioneer_badge && (
-            <PioneerBadge />
+        {/* Main Content */}
+        <div className="pt-12 md:pt-16 pb-6 px-4 md:px-6">
+          {/* Desktop: Two column layout */}
+          <div className="md:flex md:justify-between md:items-start md:gap-4">
+            {/* Left column: Name, username, followers */}
+            <div className="space-y-2">
+              {/* Name + Pioneer Badge */}
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                  {profile.name || 'Vibecoder'}
+                </h1>
+                {profile.is_pioneer && profile.show_pioneer_badge && (
+                  <PioneerBadge />
+                )}
+              </div>
+
+              {/* Username + Followers */}
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span>@{username}</span>
+                <span>·</span>
+                <span><strong className="text-gray-900">{followersCount}</strong> seguidores</span>
+                <span><strong className="text-gray-900">{followingCount}</strong> siguiendo</span>
+              </div>
+
+              {/* Tagline */}
+              {profile.tagline && (
+                <p className="text-sm md:text-base text-gray-600 italic pt-1">
+                  {profile.tagline}
+                </p>
+              )}
+            </div>
+
+            {/* Right column: Location, Website, Follow button */}
+            <div className="flex items-center gap-3 mt-4 md:mt-0">
+              {/* Location & Website - Desktop only */}
+              <div className="hidden md:flex items-center gap-4 text-sm text-gray-500">
+                {profile.location && (
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4" />
+                    <span>{profile.location}</span>
+                  </div>
+                )}
+                {profile.website && (
+                  <a 
+                    href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 hover:text-gray-700"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+
+              {/* Follow Button - Don't show on own profile */}
+              {!isOwnProfile && (
+                <FollowButton
+                  isFollowing={isFollowing}
+                  isLoading={followLoading}
+                  onToggleFollow={toggleFollow}
+                  profileUsername={profile.username}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Social Icons Row */}
+          {activeSocials.length > 0 && (
+            <div className="flex items-center gap-2 pt-4">
+              {activeSocials.map(({ key, icon: Icon, getUrl }) => {
+                const value = profile[key as keyof PublicProfile] as string;
+                return (
+                  <a
+                    key={key}
+                    href={getUrl(value)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                  >
+                    <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-700" />
+                  </a>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Mobile: Location & Website */}
+          {(profile.location || profile.website) && (
+            <div className="md:hidden space-y-1 pt-3">
+              {profile.location && (
+                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <MapPin className="h-3.5 w-3.5" />
+                  <span>{profile.location}</span>
+                </div>
+              )}
+              {profile.website && (
+                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                  <LinkIcon className="h-3.5 w-3.5" />
+                  <a 
+                    href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-gray-700 hover:underline"
+                  >
+                    {profile.website.replace(/^https?:\/\//, '')}
+                  </a>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Tagline - directly below name */}
-        {profile.tagline && (
-          <p className="text-sm md:text-base text-gray-600 italic">
-            {profile.tagline}
+        {/* Apps Section */}
+        {profile.apps.length > 0 && (
+          <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+              Apps
+            </p>
+            {/* Mobile: single column, Desktop: grid of 2 */}
+            <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+              {profile.apps.map(app => (
+                <PublicAppCard key={app.id} app={app} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="py-3 text-center border-t border-gray-100 bg-white">
+          <p className="text-[10px] md:text-xs text-gray-400">
+            <span className="text-gray-500">
+              vibecoders.la/@{username}
+            </span>
           </p>
-        )}
-
-        {/* Social Icons Row */}
-        {activeSocials.length > 0 && (
-          <div className="flex items-center gap-2 pt-1">
-            {activeSocials.map(({ key, icon: Icon, getUrl }) => {
-              const value = profile[key as keyof PublicProfile] as string;
-              return (
-                <a
-                  key={key}
-                  href={getUrl(value)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                >
-                  <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-gray-700" />
-                </a>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Location & Website */}
-        {(profile.location || profile.website) && (
-          <div className="space-y-1 pt-2">
-            {profile.location && (
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{profile.location}</span>
-              </div>
-            )}
-            {profile.website && (
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
-                <LinkIcon className="h-3.5 w-3.5" />
-                <a 
-                  href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-gray-700 hover:underline"
-                >
-                  {profile.website.replace(/^https?:\/\//, '')}
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Apps Section */}
-      {profile.apps.length > 0 && (
-        <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-            Apps
-          </p>
-          {/* Mobile: single column, Desktop: grid of 2 */}
-          <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
-            {profile.apps.map(app => (
-              <PublicAppCard key={app.id} app={app} />
-            ))}
-          </div>
         </div>
-      )}
-
-      {/* Footer */}
-      <div className="py-3 text-center border-t border-gray-100 bg-white">
-        <p className="text-[10px] md:text-xs text-gray-400">
-          <span className="text-gray-500">
-            vibecoders.la/@{username}
-          </span>
-        </p>
       </div>
     </div>
   );
