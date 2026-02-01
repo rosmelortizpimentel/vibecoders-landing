@@ -83,12 +83,12 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
               {appStacks.map(stack => (
                 <span 
                   key={stack.id}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-[10px] text-gray-600"
+                  className="group/stack inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-[10px] text-gray-600 transition-colors hover:bg-gray-200"
                 >
                   <img 
                     src={stack.logo_url} 
                     alt={stack.name}
-                    className="w-3 h-3 object-contain"
+                    className="w-3 h-3 object-contain grayscale opacity-70 transition-all duration-200 group-hover/stack:grayscale-0 group-hover/stack:opacity-100"
                   />
                   {stack.name}
                 </span>
