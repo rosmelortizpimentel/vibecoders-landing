@@ -1,26 +1,31 @@
-import { Star } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { usePioneerBadgeUrl } from '@/hooks/useGeneralSettings';
 
 interface PioneerBadgeProps {
   className?: string;
 }
 
 export function PioneerBadge({ className = '' }: PioneerBadgeProps) {
+  const { pioneerBadgeUrl, isLoading } = usePioneerBadgeUrl();
+
+  if (isLoading || !pioneerBadgeUrl) {
+    return null;
+  }
+
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 cursor-default ${className}`}
-          >
-            <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-            PIONEER
-          </span>
+          <img 
+            src={pioneerBadgeUrl}
+            alt="Pioneer Badge"
+            className={`w-[30px] h-[30px] rounded-full object-cover cursor-default ${className}`}
+          />
         </TooltipTrigger>
         <TooltipContent>
           <p>Early Founding Member</p>
