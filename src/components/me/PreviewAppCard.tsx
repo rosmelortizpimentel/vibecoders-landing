@@ -2,6 +2,12 @@ import { ExternalLink } from 'lucide-react';
 import { AppData } from '@/hooks/useApps';
 import { Status } from '@/hooks/useStatuses';
 import { TechStack } from '@/hooks/useTechStacks';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface PreviewAppCardProps {
   app: AppData;
@@ -30,7 +36,7 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
       rel="noopener noreferrer"
       className="block p-3 rounded-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
     >
-      {/* Top Row: Logo + Title + Status + Visit Button */}
+      {/* Top Row: Logo + Title + Status */}
       <div className="flex items-start gap-3">
         {/* App Logo */}
         {app.logo_url ? (
@@ -78,33 +84,37 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
               {app.tagline}
             </p>
           )}
-
-          {/* Tech Stack Row */}
-          {appStacks.length > 0 && (
-            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              {appStacks.map(stack => (
-                <span 
-                  key={stack.id}
-                  className="group/stack inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-[10px] text-gray-600 transition-colors hover:bg-gray-200"
-                >
-                  <img 
-                    src={stack.logo_url} 
-                    alt={stack.name}
-                    className="w-3 h-3 object-contain grayscale opacity-70 transition-all duration-200 group-hover/stack:grayscale-0 group-hover/stack:opacity-100"
-                  />
-                  {stack.name}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
 
-        {/* Visit Button */}
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors flex-shrink-0">
-          Visitar
-          <ExternalLink className="w-3 h-3" />
+        {/* Icon-only Visit Button */}
+        <span className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors flex-shrink-0">
+          <ExternalLink className="w-4 h-4" />
         </span>
       </div>
+
+      {/* Bottom Row: Tech Stack Icons Only */}
+      {appStacks.length > 0 && (
+        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-100">
+          <TooltipProvider delayDuration={200}>
+            {appStacks.map(stack => (
+              <Tooltip key={stack.id}>
+                <TooltipTrigger asChild>
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    <img 
+                      src={stack.logo_url} 
+                      alt={stack.name}
+                      className="w-5 h-5 object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-200"
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  {stack.name}
+                </TooltipContent>
+              </Tooltip>
+            ))}
+          </TooltipProvider>
+        </div>
+      )}
     </a>
   );
 }
