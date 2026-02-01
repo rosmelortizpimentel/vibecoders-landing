@@ -193,6 +193,7 @@ export type Database = {
           github: string | null
           id: string
           instagram: string | null
+          is_pioneer: boolean
           linkedin: string | null
           location: string | null
           lovable: string | null
@@ -219,6 +220,7 @@ export type Database = {
           github?: string | null
           id: string
           instagram?: string | null
+          is_pioneer?: boolean
           linkedin?: string | null
           location?: string | null
           lovable?: string | null
@@ -245,6 +247,7 @@ export type Database = {
           github?: string | null
           id?: string
           instagram?: string | null
+          is_pioneer?: boolean
           linkedin?: string | null
           location?: string | null
           lovable?: string | null

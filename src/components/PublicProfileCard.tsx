@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { User, CheckCircle, Lock, Rocket, Mail } from 'lucide-react';
 import type { PublicProfile } from '@/hooks/usePublicProfile';
+import { PioneerBadge } from '@/components/PioneerBadge';
 
 interface PublicProfileCardProps {
   profile: PublicProfile;
@@ -59,9 +60,16 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
           </h1>
 
           {/* Username */}
-          <p className="text-white/70 text-lg font-mono mb-6">
+          <p className="text-white/70 text-lg font-mono mb-4">
             @{profile.username}
           </p>
+
+          {/* Pioneer Badge */}
+          {profile.is_pioneer && (
+            <div className="mb-6">
+              <PioneerBadge />
+            </div>
+          )}
 
           {/* Verified Badge */}
           <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">

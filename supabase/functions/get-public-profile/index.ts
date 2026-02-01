@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     // 1. Search profile by username (case-insensitive)
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('id, username, member_number')
+      .select('id, username, member_number, is_pioneer')
       .eq('username', username.toLowerCase())
       .maybeSingle()
 
@@ -102,7 +102,8 @@ Deno.serve(async (req) => {
           username: profile.username,
           avatar_url: avatarUrl,
           first_name: firstName,
-          member_number: displayMemberNumber
+          member_number: displayMemberNumber,
+          is_pioneer: profile.is_pioneer || false
         }
       }),
       { 
