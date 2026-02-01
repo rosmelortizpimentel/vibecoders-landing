@@ -21,7 +21,7 @@ export function BrandingTab({ profile, onUpdate }: BrandingTabProps) {
           </p>
         </div>
         <FontSelector
-          value={profile.font_family || 'Inter'}
+          value={profile.font_family || ''}
           onChange={font => onUpdate({ font_family: font })}
         />
       </section>
@@ -36,18 +36,11 @@ export function BrandingTab({ profile, onUpdate }: BrandingTabProps) {
             Personaliza los colores de tu perfil
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <ColorPicker
-            label="Color Primario"
-            value={profile.primary_color || '#3D5AFE'}
-            onChange={color => onUpdate({ primary_color: color })}
-          />
-          <ColorPicker
-            label="Color Acento"
-            value={profile.accent_color || '#1c1c1c'}
-            onChange={color => onUpdate({ accent_color: color })}
-          />
-        </div>
+        <ColorPicker
+          label="Borde de Foto"
+          value={profile.accent_color || '#FFFFFF'}
+          onChange={color => onUpdate({ accent_color: color })}
+        />
       </section>
     </div>
   );

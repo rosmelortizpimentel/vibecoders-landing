@@ -29,9 +29,9 @@ export interface ProfileData {
 }
 
 const DEFAULT_PROFILE: Partial<ProfileData> = {
-  font_family: 'Inter',
+  font_family: '',
   primary_color: '#3D5AFE',
-  accent_color: '#1c1c1c',
+  accent_color: '#FFFFFF',
   card_style: 'minimal',
 };
 
