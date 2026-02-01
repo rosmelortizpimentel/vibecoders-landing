@@ -8,6 +8,7 @@ import { Menu, MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, M
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { PreviewAppCard } from './PreviewAppCard';
+import { PioneerBadge } from '@/components/PioneerBadge';
 // X icon (current logo)
 const XIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -118,10 +119,15 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
       {/* Main Content */}
       <div className="pt-12 md:pt-14 pb-6 px-4 md:px-6 text-left space-y-3">
-        {/* Name - always visible */}
-        <h2 className="text-lg md:text-xl font-bold text-gray-900">
-          {profile.name || 'Tu Nombre'}
-        </h2>
+        {/* Name + Pioneer Badge */}
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg md:text-xl font-bold text-gray-900">
+            {profile.name || 'Tu Nombre'}
+          </h2>
+          {(profile as ProfileData & { is_pioneer?: boolean }).is_pioneer && (
+            <PioneerBadge />
+          )}
+        </div>
 
         {/* Tagline - directly below name */}
         {profile.tagline && (

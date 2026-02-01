@@ -6,6 +6,7 @@ export interface PublicProfile {
   avatar_url: string | null;
   first_name: string;
   member_number: number;
+  is_pioneer: boolean;
 }
 
 interface UsePublicProfileResult {
