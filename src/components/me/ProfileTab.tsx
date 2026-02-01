@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
+import { PioneerBadge } from '@/components/PioneerBadge';
 import { Camera, MapPin, Globe, ImagePlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -130,11 +132,27 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner }
             </div>
             
             {user && (
-              <UsernameEditor 
-                currentUsername={profile.username}
-                onUpdate={(username) => onUpdate({ username })}
-                userId={user.id}
-              />
+              <div className="space-y-2">
+                <UsernameEditor 
+                  currentUsername={profile.username}
+                  onUpdate={(username) => onUpdate({ username })}
+                  userId={user.id}
+                />
+                
+                {/* Pioneer Badge Toggle - only show for pioneers */}
+                {profile.is_pioneer && (
+                  <div className="flex items-center justify-between pt-1">
+                    <div className="flex items-center gap-2">
+                      <PioneerBadge className="w-5 h-5" />
+                      <span className="text-sm text-gray-600">Mostrar badge</span>
+                    </div>
+                    <Switch
+                      checked={profile.show_pioneer_badge}
+                      onCheckedChange={(checked) => onUpdate({ show_pioneer_badge: checked })}
+                    />
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
