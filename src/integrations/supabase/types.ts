@@ -14,27 +14,346 @@ export type Database = {
   }
   public: {
     Tables: {
-      profiles: {
+      app_categories: {
+        Row: {
+          created_at: string
+          display_order: number
+          icon: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          icon: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          icon?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      app_stacks: {
+        Row: {
+          app_id: string
+          created_at: string
+          stack_id: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          stack_id: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          stack_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_stacks_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_stacks_stack_id_fkey"
+            columns: ["stack_id"]
+            isOneToOne: false
+            referencedRelation: "tech_stacks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_statuses: {
+        Row: {
+          color: string
+          created_at: string
+          display_order: number
+          icon: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          display_order?: number
+          icon: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          display_order?: number
+          icon?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      apps: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          hours_building: number | null
+          hours_ideation: number | null
+          id: string
+          is_visible: boolean
+          logo_url: string | null
+          name: string | null
+          status_id: string | null
+          tagline: string | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          hours_building?: number | null
+          hours_ideation?: number | null
+          id?: string
+          is_visible?: boolean
+          logo_url?: string | null
+          name?: string | null
+          status_id?: string | null
+          tagline?: string | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          hours_building?: number | null
+          hours_ideation?: number | null
+          id?: string
+          is_visible?: boolean
+          logo_url?: string | null
+          name?: string | null
+          status_id?: string | null
+          tagline?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "apps_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "app_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apps_status_id_fkey"
+            columns: ["status_id"]
+            isOneToOne: false
+            referencedRelation: "app_statuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "apps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          following_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          following_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          following_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_following_id_fkey"
+            columns: ["following_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      general_settings: {
         Row: {
           created_at: string | null
+          description: string | null
           id: string
-          member_number: number
+          key: string
           updated_at: string | null
-          username: string | null
+          value: string
         }
         Insert: {
           created_at?: string | null
-          id: string
-          member_number?: number
+          description?: string | null
+          id?: string
+          key: string
           updated_at?: string | null
-          username?: string | null
+          value: string
         }
         Update: {
           created_at?: string | null
+          description?: string | null
           id?: string
+          key?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          accent_color: string | null
+          avatar_url: string | null
+          banner_url: string | null
+          bio: string | null
+          card_style: string | null
+          created_at: string | null
+          email_public: string | null
+          font_family: string | null
+          github: string | null
+          id: string
+          instagram: string | null
+          is_pioneer: boolean
+          linkedin: string | null
+          location: string | null
+          lovable: string | null
+          member_number: number
+          name: string | null
+          primary_color: string | null
+          show_pioneer_badge: boolean
+          tagline: string | null
+          tiktok: string | null
+          twitter: string | null
+          updated_at: string | null
+          username: string | null
+          website: string | null
+          youtube: string | null
+        }
+        Insert: {
+          accent_color?: string | null
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
+          card_style?: string | null
+          created_at?: string | null
+          email_public?: string | null
+          font_family?: string | null
+          github?: string | null
+          id: string
+          instagram?: string | null
+          is_pioneer?: boolean
+          linkedin?: string | null
+          location?: string | null
+          lovable?: string | null
           member_number?: number
+          name?: string | null
+          primary_color?: string | null
+          show_pioneer_badge?: boolean
+          tagline?: string | null
+          tiktok?: string | null
+          twitter?: string | null
           updated_at?: string | null
           username?: string | null
+          website?: string | null
+          youtube?: string | null
+        }
+        Update: {
+          accent_color?: string | null
+          avatar_url?: string | null
+          banner_url?: string | null
+          bio?: string | null
+          card_style?: string | null
+          created_at?: string | null
+          email_public?: string | null
+          font_family?: string | null
+          github?: string | null
+          id?: string
+          instagram?: string | null
+          is_pioneer?: boolean
+          linkedin?: string | null
+          location?: string | null
+          lovable?: string | null
+          member_number?: number
+          name?: string | null
+          primary_color?: string | null
+          show_pioneer_badge?: boolean
+          tagline?: string | null
+          tiktok?: string | null
+          twitter?: string | null
+          updated_at?: string | null
+          username?: string | null
+          website?: string | null
+          youtube?: string | null
+        }
+        Relationships: []
+      }
+      tech_stacks: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          logo_url: string
+          name: string
+          tags: Json
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          logo_url: string
+          name: string
+          tags?: Json
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          logo_url?: string
+          name?: string
+          tags?: Json
         }
         Relationships: []
       }
