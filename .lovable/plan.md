@@ -1,114 +1,88 @@
 
-# Plan: Enhanced App Cards Design for Profile Preview
 
-## Summary
-Redesign the app cards in the "Apps" section of the profile preview to display richer metadata including status badges, tech stack icons, and a clear CTA button, while maintaining a clean and premium aesthetic.
+# Plan: Badge "PIONEER" para Founding Members
 
----
+## Resumen
 
-## Current State
-The app cards in `ProfilePreview.tsx` (lines 189-220) show:
-- App logo
-- App name
-- Tagline (optional)
+Agregaremos un distintivo premium "PIONEER" que aparecerá junto al nombre del usuario en su perfil. Este badge solo se mostrará para miembros que tengan la bandera `is_pioneer` activada en la base de datos.
 
-The data model already supports:
-- `status_id` - linked to `app_statuses` table with colors and icons
-- `stacks` - array of tech stack IDs linked to `tech_stacks` table with logos
-- `url` - for the visit button
+## Diseño Visual
 
----
+El badge tendrá un estilo exclusivo Gold/Amber:
+- **Forma**: Pill-shaped (pastilla redondeada)
+- **Colores**: `bg-amber-100 text-amber-700 border border-amber-200`
+- **Contenido**: Icono de estrella + texto "PIONEER"
+- **Tamaño**: Compacto, alineado verticalmente con el nombre
+- **Interacción**: Tooltip al hover mostrando "Early Founding Member"
 
-## Visual Design
+## Archivos a Modificar
 
-```text
-+------------------------------------------------------------+
-|  [Logo]  App Name               [Status Badge]    [Visitar]|
-|          Description/tagline text here                     |
-|          [React] [Tailwind] [Supabase]                     |
-+------------------------------------------------------------+
+### 1. Base de Datos
+- Nueva migración SQL para agregar columna `is_pioneer` (boolean, default false) a la tabla `profiles`
+
+### 2. Tipos y Hooks
+
+**`src/hooks/useProfileEditor.ts`**
+- Agregar `is_pioneer: boolean` al interface `ProfileData`
+
+**`src/hooks/usePublicProfile.ts`**
+- Agregar `is_pioneer: boolean` al interface `PublicProfile`
+
+### 3. Edge Function
+
+**`supabase/functions/get-public-profile/index.ts`**
+- Incluir `is_pioneer` en la consulta del perfil
+- Retornar el campo en la respuesta pública
+
+### 4. Componente de Badge
+
+**Nuevo: `src/components/PioneerBadge.tsx`**
+- Componente reutilizable con el badge dorado
+- Incluye Tooltip con mensaje "Early Founding Member"
+- Icono Star de lucide-react
+
+### 5. Vistas de Perfil
+
+**`src/components/me/ProfilePreview.tsx`**
+- Importar y mostrar `PioneerBadge` junto al nombre del usuario
+- Solo visible si `profile.is_pioneer === true`
+
+**`src/components/PublicProfileCard.tsx`**
+- Importar y mostrar `PioneerBadge` debajo del nombre
+- Solo visible si `profile.is_pioneer === true`
+
+## Detalles Tecnicos
+
+### Migracion SQL
+```sql
+ALTER TABLE profiles 
+ADD COLUMN is_pioneer boolean NOT NULL DEFAULT false;
 ```
 
-**Design Principles:**
-- Status badge: Pill-shaped with colored dot + text, positioned right of title
-- Tech stack row: Small grey badges with logo icons (max 4 shown)
-- Visit button: Subtle, right-aligned with external link icon
-- Matte, professional colors (no bright/neon tones)
-
----
-
-## Implementation Steps
-
-### Step 1: Create a New Enhanced App Card Component
-
-**File:** `src/components/me/PreviewAppCard.tsx`
-
-This component will:
-- Accept `app`, `statuses`, and `techStacks` as props
-- Render the enhanced card layout with all metadata
-- Handle the "Visitar" CTA button
-
-### Step 2: Update ProfilePreview Component
-
-**File:** `src/components/me/ProfilePreview.tsx`
-
-Changes:
-- Import `useStatuses` and `useTechStacks` hooks
-- Pass statuses and stacks data to the new card component
-- Replace the inline app card rendering with the new component
-
----
-
-## Technical Details
-
-### PreviewAppCard Component Structure
-
+### Componente PioneerBadge
 ```tsx
-interface PreviewAppCardProps {
-  app: AppData;
-  statuses: Status[];
-  stacks: TechStack[];
-}
+// Usa Tooltip de radix-ui
+// Icono Star de lucide-react
+// Clases: bg-amber-100 text-amber-700 border-amber-200
+// Texto: "PIONEER"
+// Tooltip: "Early Founding Member"
 ```
 
-**Status Badge Implementation:**
-- Find status by `app.status_id`
-- Display colored dot (using status.color) + status name
-- Use matte background: `bg-gray-100` with colored text
+### Ubicacion del Badge
 
-**Tech Stack Row Implementation:**
-- Filter `stacks` by `app.stacks` array (stack IDs)
-- Display up to 4 tech icons with small logos from `logo_url`
-- Use subtle grey badges: `bg-gray-100 text-gray-600`
+En **ProfilePreview** (editor):
+```
+[Nombre del Usuario] [PIONEER badge]
+```
 
-**Visit Button Implementation:**
-- Positioned on the right side of the card
-- Uses `ExternalLink` icon from lucide-react
-- Text: "Visitar" with hover effect
-- Opens app URL in new tab with ref parameter
+En **PublicProfileCard** (perfil publico):
+```
+          Nombre
+        @username
+      [PIONEER badge]  <- Debajo del username
+```
 
-### Color Palette (Matte/Professional)
-- Background: `bg-white`
-- Borders: `border-gray-200`
-- Text primary: `text-gray-900`
-- Text secondary: `text-gray-500`
-- Badge background: `bg-gray-100`
-- Status badge: Uses status color with 20% opacity background
+## Resultado Esperado
 
----
+Los usuarios con `is_pioneer = true` veran un badge dorado premium junto a su nombre que los distingue como miembros fundadores, sin afectar el diseno de usuarios regulares.
 
-## Files to Modify
-
-| File | Action |
-|------|--------|
-| `src/components/me/PreviewAppCard.tsx` | Create new component |
-| `src/components/me/ProfilePreview.tsx` | Update to use new component and hooks |
-
----
-
-## Considerations
-
-- **Performance:** The hooks `useStatuses` and `useTechStacks` will be called in ProfilePreview. Since these are cached queries, minimal impact expected.
-- **Responsive Design:** Card layout will adapt for mobile with stack wrap.
-- **Empty States:** If no status or stacks, those sections will be hidden gracefully.
-- **No Emojis:** Only Lucide icons and tech stack logos will be used.
