@@ -10,6 +10,5 @@
       "empty": "Ingresa tu correo electrónico",
       "invalid": "Hmm, ese correo no parece válido"
     }
-  },
-  "socialProof": "Tu @username quedará asegurado para el día del lanzamiento."
+  }
 }
