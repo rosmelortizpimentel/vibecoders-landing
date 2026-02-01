@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useProfileEditor } from '@/hooks/useProfileEditor';
 import { useApps } from '@/hooks/useApps';
@@ -8,8 +9,16 @@ import { AppsTab } from './AppsTab';
 import { BrandingTab } from './BrandingTab';
 import { ProfilePreview } from './ProfilePreview';
 import { MeHeader } from './MeHeader';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 export function MeLayout() {
   const location = useLocation();
@@ -17,6 +26,7 @@ export function MeLayout() {
   const profileEditor = useProfileEditor();
   const appsHook = useApps();
   const isMobile = useIsMobile();
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const { profile, loading, isSaving, lastSaved, error } = profileEditor;
 
@@ -49,7 +59,7 @@ export function MeLayout() {
       />
 
       <div className="container px-4 py-6">
-        <div className={`flex gap-6 ${isMobile ? 'flex-col' : ''}`}>
+        <div className="flex gap-6">
           {/* Main content */}
           <div className={isMobile ? 'w-full' : 'w-[60%]'}>
             <MeTabs />
@@ -75,19 +85,36 @@ export function MeLayout() {
             </div>
           </div>
 
-          {/* Preview sidebar - on desktop: sticky sidebar, on mobile: below content */}
-          <div className={isMobile ? 'w-full mt-8' : 'w-[40%]'}>
-            <div className={isMobile ? '' : 'sticky top-20'}>
-              {isMobile && (
-                <h3 className="text-sm font-medium text-gray-500 mb-4 uppercase tracking-wide">
-                  Vista previa
-                </h3>
-              )}
-              <ProfilePreview profile={profile} apps={appsHook.apps} />
+          {/* Preview sidebar - only on desktop */}
+          {!isMobile && (
+            <div className="w-[40%]">
+              <div className="sticky top-20">
+                <ProfilePreview profile={profile} apps={appsHook.apps} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* Mobile: Floating preview button + Sheet */}
+      {isMobile && (
+        <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
+          <SheetTrigger asChild>
+            <Button
+              size="lg"
+              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
+            >
+              <Eye className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto p-0">
+            <SheetHeader className="sr-only">
+              <SheetTitle>Vista previa del perfil</SheetTitle>
+            </SheetHeader>
+            <ProfilePreview profile={profile} apps={appsHook.apps} />
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

@@ -175,7 +175,7 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
 
   return (
     <div 
-      className="w-full max-w-md md:max-w-2xl mx-auto rounded-2xl overflow-hidden shadow-xl bg-white"
+      className="w-full min-h-screen bg-white"
       style={{ fontFamily }}
     >
       {/* Header - Solo logo que lleva a home */}
