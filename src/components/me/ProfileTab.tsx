@@ -146,6 +146,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner }
                   <div className="flex items-center gap-2 pt-7">
                     <PioneerBadge className="w-5 h-5" />
                     <span className="text-sm text-gray-600 whitespace-nowrap">Early Founding Member</span>
+                    <span className="text-sm text-gray-500 ml-2">Mostrar badge</span>
                     <Switch
                       checked={profile.show_pioneer_badge}
                       onCheckedChange={(checked) => onUpdate({ show_pioneer_badge: checked })}

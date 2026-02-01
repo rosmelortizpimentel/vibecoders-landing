@@ -124,7 +124,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           <h2 className="text-lg md:text-xl font-bold text-gray-900">
             {profile.name || 'Tu Nombre'}
           </h2>
-          {(profile as ProfileData & { is_pioneer?: boolean }).is_pioneer && (
+          {profile.is_pioneer && profile.show_pioneer_badge && (
             <PioneerBadge />
           )}
         </div>
