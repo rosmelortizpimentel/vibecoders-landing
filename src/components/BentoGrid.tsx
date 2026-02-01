@@ -8,7 +8,7 @@ const features = [
     id: 'url',
     visual: <BrowserUrlMock />,
     title: 'Tu URL es tu marca personal',
-    body: 'Olvídate de los links genéricos. Reclama un @username corto y memorable que sirva como tu tarjeta de presentación definitiva en el mundo tech.',
+    body: 'Olvídate de los links genéricos. Tu nombre de usuario se convierte en tu carta de presentación digital. Una dirección web propia que te otorga identidad y profesionalismo inmediato, lista para compartir.',
   },
   {
     id: 'stack',
