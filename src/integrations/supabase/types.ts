@@ -227,6 +227,7 @@ export type Database = {
           member_number: number
           name: string | null
           primary_color: string | null
+          show_pioneer_badge: boolean
           tagline: string | null
           tiktok: string | null
           twitter: string | null
@@ -254,6 +255,7 @@ export type Database = {
           member_number?: number
           name?: string | null
           primary_color?: string | null
+          show_pioneer_badge?: boolean
           tagline?: string | null
           tiktok?: string | null
           twitter?: string | null
@@ -281,6 +283,7 @@ export type Database = {
           member_number?: number
           name?: string | null
           primary_color?: string | null
+          show_pioneer_badge?: boolean
           tagline?: string | null
           tiktok?: string | null
           twitter?: string | null

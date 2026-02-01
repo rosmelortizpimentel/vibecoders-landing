@@ -7,6 +7,8 @@ export interface ProfileData {
   id: string;
   username: string | null;
   member_number: number;
+  is_pioneer: boolean;
+  show_pioneer_badge: boolean;
   name: string | null;
   tagline: string | null;
   bio: string | null;
@@ -48,6 +50,7 @@ export function useProfileEditor() {
       .from('profiles')
       .update({
         username: data.username,
+        show_pioneer_badge: data.show_pioneer_badge,
         name: data.name,
         tagline: data.tagline,
         bio: data.bio,
