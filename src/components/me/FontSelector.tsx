@@ -7,6 +7,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+const DEFAULT_FONT_OPTION = 'Default';
+
 const POPULAR_FONTS = [
   'Inter',
   'Roboto',
@@ -29,6 +31,8 @@ const POPULAR_FONTS = [
   'Sora',
   'Plus Jakarta Sans',
 ];
+
+const ALL_FONT_OPTIONS = [DEFAULT_FONT_OPTION, ...POPULAR_FONTS];
 
 interface FontSelectorProps {
   value: string;
@@ -55,21 +59,30 @@ export function FontSelector({ value, onChange }: FontSelectorProps) {
     };
   }, []);
 
+  // Map value for display - empty/null means Default
+  const displayValue = value || DEFAULT_FONT_OPTION;
+
+  const handleChange = (newValue: string) => {
+    // If Default is selected, pass empty string to clear the font_family
+    onChange(newValue === DEFAULT_FONT_OPTION ? '' : newValue);
+  };
+
   return (
     <div className="space-y-3">
-      <Select value={value} onValueChange={onChange}>
+      <Select value={displayValue} onValueChange={handleChange}>
         <SelectTrigger className="w-full border-gray-300 bg-white text-[#1c1c1c]">
           <SelectValue placeholder="Selecciona una fuente" />
         </SelectTrigger>
         <SelectContent>
-          {POPULAR_FONTS.map(font => (
+          {ALL_FONT_OPTIONS.map(font => (
             <SelectItem key={font} value={font}>
-              <span style={{ fontFamily: font }}>{font}</span>
+              <span style={{ fontFamily: font === DEFAULT_FONT_OPTION ? 'CameraPlain, system-ui, sans-serif' : font }}>
+                {font}
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-
     </div>
   );
 }

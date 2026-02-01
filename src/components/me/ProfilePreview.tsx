@@ -66,8 +66,9 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
   if (!profile) return null;
 
-  const fontFamily = profile.font_family || 'Inter';
+  const fontFamily = profile.font_family || 'CameraPlain, system-ui, sans-serif';
   const username = profile.username || 'username';
+  const avatarBorderColor = profile.accent_color || '#FFFFFF';
 
   // Get active socials
   const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof ProfileData]);
@@ -103,7 +104,10 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
         
         {/* Avatar aligned to the left */}
         <div className="absolute left-4 -bottom-10 md:-bottom-12">
-          <Avatar className="h-20 w-20 md:h-24 md:w-24 border-4 border-white shadow-md">
+          <Avatar 
+            className="h-20 w-20 md:h-24 md:w-24 shadow-md"
+            style={{ border: `4px solid ${avatarBorderColor}` }}
+          >
             <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
             <AvatarFallback className="text-xl md:text-2xl font-bold bg-gray-100 text-gray-600">
               {profile.name?.charAt(0) || '?'}
