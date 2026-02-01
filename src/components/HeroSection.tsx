@@ -11,6 +11,7 @@ import ProfileFileCard from './ProfileFileCard';
 import WaitlistSuccessModal from './WaitlistSuccessModal';
 import UserMenu from './UserMenu';
 import { registerToWaitlist } from '@/lib/waitlist';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 const TOTAL_LOGOS = 10;
 
@@ -110,15 +111,14 @@ const HeroSection = () => {
       <div className="relative z-10 mx-auto max-w-4xl text-center">
         {/* Logo VIBECODERS */}
         <div 
-          className="mb-8 animate-fade-in opacity-0"
+          className="mb-8 animate-fade-in opacity-0 flex justify-center"
           style={{ animationDelay: '0.05s' }}
         >
-          <span className="font-mono font-bold text-xl md:text-2xl tracking-tight inline-flex items-center gap-1 text-white">
-            <span className="text-white/60">{'<'}</span>
-            <span>VIBECODERS</span>
-            <span className="animate-cursor-blink">_</span>
-            <span className="text-white/60">{'>'}</span>
-          </span>
+          <img 
+            src={vibecodersLogo} 
+            alt="Vibecoders" 
+            className="h-16 w-16 md:h-20 md:w-20 rounded-full border-[3px] border-white object-cover shadow-lg"
+          />
         </div>
 
         {/* Badge */}
