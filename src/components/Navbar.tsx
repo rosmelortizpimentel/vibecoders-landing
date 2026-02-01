@@ -1,5 +1,6 @@
 import { Linkedin } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 const Navbar = () => {
   const t = useTranslation('common');
@@ -9,12 +10,13 @@ const Navbar = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <a 
           href="/" 
-          className="font-mono font-bold text-xl tracking-tight flex items-center gap-1 text-slate-900 transition-colors hover:opacity-80"
+          className="transition-opacity hover:opacity-80"
         >
-          <span className="text-slate-400/80">{'<'}</span>
-          <span>VIBECODERS</span>
-          <span className="animate-pulse">_</span>
-          <span className="text-slate-400/80">{'>'}</span>
+          <img 
+            src={vibecodersLogo} 
+            alt="Vibecoders" 
+            className="h-10 w-10 rounded-full border-2 border-white object-cover"
+          />
         </a>
 
         <a
