@@ -28,6 +28,7 @@ export interface ProfileData {
   primary_color: string | null;
   accent_color: string | null;
   card_style: string | null;
+  avatar_position: 'left' | 'center' | 'right' | null;
 }
 
 const DEFAULT_PROFILE: Partial<ProfileData> = {
@@ -35,6 +36,7 @@ const DEFAULT_PROFILE: Partial<ProfileData> = {
   primary_color: '#3D5AFE',
   accent_color: '#FFFFFF',
   card_style: 'minimal',
+  avatar_position: 'center',
 };
 
 export function useProfileEditor() {
@@ -70,6 +72,7 @@ export function useProfileEditor() {
         primary_color: data.primary_color,
         accent_color: data.accent_color,
         card_style: data.card_style,
+        avatar_position: data.avatar_position,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id);
@@ -129,7 +132,7 @@ export function useProfileEditor() {
     if (!user) throw new Error('No user');
 
     const fileExt = file.name.split('.').pop();
-    const filePath = `${user.id}/avatar.${fileExt}`;
+    const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('profile-assets')
@@ -149,7 +152,7 @@ export function useProfileEditor() {
     if (!user) throw new Error('No user');
 
     const fileExt = file.name.split('.').pop();
-    const filePath = `${user.id}/banner.${fileExt}`;
+    const filePath = `${user.id}/banner_${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('profile-assets')
@@ -165,6 +168,10 @@ export function useProfileEditor() {
     return publicUrl;
   }, [user, updateProfile]);
 
+  const deleteBanner = useCallback(() => {
+    updateProfile({ banner_url: null });
+  }, [updateProfile]);
+
   return {
     profile,
     loading,
@@ -174,5 +181,6 @@ export function useProfileEditor() {
     updateProfile,
     uploadAvatar,
     uploadBanner,
+    deleteBanner,
   };
 }
