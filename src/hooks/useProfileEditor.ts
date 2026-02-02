@@ -93,26 +93,89 @@ export function useProfileEditor() {
       }
 
       try {
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
-        
-        // Use Google metadata as fallback for name and avatar
+        // Handle specific errors - PGRST116 is expected for new users
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          throw fetchError;
+        }
+
+        let profileData = data;
+
+        // If profile doesn't exist, create it automatically
+        if (!profileData) {
+          let usernameToInsert: string | null = null;
+          
+          // Extract username from email
+          if (user.email) {
+            const localPart = user.email.split('@')[0] || '';
+            const candidateUsername = localPart
+              .toLowerCase()
+              .replace(/[^a-z0-9_]/g, '')
+              .slice(0, 20);
+            
+            if (candidateUsername.length >= 1) {
+              try {
+                const { data: availabilityData } = await supabase.functions.invoke(
+                  'check-username-available',
+                  { body: { username: candidateUsername } }
+                );
+                
+                if (availabilityData?.success && availabilityData?.available) {
+                  usernameToInsert = candidateUsername;
+                }
+              } catch (err) {
+                console.log('Could not check username, creating profile without it');
+              }
+            }
+          }
+          
+          // Insert new profile
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({ id: user.id, username: usernameToInsert })
+            .select()
+            .maybeSingle();
+
+          if (insertError) {
+            // Race condition: profile already exists
+            if (insertError.code === '23505') {
+              const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .maybeSingle();
+              
+              if (existingProfile) {
+                profileData = existingProfile;
+              } else {
+                throw insertError;
+              }
+            } else {
+              throw insertError;
+            }
+          } else {
+            profileData = newProfile;
+          }
+        }
+
+        // Apply defaults and Google metadata
         const googleName = user.user_metadata?.full_name;
         const googleAvatar = user.user_metadata?.avatar_url;
         
         setProfile({
           ...DEFAULT_PROFILE,
-          ...data,
-          name: data.name || googleName || null,
-          avatar_url: data.avatar_url || googleAvatar || null,
+          ...profileData,
+          name: profileData?.name || googleName || null,
+          avatar_url: profileData?.avatar_url || googleAvatar || null,
         } as ProfileData);
+
       } catch (err) {
-        console.error('Error fetching profile:', err);
+        console.error('Error fetching/creating profile:', err);
         setError(err instanceof Error ? err : new Error('Error al cargar perfil'));
       } finally {
         setLoading(false);
