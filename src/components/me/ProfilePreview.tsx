@@ -84,11 +84,18 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
     right: 'right-4'
   };
 
-  // Banner position classes
+  // Banner position classes (flexbox alignment)
   const bannerPositionClasses = {
-    left: 'object-left',
-    center: 'object-center',
-    right: 'object-right'
+    left: 'justify-start',
+    center: 'justify-center',
+    right: 'justify-end'
+  };
+
+  // Content alignment classes based on avatar position
+  const contentAlignmentClasses = {
+    left: 'text-left items-start',
+    center: 'text-center items-center',
+    right: 'text-right items-end'
   };
 
   // Get active socials
@@ -118,11 +125,11 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
       {/* Banner + Avatar */}
       <div className="relative">
         {profile.banner_url ? (
-          <div className="h-24 md:h-32 w-full">
+          <div className={`h-24 md:h-32 w-full flex items-center bg-gray-50 ${bannerPositionClasses[bannerPosition]}`}>
             <img 
               src={profile.banner_url} 
               alt="Banner" 
-              className={`w-full h-full object-cover ${bannerPositionClasses[bannerPosition]}`}
+              className="max-w-full max-h-full object-contain"
             />
           </div>
         ) : (
@@ -144,9 +151,9 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
       </div>
 
       {/* Main Content */}
-      <div className="pt-12 md:pt-14 pb-6 px-4 md:px-6 text-left space-y-3">
+      <div className={`pt-12 md:pt-14 pb-6 px-4 md:px-6 space-y-3 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
         {/* Name + Pioneer Badge */}
-        <div className="flex items-center gap-2">
+        <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
           <h2 className="text-lg md:text-xl font-bold text-gray-900">
             {profile.name || 'Tu Nombre'}
           </h2>
@@ -162,10 +169,9 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           </p>
         )}
 
-
         {/* Social Icons Row - only if there are active socials */}
         {activeSocials.length > 0 && (
-          <div className="flex items-center gap-2 pt-1">
+          <div className={`flex items-center gap-2 pt-1 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
             {activeSocials.map(({ key, icon: Icon, getUrl }) => {
               const value = profile[key as keyof ProfileData] as string;
               return (
@@ -186,13 +192,13 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
         {(profile.location || profile.website) && (
           <div className="space-y-1 pt-2">
             {profile.location && (
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <div className={`flex items-center gap-1.5 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
                 <MapPin className="h-3.5 w-3.5" />
                 <span>{profile.location}</span>
               </div>
             )}
             {profile.website && (
-              <div className="flex items-center gap-1.5 text-sm text-gray-500">
+              <div className={`flex items-center gap-1.5 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
                 <LinkIcon className="h-3.5 w-3.5" />
                 <a 
                   href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
