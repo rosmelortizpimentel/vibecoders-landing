@@ -243,70 +243,43 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
         </div>
 
         {/* Main Content */}
-        <div className="pt-12 md:pt-16 pb-6 px-4 md:px-6">
-          {/* Desktop: Two column layout */}
-          <div className={`md:flex md:justify-between md:items-start md:gap-4 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
-            {/* Left column: Name, username, followers */}
-            <div className={`space-y-2 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
-              {/* Name + Pioneer Badge */}
-              <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-                  {profile.name || 'Vibecoder'}
-                </h1>
-                {profile.is_pioneer && profile.show_pioneer_badge && (
-                  <PioneerBadge />
-                )}
-              </div>
-
-              {/* Username + Followers */}
-              <div className={`flex items-center gap-2 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-                <span>@{username}</span>
-                <span>·</span>
-                <span><strong className="text-gray-900">{followersCount}</strong> seguidores</span>
-                <span><strong className="text-gray-900">{followingCount}</strong> siguiendo</span>
-              </div>
-
-              {/* Tagline */}
-              {profile.tagline && (
-                <p className="text-sm md:text-base text-gray-600 italic pt-1">
-                  {profile.tagline}
-                </p>
-              )}
-            </div>
-
-            {/* Right column: Location, Website, Follow button */}
-            <div className="flex items-center gap-3 mt-4 md:mt-0">
-              {/* Location & Website - Desktop only */}
-              <div className="hidden md:flex items-center gap-4 text-sm text-gray-500">
-                {profile.location && (
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="h-4 w-4" />
-                    <span>{profile.location}</span>
-                  </div>
-                )}
-                {profile.website && (
-                  <a 
-                    href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 hover:text-gray-700"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                  </a>
-                )}
-              </div>
-
-              {/* Follow Button - Don't show on own profile */}
-              {!isOwnProfile && (
-                <FollowButton
-                  isFollowing={isFollowing}
-                  isLoading={followLoading}
-                  onToggleFollow={toggleFollow}
-                  profileUsername={profile.username}
-                />
-              )}
-            </div>
+        <div className={`pt-12 md:pt-16 pb-6 px-4 md:px-6 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
+          {/* Name + Pioneer Badge */}
+          <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              {profile.name || 'Vibecoder'}
+            </h1>
+            {profile.is_pioneer && profile.show_pioneer_badge && (
+              <PioneerBadge />
+            )}
           </div>
+
+          {/* Username + Followers */}
+          <div className={`flex items-center gap-2 text-sm text-gray-500 mt-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+            <span><strong className="text-gray-900">{followingCount}</strong> siguiendo</span>
+            <span><strong className="text-gray-900">{followersCount}</strong> seguidores</span>
+            <span>·</span>
+            <span>@{username}</span>
+          </div>
+
+          {/* Tagline */}
+          {profile.tagline && (
+            <p className="text-sm md:text-base text-gray-600 italic mt-2">
+              {profile.tagline}
+            </p>
+          )}
+
+          {/* Follow Button - Don't show on own profile */}
+          {!isOwnProfile && (
+            <div className="mt-4">
+              <FollowButton
+                isFollowing={isFollowing}
+                isLoading={followLoading}
+                onToggleFollow={toggleFollow}
+                profileUsername={profile.username}
+              />
+            </div>
+          )}
 
           {/* Social Icons Row */}
           {activeSocials.length > 0 && (
@@ -328,9 +301,9 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
             </div>
           )}
 
-          {/* Mobile: Location & Website */}
+          {/* Location & Website */}
           {(profile.location || profile.website) && (
-            <div className={`md:hidden space-y-1 pt-3 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
+            <div className={`space-y-1 pt-3 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
               {profile.location && (
                 <div className={`flex items-center gap-1.5 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
                   <MapPin className="h-3.5 w-3.5" />
