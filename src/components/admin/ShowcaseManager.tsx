@@ -9,8 +9,7 @@ import {
   Pencil, 
   Trash2, 
   ExternalLink, 
-  ArrowUp, 
-  ArrowDown,
+  GripVertical,
   Loader2
 } from 'lucide-react';
 import { ShowcaseForm, ShowcaseFormData } from './ShowcaseForm';
@@ -25,6 +24,23 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Showcase {
   id: string;
@@ -42,11 +58,114 @@ interface Showcase {
   created_at: string;
 }
 
+// Sortable Row Component
+function SortableShowcaseRow({ 
+  showcase, 
+  onEdit, 
+  onDelete, 
+  onToggleActive 
+}: { 
+  showcase: Showcase; 
+  onEdit: (s: Showcase) => void;
+  onDelete: (id: string) => void;
+  onToggleActive: (id: string, active: boolean) => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: showcase.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${
+        !showcase.is_active ? 'opacity-60' : ''
+      }`}
+    >
+      {/* Drag handle */}
+      <button 
+        {...attributes} 
+        {...listeners}
+        className="p-1 cursor-grab active:cursor-grabbing hover:bg-gray-200 rounded touch-none"
+      >
+        <GripVertical className="h-4 w-4 text-gray-400" />
+      </button>
+
+      {/* Thumbnail */}
+      <img 
+        src={showcase.project_thumbnail} 
+        alt={showcase.project_title}
+        className="h-12 w-20 object-cover rounded border border-gray-200 flex-shrink-0"
+      />
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <h3 className="font-medium text-sm text-[#1c1c1c] truncate">{showcase.project_title}</h3>
+        <p className="text-xs text-gray-500 truncate">{showcase.project_tagline}</p>
+        <p className="text-xs text-gray-400">Por {showcase.author_name}</p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <Switch
+          checked={showcase.is_active ?? true}
+          onCheckedChange={(checked) => onToggleActive(showcase.id, checked)}
+        />
+        
+        <a
+          href={showcase.project_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+        >
+          <ExternalLink className="h-4 w-4 text-gray-500" />
+        </a>
+
+        <button
+          onClick={() => onEdit(showcase)}
+          className="p-1.5 hover:bg-gray-200 rounded transition-colors"
+        >
+          <Pencil className="h-4 w-4 text-gray-500" />
+        </button>
+
+        <button
+          onClick={() => onDelete(showcase.id)}
+          className="p-1.5 hover:bg-red-100 rounded transition-colors"
+        >
+          <Trash2 className="h-4 w-4 text-red-500" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function ShowcaseManager() {
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingShowcase, setEditingShowcase] = useState<Showcase | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Fetch all showcases (including inactive for admin)
   const { data: showcases, isLoading } = useQuery({
@@ -155,36 +274,43 @@ export function ShowcaseManager() {
     },
   });
 
-  // Update order mutation
+  // Batch update order mutation
   const updateOrderMutation = useMutation({
-    mutationFn: async ({ id, display_order }: { id: string; display_order: number }) => {
-      const { error } = await supabase
-        .from('showcase_gallery')
-        .update({ display_order })
-        .eq('id', id);
-      if (error) throw error;
+    mutationFn: async (updates: { id: string; display_order: number }[]) => {
+      const promises = updates.map(({ id, display_order }) =>
+        supabase
+          .from('showcase_gallery')
+          .update({ display_order })
+          .eq('id', id)
+      );
+      const results = await Promise.all(promises);
+      const errorResult = results.find(r => r.error);
+      if (errorResult?.error) throw errorResult.error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-showcases'] });
     },
   });
 
-  const handleMoveUp = (index: number) => {
-    if (!showcases || index === 0) return;
-    const current = showcases[index];
-    const previous = showcases[index - 1];
-    
-    updateOrderMutation.mutate({ id: current.id, display_order: previous.display_order ?? index - 1 });
-    updateOrderMutation.mutate({ id: previous.id, display_order: current.display_order ?? index });
-  };
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
 
-  const handleMoveDown = (index: number) => {
-    if (!showcases || index === showcases.length - 1) return;
-    const current = showcases[index];
-    const next = showcases[index + 1];
-    
-    updateOrderMutation.mutate({ id: current.id, display_order: next.display_order ?? index + 1 });
-    updateOrderMutation.mutate({ id: next.id, display_order: current.display_order ?? index });
+    if (over && active.id !== over.id && showcases) {
+      const oldIndex = showcases.findIndex((s) => s.id === active.id);
+      const newIndex = showcases.findIndex((s) => s.id === over.id);
+      
+      const reordered = arrayMove(showcases, oldIndex, newIndex);
+      
+      // Optimistic update
+      queryClient.setQueryData(['admin-showcases'], reordered);
+      
+      // Persist to database
+      const updates = reordered.map((item, index) => ({
+        id: item.id,
+        display_order: index,
+      }));
+      updateOrderMutation.mutate(updates);
+    }
   };
 
   const handleEdit = (showcase: Showcase) => {
@@ -200,115 +326,64 @@ export function ShowcaseManager() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1c1c1c]">Gestión de Showcases</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-xl font-bold text-[#1c1c1c]">Gestión de Showcases</h1>
+          <p className="text-sm text-gray-500">
             Administra los proyectos destacados de la comunidad
           </p>
         </div>
-        <Button onClick={() => setShowForm(true)} className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90">
-          <Plus className="h-4 w-4 mr-2" />
+        <Button onClick={() => setShowForm(true)} size="sm" className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90">
+          <Plus className="h-4 w-4 mr-1" />
           Nuevo Showcase
         </Button>
       </div>
 
       {/* List */}
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         {isLoading ? (
-          <div className="p-6 space-y-4">
+          <div className="p-4 space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-4">
-                <Skeleton className="h-16 w-24 rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-3 w-32" />
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="h-12 w-20 rounded" />
+                <div className="flex-1 space-y-1">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-28" />
                 </div>
               </div>
             ))}
           </div>
         ) : showcases?.length === 0 ? (
-          <div className="p-12 text-center">
-            <p className="text-gray-500">No hay showcases aún. ¡Crea el primero!</p>
+          <div className="p-8 text-center">
+            <p className="text-gray-500 text-sm">No hay showcases aún. ¡Crea el primero!</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
-            {showcases?.map((showcase, index) => (
-              <div 
-                key={showcase.id} 
-                className={`flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors ${
-                  !showcase.is_active ? 'opacity-60' : ''
-                }`}
-              >
-                {/* Order controls */}
-                <div className="flex flex-col gap-1">
-                  <button 
-                    onClick={() => handleMoveUp(index)}
-                    disabled={index === 0}
-                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                  >
-                    <ArrowUp className="h-4 w-4 text-gray-500" />
-                  </button>
-                  <button 
-                    onClick={() => handleMoveDown(index)}
-                    disabled={index === showcases.length - 1}
-                    className="p-1 hover:bg-gray-200 rounded disabled:opacity-30"
-                  >
-                    <ArrowDown className="h-4 w-4 text-gray-500" />
-                  </button>
-                </div>
-
-                {/* Thumbnail */}
-                <img 
-                  src={showcase.project_thumbnail} 
-                  alt={showcase.project_title}
-                  className="h-16 w-24 object-cover rounded-lg border border-gray-200"
-                />
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-[#1c1c1c] truncate">{showcase.project_title}</h3>
-                  <p className="text-sm text-gray-500 truncate">{showcase.project_tagline}</p>
-                  <p className="text-xs text-gray-400 mt-1">Por {showcase.author_name}</p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-3">
-                  <Switch
-                    checked={showcase.is_active ?? true}
-                    onCheckedChange={(checked) => 
-                      toggleActiveMutation.mutate({ id: showcase.id, is_active: checked })
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={showcases?.map(s => s.id) || []}
+              strategy={verticalListSortingStrategy}
+            >
+              <div>
+                {showcases?.map((showcase) => (
+                  <SortableShowcaseRow
+                    key={showcase.id}
+                    showcase={showcase}
+                    onEdit={handleEdit}
+                    onDelete={setDeletingId}
+                    onToggleActive={(id, active) => 
+                      toggleActiveMutation.mutate({ id, is_active: active })
                     }
                   />
-                  
-                  <a
-                    href={showcase.project_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    <ExternalLink className="h-4 w-4 text-gray-500" />
-                  </a>
-
-                  <button
-                    onClick={() => handleEdit(showcase)}
-                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    <Pencil className="h-4 w-4 text-gray-500" />
-                  </button>
-
-                  <button
-                    onClick={() => setDeletingId(showcase.id)}
-                    className="p-2 hover:bg-red-100 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </button>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
@@ -340,11 +415,11 @@ export function ShowcaseManager() {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar este showcase?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El showcase será eliminado permanentemente.
+              Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
