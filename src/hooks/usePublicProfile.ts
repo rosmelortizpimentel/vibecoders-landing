@@ -1,12 +1,47 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
+export interface PublicAppStack {
+  id: string;
+  name: string;
+  logo_url: string;
+}
+
+export interface PublicApp {
+  id: string;
+  url: string;
+  name: string | null;
+  tagline: string | null;
+  logo_url: string | null;
+  status: { name: string; slug: string } | null;
+  stacks: PublicAppStack[];
+}
 
 export interface PublicProfile {
+  id: string;
   username: string;
   avatar_url: string | null;
-  first_name: string;
+  banner_url: string | null;
+  name: string | null;
+  tagline: string | null;
+  bio: string | null;
+  location: string | null;
+  website: string | null;
+  accent_color: string | null;
+  font_family: string | null;
   member_number: number;
   is_pioneer: boolean;
+  show_pioneer_badge: boolean;
+  // Socials
+  lovable: string | null;
+  twitter: string | null;
+  github: string | null;
+  linkedin: string | null;
+  instagram: string | null;
+  youtube: string | null;
+  tiktok: string | null;
+  email_public: string | null;
+  // Apps
+  apps: PublicApp[];
 }
 
 interface UsePublicProfileResult {
