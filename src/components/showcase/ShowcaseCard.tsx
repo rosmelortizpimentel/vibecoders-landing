@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ExternalLink, Linkedin, Twitter, Globe, User } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import type { ShowcaseProject } from '@/hooks/useShowcase';
 
 interface ShowcaseCardProps {
@@ -46,15 +47,27 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
           href={project.project_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="block group/title"
+          className="flex items-start gap-3 group/title"
         >
-          <h3 className="text-lg font-semibold text-[#1c1c1c] group-hover/title:text-[#3D5AFE] transition-colors line-clamp-1">
-            {project.project_title}
-          </h3>
+          {/* Logo */}
+          {project.project_logo_url && (
+            <img
+              src={project.project_logo_url}
+              alt={`Logo de ${project.project_title}`}
+              className="w-10 h-10 rounded-lg object-cover border border-stone-200 flex-shrink-0"
+            />
+          )}
+          
+          {/* Title & Tagline */}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-[#1c1c1c] group-hover/title:text-[#3D5AFE] transition-colors line-clamp-1">
+              {project.project_title}
+            </h3>
+            <p className="mt-1 text-sm text-stone-600 line-clamp-2">
+              {project.project_tagline}
+            </p>
+          </div>
         </a>
-        <p className="mt-1 text-sm text-stone-600 line-clamp-2">
-          {project.project_tagline}
-        </p>
       </div>
 
       {/* Separator */}
@@ -62,8 +75,8 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
 
       {/* Footer - Author Info */}
       <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Avatar className="h-8 w-8">
+        <div className="flex items-center gap-2 min-w-0">
+          <Avatar className="h-8 w-8 flex-shrink-0">
             {project.author_avatar ? (
               <AvatarImage src={project.author_avatar} alt={project.author_name} />
             ) : null}
@@ -71,9 +84,12 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
               <User className="w-4 h-4" />
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium text-stone-700">
+          <span className="text-sm font-medium text-stone-700 truncate">
             {project.author_name}
           </span>
+          <Badge className="text-[10px] bg-gray-100 text-gray-500 hover:bg-gray-100 rounded-full px-2 py-0.5 font-normal flex-shrink-0">
+            Creador
+          </Badge>
         </div>
 
         {/* Social Icons */}

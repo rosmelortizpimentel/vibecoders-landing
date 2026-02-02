@@ -347,6 +347,7 @@ export type Database = {
           display_order: number | null
           id: string
           is_active: boolean | null
+          project_logo_url: string | null
           project_tagline: string
           project_thumbnail: string
           project_title: string
@@ -362,6 +363,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_active?: boolean | null
+          project_logo_url?: string | null
           project_tagline: string
           project_thumbnail: string
           project_title: string
@@ -377,6 +379,7 @@ export type Database = {
           display_order?: number | null
           id?: string
           is_active?: boolean | null
+          project_logo_url?: string | null
           project_tagline?: string
           project_thumbnail?: string
           project_title?: string

@@ -7,6 +7,7 @@ export interface ShowcaseProject {
   project_tagline: string;
   project_url: string;
   project_thumbnail: string;
+  project_logo_url: string | null;
   author_name: string;
   author_avatar: string | null;
   author_linkedin: string | null;
