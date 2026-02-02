@@ -1,196 +1,230 @@
 
-# Plan: Corregir Creación Automática de Perfil para Nuevos Usuarios
+# Plan: Sección de Inspiración / Community Showcase
 
-## El Problema
+## Resumen
 
-Cuando un usuario nuevo inicia sesión (especialmente desde el popup de "Seguir"), la aplicación redirige a `/me` donde se usa el hook `useProfileEditor`. Este hook:
-
-1. Usa `.single()` para obtener el perfil (línea 100)
-2. **NO tiene lógica para crear el perfil** si no existe
-
-Esto causa el error:
-```
-GET /rest/v1/profiles?select=*&id=eq.XXX 406 (Not Acceptable)
-Error: Cannot coerce the result to a single JSON object (PGRST116)
-```
-
-## La Solución
-
-Modificar `useProfileEditor.ts` para que cree automáticamente el perfil si no existe, usando lógica similar a `useProfile.ts`.
+Crear una nueva página `/inspiration` que muestre una galería de proyectos destacados de la comunidad Vibecoders. Esta sección servirá como fuente de inspiración y prueba social del potencial de la comunidad.
 
 ---
 
-## Cambios Detallados
+## 1. Estructura de Base de Datos
 
-### Archivo: `src/hooks/useProfileEditor.ts`
+### Tabla: `showcase_gallery`
 
-**Cambio en la función `fetchProfile`:**
+```sql
+CREATE TABLE public.showcase_gallery (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  project_title text NOT NULL,
+  project_tagline text NOT NULL,
+  project_url text NOT NULL,
+  project_thumbnail text NOT NULL,
+  author_name text NOT NULL,
+  author_avatar text,
+  author_linkedin text,
+  author_twitter text,
+  author_website text,
+  display_order numeric DEFAULT 0,
+  is_active boolean DEFAULT true,
+  PRIMARY KEY (id)
+);
+
+-- Habilitar RLS con política de lectura pública
+ALTER TABLE public.showcase_gallery ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public view" ON public.showcase_gallery FOR SELECT USING (is_active = true);
+```
+
+---
+
+## 2. Archivos a Crear
+
+| Archivo | Descripción |
+|---------|-------------|
+| `src/pages/Inspiration.tsx` | Página principal de la galería |
+| `src/components/showcase/ShowcaseCard.tsx` | Componente de tarjeta individual |
+| `src/components/showcase/ShowcaseCardSkeleton.tsx` | Skeleton loading para las tarjetas |
+| `src/hooks/useShowcase.ts` | Hook para obtener datos de Supabase |
+
+---
+
+## 3. Diseño de Componentes
+
+### 3.1 Página `Inspiration.tsx`
 
 ```text
-Antes (líneas 96-102):
-├── Consulta con .single()
-└── Si hay error → lanza excepción (pantalla rota)
-
-Después:
-├── Consulta con .maybeSingle()
-├── Si data es null → CREAR perfil nuevo
-│   ├── Extraer username del email (si disponible)
-│   ├── Verificar disponibilidad con edge function
-│   └── Insertar perfil nuevo con .maybeSingle()
-│       └── Manejar race condition (error 23505)
-└── Aplicar defaults y datos de Google
+┌─────────────────────────────────────────────────────────────┐
+│                         NAVBAR                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│              Community Showcase                              │
+│     Proyectos reales creados por vibecoders como tú         │
+│                                                              │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
+│  │   Card 1    │  │   Card 2    │  │   Card 3    │         │
+│  │             │  │             │  │             │         │
+│  └─────────────┘  └─────────────┘  └─────────────┘         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐         │
+│  │   Card 4    │  │   Card 5    │  │   Card 6    │         │
+│  │             │  │             │  │             │         │
+│  └─────────────┘  └─────────────┘  └─────────────┘         │
+│                                                              │
+├─────────────────────────────────────────────────────────────┤
+│                         FOOTER                               │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Código específico a modificar (líneas 88-123):**
+**Layout:**
+- Grid responsive: 1 col (mobile) / 2 cols (tablet) / 3 cols (desktop)
+- `gap-6` o `gap-8` para espaciado
 
-```typescript
-useEffect(() => {
-  async function fetchProfile() {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { data, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();  // ← Cambiar de .single() a .maybeSingle()
-
-      // Manejar errores específicos
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        throw fetchError;
-      }
-
-      let profileData = data;
-
-      // Si no existe el perfil, crearlo automáticamente
-      if (!profileData) {
-        let usernameToInsert: string | null = null;
-        
-        // Extraer username del email
-        if (user.email) {
-          const localPart = user.email.split('@')[0] || '';
-          const candidateUsername = localPart
-            .toLowerCase()
-            .replace(/[^a-z0-9_]/g, '')
-            .slice(0, 20);
-          
-          if (candidateUsername.length >= 1) {
-            try {
-              const { data: availabilityData } = await supabase.functions.invoke(
-                'check-username-available',
-                { body: { username: candidateUsername } }
-              );
-              
-              if (availabilityData?.success && availabilityData?.available) {
-                usernameToInsert = candidateUsername;
-              }
-            } catch (err) {
-              console.log('Could not check username, creating profile without it');
-            }
-          }
-        }
-        
-        // Insertar nuevo perfil
-        const { data: newProfile, error: insertError } = await supabase
-          .from('profiles')
-          .insert({ id: user.id, username: usernameToInsert })
-          .select()
-          .maybeSingle();
-
-        if (insertError) {
-          // Race condition: el perfil ya existe
-          if (insertError.code === '23505') {
-            const { data: existingProfile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .maybeSingle();
-            
-            if (existingProfile) {
-              profileData = existingProfile;
-            } else {
-              throw insertError;
-            }
-          } else {
-            throw insertError;
-          }
-        } else {
-          profileData = newProfile;
-        }
-      }
-
-      // Aplicar defaults y datos de Google
-      const googleName = user.user_metadata?.full_name;
-      const googleAvatar = user.user_metadata?.avatar_url;
-      
-      setProfile({
-        ...DEFAULT_PROFILE,
-        ...profileData,
-        name: profileData?.name || googleName || null,
-        avatar_url: profileData?.avatar_url || googleAvatar || null,
-      } as ProfileData);
-
-    } catch (err) {
-      console.error('Error fetching/creating profile:', err);
-      setError(err instanceof Error ? err : new Error('Error al cargar perfil'));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  fetchProfile();
-}, [user]);
-```
-
----
-
-## Flujo Corregido
+### 3.2 Componente `ShowcaseCard.tsx`
 
 ```text
-Usuario nuevo hace login desde popup "Seguir"
-         │
-         ▼
-    App redirige a /me
-         │
-         ▼
-  MeLayout usa useProfileEditor
-         │
-         ▼
-  fetchProfile() con .maybeSingle()
-         │
-         ├─── data existe? → Cargar y mostrar
-         │
-         └─── data es null? → CREAR perfil
-                    │
-                    ├─── Extraer username del email
-                    ├─── Verificar disponibilidad
-                    └─── Insert con manejo de race condition
-                              │
-                              ▼
-                    Perfil creado → Usuario ve su dashboard
+┌────────────────────────────────────┐
+│  ┌──────────────────────────────┐  │
+│  │                              │  │
+│  │    Imagen 16:9               │  │  ← Zoom sutil en hover
+│  │    (project_thumbnail)       │  │
+│  │                              │  │
+│  └──────────────────────────────┘  │
+│                                    │
+│  Título del Proyecto               │  ← font-semibold
+│  Tagline corto limitado a dos      │  ← text-muted-foreground
+│  líneas máximo...                  │     line-clamp-2
+│                                    │
+│  ─────────────────────────────────  │  ← Separador sutil
+│                                    │
+│  ┌──────┐                   🔗 🐦  │
+│  │Avatar│ Nombre Autor      🌐 in  │  ← Iconos sociales
+│  └──────┘                          │
+└────────────────────────────────────┘
+```
+
+**Anatomía:**
+- **Imagen**: Aspect ratio 16:9, bordes redondeados superiores, efecto scale en hover
+- **Cuerpo**: Título (semibold), tagline (muted, line-clamp-2)
+- **Footer**: Avatar + nombre a la izquierda, iconos sociales a la derecha
+
+### 3.3 Skeleton Loading
+
+Rectángulos animados con `animate-pulse` que replican la estructura de la tarjeta mientras cargan los datos.
+
+---
+
+## 4. Comportamiento e Interacciones
+
+| Elemento | Comportamiento |
+|----------|----------------|
+| Imagen + Título | Link clickeable que abre `project_url` en nueva pestaña |
+| Iconos sociales | Cada icono abre su respectiva URL del autor |
+| Hover en tarjeta | `shadow-md` sutil + escala en imagen |
+| Estado vacío | Mensaje invitando a construir algo si no hay proyectos |
+
+---
+
+## 5. Integración con Router
+
+**Modificar `src/App.tsx`:**
+
+```tsx
+import Inspiration from "./pages/Inspiration";
+
+// Agregar ruta antes de /:handle
+<Route path="/inspiration" element={<Inspiration />} />
 ```
 
 ---
 
-## Resumen de Archivos a Modificar
+## 6. Hook `useShowcase.ts`
 
-| Archivo | Cambio |
-|---------|--------|
-| `src/hooks/useProfileEditor.ts` | Modificar `fetchProfile` para crear perfil automáticamente si no existe |
+```tsx
+// Fetch de showcase_gallery ordenado por display_order
+// Filtrar solo is_active = true
+// Retorna { projects, loading, error }
+```
+
+---
+
+## 7. Estilos y Consistencia Visual
+
+Siguiendo los patrones existentes del proyecto:
+
+| Elemento | Estilos |
+|----------|---------|
+| Fondo página | `bg-[#F6F5F4]` (mismo que BentoGrid) |
+| Tarjeta | `bg-white border border-stone-200 rounded-2xl` |
+| Hover tarjeta | `hover:shadow-lg hover:-translate-y-1` |
+| Color primario | `#3D5AFE` (azul de la marca) |
+| Color texto | `#1c1c1c` (títulos), `text-stone-600` (body) |
+| Iconos | Lucide React (Linkedin, Twitter, Globe, ExternalLink) |
+
+---
+
+## 8. Empty State
+
+Cuando no hay proyectos:
+
+```text
+┌─────────────────────────────────────┐
+│                                     │
+│        [Icono de Cohete]            │
+│                                     │
+│    Aún no hay proyectos             │
+│                                     │
+│   Se el primero en construir        │
+│   algo increíble con Vibecoders     │
+│                                     │
+└─────────────────────────────────────┘
+```
 
 ---
 
 ## Sección Técnica
 
-### Puntos Clave:
-- **`.maybeSingle()` vs `.single()`**: El primero retorna `null` si no hay filas, el segundo lanza error
-- **Race condition (23505)**: Código de error PostgreSQL para violación de unicidad - puede pasar si dos tabs crean el perfil simultáneamente
-- **Edge function `check-username-available`**: Ya existe y usa service role para bypasear RLS
+### Estructura de Datos TypeScript
 
-### Manejo de Errores:
-- `PGRST116`: No hay filas - esperado para usuarios nuevos, no lanzar error
-- `23505`: Perfil ya existe - re-fetch en lugar de error
-- Otros errores: Propagar al estado de error
+```typescript
+interface ShowcaseProject {
+  id: string;
+  project_title: string;
+  project_tagline: string;
+  project_url: string;
+  project_thumbnail: string;
+  author_name: string;
+  author_avatar: string | null;
+  author_linkedin: string | null;
+  author_twitter: string | null;
+  author_website: string | null;
+  display_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+```
+
+### Query Supabase
+
+```typescript
+const { data, error } = await supabase
+  .from('showcase_gallery')
+  .select('*')
+  .eq('is_active', true)
+  .order('display_order', { ascending: true });
+```
+
+### Aspectos de Accesibilidad
+
+- Imágenes con `alt` descriptivo
+- Links con `aria-label` apropiados
+- `target="_blank"` con `rel="noopener noreferrer"`
+- Fallback para imágenes que no cargan
+
+### Orden de Implementación
+
+1. Crear migración SQL para tabla `showcase_gallery`
+2. Crear hook `useShowcase.ts`
+3. Crear componente `ShowcaseCardSkeleton.tsx`
+4. Crear componente `ShowcaseCard.tsx`
+5. Crear página `Inspiration.tsx`
+6. Agregar ruta en `App.tsx`
+7. Agregar link en navegación/footer (opcional)
