@@ -1,84 +1,63 @@
 
-# Plan: Mejoras en Dashboard /me y Vista Previa
+
+# Plan: Ajustes de UI en Banner y Controles del Dashboard /me
 
 ## Resumen de Cambios
 
-Se realizarán 6 mejoras principales en el dashboard `/me`:
+Se realizarán las siguientes mejoras en la sección de edición del perfil:
 
-1. **Quitar icono del menú** de la vista previa
-2. **Usar base path dinámico** para el footer de la vista previa
-3. **Corregir problema con el banner** (no se refleja el cambio)
-4. **Agregar alineación del avatar** (izquierda, centro, derecha) + eliminar banner
-5. **Hacer la página 100% responsive** en móviles
+1. **Icono de eliminar banner en hover** - Mostrar al pasar el mouse sobre el banner
+2. **Reubicar controles de alineación del avatar** - Moverlos debajo de la foto del avatar
+3. **Agregar controles de alineación del banner** - Solo visible cuando hay banner cargado
+4. **Corregir color de labels** - Cambiar de blanco a #1C1C1C para legibilidad
+5. **Agregar campo `banner_position`** - Para guardar la alineación del banner
 
 ---
 
 ## Cambios Detallados
 
-### 1. Quitar Icono del Menú en Vista Previa
+### 1. Estructura del Banner con Controles en Hover
 
-**Archivo:** `src/components/me/ProfilePreview.tsx`
-
-- Eliminar el icono `<Menu>` del header de la vista previa
-- Mantener solo el logo de Vibecoders
-
-### 2. Usar Base Path Dinámico para el Footer
-
-**Archivo:** `src/components/me/ProfilePreview.tsx`
-
-- En lugar de hardcodear `vibecoders.la/@username`, usar `window.location.origin`
-- Esto permitirá que funcione en entornos de prueba (preview) y producción
-
-El footer mostrará:
-- En producción: `vibecoders.la/@rosmel`
-- En preview: `id-preview--xxxx.lovable.app/@rosmel`
-
-### 3. Corregir Problema del Banner
-
-**Archivo:** `src/hooks/useProfileEditor.ts`
-
-El problema es que al subir un banner con el mismo nombre (`banner.{ext}`), la URL no cambia porque Supabase cachea la imagen. La solución es agregar un timestamp al nombre del archivo para forzar una URL única:
+El banner tendrá dos tipos de overlay en hover:
+- **Icono de cámara** (centro) - Para subir/cambiar imagen
+- **Icono de eliminar** (esquina superior derecha) - Solo si hay banner, visible en hover
 
 ```
-${user.id}/banner_${Date.now()}.${fileExt}
+┌───────────────────────────────────────────┐
+│                              [🗑️ hover]   │  <- Solo visible con banner
+│                                           │
+│              [📷 hover]                   │  <- Siempre visible en hover
+│                                           │
+└───────────────────────────────────────────┘
 ```
 
-Esto aplica tanto para `uploadBanner` como para `uploadAvatar`.
+### 2. Controles de Alineación del Banner
 
-### 4. Agregar Alineación del Avatar + Eliminar Banner
+Debajo del banner, mostrar controles de alineación **solo cuando hay un banner cargado**:
 
-**Archivos:**
-- `src/hooks/useProfileEditor.ts` - agregar campo `avatar_position`
-- `src/components/me/ProfileTab.tsx` - UI para alineación y eliminar banner
-- `src/components/me/ProfilePreview.tsx` - aplicar alineación
-
-**Nueva UI en el Banner:**
-
-Se añadirán iconos sobre el banner:
-- 3 iconos para posición del avatar: izquierda, centro, derecha (por defecto: centro)
-- 1 icono para eliminar el banner
-
-**Diseño:**
 ```
-┌─────────────────────────────────────────┐
-│  [📸 Subir]          [⬅️ ⬆️ ➡️] [🗑️]  │ <- Barra de controles
-│                                         │
-│            (Banner Image)               │
-│                                         │
-└─────────────────────────────────────────┘
+┌───────────────────────────────────────────┐
+│             (Banner Image)                │
+└───────────────────────────────────────────┘
+  [◀️ Izq] [⬆️ Centro] [▶️ Der]   <- Solo si hay banner
 ```
 
-### 5. Hacer la Página 100% Responsive
+Valores: `left` (object-left), `center` (object-center), `right` (object-right)
 
-**Archivos:**
-- `src/components/me/ProfileTab.tsx`
-- `src/components/me/MeLayout.tsx`
+### 3. Controles de Alineación del Avatar
 
-**Cambios para móvil:**
-- El layout del avatar + campos pasa de horizontal a vertical
-- Pioneer badge pasa a otra línea en móvil
-- Reducir paddings y gaps en pantallas pequeñas
-- Ajustar grid de location/website
+Mover los controles de alineación del avatar **debajo del avatar**, no en la cabecera del banner:
+
+```
+      ┌──────┐
+      │ 😊   │  <- Avatar
+      └──────┘
+  [◀️ Izq] [⬆️ Centro] [▶️ Der]
+```
+
+### 4. Corrección de Labels
+
+Cambiar todos los labels de color `text-foreground` a `text-[#1C1C1C]` para garantizar legibilidad.
 
 ---
 
@@ -86,52 +65,132 @@ Se añadirán iconos sobre el banner:
 
 ### Nuevo Campo en Base de Datos
 
-Se necesita agregar el campo `avatar_position` a la tabla `profiles`:
+Se necesita agregar `banner_position` a la tabla `profiles`:
 
 ```sql
-ALTER TABLE profiles ADD COLUMN avatar_position text DEFAULT 'center';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS banner_position text DEFAULT 'center';
 ```
 
 Valores posibles: `'left'`, `'center'`, `'right'`
 
-### Cambios en el Hook `useProfileEditor.ts`
+### Cambios en ProfileData Interface
 
 ```typescript
-// En ProfileData interface
-avatar_position: 'left' | 'center' | 'right' | null;
-
-// En saveProfile
-avatar_position: data.avatar_position,
-
-// En uploadBanner - agregar timestamp
-const filePath = `${user.id}/banner_${Date.now()}.${fileExt}`;
+export interface ProfileData {
+  // ... campos existentes
+  avatar_position: 'left' | 'center' | 'right' | null;
+  banner_position: 'left' | 'center' | 'right' | null;  // NUEVO
+}
 ```
 
-### Cambios en ProfilePreview para Alineación
+### Cambios en useProfileEditor.ts
+
+1. Agregar `banner_position` a DEFAULT_PROFILE
+2. Incluir `banner_position` en la función `saveProfile`
+
+### Cambios en ProfileTab.tsx
+
+**Estructura actualizada del Banner:**
+
+```tsx
+{/* Banner Section */}
+<section className="space-y-2">
+  <Label className="text-[#1C1C1C]">Banner</Label>
+  
+  {/* Banner con overlay de hover para cámara y eliminar */}
+  <div className="relative h-32 bg-muted rounded-lg overflow-hidden cursor-pointer group">
+    {profile.banner_url ? (
+      <img 
+        src={profile.banner_url} 
+        alt="Banner" 
+        className={cn("w-full h-full", objectPositionClass)}
+      />
+    ) : (
+      <div className="flex flex-col items-center justify-center h-full">
+        <ImagePlus className="h-8 w-8 mb-2" />
+        <span className="text-sm">Añadir banner</span>
+      </div>
+    )}
+    
+    {/* Camera overlay - click to upload */}
+    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+      <Camera className="h-6 w-6 text-white" />
+    </div>
+    
+    {/* Delete button - top right corner, only with banner */}
+    {profile.banner_url && (
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); handleDeleteBanner(); }}
+        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
+      >
+        <Trash2 className="h-4 w-4 text-white" />
+      </button>
+    )}
+  </div>
+  
+  {/* Banner Alignment Controls - only when banner exists */}
+  {profile.banner_url && (
+    <div className="flex items-center justify-center gap-1 p-1 bg-muted rounded-md w-fit mx-auto">
+      <button onClick={() => onUpdate({ banner_position: 'left' })} ...>
+        <AlignLeft />
+      </button>
+      <button onClick={() => onUpdate({ banner_position: 'center' })} ...>
+        <AlignCenter />
+      </button>
+      <button onClick={() => onUpdate({ banner_position: 'right' })} ...>
+        <AlignRight />
+      </button>
+    </div>
+  )}
+</section>
+
+{/* Avatar + Name Section */}
+<section>
+  <div className="flex flex-col sm:flex-row items-start gap-4">
+    {/* Avatar con controles debajo */}
+    <div className="flex flex-col items-center gap-2">
+      <Avatar ... />
+      
+      {/* Avatar Position Controls */}
+      <div className="flex items-center gap-1 p-1 bg-muted rounded-md">
+        <button onClick={() => onUpdate({ avatar_position: 'left' })} ...>
+          <AlignLeft />
+        </button>
+        <button onClick={() => onUpdate({ avatar_position: 'center' })} ...>
+          <AlignCenter />
+        </button>
+        <button onClick={() => onUpdate({ avatar_position: 'right' })} ...>
+          <AlignRight />
+        </button>
+      </div>
+    </div>
+    
+    {/* Name and Username fields */}
+    <div className="flex-1 w-full space-y-4">
+      ...
+    </div>
+  </div>
+</section>
+```
+
+### Cambios en ProfilePreview.tsx
+
+Agregar clase de posición del banner:
 
 ```typescript
-// Posición dinámica del avatar
-const avatarPosition = profile.avatar_position || 'center';
-const positionClasses = {
-  left: 'left-4',
-  center: 'left-1/2 -translate-x-1/2',
-  right: 'right-4'
+const bannerPosition = profile.banner_position || 'center';
+const bannerPositionClasses = {
+  left: 'object-left',
+  center: 'object-center',
+  right: 'object-right'
 };
-```
 
-### Cambios en ProfileTab para Banner Controls
-
-Nueva sección sobre el banner con:
-- Botón de subir imagen
-- 3 iconos de alineación: `AlignLeft`, `AlignCenter`, `AlignRight`
-- Botón eliminar: icono `Trash2`
-
-### Base Path Dinámico
-
-```typescript
-// En ProfilePreview.tsx
-const baseUrl = window.location.origin;
-// Mostrar: {new URL(baseUrl).host}/@{username}
+// En el img del banner:
+<img 
+  src={profile.banner_url} 
+  className={`w-full h-full object-cover ${bannerPositionClasses[bannerPosition]}`}
+/>
 ```
 
 ---
@@ -140,15 +199,40 @@ const baseUrl = window.location.origin;
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/me/ProfilePreview.tsx` | Quitar menú, base path dinámico, alineación avatar |
-| `src/components/me/ProfileTab.tsx` | Controles banner (alineación, eliminar), responsive |
-| `src/hooks/useProfileEditor.ts` | Timestamp en uploads, nuevo campo avatar_position, deleteBanner |
-| `src/integrations/supabase/types.ts` | Actualizar tipos (automático) |
+| `src/hooks/useProfileEditor.ts` | Agregar `banner_position` al interface y saveProfile |
+| `src/components/me/ProfileTab.tsx` | Reestructurar UI de banner y avatar con nuevos controles |
+| `src/components/me/ProfilePreview.tsx` | Aplicar posición del banner en la vista previa |
+| `src/integrations/supabase/types.ts` | Se actualizará automáticamente |
 
 ---
 
 ## Migración de Base de Datos Requerida
 
 ```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_position text DEFAULT 'center';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS banner_position text DEFAULT 'center';
 ```
+
+---
+
+## Resumen Visual de la Nueva UI
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Label: Banner (color: #1C1C1C)                          │
+├─────────────────────────────────────────────────────────┤
+│                                            [🗑️ hover]   │
+│                                                         │
+│                    [📷 hover]                           │ <- Banner
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│               [◀️] [⬆️] [▶️] Alinear banner             │ <- Solo con banner
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│    ┌────────┐                                           │
+│    │  😊    │   [Nombre *]                              │ <- Avatar + campos
+│    └────────┘   [Username]                              │
+│  [◀️] [⬆️] [▶️]  [Pioneer Badge toggle]                 │ <- Alineación avatar
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
