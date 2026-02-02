@@ -1,122 +1,164 @@
 
-# Plan: Mejorar Legibilidad y Estilo Visual de /inspiration
+# Plan: Añadir Logo de App y Badge "Creador" al Showcase
 
-## Problema Identificado
+## Resumen
 
-1. **Texto ilegible**: El título "Hecho por Vibecoders" usa `text-foreground` que en el tema actual resulta en un color muy claro sobre el fondo crema `#F6F5F4`
-2. **Falta de estilo profesional**: La página carece del efecto de onda curva que le da carácter distintivo a la landing page
+Este plan implementa dos mejoras visuales para las tarjetas de Showcase, transformándolas en un directorio profesional estilo Product Hunt:
 
-## Solución
+1. **Logo del proyecto** junto al título
+2. **Badge "Creador"** en el footer junto al nombre del autor
 
-### 1. Corregir colores de texto
+---
 
-Cambiar las clases de color a valores explícitos:
+## Cambios Requeridos
 
-| Elemento | Antes | Después |
-|----------|-------|---------|
-| Título `<h1>` | `text-foreground` | `text-[#1c1c1c]` |
-| Subtítulo `<p>` | `text-muted-foreground` | `text-[#1c1c1c]/70` |
-| Texto en estado vacío | `text-foreground` | `text-[#1c1c1c]` |
-| Texto secundario vacío | `text-muted-foreground` | `text-[#1c1c1c]/60` |
+### 1. Base de Datos (Supabase)
 
-### 2. Añadir sección Hero con onda curva
+Añadir una nueva columna a la tabla `showcase_gallery`:
 
-Restructurar la página para incluir:
+```sql
+ALTER TABLE showcase_gallery
+ADD COLUMN project_logo_url text;
+```
 
-1. **Header azul** con el título y CTA sobre fondo `#3D5AFE`
-2. **WaveDivider** que transiciona de azul a crema (igual que landing)
-3. **Grid de proyectos** sobre fondo crema `#F6F5F4`
+Esta columna es nullable, permitiendo que proyectos existentes funcionen sin logo.
 
-### Estructura Visual Final
+---
+
+### 2. Componente ShowcaseCard.tsx
+
+**Estructura visual actualizada:**
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│  PublicHeader (logo + menú usuario)                             │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │              THUMBNAIL (16:9)                           │    │
+│  │              object-cover, sin distorsión               │    │
+│  └─────────────────────────────────────────────────────────┘    │
 ├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ████████████████ FONDO AZUL #3D5AFE ████████████████████████   │
-│                                                                 │
-│           "Hecho por Vibecoders" (texto blanco)                 │
-│           "Apps reales creadas por..." (texto blanco/80)        │
-│                                          [Quiero aparecer aquí] │
-│                                                                 │
-│  ╭───────────────── WAVE DIVIDER ─────────────────────────╮     │
-├──╯                                                        ╰─────┤
-│                                                                 │
-│  ████████████████ FONDO CREMA #F6F5F4 ██████████████████████    │
-│                                                                 │
-│     [Card 1]      [Card 2]      [Card 3]                        │
-│     [Card 4]      [Card 5]      [Card 6]                        │
-│                                                                 │
+│  [Logo]  Título del Proyecto                                    │
+│   40x40  Tagline del proyecto en una o dos líneas...            │
 ├─────────────────────────────────────────────────────────────────┤
-│  Footer                                                         │
+│  [Avatar] Nombre del Autor [Creador]        [in] [X] [🌐]       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Archivo a Modificar
+**Cambios en el Body (sección del título):**
 
-**`src/pages/Inspiration.tsx`**
+- Layout: `flex items-start gap-3`
+- Logo a la izquierda:
+  - Tamaño: `w-10 h-10` (40px)
+  - Estilo: `rounded-lg`, `object-cover`, borde sutil
+  - Si no hay logo: No mostrar nada (el título ocupa todo el ancho)
+- Título y tagline a la derecha en un contenedor flex-1
 
-### Cambios específicos:
+**Cambios en el Footer (badge Creador):**
 
-1. Importar `WaveDivider` del componente existente
-2. Crear sección Hero con fondo azul `#3D5AFE`
-3. Texto del título en blanco (`text-white`)
-4. Texto del subtítulo en blanco con opacidad (`text-white/80`)
-5. Añadir `WaveDivider` después del Hero
-6. Mantener el grid de proyectos en la sección crema
-7. Ajustar padding del botón CTA para que esté dentro del Hero azul
+- Añadir Badge después del nombre del autor
+- Estilos del badge:
+  - `text-[10px]` o `text-xs`
+  - `bg-gray-100`
+  - `text-gray-500`
+  - `rounded-full`
+  - `px-2 py-0.5`
 
-### Código resultante (estructura):
+---
+
+### 3. Hook useShowcase.ts
+
+Añadir `project_logo_url` a la interface `ShowcaseProject`:
+
+```typescript
+export interface ShowcaseProject {
+  // ... campos existentes
+  project_logo_url: string | null;  // NUEVO
+}
+```
+
+---
+
+### 4. Formulario Admin (ShowcaseForm.tsx)
+
+Añadir campo para subir el logo del proyecto:
+
+- Nuevo input de archivo junto al thumbnail
+- Mismo patrón de upload que thumbnail pero con dimensiones cuadradas
+- Preview de 40x40 con bordes redondeados
+
+---
+
+### 5. ShowcaseManager.tsx
+
+Actualizar la interface del formulario para incluir `project_logo_url`.
+
+---
+
+## Archivos a Modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| **Migración SQL** | Añadir columna `project_logo_url` |
+| `src/hooks/useShowcase.ts` | Añadir `project_logo_url` al tipo |
+| `src/components/showcase/ShowcaseCard.tsx` | Logo + Badge "Creador" |
+| `src/components/admin/ShowcaseForm.tsx` | Campo para subir logo |
+| `src/components/admin/ShowcaseManager.tsx` | Incluir logo en el formulario |
+
+---
+
+## Sección Técnica
+
+### Código del Badge "Creador"
 
 ```tsx
-<div className="min-h-screen flex flex-col">
-  <PublicHeader />
-  
-  {/* Hero Section - Fondo Azul */}
-  <section className="bg-[#3D5AFE] pt-12 pb-16 md:pb-20">
-    <div className="container mx-auto px-4 md:px-6">
-      <header className="relative">
-        {/* Desktop: Button positioned absolute right */}
-        <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2">
-          <Button className="bg-white text-[#3D5AFE] hover:bg-white/90 rounded-full ...">
-            Quiero aparecer aquí
-          </Button>
-        </div>
+<Badge className="text-[10px] bg-gray-100 text-gray-500 rounded-full px-2 py-0.5 font-normal">
+  Creador
+</Badge>
+```
 
-        {/* Centered text - BLANCO */}
-        <div className="text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Hecho por Vibecoders
-          </h1>
-          <p className="text-lg text-white/80 max-w-2xl mx-auto">
-            Apps reales creadas por gente como tú...
-          </p>
-        </div>
+### Código del Logo en el Body
 
-        {/* Mobile button */}
-        <div className="flex justify-center mt-6 md:hidden">
-          <Button className="bg-white text-[#3D5AFE] ...">...</Button>
-        </div>
-      </header>
+```tsx
+<div className="p-4">
+  <a href={project.project_url} className="flex items-start gap-3 group/title">
+    {/* Logo */}
+    {project.project_logo_url && (
+      <img
+        src={project.project_logo_url}
+        alt={`Logo de ${project.project_title}`}
+        className="w-10 h-10 rounded-lg object-cover border border-stone-200 flex-shrink-0"
+      />
+    )}
+    
+    {/* Title & Tagline */}
+    <div className="flex-1 min-w-0">
+      <h3 className="text-lg font-semibold text-[#1c1c1c] group-hover/title:text-[#3D5AFE] line-clamp-1">
+        {project.project_title}
+      </h3>
+      <p className="mt-1 text-sm text-stone-600 line-clamp-2">
+        {project.project_tagline}
+      </p>
     </div>
-  </section>
-
-  {/* Wave Divider */}
-  <WaveDivider fromColor="#3D5AFE" toColor="#F6F5F4" />
-
-  {/* Main Content - Fondo Crema */}
-  <main className="flex-1 bg-[#F6F5F4] pb-16">
-    {/* Grid de proyectos */}
-  </main>
-
-  <Footer />
+  </a>
 </div>
 ```
 
-## Beneficios
+### Responsividad
 
-1. **Consistencia visual**: Mismo estilo que la landing page principal
-2. **Mejor legibilidad**: Texto blanco sobre azul tiene excelente contraste
-3. **Profesionalismo**: El efecto de onda añade dinamismo y estilo distintivo
-4. **Identidad de marca**: Usa los colores corporativos correctamente (azul #3D5AFE)
+La página ya es 100% responsive:
+- **Móvil**: 1 columna (`grid-cols-1`)
+- **Tablet**: 2 columnas (`md:grid-cols-2`)
+- **Desktop**: 3 columnas (`lg:grid-cols-3`)
+
+Los componentes internos usan Flexbox con `flex-wrap` y `min-w-0` para evitar desbordamientos en pantallas pequeñas.
+
+### Migración SQL
+
+```sql
+-- Añadir columna para el logo del proyecto
+ALTER TABLE showcase_gallery
+ADD COLUMN project_logo_url text;
+
+-- Comentario descriptivo
+COMMENT ON COLUMN showcase_gallery.project_logo_url IS 
+  'URL del logo cuadrado del proyecto (opcional)';
+```
