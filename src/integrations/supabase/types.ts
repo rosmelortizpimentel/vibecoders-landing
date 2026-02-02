@@ -336,6 +336,54 @@ export type Database = {
         }
         Relationships: []
       }
+      showcase_gallery: {
+        Row: {
+          author_avatar: string | null
+          author_linkedin: string | null
+          author_name: string
+          author_twitter: string | null
+          author_website: string | null
+          created_at: string
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          project_tagline: string
+          project_thumbnail: string
+          project_title: string
+          project_url: string
+        }
+        Insert: {
+          author_avatar?: string | null
+          author_linkedin?: string | null
+          author_name: string
+          author_twitter?: string | null
+          author_website?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          project_tagline: string
+          project_thumbnail: string
+          project_title: string
+          project_url: string
+        }
+        Update: {
+          author_avatar?: string | null
+          author_linkedin?: string | null
+          author_name?: string
+          author_twitter?: string | null
+          author_website?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          project_tagline?: string
+          project_thumbnail?: string
+          project_title?: string
+          project_url?: string
+        }
+        Relationships: []
+      }
       tech_stacks: {
         Row: {
           created_at: string
