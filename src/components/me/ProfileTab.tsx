@@ -66,10 +66,11 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
   const avatarPosition = profile.avatar_position || 'center';
   const bannerPosition = profile.banner_position || 'center';
 
+  // Banner position classes (flexbox alignment for contain mode)
   const bannerPositionClasses = {
-    left: 'object-left',
-    center: 'object-center',
-    right: 'object-right'
+    left: 'justify-start',
+    center: 'justify-center',
+    right: 'justify-end'
   };
 
   return (
@@ -84,11 +85,13 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
           onClick={handleBannerClick}
         >
           {profile.banner_url ? (
-            <img 
-              src={profile.banner_url} 
-              alt="Banner" 
-              className={cn("w-full h-full object-cover", bannerPositionClasses[bannerPosition])}
-            />
+            <div className={`w-full h-full flex items-center ${bannerPositionClasses[bannerPosition]}`}>
+              <img 
+                src={profile.banner_url} 
+                alt="Banner" 
+                className="max-w-full max-h-full object-contain"
+              />
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <ImagePlus className="h-8 w-8 mb-2" />
