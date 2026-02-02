@@ -7,7 +7,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useUserRole } from '@/hooks/useUserRole';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 interface MeHeaderProps {
@@ -34,6 +36,7 @@ function formatDisplayName(name: string | null | undefined): string {
 export function MeHeader({ profile, isSaving, lastSaved, error, onSignOut }: MeHeaderProps) {
   const displayName = formatDisplayName(profile?.name);
   const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
+  const { isAdmin } = useUserRole();
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
@@ -48,6 +51,17 @@ export function MeHeader({ profile, isSaving, lastSaved, error, onSignOut }: MeH
         </a>
         
         <div className="flex items-center gap-4">
+          {/* Admin Link - Only visible for admins */}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-[#3D5AFE] hover:bg-gray-50 rounded-lg transition-colors"
+            >
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Admin</span>
+            </Link>
+          )}
+
           {/* Save status indicator */}
           <div className="flex items-center gap-2 text-sm">
             {isSaving ? (

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Me from "./pages/Me";
+import Admin from "./pages/Admin";
 import PublicProfile from "./pages/PublicProfile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -29,6 +30,8 @@ const App = () => (
           <Route path="/me/profile" element={<Me />} />
           <Route path="/me/apps" element={<Me />} />
           <Route path="/me/branding" element={<Me />} />
+          {/* Admin routes - protected by Admin component */}
+          <Route path="/admin/*" element={<Admin />} />
           {/* Legal pages - must be before /:handle to avoid conflicts */}
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
