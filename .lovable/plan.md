@@ -1,238 +1,196 @@
 
+# Plan: Corregir Creación Automática de Perfil para Nuevos Usuarios
 
-# Plan: Ajustes de UI en Banner y Controles del Dashboard /me
+## El Problema
 
-## Resumen de Cambios
+Cuando un usuario nuevo inicia sesión (especialmente desde el popup de "Seguir"), la aplicación redirige a `/me` donde se usa el hook `useProfileEditor`. Este hook:
 
-Se realizarán las siguientes mejoras en la sección de edición del perfil:
+1. Usa `.single()` para obtener el perfil (línea 100)
+2. **NO tiene lógica para crear el perfil** si no existe
 
-1. **Icono de eliminar banner en hover** - Mostrar al pasar el mouse sobre el banner
-2. **Reubicar controles de alineación del avatar** - Moverlos debajo de la foto del avatar
-3. **Agregar controles de alineación del banner** - Solo visible cuando hay banner cargado
-4. **Corregir color de labels** - Cambiar de blanco a #1C1C1C para legibilidad
-5. **Agregar campo `banner_position`** - Para guardar la alineación del banner
+Esto causa el error:
+```
+GET /rest/v1/profiles?select=*&id=eq.XXX 406 (Not Acceptable)
+Error: Cannot coerce the result to a single JSON object (PGRST116)
+```
+
+## La Solución
+
+Modificar `useProfileEditor.ts` para que cree automáticamente el perfil si no existe, usando lógica similar a `useProfile.ts`.
 
 ---
 
 ## Cambios Detallados
 
-### 1. Estructura del Banner con Controles en Hover
+### Archivo: `src/hooks/useProfileEditor.ts`
 
-El banner tendrá dos tipos de overlay en hover:
-- **Icono de cámara** (centro) - Para subir/cambiar imagen
-- **Icono de eliminar** (esquina superior derecha) - Solo si hay banner, visible en hover
+**Cambio en la función `fetchProfile`:**
 
-```
-┌───────────────────────────────────────────┐
-│                              [🗑️ hover]   │  <- Solo visible con banner
-│                                           │
-│              [📷 hover]                   │  <- Siempre visible en hover
-│                                           │
-└───────────────────────────────────────────┘
-```
+```text
+Antes (líneas 96-102):
+├── Consulta con .single()
+└── Si hay error → lanza excepción (pantalla rota)
 
-### 2. Controles de Alineación del Banner
-
-Debajo del banner, mostrar controles de alineación **solo cuando hay un banner cargado**:
-
-```
-┌───────────────────────────────────────────┐
-│             (Banner Image)                │
-└───────────────────────────────────────────┘
-  [◀️ Izq] [⬆️ Centro] [▶️ Der]   <- Solo si hay banner
+Después:
+├── Consulta con .maybeSingle()
+├── Si data es null → CREAR perfil nuevo
+│   ├── Extraer username del email (si disponible)
+│   ├── Verificar disponibilidad con edge function
+│   └── Insertar perfil nuevo con .maybeSingle()
+│       └── Manejar race condition (error 23505)
+└── Aplicar defaults y datos de Google
 ```
 
-Valores: `left` (object-left), `center` (object-center), `right` (object-right)
+**Código específico a modificar (líneas 88-123):**
 
-### 3. Controles de Alineación del Avatar
+```typescript
+useEffect(() => {
+  async function fetchProfile() {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
-Mover los controles de alineación del avatar **debajo del avatar**, no en la cabecera del banner:
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();  // ← Cambiar de .single() a .maybeSingle()
 
+      // Manejar errores específicos
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+
+      let profileData = data;
+
+      // Si no existe el perfil, crearlo automáticamente
+      if (!profileData) {
+        let usernameToInsert: string | null = null;
+        
+        // Extraer username del email
+        if (user.email) {
+          const localPart = user.email.split('@')[0] || '';
+          const candidateUsername = localPart
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, '')
+            .slice(0, 20);
+          
+          if (candidateUsername.length >= 1) {
+            try {
+              const { data: availabilityData } = await supabase.functions.invoke(
+                'check-username-available',
+                { body: { username: candidateUsername } }
+              );
+              
+              if (availabilityData?.success && availabilityData?.available) {
+                usernameToInsert = candidateUsername;
+              }
+            } catch (err) {
+              console.log('Could not check username, creating profile without it');
+            }
+          }
+        }
+        
+        // Insertar nuevo perfil
+        const { data: newProfile, error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: user.id, username: usernameToInsert })
+          .select()
+          .maybeSingle();
+
+        if (insertError) {
+          // Race condition: el perfil ya existe
+          if (insertError.code === '23505') {
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .maybeSingle();
+            
+            if (existingProfile) {
+              profileData = existingProfile;
+            } else {
+              throw insertError;
+            }
+          } else {
+            throw insertError;
+          }
+        } else {
+          profileData = newProfile;
+        }
+      }
+
+      // Aplicar defaults y datos de Google
+      const googleName = user.user_metadata?.full_name;
+      const googleAvatar = user.user_metadata?.avatar_url;
+      
+      setProfile({
+        ...DEFAULT_PROFILE,
+        ...profileData,
+        name: profileData?.name || googleName || null,
+        avatar_url: profileData?.avatar_url || googleAvatar || null,
+      } as ProfileData);
+
+    } catch (err) {
+      console.error('Error fetching/creating profile:', err);
+      setError(err instanceof Error ? err : new Error('Error al cargar perfil'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchProfile();
+}, [user]);
 ```
-      ┌──────┐
-      │ 😊   │  <- Avatar
-      └──────┘
-  [◀️ Izq] [⬆️ Centro] [▶️ Der]
+
+---
+
+## Flujo Corregido
+
+```text
+Usuario nuevo hace login desde popup "Seguir"
+         │
+         ▼
+    App redirige a /me
+         │
+         ▼
+  MeLayout usa useProfileEditor
+         │
+         ▼
+  fetchProfile() con .maybeSingle()
+         │
+         ├─── data existe? → Cargar y mostrar
+         │
+         └─── data es null? → CREAR perfil
+                    │
+                    ├─── Extraer username del email
+                    ├─── Verificar disponibilidad
+                    └─── Insert con manejo de race condition
+                              │
+                              ▼
+                    Perfil creado → Usuario ve su dashboard
 ```
 
-### 4. Corrección de Labels
+---
 
-Cambiar todos los labels de color `text-foreground` a `text-[#1C1C1C]` para garantizar legibilidad.
+## Resumen de Archivos a Modificar
+
+| Archivo | Cambio |
+|---------|--------|
+| `src/hooks/useProfileEditor.ts` | Modificar `fetchProfile` para crear perfil automáticamente si no existe |
 
 ---
 
 ## Sección Técnica
 
-### Nuevo Campo en Base de Datos
+### Puntos Clave:
+- **`.maybeSingle()` vs `.single()`**: El primero retorna `null` si no hay filas, el segundo lanza error
+- **Race condition (23505)**: Código de error PostgreSQL para violación de unicidad - puede pasar si dos tabs crean el perfil simultáneamente
+- **Edge function `check-username-available`**: Ya existe y usa service role para bypasear RLS
 
-Se necesita agregar `banner_position` a la tabla `profiles`:
-
-```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS banner_position text DEFAULT 'center';
-```
-
-Valores posibles: `'left'`, `'center'`, `'right'`
-
-### Cambios en ProfileData Interface
-
-```typescript
-export interface ProfileData {
-  // ... campos existentes
-  avatar_position: 'left' | 'center' | 'right' | null;
-  banner_position: 'left' | 'center' | 'right' | null;  // NUEVO
-}
-```
-
-### Cambios en useProfileEditor.ts
-
-1. Agregar `banner_position` a DEFAULT_PROFILE
-2. Incluir `banner_position` en la función `saveProfile`
-
-### Cambios en ProfileTab.tsx
-
-**Estructura actualizada del Banner:**
-
-```tsx
-{/* Banner Section */}
-<section className="space-y-2">
-  <Label className="text-[#1C1C1C]">Banner</Label>
-  
-  {/* Banner con overlay de hover para cámara y eliminar */}
-  <div className="relative h-32 bg-muted rounded-lg overflow-hidden cursor-pointer group">
-    {profile.banner_url ? (
-      <img 
-        src={profile.banner_url} 
-        alt="Banner" 
-        className={cn("w-full h-full", objectPositionClass)}
-      />
-    ) : (
-      <div className="flex flex-col items-center justify-center h-full">
-        <ImagePlus className="h-8 w-8 mb-2" />
-        <span className="text-sm">Añadir banner</span>
-      </div>
-    )}
-    
-    {/* Camera overlay - click to upload */}
-    <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-      <Camera className="h-6 w-6 text-white" />
-    </div>
-    
-    {/* Delete button - top right corner, only with banner */}
-    {profile.banner_url && (
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); handleDeleteBanner(); }}
-        className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
-      >
-        <Trash2 className="h-4 w-4 text-white" />
-      </button>
-    )}
-  </div>
-  
-  {/* Banner Alignment Controls - only when banner exists */}
-  {profile.banner_url && (
-    <div className="flex items-center justify-center gap-1 p-1 bg-muted rounded-md w-fit mx-auto">
-      <button onClick={() => onUpdate({ banner_position: 'left' })} ...>
-        <AlignLeft />
-      </button>
-      <button onClick={() => onUpdate({ banner_position: 'center' })} ...>
-        <AlignCenter />
-      </button>
-      <button onClick={() => onUpdate({ banner_position: 'right' })} ...>
-        <AlignRight />
-      </button>
-    </div>
-  )}
-</section>
-
-{/* Avatar + Name Section */}
-<section>
-  <div className="flex flex-col sm:flex-row items-start gap-4">
-    {/* Avatar con controles debajo */}
-    <div className="flex flex-col items-center gap-2">
-      <Avatar ... />
-      
-      {/* Avatar Position Controls */}
-      <div className="flex items-center gap-1 p-1 bg-muted rounded-md">
-        <button onClick={() => onUpdate({ avatar_position: 'left' })} ...>
-          <AlignLeft />
-        </button>
-        <button onClick={() => onUpdate({ avatar_position: 'center' })} ...>
-          <AlignCenter />
-        </button>
-        <button onClick={() => onUpdate({ avatar_position: 'right' })} ...>
-          <AlignRight />
-        </button>
-      </div>
-    </div>
-    
-    {/* Name and Username fields */}
-    <div className="flex-1 w-full space-y-4">
-      ...
-    </div>
-  </div>
-</section>
-```
-
-### Cambios en ProfilePreview.tsx
-
-Agregar clase de posición del banner:
-
-```typescript
-const bannerPosition = profile.banner_position || 'center';
-const bannerPositionClasses = {
-  left: 'object-left',
-  center: 'object-center',
-  right: 'object-right'
-};
-
-// En el img del banner:
-<img 
-  src={profile.banner_url} 
-  className={`w-full h-full object-cover ${bannerPositionClasses[bannerPosition]}`}
-/>
-```
-
----
-
-## Archivos a Modificar
-
-| Archivo | Cambio |
-|---------|--------|
-| `src/hooks/useProfileEditor.ts` | Agregar `banner_position` al interface y saveProfile |
-| `src/components/me/ProfileTab.tsx` | Reestructurar UI de banner y avatar con nuevos controles |
-| `src/components/me/ProfilePreview.tsx` | Aplicar posición del banner en la vista previa |
-| `src/integrations/supabase/types.ts` | Se actualizará automáticamente |
-
----
-
-## Migración de Base de Datos Requerida
-
-```sql
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS banner_position text DEFAULT 'center';
-```
-
----
-
-## Resumen Visual de la Nueva UI
-
-```
-┌─────────────────────────────────────────────────────────┐
-│ Label: Banner (color: #1C1C1C)                          │
-├─────────────────────────────────────────────────────────┤
-│                                            [🗑️ hover]   │
-│                                                         │
-│                    [📷 hover]                           │ <- Banner
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│               [◀️] [⬆️] [▶️] Alinear banner             │ <- Solo con banner
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│    ┌────────┐                                           │
-│    │  😊    │   [Nombre *]                              │ <- Avatar + campos
-│    └────────┘   [Username]                              │
-│  [◀️] [⬆️] [▶️]  [Pioneer Badge toggle]                 │ <- Alineación avatar
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
+### Manejo de Errores:
+- `PGRST116`: No hay filas - esperado para usuarios nuevos, no lanzar error
+- `23505`: Perfil ya existe - re-fetch en lugar de error
+- Otros errores: Propagar al estado de error
