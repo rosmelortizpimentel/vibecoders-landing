@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
       .select(`
         id, username, member_number, is_pioneer, show_pioneer_badge,
         name, tagline, bio, location, website, banner_url, avatar_url,
+        avatar_position, banner_position,
         accent_color, font_family,
         lovable, twitter, github, linkedin, instagram, youtube, tiktok, email_public
       `)
@@ -132,7 +133,9 @@ Deno.serve(async (req) => {
           id: profile.id,
           username: profile.username,
           avatar_url: profile.avatar_url,
+          avatar_position: profile.avatar_position || 'center',
           banner_url: profile.banner_url,
+          banner_position: profile.banner_position || 'center',
           name: profile.name,
           tagline: profile.tagline,
           bio: profile.bio,

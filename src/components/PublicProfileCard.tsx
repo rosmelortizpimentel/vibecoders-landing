@@ -177,6 +177,29 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
   const fontFamily = profile.font_family || 'CameraPlain, system-ui, sans-serif';
   const username = profile.username || 'username';
   const avatarBorderColor = profile.accent_color || '#FFFFFF';
+  const avatarPosition = profile.avatar_position || 'center';
+  const bannerPosition = profile.banner_position || 'center';
+
+  // Avatar position classes
+  const avatarPositionClasses = {
+    left: 'left-4 md:left-6',
+    center: 'left-1/2 -translate-x-1/2',
+    right: 'right-4 md:right-6'
+  };
+
+  // Banner position classes (flexbox alignment)
+  const bannerPositionClasses = {
+    left: 'justify-start',
+    center: 'justify-center',
+    right: 'justify-end'
+  };
+
+  // Content alignment classes based on avatar position
+  const contentAlignmentClasses = {
+    left: 'text-left items-start',
+    center: 'text-center items-center',
+    right: 'text-right items-end'
+  };
 
   // Get active socials
   const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof PublicProfile]);
@@ -194,19 +217,19 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
         {/* Banner + Avatar */}
         <div className="relative">
           {profile.banner_url ? (
-            <div className="h-24 md:h-48 w-full md:mt-4 md:mx-auto md:rounded-2xl overflow-hidden">
+            <div className={`h-24 md:h-48 w-full md:mt-4 md:mx-auto md:rounded-2xl overflow-hidden bg-gray-50 flex items-center ${bannerPositionClasses[bannerPosition]}`}>
               <img 
                 src={profile.banner_url} 
                 alt="Banner" 
-                className="w-full h-full object-cover"
+                className="max-w-full max-h-full object-contain"
               />
             </div>
           ) : (
             <div className="h-16 md:h-32 w-full md:mt-4 md:mx-auto md:rounded-2xl bg-gradient-to-r from-gray-100 to-gray-50" />
           )}
           
-          {/* Avatar aligned to the left */}
-          <div className="absolute left-4 md:left-6 -bottom-10 md:-bottom-14">
+          {/* Avatar with dynamic position */}
+          <div className={`absolute -bottom-10 md:-bottom-14 ${avatarPositionClasses[avatarPosition]}`}>
             <Avatar 
               className="h-20 w-20 md:h-28 md:w-28 shadow-md"
               style={{ border: `4px solid ${avatarBorderColor}` }}
@@ -222,11 +245,11 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
         {/* Main Content */}
         <div className="pt-12 md:pt-16 pb-6 px-4 md:px-6">
           {/* Desktop: Two column layout */}
-          <div className="md:flex md:justify-between md:items-start md:gap-4">
+          <div className={`md:flex md:justify-between md:items-start md:gap-4 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
             {/* Left column: Name, username, followers */}
-            <div className="space-y-2">
+            <div className={`space-y-2 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
               {/* Name + Pioneer Badge */}
-              <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
                 <h1 className="text-xl md:text-2xl font-bold text-gray-900">
                   {profile.name || 'Vibecoder'}
                 </h1>
@@ -236,7 +259,7 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
               </div>
 
               {/* Username + Followers */}
-              <div className="flex items-center gap-2 text-sm text-gray-500">
+              <div className={`flex items-center gap-2 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
                 <span>@{username}</span>
                 <span>·</span>
                 <span><strong className="text-gray-900">{followersCount}</strong> seguidores</span>
@@ -287,7 +310,7 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
 
           {/* Social Icons Row */}
           {activeSocials.length > 0 && (
-            <div className="flex items-center gap-2 pt-4">
+            <div className={`flex items-center gap-2 pt-4 ${avatarPosition === 'center' ? 'justify-center' : avatarPosition === 'right' ? 'justify-end flex-row-reverse' : ''}`}>
               {activeSocials.map(({ key, icon: Icon, getUrl }) => {
                 const value = profile[key as keyof PublicProfile] as string;
                 return (
@@ -307,15 +330,15 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
 
           {/* Mobile: Location & Website */}
           {(profile.location || profile.website) && (
-            <div className="md:hidden space-y-1 pt-3">
+            <div className={`md:hidden space-y-1 pt-3 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
               {profile.location && (
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <div className={`flex items-center gap-1.5 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
                   <MapPin className="h-3.5 w-3.5" />
                   <span>{profile.location}</span>
                 </div>
               )}
               {profile.website && (
-                <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                <div className={`flex items-center gap-1.5 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
                   <LinkIcon className="h-3.5 w-3.5" />
                   <a 
                     href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}

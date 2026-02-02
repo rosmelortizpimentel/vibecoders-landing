@@ -20,7 +20,9 @@ export interface PublicProfile {
   id: string;
   username: string;
   avatar_url: string | null;
+  avatar_position: 'left' | 'center' | 'right' | null;
   banner_url: string | null;
+  banner_position: 'left' | 'center' | 'right' | null;
   name: string | null;
   tagline: string | null;
   bio: string | null;
