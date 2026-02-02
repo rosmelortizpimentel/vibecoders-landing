@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, ArrowLeft, LogOut } from 'lucide-react';
+import { User, ArrowLeft, LogOut, LogIn } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,9 +12,24 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 
 const UserMenu = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signInWithGoogle, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Mostrar botón de Ingresar si no hay usuario (solo en landing)
+  if (!loading && !user && location.pathname === '/') {
+    return (
+      <div className="fixed right-4 top-4 z-50">
+        <Button
+          onClick={signInWithGoogle}
+          className="gap-2 bg-white text-[#1c1c1c] hover:bg-white/90 font-semibold shadow-lg"
+        >
+          <LogIn className="h-4 w-4" />
+          Ingresar
+        </Button>
+      </div>
+    );
+  }
 
   if (loading || !user) {
     return null;
