@@ -91,7 +91,7 @@ export function ProfileSocials({ profile, onUpdate }: ProfileSocialsProps) {
             >
               <Icon className="h-5 w-5" />
               {hasValue && !isSelected && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#3D5AFE] rounded-full flex items-center justify-center">
                   <Check className="h-2.5 w-2.5 text-white" />
                 </div>
               )}

@@ -62,7 +62,7 @@ export function MeHeader({ profile, isSaving, lastSaved, error, onSignOut }: MeH
               </>
             ) : lastSaved ? (
               <>
-                <Check className="h-4 w-4 text-green-500" />
+                <Check className="h-4 w-4 text-[#3D5AFE]" />
                 <span className="text-gray-500 hidden sm:inline">Guardado</span>
               </>
             ) : null}
