@@ -48,6 +48,7 @@ interface Showcase {
   project_tagline: string;
   project_url: string;
   project_thumbnail: string;
+  project_logo_url: string | null;
   author_name: string;
   author_avatar: string | null;
   author_linkedin: string | null;
@@ -189,6 +190,7 @@ export function ShowcaseManager() {
         project_tagline: data.project_tagline,
         project_url: data.project_url,
         project_thumbnail: data.project_thumbnail,
+        project_logo_url: data.project_logo_url,
         author_name: data.author_name,
         author_avatar: data.author_avatar,
         author_linkedin: data.author_linkedin,
@@ -221,6 +223,7 @@ export function ShowcaseManager() {
           project_tagline: data.project_tagline,
           project_url: data.project_url,
           project_thumbnail: data.project_thumbnail,
+          project_logo_url: data.project_logo_url,
           author_name: data.author_name,
           author_avatar: data.author_avatar,
           author_linkedin: data.author_linkedin,
@@ -396,6 +399,7 @@ export function ShowcaseManager() {
             project_tagline: editingShowcase.project_tagline,
             project_url: editingShowcase.project_url,
             project_thumbnail: editingShowcase.project_thumbnail,
+            project_logo_url: editingShowcase.project_logo_url,
             author_name: editingShowcase.author_name,
             author_avatar: editingShowcase.author_avatar,
             author_linkedin: editingShowcase.author_linkedin,

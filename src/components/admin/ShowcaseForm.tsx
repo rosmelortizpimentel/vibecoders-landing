@@ -12,6 +12,7 @@ export interface ShowcaseFormData {
   project_tagline: string;
   project_url: string;
   project_thumbnail: string;
+  project_logo_url: string | null;
   author_name: string;
   author_avatar: string | null;
   author_linkedin: string | null;
@@ -33,6 +34,7 @@ const emptyForm: ShowcaseFormData = {
   project_tagline: '',
   project_url: '',
   project_thumbnail: '',
+  project_logo_url: null,
   author_name: '',
   author_avatar: null,
   author_linkedin: null,
@@ -48,15 +50,17 @@ const inputClassName = "flex h-9 w-full rounded-md border border-gray-300 bg-whi
 export function ShowcaseForm({ initialData, onSubmit, onCancel, isLoading }: ShowcaseFormProps) {
   const [formData, setFormData] = useState<ShowcaseFormData>(initialData || emptyForm);
   const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (field: keyof ShowcaseFormData, value: string | number | boolean | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const uploadFile = async (file: File, type: 'thumbnail' | 'avatar'): Promise<string | null> => {
+  const uploadFile = async (file: File, type: 'thumbnail' | 'logo' | 'avatar'): Promise<string | null> => {
     const timestamp = Date.now();
     const ext = file.name.split('.').pop();
     const fileName = `${type}_${timestamp}.${ext}`;
@@ -67,7 +71,7 @@ export function ShowcaseForm({ initialData, onSubmit, onCancel, isLoading }: Sho
 
     if (error) {
       console.error('Upload error:', error);
-      toast.error(`Error al subir ${type === 'thumbnail' ? 'imagen' : 'avatar'}`);
+      toast.error(`Error al subir ${type === 'thumbnail' ? 'imagen' : type === 'logo' ? 'logo' : 'avatar'}`);
       return null;
     }
 
@@ -78,12 +82,14 @@ export function ShowcaseForm({ initialData, onSubmit, onCancel, isLoading }: Sho
     return urlData.publicUrl;
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'thumbnail' | 'avatar') => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'thumbnail' | 'logo' | 'avatar') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (type === 'thumbnail') {
       setUploadingThumbnail(true);
+    } else if (type === 'logo') {
+      setUploadingLogo(true);
     } else {
       setUploadingAvatar(true);
     }
@@ -93,6 +99,8 @@ export function ShowcaseForm({ initialData, onSubmit, onCancel, isLoading }: Sho
     if (url) {
       if (type === 'thumbnail') {
         handleChange('project_thumbnail', url);
+      } else if (type === 'logo') {
+        handleChange('project_logo_url', url);
       } else {
         handleChange('author_avatar', url);
       }
@@ -100,6 +108,8 @@ export function ShowcaseForm({ initialData, onSubmit, onCancel, isLoading }: Sho
 
     if (type === 'thumbnail') {
       setUploadingThumbnail(false);
+    } else if (type === 'logo') {
+      setUploadingLogo(false);
     } else {
       setUploadingAvatar(false);
     }
@@ -208,6 +218,49 @@ export function ShowcaseForm({ initialData, onSubmit, onCancel, isLoading }: Sho
                     type="file"
                     accept="image/*"
                     onChange={(e) => handleFileUpload(e, 'thumbnail')}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Logo del proyecto */}
+              <div className="space-y-1">
+                <Label className="text-xs text-[#1c1c1c]">Logo</Label>
+                <div className="flex items-center">
+                  {formData.project_logo_url ? (
+                    <div className="relative">
+                      <img
+                        src={formData.project_logo_url}
+                        alt="Logo"
+                        className="h-10 w-10 object-cover rounded-lg border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleChange('project_logo_url', null)}
+                        className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                      className="h-10 w-10 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-[#3D5AFE] transition-colors"
+                    >
+                      {uploadingLogo ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                      ) : (
+                        <Upload className="h-4 w-4 text-gray-400" />
+                      )}
+                    </button>
+                  )}
+                  <input
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleFileUpload(e, 'logo')}
                     className="hidden"
                   />
                 </div>
