@@ -7,26 +7,26 @@ const features = [
   {
     id: 'url',
     visual: <BrowserUrlMock />,
-    title: 'Asegura tu @username',
-    body: 'Los mejores nombres vuelan rápido. Reclama tu identidad única antes de que alguien más se la lleve. Es tu nueva tarjeta de presentación.',
+    title: 'Tu URL es tu marca personal',
+    body: 'Olvídate de los links genéricos. Tu nombre de usuario se convierte en tu carta de presentación digital. Una dirección web propia que te otorga identidad y profesionalismo inmediato, lista para compartir.',
   },
   {
     id: 'stack',
     visual: <TechStackCarousel />,
-    title: 'Presume tu "Killer Combo"',
-    body: 'Una captura no dice nada. Revela tu receta secreta: v0 + Supabase + Cursor. Demuestra que no solo copias código, sino que dominas el stack moderno.',
+    title: 'Tu Stack es tu superpoder',
+    body: 'No escondas la magia. Muestra con orgullo las herramientas que dominas (Lovable, v0, Replit). La transparencia demuestra que estás a la vanguardia.',
   },
   {
     id: 'ecosystem',
     visual: <EcosystemHub />,
-    title: 'El fin del caos',
-    body: 'Tu código vive en GitHub. Tu red en LinkedIn. Tus demos en Vercel. Vibecoders es el pegamento que une todo tu caos creativo en un solo lugar.',
+    title: 'Conecta tu ecosistema digital',
+    body: 'Tu código vive en GitHub. Tu red en LinkedIn. Tu voz en X. Vibecoders es el punto de encuentro donde todo tu caos creativo cobra sentido.',
   },
   {
     id: 'reputation',
     visual: <VerifiedBadge />,
-    title: 'Demuestra que eres Builder',
-    body: 'Sepárate de los que solo escriben prompts. Un perfil verificado con proyectos funcionales vale más que mil currículums. Muestra resultados, cierra tratos.',
+    title: 'Valídate como "Shipper"',
+    body: 'Sepárate de los que solo tienen ideas. Un perfil verificado con proyectos funcionales le dice al mundo: "Yo no solo prometo, yo construyo".',
   },
 ];
 

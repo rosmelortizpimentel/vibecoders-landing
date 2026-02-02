@@ -1,4 +1,5 @@
 import lovableLogo from '@/assets/logos/lovable.svg';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 const EcosystemHub = () => {
   return (
@@ -15,9 +16,9 @@ const EcosystemHub = () => {
         <line x1="170" y1="60" x2="130" y2="60" stroke="#E5E5E5" strokeWidth="2" strokeDasharray="4 2" />
       </svg>
 
-      {/* Center Hub */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-xl bg-gradient-to-br from-stone-800 to-stone-900 flex items-center justify-center shadow-lg animate-pulse">
-        <span className="text-white font-bold text-sm">VC</span>
+      {/* Center Hub - Vibecoders Logo */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full border-[3px] border-stone-900 flex items-center justify-center shadow-lg overflow-hidden">
+        <img src={vibecodersLogo} alt="Vibecoders" className="w-full h-full object-cover" />
       </div>
 
       {/* GitHub - Top */}

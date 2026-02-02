@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 const VerifiedBadge = () => {
   return (
@@ -14,9 +15,15 @@ const VerifiedBadge = () => {
           
           {/* Content */}
           <div className="flex items-center gap-3">
-            {/* Checkmark Circle */}
-            <div className="w-10 h-10 rounded-full bg-[#3D5AFE] flex items-center justify-center shadow-lg">
-              <Check className="w-5 h-5 text-white" strokeWidth={3} />
+            {/* Vibecoders Logo with Check */}
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full border-2 border-white overflow-hidden shadow-lg">
+                <img src={vibecodersLogo} alt="Vibecoders" className="w-full h-full object-cover" />
+              </div>
+              {/* Blue Check Badge */}
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#3D5AFE] flex items-center justify-center border-2 border-stone-800">
+                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+              </div>
             </div>
             
             {/* Text */}
