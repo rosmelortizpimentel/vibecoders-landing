@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -13,25 +13,34 @@ const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: roleLoading } = useUserRole();
   const { profile } = useProfile();
+  const [accessChecked, setAccessChecked] = useState(false);
 
   const loading = authLoading || roleLoading;
 
   useEffect(() => {
-    if (!loading) {
-      if (!user) {
-        navigate('/');
-      } else if (!isAdmin) {
-        navigate('/me/profile');
-      }
+    // No hacer nada hasta que la carga termine
+    if (loading) return;
+    
+    // Solo verificar acceso una vez
+    if (accessChecked) return;
+    
+    setAccessChecked(true);
+    
+    if (!user) {
+      navigate('/', { replace: true });
+    } else if (!isAdmin) {
+      console.warn('[Security] Non-admin user attempted to access /admin:', user.id);
+      navigate('/me/profile', { replace: true });
     }
-  }, [user, isAdmin, loading, navigate]);
+  }, [user, isAdmin, loading, accessChecked, navigate]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/');
   };
 
-  if (loading) {
+  // Mostrar loader mientras carga O mientras no hemos verificado acceso
+  if (loading || !accessChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-[#3D5AFE]" />
@@ -39,6 +48,7 @@ const Admin = () => {
     );
   }
 
+  // Doble verificación: si pasó el loader pero no tiene acceso
   if (!user || !isAdmin) {
     return null;
   }

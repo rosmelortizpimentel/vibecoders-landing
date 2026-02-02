@@ -3,16 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
 export function useUserRole() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
-  const { data: isAdmin = false, isLoading: loading } = useQuery({
+  const { 
+    data: isAdmin = false, 
+    isLoading, 
+    isFetching 
+  } = useQuery({
     queryKey: ['userRole', user?.id],
     queryFn: async () => {
       if (!user?.id) return false;
       
-      console.log('[useUserRole] Checking admin role for user:', user.id);
-      
-      // Query user_roles table directly to check for admin role
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -25,13 +26,18 @@ export function useUserRole() {
         return false;
       }
       
-      const isAdminResult = !!data;
-      console.log('[useUserRole] Admin check result:', isAdminResult, 'data:', data);
-      return isAdminResult;
+      return !!data;
     },
     enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
+
+  // Loading es true si:
+  // - Auth está cargando
+  // - La query de roles está en proceso inicial
+  // - Está refetching sin datos confirmados
+  const loading = authLoading || isLoading || (isFetching && !isAdmin);
 
   return { isAdmin, loading };
 }
