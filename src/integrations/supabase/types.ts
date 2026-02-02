@@ -248,6 +248,7 @@ export type Database = {
           accent_color: string | null
           avatar_position: string | null
           avatar_url: string | null
+          banner_position: string | null
           banner_url: string | null
           bio: string | null
           card_style: string | null
@@ -277,6 +278,7 @@ export type Database = {
           accent_color?: string | null
           avatar_position?: string | null
           avatar_url?: string | null
+          banner_position?: string | null
           banner_url?: string | null
           bio?: string | null
           card_style?: string | null
@@ -306,6 +308,7 @@ export type Database = {
           accent_color?: string | null
           avatar_position?: string | null
           avatar_url?: string | null
+          banner_position?: string | null
           banner_url?: string | null
           bio?: string | null
           card_style?: string | null

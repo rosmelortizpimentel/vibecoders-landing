@@ -72,6 +72,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
   const username = profile.username || 'username';
   const avatarBorderColor = profile.accent_color || '#FFFFFF';
   const avatarPosition = profile.avatar_position || 'center';
+  const bannerPosition = profile.banner_position || 'center';
   
   // Dynamic base URL for footer
   const baseHost = window.location.host;
@@ -81,6 +82,13 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
     left: 'left-4',
     center: 'left-1/2 -translate-x-1/2',
     right: 'right-4'
+  };
+
+  // Banner position classes
+  const bannerPositionClasses = {
+    left: 'object-left',
+    center: 'object-center',
+    right: 'object-right'
   };
 
   // Get active socials
@@ -114,7 +122,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
             <img 
               src={profile.banner_url} 
               alt="Banner" 
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover ${bannerPositionClasses[bannerPosition]}`}
             />
           </div>
         ) : (
