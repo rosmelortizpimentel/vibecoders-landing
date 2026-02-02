@@ -33,13 +33,25 @@ export function useProfile() {
 
     try {
       setLoading(true);
+      setError(null);
+      
       const { data, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
-      if (fetchError) throw fetchError;
+      // Handle specific errors gracefully
+      if (fetchError) {
+        // PGRST116 = no rows found (expected for new users)
+        // 406 = Not Acceptable (session might not be ready)
+        if (fetchError.code === 'PGRST116') {
+          // No profile found, will create below
+        } else {
+          console.error('Error fetching profile:', fetchError);
+          throw fetchError;
+        }
+      }
 
       // Si no existe el perfil, lo creamos con username derivado del email
       if (!data) {
@@ -70,9 +82,24 @@ export function useProfile() {
           .from('profiles')
           .insert({ id: user.id, username: usernameToInsert })
           .select()
-          .single();
+          .maybeSingle();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          // If profile already exists (race condition), try fetching again
+          if (insertError.code === '23505') {
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', user.id)
+              .maybeSingle();
+            
+            if (existingProfile) {
+              setProfile(existingProfile);
+              return;
+            }
+          }
+          throw insertError;
+        }
         setProfile(newProfile);
       } else {
         setProfile(data);
