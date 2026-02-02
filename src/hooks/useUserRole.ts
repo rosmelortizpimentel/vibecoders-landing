@@ -10,17 +10,24 @@ export function useUserRole() {
     queryFn: async () => {
       if (!user?.id) return false;
       
-      const { data, error } = await supabase.rpc('has_role', {
-        _user_id: user.id,
-        _role: 'admin'
-      });
+      console.log('[useUserRole] Checking admin role for user:', user.id);
+      
+      // Query user_roles table directly to check for admin role
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
       
       if (error) {
-        console.error('Error checking admin role:', error);
+        console.error('[useUserRole] Error checking admin role:', error);
         return false;
       }
       
-      return data ?? false;
+      const isAdminResult = !!data;
+      console.log('[useUserRole] Admin check result:', isAdminResult, 'data:', data);
+      return isAdminResult;
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
