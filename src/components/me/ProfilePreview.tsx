@@ -75,10 +75,17 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
   const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof ProfileData]);
 
   return (
-    <div 
-      className="rounded-2xl overflow-hidden shadow-xl w-full bg-white"
-      style={{ fontFamily }}
-    >
+    <div className="space-y-3">
+      {/* Preview Header */}
+      <div className="flex items-center gap-2 px-1">
+        <span className="text-sm font-medium text-slate-500">Vista Previa</span>
+      </div>
+      
+      {/* Preview Card */}
+      <div 
+        className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm w-full bg-white"
+        style={{ fontFamily }}
+      >
       {/* App-style Header */}
       <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-gray-100">
         <Menu className="h-5 w-5 text-gray-600" />
@@ -232,6 +239,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
             vibecoders.la/@{username}
           </a>
         </p>
+      </div>
       </div>
     </div>
   );
