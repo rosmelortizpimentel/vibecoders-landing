@@ -58,19 +58,20 @@ export function MeLayout() {
         onSignOut={signOut}
       />
 
-      <div className="container px-4 py-6">
-        <div className="flex gap-6">
+      <div className="container px-3 sm:px-4 py-4 sm:py-6">
+        <div className="flex gap-4 sm:gap-6">
           {/* Main content */}
           <div className={isMobile ? 'w-full' : 'w-[60%]'}>
             <MeTabs />
             
-            <div className="mt-6">
+            <div className="mt-4 sm:mt-6">
               {activeTab === 'profile' && (
                 <ProfileTab 
                   profile={profile} 
                   onUpdate={profileEditor.updateProfile}
                   onUploadAvatar={profileEditor.uploadAvatar}
                   onUploadBanner={profileEditor.uploadBanner}
+                  onDeleteBanner={profileEditor.deleteBanner}
                 />
               )}
               {activeTab === 'apps' && (

@@ -4,11 +4,12 @@ import { AppData } from '@/hooks/useApps';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useTechStacks } from '@/hooks/useTechStacks';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Menu, MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { PreviewAppCard } from './PreviewAppCard';
 import { PioneerBadge } from '@/components/PioneerBadge';
+
 // X icon (current logo)
 const XIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -70,6 +71,17 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
   const fontFamily = profile.font_family || 'CameraPlain, system-ui, sans-serif';
   const username = profile.username || 'username';
   const avatarBorderColor = profile.accent_color || '#FFFFFF';
+  const avatarPosition = profile.avatar_position || 'center';
+  
+  // Dynamic base URL for footer
+  const baseHost = window.location.host;
+
+  // Avatar position classes
+  const positionClasses = {
+    left: 'left-4',
+    center: 'left-1/2 -translate-x-1/2',
+    right: 'right-4'
+  };
 
   // Get active socials
   const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof ProfileData]);
@@ -86,9 +98,8 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
         className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm w-full bg-white"
         style={{ fontFamily }}
       >
-      {/* App-style Header */}
-      <div className="flex items-center gap-3 px-4 py-2 bg-white border-b border-gray-100">
-        <Menu className="h-5 w-5 text-gray-600" />
+      {/* App-style Header - Logo only, no menu icon */}
+      <div className="flex items-center justify-center px-4 py-2 bg-white border-b border-gray-100">
         <img 
           src={vibecodersLogo} 
           alt="Vibecoders" 
@@ -110,8 +121,8 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
           <div className="h-16 md:h-20 w-full bg-gradient-to-r from-gray-100 to-gray-50" />
         )}
         
-        {/* Avatar aligned to the left */}
-        <div className="absolute left-4 -bottom-10 md:-bottom-12">
+        {/* Avatar with dynamic position */}
+        <div className={`absolute -bottom-10 md:-bottom-12 ${positionClasses[avatarPosition]}`}>
           <Avatar 
             className="h-20 w-20 md:h-24 md:w-24 shadow-md"
             style={{ border: `4px solid ${avatarBorderColor}` }}
@@ -227,16 +238,16 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
         </div>
       )}
 
-      {/* Footer */}
+      {/* Footer with dynamic base path */}
       <div className="py-3 text-center border-t border-gray-100 bg-white">
         <p className="text-[10px] md:text-xs text-gray-400">
           <a 
-            href={`https://vibecoders.la/@${username}`}
+            href={`${window.location.origin}/@${username}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-gray-500 hover:text-gray-700 hover:underline"
           >
-            vibecoders.la/@{username}
+            {baseHost}/@{username}
           </a>
         </p>
       </div>
