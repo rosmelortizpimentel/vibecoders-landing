@@ -1,278 +1,202 @@
 
+# Plan: Solución Robusta de Seguridad para Admin
 
-# Plan: Sistema Admin y Primer Showcase
+## Resumen Ejecutivo
 
-## Resumen
-
-Este plan implementa tres componentes principales:
-1. **Sistema de roles** con tabla `user_roles` (por defecto USER, ADMIN asignable manualmente)
-2. **Bucket de storage** para assets del showcase
-3. **Panel de administración** en `/admin` con gestión de showcases
-4. **Inserción del primer proyecto** (aiselfi.es)
+El backend ya está correctamente asegurado con RLS. El problema actual es una **condición de carrera** en el frontend que causa redirecciones prematuras. Este plan corrige el frontend y añade capas adicionales de seguridad.
 
 ---
 
-## 1. Base de Datos
+## Estado Actual de Seguridad
 
-### 1.1 Tabla `user_roles`
-
-```sql
--- Crear enum para roles
-CREATE TYPE public.app_role AS ENUM ('user', 'admin');
-
--- Crear tabla de roles
-CREATE TABLE public.user_roles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
-  role app_role NOT NULL DEFAULT 'user',
-  created_at timestamp with time zone DEFAULT now(),
-  UNIQUE (user_id, role)
-);
-
--- Habilitar RLS
-ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
-
--- Política: usuarios pueden ver sus propios roles
-CREATE POLICY "Users can view own roles" 
-  ON public.user_roles FOR SELECT 
-  USING (auth.uid() = user_id);
-```
-
-### 1.2 Función `has_role` (Security Definer)
-
-```sql
--- Función para verificar roles sin recursión RLS
-CREATE OR REPLACE FUNCTION public.has_role(_user_id uuid, _role app_role)
-RETURNS boolean
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT EXISTS (
-    SELECT 1
-    FROM public.user_roles
-    WHERE user_id = _user_id
-      AND role = _role
-  )
-$$;
-```
-
-### 1.3 Bucket de Storage
-
-```sql
--- Crear bucket público para showcase
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('showcase-assets', 'showcase-assets', true);
-
--- Política: cualquiera puede leer
-CREATE POLICY "Public read access"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'showcase-assets');
-
--- Política: solo admins pueden subir/modificar
-CREATE POLICY "Admins can upload"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'showcase-assets' 
-  AND public.has_role(auth.uid(), 'admin')
-);
-
-CREATE POLICY "Admins can update"
-ON storage.objects FOR UPDATE
-USING (
-  bucket_id = 'showcase-assets' 
-  AND public.has_role(auth.uid(), 'admin')
-);
-
-CREATE POLICY "Admins can delete"
-ON storage.objects FOR DELETE
-USING (
-  bucket_id = 'showcase-assets' 
-  AND public.has_role(auth.uid(), 'admin')
-);
-```
-
-### 1.4 Políticas adicionales para `showcase_gallery`
-
-```sql
--- Solo admins pueden insertar
-CREATE POLICY "Admins can insert showcase" 
-ON public.showcase_gallery FOR INSERT
-WITH CHECK (public.has_role(auth.uid(), 'admin'));
-
--- Solo admins pueden actualizar
-CREATE POLICY "Admins can update showcase" 
-ON public.showcase_gallery FOR UPDATE
-USING (public.has_role(auth.uid(), 'admin'));
-
--- Solo admins pueden eliminar
-CREATE POLICY "Admins can delete showcase" 
-ON public.showcase_gallery FOR DELETE
-USING (public.has_role(auth.uid(), 'admin'));
-```
+| Componente | Estado | Notas |
+|------------|--------|-------|
+| RLS `showcase_gallery` | Seguro | Solo admins pueden INSERT/UPDATE/DELETE |
+| RLS `user_roles` | Seguro | Solo SELECT del propio rol, sin modificaciones |
+| Storage `showcase-assets` | Seguro | Solo admins pueden subir/modificar/eliminar |
+| Función `has_role()` | Seguro | Security definer, evita recursión |
+| Frontend `useUserRole` | Bug | No espera a que auth termine de cargar |
+| Frontend `Admin.tsx` | Bug | Redirige antes de verificar rol real |
 
 ---
 
-## 2. Archivos a Crear/Modificar
+## Solución Propuesta
 
-| Archivo | Acción | Descripción |
-|---------|--------|-------------|
-| `src/hooks/useUserRole.ts` | Crear | Hook para verificar si el usuario es admin |
-| `src/pages/Admin.tsx` | Crear | Layout principal del panel admin |
-| `src/components/admin/AdminLayout.tsx` | Crear | Layout con sidebar |
-| `src/components/admin/AdminSidebar.tsx` | Crear | Menú lateral de navegación |
-| `src/components/admin/ShowcaseManager.tsx` | Crear | CRUD de showcases |
-| `src/components/admin/ShowcaseForm.tsx` | Crear | Formulario para crear/editar showcase |
-| `src/components/me/MeHeader.tsx` | Modificar | Agregar link "Admin" condicional |
-| `src/App.tsx` | Modificar | Agregar ruta `/admin/*` |
+### 1. Corregir `useUserRole.ts`
 
----
-
-## 3. Arquitectura de Componentes
-
-### 3.1 Layout Admin
-
-```text
-┌──────────────────────────────────────────────────────────────────┐
-│  MeHeader (con link Admin visible solo para admins)              │
-├─────────────┬────────────────────────────────────────────────────┤
-│             │                                                    │
-│   Sidebar   │              Contenido Principal                   │
-│   ┌───────┐ │   ┌────────────────────────────────────────────┐   │
-│   │Showcase│ │   │  Gestión de Showcases                     │   │
-│   │   •    │ │   │  ┌──────────────────────────────────────┐ │   │
-│   │(futuro)│ │   │  │ [+ Nuevo Showcase]                   │ │   │
-│   │   •    │ │   │  ├──────────────────────────────────────┤ │   │
-│   └───────┘ │   │  │ Lista de proyectos editables         │ │   │
-│             │   │  │ - aiselfi.es [Editar] [Eliminar]     │ │   │
-│             │   │  │ - ...                                 │ │   │
-│             │   │  └──────────────────────────────────────┘ │   │
-│             │   └────────────────────────────────────────────┘   │
-└─────────────┴────────────────────────────────────────────────────┘
-```
-
-### 3.2 Hook `useUserRole`
+Incluir el estado de carga de autenticación y usar flags adicionales de React Query:
 
 ```typescript
-// Verifica rol del usuario usando la función has_role de Supabase
 export function useUserRole() {
-  // Llama a supabase.rpc('has_role', { _user_id, _role: 'admin' })
-  // Retorna { isAdmin, loading }
+  const { user, loading: authLoading } = useAuth();
+
+  const { 
+    data: isAdmin = false, 
+    isLoading, 
+    isFetching 
+  } = useQuery({
+    queryKey: ['userRole', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      
+      if (error) {
+        console.error('[useUserRole] Error:', error);
+        return false;
+      }
+      
+      return !!data;
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+    retry: 1, // Limitar reintentos para no bloquear UI
+  });
+
+  // Loading es true si:
+  // - Auth está cargando
+  // - La query de roles está en proceso inicial
+  // - Está refetching sin datos confirmados
+  const loading = authLoading || isLoading || (isFetching && !isAdmin);
+
+  return { isAdmin, loading };
 }
 ```
 
-### 3.3 Protección de Ruta
+### 2. Robustecer `Admin.tsx`
 
-El componente `Admin.tsx` verificará el rol y redirigirá a `/` si no es admin.
+Añadir protección contra redirecciones prematuras con un flag de verificación:
 
----
+```typescript
+const Admin = () => {
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useUserRole();
+  const { profile } = useProfile();
+  const [accessChecked, setAccessChecked] = useState(false);
 
-## 4. Link Condicional en Header
+  // Combinar todos los estados de carga
+  const loading = authLoading || roleLoading;
 
-En `MeHeader.tsx`, se agregará un link "Admin" que:
-- Solo se renderiza si `isAdmin === true`
-- Usa un icono de Settings o Shield
-- Navega a `/admin`
+  useEffect(() => {
+    // No hacer nada hasta que la carga termine
+    if (loading) return;
+    
+    // Solo verificar acceso una vez
+    if (accessChecked) return;
+    
+    setAccessChecked(true);
+    
+    if (!user) {
+      navigate('/', { replace: true });
+    } else if (!isAdmin) {
+      navigate('/me/profile', { replace: true });
+    }
+  }, [user, isAdmin, loading, accessChecked, navigate]);
 
-```text
-┌──────────────────────────────────────────────────────────────────┐
-│ [Logo]                    [Admin] [✓ Guardado] [Avatar ▼]        │
-└──────────────────────────────────────────────────────────────────┘
-                              ↑
-                     Solo visible para admins
+  // Mostrar loader mientras carga O mientras no hemos verificado acceso
+  if (loading || !accessChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <Loader2 className="h-8 w-8 animate-spin text-[#3D5AFE]" />
+      </div>
+    );
+  }
+
+  // Doble verificación: si pasó el loader pero no tiene acceso
+  if (!user || !isAdmin) {
+    return null;
+  }
+
+  // ... resto del componente
+};
+```
+
+### 3. Añadir Logging de Seguridad (Opcional)
+
+Para auditoría, añadir logs cuando se detecten intentos de acceso:
+
+```typescript
+// En Admin.tsx useEffect
+if (!isAdmin && user) {
+  console.warn('[Security] Non-admin user attempted to access /admin:', user.id);
+}
 ```
 
 ---
 
-## 5. Gestión de Showcases (CRUD)
+## Archivos a Modificar
 
-### 5.1 ShowcaseManager
-
-Lista todos los showcases con opciones para:
-- Ver (link externo)
-- Editar (abre formulario)
-- Eliminar (con confirmación)
-- Cambiar orden (drag & drop o flechas)
-- Toggle activo/inactivo
-
-### 5.2 ShowcaseForm
-
-Formulario con los campos:
-- Título del proyecto
-- Tagline
-- URL del proyecto
-- Thumbnail (upload a Supabase Storage)
-- Nombre del autor
-- Avatar del autor (upload)
-- LinkedIn, Twitter, Website del autor
-- Orden de visualización
-- Estado activo/inactivo
+| Archivo | Cambios |
+|---------|---------|
+| `src/hooks/useUserRole.ts` | Incluir `authLoading` y `isFetching` en el cálculo de loading |
+| `src/pages/Admin.tsx` | Añadir flag `accessChecked` y mejorar lógica de redirección |
 
 ---
 
-## 6. Inserción del Primer Showcase
+## Por Qué Esta Solución es Segura
 
-Una vez implementado el sistema, se insertarán los datos del proyecto aiselfi.es:
-
-1. **Subir imágenes al bucket `showcase-assets`**:
-   - `aiselfi-og.png` → Thumbnail
-   - `aiselfies_logo.webp` → Avatar del autor
-
-2. **Insertar registro en `showcase_gallery`**:
-   - project_title: "aiselfi.es"
-   - project_tagline: "Fotos profesionales en minutos, no días"
-   - project_url: "https://aiselfi.es/?ref=vibecoders.la"
-   - author_name: "Jon Kraayenbrink"
-   - author_linkedin: "https://www.linkedin.com/in/jonathan-kraayenbrink/"
-   - display_order: 1
-   - is_active: true
+1. **Defensa en profundidad**: Aunque el frontend falle, RLS siempre protege el backend
+2. **No depende del cliente**: Los roles se verifican server-side con `has_role()`
+3. **No usa localStorage**: No hay tokens ni roles almacenados localmente que puedan manipularse
+4. **Sin hardcoding**: No hay credenciales o IDs de admin en el código
+5. **Race condition eliminada**: El nuevo flag asegura que no se redirija hasta tener datos reales
 
 ---
 
 ## Sección Técnica
 
-### Estructura de Archivos Final
+### Flujo de Verificación Mejorado
 
-```
-src/
-├── hooks/
-│   └── useUserRole.ts          # Hook para verificar rol admin
-├── pages/
-│   └── Admin.tsx               # Página principal admin
-├── components/
-│   ├── admin/
-│   │   ├── AdminLayout.tsx     # Layout con header + sidebar
-│   │   ├── AdminSidebar.tsx    # Menú lateral
-│   │   ├── ShowcaseManager.tsx # Lista y gestión de showcases
-│   │   └── ShowcaseForm.tsx    # Formulario crear/editar
-│   └── me/
-│       └── MeHeader.tsx        # Modificado: link Admin condicional
-```
-
-### Rutas
-
-```tsx
-// En App.tsx
-<Route path="/admin" element={<Admin />}>
-  <Route index element={<Navigate to="/admin/showcase" replace />} />
-  <Route path="showcase" element={<ShowcaseManager />} />
-</Route>
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│ 1. Usuario navega a /admin                                      │
+├─────────────────────────────────────────────────────────────────┤
+│ 2. Admin.tsx se monta                                           │
+│    - loading = true (authLoading || roleLoading)                │
+│    - accessChecked = false                                      │
+│    - Muestra Loader                                             │
+├─────────────────────────────────────────────────────────────────┤
+│ 3. useAuth completa → authLoading = false                       │
+│    - roleLoading aún true                                       │
+│    - Sigue mostrando Loader                                     │
+├─────────────────────────────────────────────────────────────────┤
+│ 4. useUserRole completa → roleLoading = false                   │
+│    - loading = false                                            │
+│    - useEffect ejecuta verificación                             │
+│    - accessChecked = true                                       │
+├─────────────────────────────────────────────────────────────────┤
+│ 5a. Si isAdmin = true → Renderiza AdminLayout                   │
+│ 5b. Si isAdmin = false → Redirige a /me/profile                 │
+│ 5c. Si !user → Redirige a /                                     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Seguridad
+### Comportamiento de React Query
 
-- La verificación de admin se hace server-side con RLS y `has_role()`
-- El frontend solo muestra/oculta UI, pero el backend rechaza operaciones no autorizadas
-- Los roles se asignan manualmente en la tabla `user_roles` desde Supabase Dashboard
+El hook `useQuery` tiene varios estados que debemos considerar:
 
-### Orden de Implementación
+- `isLoading`: true solo en la primera carga (no hay datos en cache)
+- `isFetching`: true cuando hay una request en curso (incluyendo refetch)
+- `data`: el valor cacheado (puede ser stale)
 
-1. Migración SQL: crear `user_roles`, función `has_role`, bucket, políticas
-2. Crear hook `useUserRole`
-3. Crear estructura de componentes admin
-4. Modificar `MeHeader` con link condicional
-5. Agregar rutas en `App.tsx`
-6. Subir imágenes del primer showcase
-7. Insertar datos del primer showcase
+Al incluir `(isFetching && !isAdmin)` en el cálculo de loading, nos aseguramos de:
+1. No reportar loading=false con datos stale negativos
+2. Permitir que pase si ya tenemos confirmación positiva de admin
 
+### Resumen de Cambios
+
+**useUserRole.ts:**
+- Línea 6: Desestructurar `loading as authLoading` de `useAuth()`
+- Línea 8: Añadir `isFetching` a la desestructuración de `useQuery`
+- Línea final: Cambiar cálculo de loading a `authLoading || isLoading || (isFetching && !isAdmin)`
+
+**Admin.tsx:**
+- Añadir estado `const [accessChecked, setAccessChecked] = useState(false)`
+- Modificar useEffect para usar el flag
+- Ajustar condición del loader para incluir `!accessChecked`
