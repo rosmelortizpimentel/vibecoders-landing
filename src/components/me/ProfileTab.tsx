@@ -239,7 +239,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                 value={profile.name || ''}
                 onChange={e => onUpdate({ name: e.target.value })}
                 placeholder="Tu nombre completo"
-                className="text-base sm:text-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+                className="text-base sm:text-lg border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
               />
             </div>
             
@@ -279,7 +279,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
             onChange={e => onUpdate({ tagline: e.target.value.slice(0, 100) })}
             placeholder="Una frase que te defina"
             maxLength={100}
-            className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
           />
           <p className="text-xs text-muted-foreground text-right">{profile.tagline?.length || 0}/100</p>
         </div>
@@ -295,7 +295,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
             value={profile.bio || ''}
             onChange={e => onUpdate({ bio: e.target.value.slice(0, 500) })}
             placeholder="Cuéntanos sobre ti, tus proyectos, tu experiencia..."
-            className="min-h-[120px] resize-none border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+            className="min-h-[120px] resize-none border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
             maxLength={500}
           />
           <p className="text-xs text-muted-foreground text-right">{bioLength}/500</p>
@@ -317,7 +317,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
             value={profile.location || ''}
             onChange={e => onUpdate({ location: e.target.value })}
             placeholder="Ciudad, País"
-            className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
           />
         </div>
 
@@ -332,7 +332,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
             onChange={e => onUpdate({ website: e.target.value })}
             placeholder="https://tuwebsite.com"
             type="url"
-            className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
           />
         </div>
       </section>
