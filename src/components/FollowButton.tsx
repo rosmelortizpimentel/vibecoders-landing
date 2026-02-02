@@ -84,19 +84,19 @@ export function FollowButton({
       </Button>
 
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-[#3D5AFE] border-none text-white">
           <DialogHeader className="text-center">
             <div className="flex justify-center mb-4">
               <img 
                 src={vibecodersLogo} 
                 alt="Vibecoders" 
-                className="h-16 w-16 rounded-full"
+                className="h-16 w-16 rounded-full border-[3px] border-white shadow-lg"
               />
             </div>
-            <DialogTitle className="text-xl">
+            <DialogTitle className="text-xl text-white">
               Únete a Vibecoders
             </DialogTitle>
-            <DialogDescription className="text-center">
+            <DialogDescription className="text-center text-white/90">
               {profileUsername 
                 ? `Inicia sesión para seguir a @${profileUsername} y descubrir más vibecoders.`
                 : 'Inicia sesión para seguir a este vibecoder y descubrir más perfiles.'
@@ -133,7 +133,7 @@ export function FollowButton({
             <Button
               variant="ghost"
               onClick={() => setShowAuthDialog(false)}
-              className="text-gray-500"
+              className="text-white/70 hover:text-white hover:bg-white/10"
             >
               Ahora no
             </Button>
