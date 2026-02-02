@@ -29,6 +29,7 @@ export interface ProfileData {
   accent_color: string | null;
   card_style: string | null;
   avatar_position: 'left' | 'center' | 'right' | null;
+  banner_position: 'left' | 'center' | 'right' | null;
 }
 
 const DEFAULT_PROFILE: Partial<ProfileData> = {
@@ -37,6 +38,7 @@ const DEFAULT_PROFILE: Partial<ProfileData> = {
   accent_color: '#FFFFFF',
   card_style: 'minimal',
   avatar_position: 'center',
+  banner_position: 'center',
 };
 
 export function useProfileEditor() {
@@ -73,6 +75,7 @@ export function useProfileEditor() {
         accent_color: data.accent_color,
         card_style: data.card_style,
         avatar_position: data.avatar_position,
+        banner_position: data.banner_position,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id);
