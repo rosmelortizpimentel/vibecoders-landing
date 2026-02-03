@@ -201,23 +201,23 @@ export function AuthenticatedHeader({
                 <Menu className="h-6 w-6 text-gray-700" />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] bg-white p-0">
-              <SheetHeader className="p-4 border-b border-gray-100">
-                <SheetTitle className="text-left text-lg font-semibold text-foreground">Menú</SheetTitle>
+            <SheetContent side="right" className="w-[280px] bg-white p-0 flex flex-col">
+              <SheetHeader className="p-5 border-b border-gray-100">
+                <SheetTitle className="text-left text-base font-medium text-foreground">Menú</SheetTitle>
               </SheetHeader>
               
-              <nav className="flex flex-col p-4">
-                {/* Navigation Links */}
+              {/* Navigation Links - Clean list */}
+              <nav className="flex flex-col px-5 py-6 flex-1">
                 {navLinks.map((link) => (
                   <Link
                     key={link.path}
                     to={link.path}
                     onClick={handleNavClick}
                     className={cn(
-                      "text-lg py-3 px-2 rounded-lg transition-colors",
+                      "text-base py-3 transition-colors",
                       isActive(link.path)
-                        ? "text-[#3D5AFE] font-semibold bg-[#3D5AFE]/5"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-[#3D5AFE]"
+                        ? "text-foreground font-semibold"
+                        : "text-gray-500 hover:text-foreground"
                     )}
                   >
                     {link.label}
@@ -230,71 +230,53 @@ export function AuthenticatedHeader({
                     to="/admin"
                     onClick={handleNavClick}
                     className={cn(
-                      "flex items-center gap-2 text-lg py-3 px-2 rounded-lg transition-colors",
+                      "flex items-center gap-2 text-base py-3 transition-colors",
                       isActive('/admin')
-                        ? "text-[#3D5AFE] font-semibold bg-[#3D5AFE]/5"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-[#3D5AFE]"
+                        ? "text-foreground font-semibold"
+                        : "text-gray-500 hover:text-foreground"
                     )}
                   >
-                    <Shield className="h-5 w-5" />
+                    <Shield className="h-4 w-4" />
                     Admin
                   </Link>
                 )}
+              </nav>
 
-                <Separator className="my-4" />
-
-                {/* User Profile Section */}
-                <div className="flex items-center gap-3 p-2 mb-2">
-                  <Avatar className="h-10 w-10 border border-gray-200">
+              {/* User Section - Anchored to bottom */}
+              <div className="mt-auto border-t border-gray-100 p-5">
+                <Link 
+                  to="/me/profile"
+                  onClick={handleNavClick}
+                  className="flex items-center gap-3 group"
+                >
+                  <Avatar className="h-10 w-10 border border-gray-200 group-hover:border-gray-300 transition-colors">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
-                    <AvatarFallback className="text-sm bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
+                    <AvatarFallback className="text-sm bg-muted text-muted-foreground font-medium">
                       {profile?.name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-foreground">{profile?.name || 'Usuario'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate group-hover:text-foreground/80 transition-colors">
+                      {profile?.name || 'Usuario'}
+                    </p>
                     {profile?.username && (
-                      <span className="text-xs text-muted-foreground">@{profile.username}</span>
+                      <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>
                     )}
                   </div>
-                </div>
-
-                {/* Profile Actions */}
-                <Link
-                  to="/me/profile"
-                  onClick={handleNavClick}
-                  className="text-lg py-3 px-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[#3D5AFE] transition-colors"
-                >
-                  Mi Perfil
-                </Link>
-
-                {publicProfileUrl && (
-                  <a
-                    href={publicProfileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={handleNavClick}
-                    className="flex items-center gap-2 text-lg py-3 px-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[#3D5AFE] transition-colors"
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleNavClick();
+                      onSignOut();
+                    }}
+                    className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    aria-label="Cerrar sesión"
                   >
-                    <ExternalLink className="h-5 w-5" />
-                    Ver Perfil Público
-                  </a>
-                )}
-
-                <Separator className="my-4" />
-
-                {/* Sign Out */}
-                <button
-                  onClick={() => {
-                    handleNavClick();
-                    onSignOut();
-                  }}
-                  className="flex items-center gap-2 text-lg py-3 px-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors w-full text-left"
-                >
-                  <LogOut className="h-5 w-5" />
-                  Cerrar Sesión
-                </button>
-              </nav>
+                    <LogOut className="h-5 w-5" />
+                  </button>
+                </Link>
+              </div>
             </SheetContent>
           </Sheet>
         )}
