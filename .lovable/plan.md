@@ -1,153 +1,167 @@
 
+# Plan: Navegación Fluida sin Parpadeo del Header
 
-# Plan: Rediseño Limpio - Quitar Morado y Simplificar Navbar/Hero
+## Problema Identificado
 
-## Resumen
+Cada vez que navegas entre `/projects` y `/tools`, toda la página se desmonta y vuelve a montar, incluyendo el header y footer. Esto causa el efecto de "carga" visible porque:
 
-Eliminar el color morado del sistema de diseño, cambiar la paleta de acentos a azul (#3D5AFE), y rediseñar el Navbar y Hero de la página de Proyectos para un look más limpio y minimalista.
-
----
-
-## Problema Principal
-
-La imagen muestra que el dropdown del selector de fuentes tiene:
-- Fondo oscuro (#1c1c1c)
-- Selección con fondo morado/violeta
-- Necesita: fondo blanco con selección azul
+1. **Cada página es independiente**: `Tools.tsx` y `Projects.tsx` renderizan su propio `AuthenticatedHeader` y `Footer`
+2. **Estado de carga reinicia**: Los hooks `useAuth()` y `useProfile()` inician con `loading: true` en cada montaje
+3. **Loader de pantalla completa**: Mientras `authLoading` es `true`, se muestra un spinner de pantalla completa que oculta TODO
 
 ---
 
-## Cambios Requeridos
+## Solución: Layout Compartido
 
-### 1. `src/index.css` - Eliminar Morado de Variables CSS
+Crear un componente de layout que envuelva las rutas autenticadas y mantenga el Header/Footer siempre montados.
 
-**Cambio**: Reemplazar todos los valores de color morado (hue 263) por azul (#3D5AFE = 231° 99% 62% en HSL)
+### Arquitectura Propuesta
 
-| Variable | Antes (Morado) | Después (Azul) |
-|----------|----------------|----------------|
-| `--primary` | `263 70% 58%` | `231 99% 62%` |
-| `--accent` | `263 70% 58%` | `231 99% 62%` |
-| `--ring` | `263 70% 58%` | `231 99% 62%` |
-| `--border` | `263 30% 25%` | `220 13% 91%` (gris claro) |
-| `--popover` | `222 47% 8%` | `0 0% 100%` (blanco) |
-| `--popover-foreground` | `210 40% 98%` | `222 47% 11%` (negro) |
-
-Esto afectará globalmente todos los componentes que usen `bg-accent`, `focus:ring`, etc.
-
----
-
-### 2. `src/components/ui/select.tsx` - Estilo del SelectContent
-
-**Cambio**: Asegurar que el dropdown tenga fondo blanco y selección azul
-
-```tsx
-// SelectContent - fondo blanco
-className="... bg-white text-gray-900 ..."
-
-// SelectItem - selección azul con texto blanco
-className="... focus:bg-[#3D5AFE] focus:text-white ..."
+```text
+┌─────────────────────────────────────────────────────┐
+│  AuthenticatedLayout (siempre montado)              │
+│  ┌───────────────────────────────────────────────┐  │
+│  │  AuthenticatedHeader                          │  │
+│  └───────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │  <Outlet /> ← Solo esto cambia                │  │
+│  │  (Projects, Tools, Me content)                │  │
+│  └───────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────┐  │
+│  │  Footer                                       │  │
+│  └───────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### 3. `src/components/AuthenticatedHeader.tsx` - Navbar Blanco Sólido
+## Archivos a Crear/Modificar
 
-**Cambio**: Quitar el glassmorphism, usar blanco sólido con borde sutil
+### 1. Crear: `src/layouts/AuthenticatedLayout.tsx`
 
-```tsx
-// Antes
-className="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-md"
+Nuevo componente que:
+- Verifica autenticación una sola vez
+- Renderiza Header y Footer de forma persistente
+- Usa `<Outlet />` para el contenido de las rutas hijas
+- El loader solo aparece en el área de contenido, no en todo el viewport
 
-// Después
-className="sticky top-0 z-50 border-b border-gray-100 bg-white"
-```
+### 2. Modificar: `src/App.tsx`
 
----
-
-### 4. `src/pages/Projects.tsx` - Hero Limpio Sin Fondo Azul
-
-**Cambios**:
-- Eliminar el fondo azul (`bg-[#3D5AFE]`)
-- Eliminar el WaveDivider
-- Texto: título negro, subtítulo gris
-- Mantener el botón CTA azul (ahora resaltará más)
-- Fondo uniforme blanco/crema
+Restructurar las rutas para usar layout anidado:
 
 ```tsx
-// Hero Section - Fondo limpio
-<section className="bg-white pt-12 pb-8">
-  <div className="container mx-auto px-4 md:px-6">
-    <header className="relative text-center">
-      <h1 className="text-4xl md:text-5xl font-bold text-[#1c1c1c] mb-4">
-        Hecho por Vibecoders
-      </h1>
-      <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-8">
-        Apps reales creadas por gente como tú. Inspírate y lanza la tuya.
-      </p>
-      
-      {/* Botón CTA - Mantiene estilo azul */}
-      <Button className="bg-[#3D5AFE] text-white hover:bg-[#3D5AFE]/90 rounded-full px-6">
-        Quiero aparecer aquí
-      </Button>
-    </header>
-  </div>
-</section>
-
-{/* SIN WaveDivider */}
-
-<main className="flex-1 bg-[#F6F5F4] pb-16 pt-8">
+<Route element={<AuthenticatedLayout />}>
+  <Route path="/projects" element={<ProjectsContent />} />
+  <Route path="/tools" element={<ToolsContent />} />
+  <Route path="/me/*" element={<MeContent />} />
+</Route>
 ```
 
----
+### 3. Simplificar: `src/pages/Projects.tsx`
 
-## Archivos a Modificar
+- Eliminar AuthenticatedHeader y Footer (ya están en el layout)
+- Eliminar verificación de auth (ya está en el layout)
+- Mantener solo el contenido específico de la página
 
-| Archivo | Acción |
-|---------|--------|
-| `src/index.css` | Cambiar variables CSS de morado a azul |
-| `src/components/ui/select.tsx` | Fondo blanco, selección azul |
-| `src/components/AuthenticatedHeader.tsx` | Navbar blanco sólido |
-| `src/pages/Projects.tsx` | Hero limpio sin fondo azul |
+### 4. Simplificar: `src/pages/Tools.tsx`
+
+- Mismos cambios que Projects.tsx
+
+### 5. Adaptar: `src/pages/Me.tsx` y `src/components/me/MeLayout.tsx`
+
+- Usar el layout compartido en lugar de su propio header
+- Mantener la lógica específica del editor de perfil
 
 ---
 
 ## Detalles Técnicos
 
-### Variables CSS Actualizadas
+### AuthenticatedLayout.tsx
 
-```css
-:root {
-  --primary: 231 99% 62%;           /* #3D5AFE */
-  --primary-foreground: 0 0% 100%;  /* blanco */
-  
-  --accent: 231 99% 62%;            /* #3D5AFE */
-  --accent-foreground: 0 0% 100%;   /* blanco */
-  
-  --popover: 0 0% 100%;             /* blanco */
-  --popover-foreground: 222 47% 11%; /* negro */
-  
-  --ring: 231 99% 62%;              /* #3D5AFE */
-  --border: 220 13% 91%;            /* gris claro */
+```tsx
+import { Outlet, Navigate } from 'react-router-dom';
+import { AuthenticatedHeader } from '@/components/AuthenticatedHeader';
+import Footer from '@/components/Footer';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
+import { Loader2 } from 'lucide-react';
+
+export function AuthenticatedLayout() {
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { profile } = useProfile();
+
+  // Redirect si no autenticado (después de cargar)
+  if (!authLoading && !user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      {/* Header siempre visible */}
+      <AuthenticatedHeader 
+        profile={profile || null}
+        onSignOut={signOut}
+      />
+
+      {/* Contenido: loader o página */}
+      {authLoading ? (
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </main>
+      ) : (
+        <Outlet />
+      )}
+
+      {/* Footer siempre visible */}
+      <Footer />
+    </div>
+  );
 }
 ```
 
-### SelectItem con Selección Azul
+### App.tsx (Rutas Reestructuradas)
 
 ```tsx
-<SelectPrimitive.Item
-  className={cn(
-    "... focus:bg-[#3D5AFE] focus:text-white",
-    className,
-  )}
->
+import { AuthenticatedLayout } from './layouts/AuthenticatedLayout';
+
+<Routes>
+  {/* Rutas públicas */}
+  <Route path="/" element={<Index />} />
+  <Route path="/privacy" element={<Privacy />} />
+  <Route path="/terms" element={<Terms />} />
+  <Route path="/:handle" element={<PublicProfile />} />
+
+  {/* Rutas autenticadas con layout compartido */}
+  <Route element={<AuthenticatedLayout />}>
+    <Route path="/projects" element={<Projects />} />
+    <Route path="/tools" element={<Tools />} />
+    <Route path="/me" element={<Navigate to="/me/profile" replace />} />
+    <Route path="/me/profile" element={<Me />} />
+    <Route path="/me/apps" element={<Me />} />
+    <Route path="/me/branding" element={<Me />} />
+  </Route>
+  
+  {/* Admin */}
+  <Route path="/admin/*" element={<Admin />} />
+</Routes>
 ```
 
 ---
 
-## Resultado Visual Esperado
+## Resultado Esperado
 
-1. **Dropdown de fuentes**: Fondo blanco, opciones en negro, selección con fondo azul (#3D5AFE) y texto blanco
-2. **Navbar**: Fondo blanco sólido, borde gris muy sutil, sin blur
-3. **Hero de Proyectos**: Fondo blanco, título negro, subtítulo gris, botón azul destacado
-4. **Sin morado**: En ningún lugar de la aplicación
+| Antes | Después |
+|-------|---------|
+| Al navegar: toda la página parpadea | Solo el contenido central cambia |
+| Header y Footer se recargan | Header y Footer permanecen estables |
+| Spinner de pantalla completa | Spinner solo en el área de contenido |
+| Múltiples llamadas a useAuth/useProfile | Una sola instancia compartida |
 
+---
+
+## Consideraciones Especiales para /me
+
+El MeLayout tiene lógica adicional (estado de guardado, tabs). Se integrará de la siguiente manera:
+- El layout compartido provee Header con props básicas
+- MeLayout pasa props adicionales (isSaving, lastSaved) al header cuando está en esas rutas
+- Alternativa: MeLayout puede seguir teniendo su propio header especializado y no usar el layout compartido para /me/*
