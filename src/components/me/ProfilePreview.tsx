@@ -116,8 +116,8 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
         className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm w-full bg-white"
         style={{ fontFamily }}
       >
-      {/* App-style Header - Logo only, no menu icon */}
-      <div className="flex items-center justify-center px-4 py-2 bg-white border-b border-gray-100">
+      {/* App-style Header - Logo on the left */}
+      <div className="flex items-center justify-start px-4 py-2 bg-white border-b border-gray-100">
         <img 
           src={vibecodersLogo} 
           alt="Vibecoders" 
