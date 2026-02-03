@@ -2,13 +2,15 @@ import { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface StackCardProps {
-  icon: LucideIcon;
+  icon?: LucideIcon;
+  logoSrc?: string;
+  logoAlt?: string;
   title: string;
   description: string;
   className?: string;
 }
 
-export function StackCard({ icon: Icon, title, description, className }: StackCardProps) {
+export function StackCard({ icon: Icon, logoSrc, logoAlt, title, description, className }: StackCardProps) {
   return (
     <div 
       className={cn(
@@ -17,8 +19,16 @@ export function StackCard({ icon: Icon, title, description, className }: StackCa
       )}
     >
       <div className="flex items-center gap-3 mb-3">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <Icon className="h-5 w-5 text-primary" />
+        <div className="p-2 bg-primary/5 rounded-lg flex items-center justify-center">
+          {logoSrc ? (
+            <img 
+              src={logoSrc} 
+              alt={logoAlt || title} 
+              className="h-6 w-6 object-contain"
+            />
+          ) : Icon ? (
+            <Icon className="h-5 w-5 text-primary" />
+          ) : null}
         </div>
         <h4 className="font-semibold text-gray-900">{title}</h4>
       </div>

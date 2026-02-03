@@ -1,10 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Database, Rocket, ExternalLink, ArrowRight } from 'lucide-react';
+import { ExternalLink, ArrowRight } from 'lucide-react';
 import { BuildLogSidebar } from '@/components/buildlog/BuildLogSidebar';
 import { StackCard } from '@/components/buildlog/StackCard';
 import { ProTipCallout } from '@/components/buildlog/ProTipCallout';
 import { WorkflowTimeline, BranchDiagram } from '@/components/buildlog/WorkflowTimeline';
+
+// Import platform logos
+import lovableLogo from '@/assets/logos/lovable-icon.png';
+import supabaseLogo from '@/assets/logos/supabase.svg';
+import vercelLogo from '@/assets/logos/vercel.svg';
 
 export default function BuildLog() {
   return (
@@ -59,17 +64,20 @@ export default function BuildLog() {
               
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <StackCard
-                  icon={Sparkles}
+                  logoSrc={lovableLogo}
+                  logoAlt="Lovable"
                   title="Frontend & Generación"
                   description="Lovable. Es la forma más rápida hoy en día de iniciar conectada a Git."
                 />
                 <StackCard
-                  icon={Database}
+                  logoSrc={supabaseLogo}
+                  logoAlt="Supabase"
                   title="Backend"
                   description="Supabase. Maneja la base de datos, el almacenamiento y la autenticación (Google Auth) en un solo lugar."
                 />
                 <StackCard
-                  icon={Rocket}
+                  logoSrc={vercelLogo}
+                  logoAlt="Vercel"
                   title="Despliegue"
                   description="Vercel. Para automatizar el pase a producción."
                 />
