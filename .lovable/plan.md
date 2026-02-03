@@ -1,110 +1,374 @@
 
-
-# Plan: Migrar Google One Tap a FedCM
+# Plan: Implementar Página /stack con Administración
 
 ## Resumen
 
-Actualizar el componente `GoogleOneTap.tsx` para ser compatible con FedCM (Federated Credential Management API), que será obligatorio próximamente. Esto elimina el warning actual y asegura compatibilidad futura.
+Crear una nueva sección "The Vibe Stack" que muestre un directorio curado de herramientas tecnológicas recomendadas, con panel de administración para gestión completa (CRUD + drag-and-drop). **Los logos se almacenarán en un bucket separado llamado `stack-assets`.**
 
 ---
 
-## ¿Qué es FedCM?
+## Arquitectura General
 
-FedCM es una nueva API del navegador que mejora la privacidad al manejar la autenticación federada de forma nativa, sin depender de cookies de terceros.
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│                         FRONTEND                                    │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  /stack (Página Pública)          /admin/stack (Panel Admin)        │
+│  ┌─────────────────────────┐      ┌─────────────────────────┐      │
+│  │ - Header + Filtros      │      │ - Lista con drag-drop   │      │
+│  │ - Grid de ToolCards     │      │ - CRUD completo         │      │
+│  │ - Featured destacadas   │      │ - Toggle activo/featured│      │
+│  └─────────────────────────┘      └─────────────────────────┘      │
+│           │                                │                        │
+│           └────────────┬───────────────────┘                        │
+│                        │                                            │
+│               ┌────────▼────────┐                                   │
+│               │   useToolsStack │  (React Query hook)               │
+│               └────────┬────────┘                                   │
+│                        │                                            │
+├────────────────────────┼────────────────────────────────────────────┤
+│                        │          SUPABASE                          │
+│               ┌────────▼────────┐  ┌─────────────────┐              │
+│               │  tools_library  │  │  stack-assets   │              │
+│               │     (tabla)     │  │    (bucket)     │              │
+│               └─────────────────┘  └─────────────────┘              │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Cambios Necesarios
+## Paso 1: Crear Bucket `stack-assets` en Supabase
 
-### 1. Habilitar FedCM en la configuración
+### SQL para crear el bucket
 
-Añadir `use_fedcm_for_prompt: true` a las opciones de `initialize()`:
+```sql
+-- Crear bucket público para logos del stack
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('stack-assets', 'stack-assets', true);
 
-```typescript
-window.google.accounts.id.initialize({
-  client_id: GOOGLE_CLIENT_ID,
-  callback: handleCredentialResponse,
-  auto_select: false,
-  cancel_on_tap_outside: false,
-  context: 'signin',
-  itp_support: true,
-  use_fedcm_for_prompt: true,  // ← NUEVO: Habilitar FedCM
-});
+-- Política: Lectura pública
+CREATE POLICY "Public read stack assets"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'stack-assets');
+
+-- Política: Solo admins pueden subir
+CREATE POLICY "Admins can upload stack assets"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'stack-assets' 
+  AND has_role(auth.uid(), 'admin')
+);
+
+-- Política: Solo admins pueden actualizar
+CREATE POLICY "Admins can update stack assets"
+ON storage.objects FOR UPDATE
+USING (
+  bucket_id = 'stack-assets' 
+  AND has_role(auth.uid(), 'admin')
+);
+
+-- Política: Solo admins pueden eliminar
+CREATE POLICY "Admins can delete stack assets"
+ON storage.objects FOR DELETE
+USING (
+  bucket_id = 'stack-assets' 
+  AND has_role(auth.uid(), 'admin')
+);
 ```
 
-### 2. Simplificar el callback del prompt
+---
 
-Los métodos `isNotDisplayed()`, `isDismissedMoment()`, `isSkippedMoment()` no funcionarán con FedCM. Simplificamos la lógica:
+## Paso 2: Crear Tabla `tools_library`
 
-**Antes (código actual):**
-```typescript
-window.google.accounts.id.prompt((notification) => {
-  if (notification.isNotDisplayed()) {
-    // ... lógica compleja
-  }
-  if (notification.isDismissedMoment()) {
-    // ... lógica compleja
-  }
-  if (notification.isSkippedMoment()) {
-    // ... lógica compleja
-  }
-});
+### Esquema de la tabla
+
+| Campo | Tipo | Nullable | Default | Descripción |
+|-------|------|----------|---------|-------------|
+| id | uuid | No | gen_random_uuid() | Identificador único |
+| created_at | timestamptz | No | now() | Fecha de creación |
+| name | text | No | - | Nombre de la herramienta |
+| tagline | text | No | - | Descripción corta (max 60 chars) |
+| logo_url | text | Sí | null | URL del icono (en bucket stack-assets) |
+| website_url | text | No | - | URL del sitio (puede ser afiliado) |
+| category | text | No | - | Categoría (Frontend AI, Backend, etc) |
+| pricing_model | text | Sí | null | Modelo de precio (Free Tier, Paid, Open Source) |
+| is_featured | boolean | No | false | Destacar herramienta |
+| is_active | boolean | No | true | Visible en página pública |
+| display_order | numeric | No | 0 | Orden de visualización |
+
+### SQL para crear la tabla y políticas RLS
+
+```sql
+CREATE TABLE public.tools_library (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  name text NOT NULL,
+  tagline text NOT NULL,
+  logo_url text,
+  website_url text NOT NULL,
+  category text NOT NULL,
+  pricing_model text,
+  is_featured boolean NOT NULL DEFAULT false,
+  is_active boolean NOT NULL DEFAULT true,
+  display_order numeric NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+);
+
+-- Habilitar RLS
+ALTER TABLE public.tools_library ENABLE ROW LEVEL SECURITY;
+
+-- Lectura pública de herramientas activas
+CREATE POLICY "Public view active tools"
+ON public.tools_library FOR SELECT
+USING (is_active = true);
+
+-- Admins pueden ver todas (incluyendo inactivas)
+CREATE POLICY "Admins view all tools"
+ON public.tools_library FOR SELECT
+USING (has_role(auth.uid(), 'admin'));
+
+-- Solo admins pueden insertar
+CREATE POLICY "Admins can insert tools"
+ON public.tools_library FOR INSERT
+WITH CHECK (has_role(auth.uid(), 'admin'));
+
+-- Solo admins pueden actualizar
+CREATE POLICY "Admins can update tools"
+ON public.tools_library FOR UPDATE
+USING (has_role(auth.uid(), 'admin'));
+
+-- Solo admins pueden eliminar
+CREATE POLICY "Admins can delete tools"
+ON public.tools_library FOR DELETE
+USING (has_role(auth.uid(), 'admin'));
 ```
 
-**Después (compatible con FedCM):**
-```typescript
-window.google.accounts.id.prompt((notification) => {
-  // Con FedCM, solo podemos verificar si hubo un dismiss
-  // La lógica de "moments" ya no está disponible
-  if (notification.getDismissedReason?.() === 'credential_returned') {
-    // Éxito - el credential fue enviado al callback principal
-    return;
-  }
-  
-  // Para cualquier otro caso, marcamos como dismissed
-  // para no molestar al usuario en esta sesión
-  const dismissReason = notification.getDismissedReason?.();
-  if (dismissReason && dismissReason !== 'credential_returned') {
-    sessionStorage.setItem('oneTapDismissed', 'true');
-  }
-});
+### Datos iniciales
+
+```sql
+INSERT INTO public.tools_library (name, tagline, website_url, category, pricing_model, is_featured, display_order) VALUES
+  ('Lovable', 'Fullstack AI development', 'https://lovable.dev', 'Frontend AI', 'Free Tier', true, 0),
+  ('Supabase', 'Backend as a Service', 'https://supabase.com', 'Backend', 'Free Tier', true, 1),
+  ('Vercel', 'Deploy with zero config', 'https://vercel.com', 'Hosting', 'Free Tier', false, 2);
 ```
 
-### 3. Actualizar tipos TypeScript
+---
 
-Añadir el nuevo campo al tipo de configuración en `src/types/google.d.ts`:
+## Paso 3: Archivos a Crear
+
+### Estructura de archivos nuevos:
+
+```text
+src/
+├── pages/
+│   └── Stack.tsx                    # Página pública /stack
+├── hooks/
+│   └── useToolsStack.ts             # Hook React Query
+├── components/
+│   ├── stack/
+│   │   ├── ToolCard.tsx             # Tarjeta de herramienta
+│   │   └── ToolCardSkeleton.tsx     # Loading skeleton
+│   └── admin/
+│       ├── StackManager.tsx         # Gestor admin (como ShowcaseManager)
+│       └── StackForm.tsx            # Formulario crear/editar
+```
+
+---
+
+## Paso 4: Diseño de la Página Pública /stack
+
+### Layout
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  [Header]  Logo                              [Avatar Menu]      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                    The Vibe Stack                               │
+│      Las herramientas que usamos para construir productos       │
+│              escalables a velocidad récord.                     │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ [Todos] [Frontend AI] [Backend] [Hosting] [Design]      │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐               │
+│  │  CARD   │ │  CARD   │ │   CARD  │ │   CARD  │               │
+│  │ Featured│ │ Featured│ │         │ │         │               │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Componente ToolCard
+
+Diseño compacto estilo directorio SaaS:
+
+```text
+┌──────────────────────────────────────────────┐
+│  ┌──────┐                   [Frontend AI]    │  <- Badge categoría
+│  │ LOGO │    Lovable                         │
+│  │ 40px │    Fullstack AI development        │  <- Tagline (max 2 líneas)
+│  └──────┘                                    │
+│                              [Free Tier]     │  <- Badge pricing (verde si free)
+└──────────────────────────────────────────────┘
+   ^ Borde dorado/destacado si is_featured = true
+```
+
+### Categorías para filtros
+
+- Todos (default)
+- Frontend AI
+- Backend
+- Database
+- Hosting
+- Design
+- AI/ML
+
+---
+
+## Paso 5: Hook useToolsStack
 
 ```typescript
-export interface GoogleOneTapConfig {
-  // ... campos existentes
-  use_fedcm_for_prompt?: boolean;  // ← NUEVO
+// src/hooks/useToolsStack.ts
+
+export interface Tool {
+  id: string;
+  name: string;
+  tagline: string;
+  logo_url: string | null;
+  website_url: string;
+  category: string;
+  pricing_model: string | null;
+  is_featured: boolean;
+  is_active: boolean;
+  display_order: number;
+  created_at: string;
+}
+
+// Ordenar: is_featured primero, luego por display_order
+async function fetchTools(): Promise<Tool[]> {
+  const { data, error } = await supabase
+    .from('tools_library')
+    .select('*')
+    .eq('is_active', true)
+    .order('is_featured', { ascending: false })
+    .order('display_order', { ascending: true });
+  // ...
 }
 ```
 
 ---
 
-## Archivos a Modificar
+## Paso 6: Panel de Administración
 
-| Archivo | Cambio |
-|---------|--------|
-| `src/components/GoogleOneTap.tsx` | Añadir `use_fedcm_for_prompt: true`, simplificar callback |
-| `src/types/google.d.ts` | Añadir tipo `use_fedcm_for_prompt` |
+### Añadir ruta al sidebar (AdminSidebar.tsx)
+
+```typescript
+const menuItems = [
+  { title: 'Showcases', href: '/admin/showcase', icon: LayoutGrid },
+  { title: 'Stack', href: '/admin/stack', icon: Layers }, // NUEVO
+];
+```
+
+### Añadir ruta en Admin.tsx
+
+```typescript
+<Route path="stack" element={<StackManager />} />
+```
+
+### StackManager (similar a ShowcaseManager)
+
+Funcionalidades:
+- Lista con drag-and-drop para reordenar
+- Toggle para is_active y is_featured
+- Botones editar/eliminar
+- Modal de formulario para crear/editar
+
+### StackForm
+
+El formulario usará el bucket **`stack-assets`** para subir logos:
+
+```typescript
+const uploadLogo = async (file: File): Promise<string | null> => {
+  const timestamp = Date.now();
+  const ext = file.name.split('.').pop();
+  const fileName = `logo_${timestamp}.${ext}`;
+  
+  const { error } = await supabase.storage
+    .from('stack-assets')  // <-- Bucket dedicado
+    .upload(fileName, file, { upsert: true });
+
+  if (error) {
+    console.error('Upload error:', error);
+    return null;
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('stack-assets')
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+};
+```
+
+Campos del formulario:
+- Nombre de la herramienta (required)
+- Tagline (required)
+- Website URL (required)
+- Logo (file upload al bucket **stack-assets**)
+- Categoría (select con opciones predefinidas)
+- Modelo de precio (select: Free Tier, Paid, Open Source)
+- Featured (switch)
+- Activo (switch)
 
 ---
 
-## Comportamiento Esperado
+## Paso 7: Integración de Rutas
 
-| Escenario | Con FedCM |
-|-----------|-----------|
-| Usuario hace clic en cuenta | `callback` recibe el credential ✓ |
-| Usuario cierra el popup | `getDismissedReason()` retorna el motivo |
-| Navegador bloquea popup | Simplemente no se muestra, sin callback detallado |
+Modificar `App.tsx`:
+
+```typescript
+import Stack from './pages/Stack';
+
+// En Routes:
+<Route path="/stack" element={<Stack />} />
+```
 
 ---
 
-## Notas Importantes
+## Resumen de Archivos
 
-1. **FedCM requiere HTTPS** - Ya estamos en HTTPS, así que no hay problema
-2. **Compatibilidad** - FedCM tiene fallback automático en navegadores antiguos
-3. **El warning desaparecerá** - Al usar `use_fedcm_for_prompt: true` y eliminar los métodos deprecados
+| Archivo | Acción | Descripción |
+|---------|--------|-------------|
+| Migración SQL | Crear | Tabla tools_library + bucket stack-assets |
+| `src/pages/Stack.tsx` | **Crear** | Página pública del directorio |
+| `src/hooks/useToolsStack.ts` | **Crear** | Hook para fetching de herramientas |
+| `src/components/stack/ToolCard.tsx` | **Crear** | Tarjeta compacta de herramienta |
+| `src/components/stack/ToolCardSkeleton.tsx` | **Crear** | Skeleton de carga |
+| `src/components/admin/StackManager.tsx` | **Crear** | Gestor admin con drag-drop |
+| `src/components/admin/StackForm.tsx` | **Crear** | Formulario modal |
+| `src/components/admin/AdminSidebar.tsx` | Modificar | Añadir enlace "Stack" |
+| `src/pages/Admin.tsx` | Modificar | Añadir ruta /admin/stack |
+| `src/App.tsx` | Modificar | Añadir ruta /stack |
 
+---
+
+## Beneficios
+
+1. **Separación de recursos**: Bucket `stack-assets` dedicado para logos de herramientas
+2. **Consistencia**: Reutiliza patrones existentes (ShowcaseManager, RLS con has_role)
+3. **Monetización**: URLs pueden incluir links de afiliado
+4. **SEO/Branding**: Posiciona a Vibecoders como curador de herramientas
+5. **Escalable**: Fácil añadir nuevas herramientas desde el admin
+
+---
+
+## Notas Técnicas
+
+- Nuevo bucket `stack-assets` con políticas RLS restrictivas (solo admin puede subir/modificar)
+- Las políticas RLS siguen el mismo patrón que showcase_gallery usando `has_role()`
+- El hook seguirá el patrón de `useShowcase` con React Query
+- Drag-and-drop usa @dnd-kit ya instalado en el proyecto
+- Timestamp en nombres de archivo para evitar problemas de caché
