@@ -102,7 +102,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
           {/* Camera overlay with size recommendation */}
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
             <Camera className="h-6 w-6 text-white mb-1" />
-            <span className="text-xs text-white/80">Ratio 4:1 (1584×396px)</span>
+            <span className="text-xs text-white/80">Ratio Sugerido 4:1 (1584×396px)</span>
           </div>
           
           {/* Delete button - top right corner, only with banner */}
