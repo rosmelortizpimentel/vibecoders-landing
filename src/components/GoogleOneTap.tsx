@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { CredentialResponse, GoogleOneTapConfig } from '@/types/google';
+import type { CredentialResponse } from '@/types/google';
 
 // Google Client ID - mismo que usas para OAuth en Supabase
 const GOOGLE_CLIENT_ID = '787805030135-rm2nv0stobgiuivckbgo2jgoeq12caro.apps.googleusercontent.com';
@@ -14,6 +14,15 @@ const generateNonce = (): string => {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 };
 
+// Hashear nonce con SHA-256 (requerido para FedCM)
+const hashNonce = async (nonce: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(nonce);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
 interface GoogleOneTapProps {
   onSuccess?: () => void;
 }
@@ -23,14 +32,15 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
   const navigate = useNavigate();
   const initializedRef = useRef(false);
   const nonceRef = useRef<string>('');
+  const nonceHashRef = useRef<string>('');
 
   const handleCredentialResponse = useCallback(async (response: CredentialResponse) => {
     try {
-      // Usar el nonce que generamos al inicializar
+      // Usar el HASH del nonce para verificar con Supabase
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: response.credential,
-        nonce: nonceRef.current,
+        nonce: nonceHashRef.current,
       });
 
       if (error) {
@@ -51,7 +61,7 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
       return;
     }
 
-    const initializeOneTap = () => {
+    const initializeOneTap = async () => {
       if (!window.google?.accounts?.id) {
         console.warn('Google Identity Services not loaded');
         return;
@@ -60,8 +70,9 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
       // Marcar como inicializado para evitar múltiples inicializaciones
       initializedRef.current = true;
       
-      // Generar nonce único para esta sesión
+      // Generar nonce único y calcular su hash
       nonceRef.current = generateNonce();
+      nonceHashRef.current = await hashNonce(nonceRef.current);
 
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
@@ -71,7 +82,7 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
         context: 'signin',
         itp_support: true,
         use_fedcm_for_prompt: true,
-        nonce: nonceRef.current, // Pasar el nonce a Google
+        nonce: nonceRef.current, // Pasar nonce original a Google (Google lo hashea internamente)
       });
 
       window.google.accounts.id.prompt();
