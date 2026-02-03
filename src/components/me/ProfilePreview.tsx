@@ -128,7 +128,7 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
       {/* Banner + Avatar */}
       <div className="relative">
         {profile.banner_url ? (
-          <div className={`aspect-[16/5] w-full flex items-center bg-gray-50 ${bannerPositionClasses[bannerPosition]}`}>
+          <div className={`aspect-[4/1] w-full flex items-center bg-gray-50 ${bannerPositionClasses[bannerPosition]}`}>
             <img 
               src={profile.banner_url} 
               alt="Banner" 
@@ -136,7 +136,7 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
             />
           </div>
         ) : (
-          <div className="aspect-[16/5] w-full bg-gradient-to-r from-gray-100 to-gray-50" />
+          <div className="aspect-[4/1] w-full bg-gradient-to-r from-gray-100 to-gray-50" />
         )}
         
         {/* Avatar with dynamic position */}
