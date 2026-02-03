@@ -1,94 +1,41 @@
 
-# Plan: Reorganizar Header Autenticado
+# Plan: Corregir políticas RLS para tabla waitlist
 
-## Resumen
-Mover el link de "Mi Perfil" del menú desplegable al header principal como parte de la navegación central, agregar iconos a todos los links de navegación en desktop, y asegurar que Build Log sea visible para usuarios en la waitlist.
+## Diagnóstico
+El link "Build Log" no aparece porque la tabla `waitlist` tiene políticas RLS que **solo permiten acceso al rol `anon`** (usuarios no logueados), pero no al rol `authenticated` (usuarios logueados).
 
-## Cambios a realizar
+Cuando el usuario está autenticado:
+1. El hook `useWaitlistStatus` intenta consultar la tabla `waitlist`
+2. Supabase usa el rol `authenticated` 
+3. No existe política de SELECT para ese rol
+4. La consulta retorna vacío (o error silencioso)
+5. `isInWaitlist` queda en `false`
+6. El link "Build Log" no se muestra
 
-### 1. Actualizar navegación en AuthenticatedHeader.tsx
+## Solución
+Agregar una política RLS que permita a usuarios autenticados consultar su propio registro en la tabla `waitlist`.
 
-**Agregar "Mi Perfil" a la navegación central:**
-- Añadir un nuevo link al inicio del array `navLinks` con path `/me`, label `Mi Perfil` e icono `User`
+## Cambio a realizar
 
-**Mostrar iconos en desktop:**
-- Modificar el renderizado de los links de navegación en desktop para incluir los iconos (actualmente solo se muestran en móvil)
-- Los iconos serán: User para Mi Perfil, Rocket para Startups, Wrench para Herramientas, y Crown/Sparkles para Build Log
+### Migración SQL
+Crear una nueva política RLS que permita a usuarios autenticados leer registros de la tabla waitlist donde el email coincida con su email de autenticación.
 
-**Actualizar el dropdown del usuario:**
-- Remover la opción "Mi Perfil" del dropdown ya que ahora estará en la navegación principal
-- Mantener solo "Ver Perfil Público" y "Cerrar Sesión"
-
-**Cambiar icono de Build Log:**
-- Cambiar el icono de `Sparkles` a `Crown` con color amber para indicar contenido exclusivo/premium
-
----
-
-## Detalles Técnicos
-
-### Archivo: `src/components/AuthenticatedHeader.tsx`
-
-**1. Importar iconos adicionales:**
-```tsx
-import { User, Crown } from 'lucide-react';
+```sql
+CREATE POLICY "Allow authenticated users to check their own waitlist status"
+  ON public.waitlist
+  FOR SELECT
+  TO authenticated
+  USING (email = lower(auth.jwt() ->> 'email'));
 ```
 
-**2. Actualizar array navLinks (línea ~71-75):**
-```tsx
-const navLinks = [
-  { path: '/me', label: 'Mi Perfil', icon: User },
-  { path: '/startups', label: 'Startups', icon: Rocket },
-  { path: '/tools', label: 'Herramientas', icon: Wrench },
-  ...(isInWaitlist ? [{ path: '/buildlog', label: 'Build Log', icon: Crown, premium: true }] : []),
-];
-```
+Esta política:
+- Aplica al rol `authenticated` (usuarios logueados)
+- Permite operación SELECT
+- Solo permite leer filas donde el email de la waitlist coincide con el email del usuario autenticado
+- Usa `lower()` para asegurar comparación case-insensitive
 
-**3. Modificar navegación desktop (líneas ~93-110) para mostrar iconos:**
-```tsx
-{!isMobile && (
-  <nav className="flex items-center gap-6 sm:gap-8">
-    {navLinks.map((link) => {
-      const Icon = link.icon;
-      return (
-        <Link
-          key={link.path}
-          to={link.path}
-          className={cn(
-            "flex items-center gap-1.5 text-sm font-medium transition-colors",
-            isActive(link.path)
-              ? "text-[#3D5AFE] font-semibold"
-              : "text-gray-600 hover:text-[#3D5AFE]"
-          )}
-        >
-          <Icon className={cn(
-            "h-4 w-4",
-            link.premium && "text-amber-400"
-          )} />
-          {link.label}
-        </Link>
-      );
-    })}
-  </nav>
-)}
-```
-
-**4. Remover "Mi Perfil" del dropdown (líneas ~166-171):**
-Eliminar el DropdownMenuItem que enlaza a `/me/profile`, dejando solo:
-- Ver Perfil Público
-- Cerrar Sesión
-
----
-
-## Resultado Visual
-
-```text
-┌────────────────────────────────────────────────────────────────────────┐
-│ [Logo]    👤Mi Perfil  🚀Startups  🔧Herramientas  👑Build Log    [Avatar] │
-│                                                              ├──────────┤
-│                                                              │Ver Público│
-│                                                              │Cerrar Ses.│
-│                                                              └──────────┘
-└────────────────────────────────────────────────────────────────────────┘
-```
-
-El icono de Crown (👑) tendrá color amber para destacar el contenido premium/exclusivo.
+## Resultado esperado
+Después de aplicar la migración:
+1. Usuarios autenticados podrán consultar si su email está en la waitlist
+2. El hook `useWaitlistStatus` funcionará correctamente
+3. El link "Build Log" aparecerá en el menú para usuarios que estén en la waitlist
