@@ -97,16 +97,19 @@ export function MeLayout() {
         </div>
       </div>
 
-      {/* Mobile: Floating preview button + Sheet */}
+      {/* Mobile: Fixed footer preview button + Sheet */}
       {isMobile && (
         <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
           <SheetTrigger asChild>
-            <Button
-              size="lg"
-              className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50"
-            >
-              <Eye className="h-6 w-6" />
-            </Button>
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 px-4 py-3">
+              <Button
+                size="lg"
+                className="w-full bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white"
+              >
+                <Eye className="h-5 w-5 mr-2" />
+                Vista Previa
+              </Button>
+            </div>
           </SheetTrigger>
           <SheetContent side="bottom" className="h-[90vh] overflow-y-auto p-0">
             <SheetHeader className="sr-only">
