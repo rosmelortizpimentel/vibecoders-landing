@@ -79,9 +79,9 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
       <section className="space-y-2">
         <Label className="text-[#1C1C1C]">Banner</Label>
         
-        {/* Banner with hover overlays - responsive aspect ratio */}
+        {/* Banner with hover overlays - 4:1 aspect ratio (1584x396) */}
         <div 
-          className="relative aspect-[16/5] bg-muted rounded-lg overflow-hidden cursor-pointer group"
+          className="relative aspect-[4/1] bg-muted rounded-lg overflow-hidden cursor-pointer group"
           onClick={handleBannerClick}
         >
           {profile.banner_url ? (
