@@ -44,11 +44,11 @@ export default function BuildLog() {
             {/* Intro */}
             <div className="prose prose-lg max-w-none mb-12">
               <p className="text-xl text-gray-700 leading-relaxed">
-                Hace unos días les conté que estaba creando vibecoders.la usando herramientas de desarrollo asistido por IA 
+                Hace unos días les conté que estoy creando vibecoders.la usando herramientas de desarrollo asistido por IA 
                 (Vibe Coding). Pero más allá del hype, les prometí mostrar la parte que casi nadie muestra: la estrategia 
                 real detrás del lanzamiento. Porque hacer "vibe coding" no es solo promptear: es saber elegir las 
                 herramientas correctas, estructurar un flujo de trabajo profesional, y diseñar con intención para no parecer 
-                "una app hecha por IA". Este es el desglose técnico y de diseño que usé para construir vibecoders.la.
+                "una app hecha por IA". Este es el desglose técnico y de diseño que estoy usando para construir vibecoders.la.
               </p>
             </div>
 
