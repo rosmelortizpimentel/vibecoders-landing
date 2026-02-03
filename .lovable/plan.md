@@ -1,84 +1,99 @@
 
-# Plan: Servir OG Metadata desde el Mismo Dominio (Sin Redirect)
 
-## Problema Confirmado
+# Plan: Corregir Meta Tags OG para LinkedIn y WhatsApp
 
-El curl muestra que Vercel **sí hace el redirect** correctamente:
+## Diagnóstico Confirmado
+
+### Lo que está pasando:
+
+1. **La Edge Function funciona perfectamente** - Devuelve "Rosmel Ortiz" con todos los meta tags correctos
+
+2. **Vercel hace redirect 307 a `/api/og/:username`** - El proxy funciona
+
+3. **Pero LinkedIn/WhatsApp ven datos default** por dos razones:
+   - La `site_url` está configurada como `vibecoders.la` pero tú usas `building.vibecoders.la`
+   - LinkedIn puede estar leyendo el `index.html` antes de seguir el redirect
+
+### Evidencia en la imagen de Facebook Debug:
 ```
-HTTP/1.1 307 Temporary Redirect
-Location: https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=rosmelortiz
+URL canónica: https://building.vibecoders.la/api/og/rosmelortiz
+              https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=rosmelortiz (hace 25 minutos)
 ```
-
-Pero **LinkedIn no sigue redirects a dominios externos** (de `building.vibecoders.la` a `supabase.co`), lo que causa el error 500.
-
-Tu screenshot confirma que la Edge Function funciona perfectamente - el problema es solo el redirect cross-domain.
+Facebook está cacheando la versión de hace 25 minutos, antes de que el proxy funcionara.
 
 ---
 
-## Solución: Vercel Serverless Function como Proxy
+## Solución en 3 Partes
 
-Crear una función en Vercel que:
-1. Reciba la petición del bot
-2. Haga fetch internamente a la Edge Function de Supabase
-3. Devuelva el HTML directamente (sin redirect)
+### Parte 1: Cambiar de Redirect a Rewrite Interno
+
+El problema con `redirect 307` es que LinkedIn puede parsear el HTML original antes de seguir el redirect.
+
+Cambiar en `vercel.json`:
+- De `redirects` → `rewrites` (para rutas que van al proxy interno)
+
+Esto hace que Vercel sirva el HTML del proxy directamente sin que el bot vea ningún redirect.
 
 ```text
-ANTES (redirect que LinkedIn no sigue):
-LinkedIn → Vercel (307) → ❌ LinkedIn no sigue
+ANTES (redirect):
+Bot → Vercel (307) → Bot sigue → /api/og/username → HTML
+                  ↓
+         Bot ve index.html primero (problema!)
 
-DESPUÉS (proxy interno):
-LinkedIn → Vercel → fetch(Supabase) → HTML directo → ✅ LinkedIn lee tags
+DESPUÉS (rewrite):
+Bot → Vercel → /api/og/username → HTML directo
+         (sin redirect visible para el bot)
 ```
+
+### Parte 2: Actualizar site_url para Building
+
+Actualizar la base de datos para que `site_url` sea `https://building.vibecoders.la` en lugar de `https://vibecoders.la`.
+
+Esto asegura que:
+- `og:url` sea consistente con la URL real
+- `canonical` apunte al dominio correcto
+- Los redirects de JavaScript vayan al lugar correcto
+
+**Nota:** Este cambio afecta a todo el sitio. Si necesitas mantener ambos dominios, habría que agregar lógica para detectar el dominio del request.
+
+### Parte 3: Forzar Invalidación de Cache
+
+Una vez aplicados los cambios, usar las herramientas de debug de cada plataforma para forzar re-scraping:
+- LinkedIn Post Inspector: hacer clic en "Inspect" de nuevo
+- Facebook Debug: hacer clic en "Scrape Again"
 
 ---
 
-## Archivos a Crear/Modificar
+## Archivos a Modificar
 
-### 1. Nueva carpeta y función: `api/og/[username].ts`
+| Archivo | Cambio |
+|---------|--------|
+| `vercel.json` | Cambiar `redirects` por `rewrites` para bots (mismo dominio) |
 
-Vercel detecta automáticamente funciones en la carpeta `api/`. Esta función:
-- Extrae el username del path
-- Hace fetch a la Edge Function de Supabase
-- Devuelve el HTML con los headers correctos
+## Base de Datos
 
-```typescript
-// api/og/[username].ts
-export default async function handler(req, res) {
-  const { username } = req.query;
-  
-  const response = await fetch(
-    `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=${username}`
-  );
-  
-  const html = await response.text();
-  
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
-  res.status(200).send(html);
-}
-```
+| Tabla | Key | Valor Nuevo |
+|-------|-----|-------------|
+| `general_settings` | `site_url` | `https://building.vibecoders.la` |
 
-### 2. Actualizar `vercel.json`
+---
 
-Cambiar el destino del redirect para que apunte a la función local en vez de Supabase:
+## Cambio Específico en vercel.json
 
 ```json
 {
-  "redirects": [
+  "rewrites": [
     {
       "source": "/@:username",
       "has": [
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(LinkedInBot|facebookexternalhit|Twitterbot|WhatsApp|...).*"
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|...).*"
         }
       ],
-      "destination": "/api/og/:username",
-      "permanent": false
-    }
-  ],
-  "rewrites": [
+      "destination": "/api/og/:username"
+    },
     {
       "source": "/(.*)",
       "destination": "/"
@@ -87,58 +102,24 @@ Cambiar el destino del redirect para que apunte a la función local en vez de Su
 }
 ```
 
+**Importante:** Cuando usamos `rewrites` en lugar de `redirects`, las reglas con `has` (condiciones) deben evaluarse primero, antes del catch-all `/(.*) → /`.
+
 ---
 
-## Flujo Después del Cambio
+## Verificación Post-Implementación
 
-```text
-1. LinkedIn solicita: https://building.vibecoders.la/@rosmelortiz
-2. Vercel detecta User-Agent de LinkedIn
-3. Vercel redirige internamente a /api/og/rosmelortiz (mismo dominio)
-4. La función hace fetch a Supabase Edge Function
-5. Devuelve HTML directamente a LinkedIn
-6. LinkedIn lee todos los meta tags correctamente
+1. Probar con curl:
+```bash
+curl -A "LinkedInBot" "https://building.vibecoders.la/@rosmelortiz" | head -20
 ```
+Debería mostrar directamente el HTML con "Rosmel Ortiz" sin ningún redirect
+
+2. LinkedIn Post Inspector - hacer nuevo Inspect
+3. Facebook Debug Tool - hacer "Scrape Again"
 
 ---
 
-## Ventajas de Esta Solución
+## Consideración Alternativa: Soporte Multi-Dominio
 
-| Aspecto | Beneficio |
-|---------|-----------|
-| Mismo dominio | LinkedIn no ve redirect cross-domain |
-| Edge Function intacta | No duplicamos lógica, solo proxy |
-| Cache | Podemos cachear en Vercel Edge |
-| Escalable | Funciona para todos los bots sin cambios |
+Si necesitas soportar tanto `vibecoders.la` como `building.vibecoders.la`, la Edge Function tendría que detectar el dominio del request y generar URLs acordes. Esto requeriría pasar el dominio como parámetro desde el proxy de Vercel.
 
----
-
-## Consideraciones Técnicas
-
-1. **La Edge Function es pública** (`verify_jwt = false`) - No hay problema de autenticación
-2. **Latencia mínima** - Es un fetch simple, ~100-200ms adicionales
-3. **Sin secretos expuestos** - La función solo hace un fetch público
-
----
-
-## Archivos Finales
-
-| Archivo | Acción |
-|---------|--------|
-| `api/og/[username].ts` | Crear - Serverless function proxy |
-| `vercel.json` | Modificar - Apuntar a `/api/og/:username` |
-
----
-
-## Prueba Post-Implementación
-
-1. Publicar cambios
-2. Probar con curl:
-   ```bash
-   curl -I -A "LinkedInBot" "https://building.vibecoders.la/@rosmelortiz"
-   ```
-   - Debería mostrar `200 OK` con `Content-Type: text/html`
-   
-3. LinkedIn Post Inspector:
-   - Ya no debería mostrar 500
-   - Debería leer "Rosmel Ortiz" y la imagen OG
