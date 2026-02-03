@@ -264,6 +264,7 @@ export type Database = {
           lovable: string | null
           member_number: number
           name: string | null
+          og_image_url: string | null
           primary_color: string | null
           show_pioneer_badge: boolean
           tagline: string | null
@@ -294,6 +295,7 @@ export type Database = {
           lovable?: string | null
           member_number?: number
           name?: string | null
+          og_image_url?: string | null
           primary_color?: string | null
           show_pioneer_badge?: boolean
           tagline?: string | null
@@ -324,6 +326,7 @@ export type Database = {
           lovable?: string | null
           member_number?: number
           name?: string | null
+          og_image_url?: string | null
           primary_color?: string | null
           show_pioneer_badge?: boolean
           tagline?: string | null

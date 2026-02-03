@@ -68,7 +68,9 @@ const Me = () => {
               {activeTab === 'branding' && (
                 <BrandingTab 
                   profile={profile} 
-                  onUpdate={profileEditor.updateProfile} 
+                  onUpdate={profileEditor.updateProfile}
+                  onUploadOgImage={profileEditor.uploadOgImage}
+                  onDeleteOgImage={profileEditor.deleteOgImage}
                 />
               )}
             </div>

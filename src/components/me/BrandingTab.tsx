@@ -1,13 +1,16 @@
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { FontSelector } from './FontSelector';
 import { ColorPicker } from './ColorPicker';
+import { OgImageSection } from './OgImageSection';
 
 interface BrandingTabProps {
   profile: ProfileData | null;
   onUpdate: (updates: Partial<ProfileData>) => void;
+  onUploadOgImage: (file: File) => Promise<string>;
+  onDeleteOgImage: () => void;
 }
 
-export function BrandingTab({ profile, onUpdate }: BrandingTabProps) {
+export function BrandingTab({ profile, onUpdate, onUploadOgImage, onDeleteOgImage }: BrandingTabProps) {
   if (!profile) return null;
 
   return (
@@ -42,6 +45,15 @@ export function BrandingTab({ profile, onUpdate }: BrandingTabProps) {
           onChange={color => onUpdate({ accent_color: color })}
         />
       </section>
+
+      <hr className="border-gray-200" />
+
+      {/* OG Image for Social Media */}
+      <OgImageSection
+        profile={profile}
+        onUpload={onUploadOgImage}
+        onDelete={onDeleteOgImage}
+      />
     </div>
   );
 }
