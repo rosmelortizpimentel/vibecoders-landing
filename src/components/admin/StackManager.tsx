@@ -129,7 +129,7 @@ function SortableToolRow({
       </div>
 
       {/* Category Badge */}
-      <Badge variant="outline" className="text-xs flex-shrink-0">
+      <Badge variant="secondary" className="text-xs flex-shrink-0 bg-gray-100 text-gray-700">
         {tool.category}
       </Badge>
 
