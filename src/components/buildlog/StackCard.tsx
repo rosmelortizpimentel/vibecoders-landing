@@ -1,0 +1,28 @@
+import { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface StackCardProps {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  className?: string;
+}
+
+export function StackCard({ icon: Icon, title, description, className }: StackCardProps) {
+  return (
+    <div 
+      className={cn(
+        "bg-white border border-gray-200 rounded-xl p-6 hover:border-primary/30 hover:shadow-md transition-all",
+        className
+      )}
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <h4 className="font-semibold text-gray-900">{title}</h4>
+      </div>
+      <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
+    </div>
+  );
+}

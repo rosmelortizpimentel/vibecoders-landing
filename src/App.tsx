@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import Me from "./pages/Me";
+import BuildLog from "./pages/BuildLog";
 import Admin from "./pages/Admin";
 import PublicProfile from "./pages/PublicProfile";
 import Privacy from "./pages/Privacy";
@@ -38,6 +39,7 @@ const App = () => (
           <Route element={<AuthenticatedLayout />}>
             <Route path="/startups" element={<Projects />} />
             <Route path="/tools" element={<Tools />} />
+            <Route path="/buildlog" element={<BuildLog />} />
             <Route path="/me" element={<Navigate to="/me/profile" replace />} />
             <Route path="/me/profile" element={<Me />} />
             <Route path="/me/apps" element={<Me />} />
