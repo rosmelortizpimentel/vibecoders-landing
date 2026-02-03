@@ -132,12 +132,17 @@ function generateHtmlResponse(
   <link rel="icon" type="image/png" href="${escapeHtml(favicon)}">
   
   <!-- Open Graph / Facebook -->
+  <meta property="og:locale" content="es_LA">
   <meta property="og:type" content="profile">
   <meta property="og:url" content="${escapeHtml(canonicalUrl)}">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:image" content="${escapeHtml(image)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${escapeHtml(title)} - Vibecoders">
   <meta property="og:site_name" content="Vibecoders">
+  <meta property="og:logo" content="${escapeHtml(settings.site_url)}/images/vibecoders-logo.png">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
@@ -145,6 +150,7 @@ function generateHtmlResponse(
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
   <meta name="twitter:image" content="${escapeHtml(image)}">
+  <meta name="twitter:image:alt" content="${escapeHtml(title)} - Vibecoders">
   
   <!-- Canonical -->
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
