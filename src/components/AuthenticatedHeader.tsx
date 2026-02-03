@@ -1,5 +1,5 @@
+import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { ProfileData } from '@/hooks/useProfileEditor';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -8,8 +8,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { Separator } from '@/components/ui/separator';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
@@ -55,8 +64,14 @@ export function AuthenticatedHeader({
   const displayName = formatDisplayName(profile?.name);
   const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
   const { isAdmin } = useUserRole();
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleNavClick = () => {
+    setSheetOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-gray-100 bg-white">
@@ -70,106 +85,219 @@ export function AuthenticatedHeader({
           />
         </Link>
 
-        {/* Navigation - Center */}
-        <nav className="flex items-center gap-6 sm:gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={cn(
-                "text-sm font-medium transition-colors",
-                isActive(link.path)
-                  ? "text-[#3D5AFE] font-semibold"
-                  : "text-gray-600 hover:text-[#3D5AFE]"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Desktop Navigation - Center (hidden on mobile) */}
+        {!isMobile && (
+          <nav className="flex items-center gap-6 sm:gap-8">
+            {navLinks.map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={cn(
+                  "text-sm font-medium transition-colors",
+                  isActive(link.path)
+                    ? "text-[#3D5AFE] font-semibold"
+                    : "text-gray-600 hover:text-[#3D5AFE]"
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+        )}
         
-        {/* Right section: Admin + Save Status + User Menu */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Admin Link - Only visible for admins */}
-          {isAdmin && (
-            <Link
-              to="/admin"
-              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-[#3D5AFE] hover:bg-gray-50 rounded-lg transition-colors"
-            >
-              <Shield className="h-4 w-4" />
-              <span className="hidden sm:inline">Admin</span>
-            </Link>
-          )}
+        {/* Desktop Right section (hidden on mobile) */}
+        {!isMobile && (
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Admin Link - Only visible for admins */}
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-[#3D5AFE] hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <Shield className="h-4 w-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
+            )}
 
-          {/* Save status indicator - only shown when props are provided */}
-          {(isSaving !== undefined || lastSaved !== undefined || error !== undefined) && (
-            <div className="flex items-center gap-2 text-sm">
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                  <span className="text-gray-500 hidden sm:inline">Guardando...</span>
-                </>
-              ) : error ? (
-                <>
-                  <AlertCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-red-500 hidden sm:inline">Error</span>
-                </>
-              ) : lastSaved ? (
-                <>
-                  <Check className="h-4 w-4 text-[#3D5AFE]" />
-                  <span className="text-gray-500 hidden sm:inline">Guardado</span>
-                </>
-              ) : null}
-            </div>
-          )}
+            {/* Save status indicator - only shown when props are provided */}
+            {(isSaving !== undefined || lastSaved !== undefined || error !== undefined) && (
+              <div className="flex items-center gap-2 text-sm">
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                    <span className="text-gray-500 hidden sm:inline">Guardando...</span>
+                  </>
+                ) : error ? (
+                  <>
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                    <span className="text-red-500 hidden sm:inline">Error</span>
+                  </>
+                ) : lastSaved ? (
+                  <>
+                    <Check className="h-4 w-4 text-[#3D5AFE]" />
+                    <span className="text-gray-500 hidden sm:inline">Guardado</span>
+                  </>
+                ) : null}
+              </div>
+            )}
 
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3D5AFE]/20">
-                <Avatar className="h-8 w-8 border border-gray-200">
-                  <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
-                  <AvatarFallback className="text-xs bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
-                    {profile?.name?.charAt(0) || '?'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium text-[#1c1c1c] hidden sm:inline">
-                  {displayName}
-                </span>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-white border-gray-200 p-1 shadow-lg">
-              {/* Profile link */}
-              <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white">
-                <Link to="/me/profile" className="flex items-center gap-2 cursor-pointer">
-                  <span>Mi Perfil</span>
-                </Link>
-              </DropdownMenuItem>
-              {publicProfileUrl && (
+            {/* User Menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3D5AFE]/20">
+                  <Avatar className="h-8 w-8 border border-gray-200">
+                    <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
+                    <AvatarFallback className="text-xs bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
+                      {profile?.name?.charAt(0) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium text-[#1c1c1c] hidden sm:inline">
+                    {displayName}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-white border-gray-200 p-1 shadow-lg">
+                {/* Profile link */}
                 <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white">
-                  <a 
+                  <Link to="/me/profile" className="flex items-center gap-2 cursor-pointer">
+                    <span>Mi Perfil</span>
+                  </Link>
+                </DropdownMenuItem>
+                {publicProfileUrl && (
+                  <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white">
+                    <a 
+                      href={publicProfileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span>Ver Perfil Público</span>
+                    </a>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator className="bg-gray-200" />
+                <DropdownMenuItem 
+                  onClick={onSignOut}
+                  className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white cursor-pointer"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Cerrar Sesión</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+
+        {/* Mobile Menu Button (only on mobile) */}
+        {isMobile && (
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <button 
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3D5AFE]/20"
+                aria-label="Abrir menú"
+              >
+                <Menu className="h-6 w-6 text-gray-700" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] bg-white p-0">
+              <SheetHeader className="p-4 border-b border-gray-100">
+                <SheetTitle className="text-left text-lg font-semibold text-foreground">Menú</SheetTitle>
+              </SheetHeader>
+              
+              <nav className="flex flex-col p-4">
+                {/* Navigation Links */}
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={handleNavClick}
+                    className={cn(
+                      "text-lg py-3 px-2 rounded-lg transition-colors",
+                      isActive(link.path)
+                        ? "text-[#3D5AFE] font-semibold bg-[#3D5AFE]/5"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-[#3D5AFE]"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+
+                {/* Admin Link - Only visible for admins */}
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    onClick={handleNavClick}
+                    className={cn(
+                      "flex items-center gap-2 text-lg py-3 px-2 rounded-lg transition-colors",
+                      isActive('/admin')
+                        ? "text-[#3D5AFE] font-semibold bg-[#3D5AFE]/5"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-[#3D5AFE]"
+                    )}
+                  >
+                    <Shield className="h-5 w-5" />
+                    Admin
+                  </Link>
+                )}
+
+                <Separator className="my-4" />
+
+                {/* User Profile Section */}
+                <div className="flex items-center gap-3 p-2 mb-2">
+                  <Avatar className="h-10 w-10 border border-gray-200">
+                    <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
+                    <AvatarFallback className="text-sm bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
+                      {profile?.name?.charAt(0) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-foreground">{profile?.name || 'Usuario'}</span>
+                    {profile?.username && (
+                      <span className="text-xs text-muted-foreground">@{profile.username}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Profile Actions */}
+                <Link
+                  to="/me/profile"
+                  onClick={handleNavClick}
+                  className="text-lg py-3 px-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[#3D5AFE] transition-colors"
+                >
+                  Mi Perfil
+                </Link>
+
+                {publicProfileUrl && (
+                  <a
                     href={publicProfileUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={handleNavClick}
+                    className="flex items-center gap-2 text-lg py-3 px-2 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[#3D5AFE] transition-colors"
                   >
-                    <ExternalLink className="h-4 w-4" />
-                    <span>Ver Perfil Público</span>
+                    <ExternalLink className="h-5 w-5" />
+                    Ver Perfil Público
                   </a>
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator className="bg-gray-200" />
-              <DropdownMenuItem 
-                onClick={onSignOut}
-                className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white cursor-pointer"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Cerrar Sesión</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                )}
+
+                <Separator className="my-4" />
+
+                {/* Sign Out */}
+                <button
+                  onClick={() => {
+                    handleNavClick();
+                    onSignOut();
+                  }}
+                  className="flex items-center gap-2 text-lg py-3 px-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors w-full text-left"
+                >
+                  <LogOut className="h-5 w-5" />
+                  Cerrar Sesión
+                </button>
+              </nav>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
     </header>
   );
