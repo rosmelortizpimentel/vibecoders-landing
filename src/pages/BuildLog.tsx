@@ -203,8 +203,20 @@ export default function BuildLog() {
                 </ProTipCallout>
                 
                 <ProTipCallout variant="info" title="Regla #2: Fuentes con personalidad">
-                  Nunca uses la fuente por defecto. Elegí una fuente variable personalizada (Camera Plain) que 
-                  le da identidad única a la marca. Una tipografía distintiva separa tu proyecto del resto.
+                  <p>
+                    Nunca uses la fuente por defecto. Elegí una fuente variable personalizada (Camera Plain) que 
+                    le da identidad única a la marca. Una tipografía distintiva separa tu proyecto del resto. 
+                    Explora opciones en{' '}
+                    <a 
+                      href="https://fonts.google.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      Google Fonts
+                      <ExternalLink className="h-3 w-3" />
+                    </a>.
+                  </p>
                 </ProTipCallout>
                 
                 <ProTipCallout variant="success" title='Regla #3: Robar como un artista (Branding)'>
