@@ -36,7 +36,7 @@ const App = () => (
           
           {/* Authenticated routes with shared layout (persistent header/footer) */}
           <Route element={<AuthenticatedLayout />}>
-            <Route path="/projects" element={<Projects />} />
+            <Route path="/startups" element={<Projects />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/me" element={<Navigate to="/me/profile" replace />} />
             <Route path="/me/profile" element={<Me />} />
@@ -45,7 +45,8 @@ const App = () => (
           </Route>
           
           {/* Legacy redirects */}
-          <Route path="/inspiration" element={<Navigate to="/projects" replace />} />
+          <Route path="/inspiration" element={<Navigate to="/startups" replace />} />
+          <Route path="/projects" element={<Navigate to="/startups" replace />} />
           <Route path="/stack" element={<Navigate to="/tools" replace />} />
           
           {/* Public profile route - captures /@username, validated in component */}

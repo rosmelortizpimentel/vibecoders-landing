@@ -49,7 +49,7 @@ function formatDisplayName(name: string | null | undefined): string {
 }
 
 const navLinks = [
-  { path: '/projects', label: 'Proyectos' },
+  { path: '/startups', label: 'Startups' },
   { path: '/tools', label: 'Herramientas' },
 ];
 
