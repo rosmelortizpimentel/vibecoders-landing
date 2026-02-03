@@ -13,6 +13,7 @@ import Terms from "./pages/Terms";
 import Projects from "./pages/Projects";
 import Tools from "./pages/Tools";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
+import { AuthenticatedLayout } from "./layouts/AuthenticatedLayout";
 
 const queryClient = new QueryClient();
 
@@ -24,26 +25,32 @@ const App = () => (
       <InAppBrowserWarning />
       <BrowserRouter>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Index />} />
           <Route path="/profile" element={<Profile />} />
-          {/* Me dashboard routes with sub-paths */}
-          <Route path="/me" element={<Navigate to="/me/profile" replace />} />
-          <Route path="/me/profile" element={<Me />} />
-          <Route path="/me/apps" element={<Me />} />
-          <Route path="/me/branding" element={<Me />} />
-          {/* Admin routes - protected by Admin component */}
-          <Route path="/admin/*" element={<Admin />} />
-          {/* Legal pages - must be before /:handle to avoid conflicts */}
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
-          {/* Projects Gallery (antes /inspiration) */}
-          <Route path="/projects" element={<Projects />} />
+          
+          {/* Admin routes - protected by Admin component */}
+          <Route path="/admin/*" element={<Admin />} />
+          
+          {/* Authenticated routes with shared layout (persistent header/footer) */}
+          <Route element={<AuthenticatedLayout />}>
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/tools" element={<Tools />} />
+            <Route path="/me" element={<Navigate to="/me/profile" replace />} />
+            <Route path="/me/profile" element={<Me />} />
+            <Route path="/me/apps" element={<Me />} />
+            <Route path="/me/branding" element={<Me />} />
+          </Route>
+          
+          {/* Legacy redirects */}
           <Route path="/inspiration" element={<Navigate to="/projects" replace />} />
-          {/* Tools Directory (antes /stack) */}
-          <Route path="/tools" element={<Tools />} />
           <Route path="/stack" element={<Navigate to="/tools" replace />} />
+          
           {/* Public profile route - captures /@username, validated in component */}
           <Route path="/:handle" element={<PublicProfile />} />
+          
           {/* Redirect all unknown routes to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
