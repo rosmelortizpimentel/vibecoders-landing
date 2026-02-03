@@ -31,11 +31,6 @@ export interface CredentialResponse {
 }
 
 export interface PromptNotification {
-  isNotDisplayed: () => boolean;
-  isSkippedMoment: () => boolean;
-  isDismissedMoment: () => boolean;
-  getNotDisplayedReason: () => string;
-  getSkippedReason: () => string;
-  getDismissedReason: () => string;
   getMomentType: () => string;
+  getDismissedReason: () => string;
 }
