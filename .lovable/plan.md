@@ -1,39 +1,79 @@
 
-
-# Plan: Actualizar Google Client ID para One Tap
+# Plan: Corregir Google One Tap con FedCM y Nonce Hasheado
 
 ## Problema
-El componente `GoogleOneTap.tsx` tiene hardcodeado un Client ID incorrecto que no coincide con el configurado en Google Cloud Console.
+Cuando se usa `use_fedcm_for_prompt: true`, Google hashea el nonce con SHA-256 antes de incluirlo en el ID token. Actualmente estamos enviando el nonce original a Supabase, pero el token contiene el hash, causando "Nonces mismatch".
 
 ## Solución
-Actualizar el Client ID en línea 7 del archivo `src/components/GoogleOneTap.tsx`:
 
-```text
-Antes:  650134857892-uvvnuq2ivb55i7uoq48fqp4sddvngdph.apps.googleusercontent.com
-Después: 787805030135-rm2nv0stobgiuivckbgo2jgoeq12caro.apps.googleusercontent.com
+### Archivo a Modificar: `src/components/GoogleOneTap.tsx`
+
+**Cambios necesarios:**
+
+1. **Agregar función para hashear nonce con SHA-256**:
+```tsx
+const hashNonce = async (nonce: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(nonce);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+};
 ```
 
-## Archivo a Modificar
-
-### `src/components/GoogleOneTap.tsx`
-- Cambiar la constante `GOOGLE_CLIENT_ID` al valor correcto proporcionado por el usuario
-
-## Cambio Específico
+2. **Almacenar el hash además del nonce original**:
 ```tsx
-// Línea 7 - Antes
-const GOOGLE_CLIENT_ID = '650134857892-uvvnuq2ivb55i7uoq48fqp4sddvngdph.apps.googleusercontent.com';
+const nonceRef = useRef<string>('');
+const nonceHashRef = useRef<string>(''); // Nuevo: para el hash
+```
 
-// Línea 7 - Después
-const GOOGLE_CLIENT_ID = '787805030135-rm2nv0stobgiuivckbgo2jgoeq12caro.apps.googleusercontent.com';
+3. **Calcular y guardar el hash al inicializar**:
+```tsx
+// En initializeOneTap
+nonceRef.current = generateNonce();
+nonceHashRef.current = await hashNonce(nonceRef.current);
+```
+
+4. **Enviar el HASH a Supabase (no el nonce original)**:
+```tsx
+const { data, error } = await supabase.auth.signInWithIdToken({
+  provider: 'google',
+  token: response.credential,
+  nonce: nonceHashRef.current, // Enviar el hash, no el original
+});
+```
+
+5. **Hacer `initializeOneTap` async** para poder usar await en el hash
+
+## Flujo Corregido
+
+```text
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│   Frontend      │      │   Google        │      │   Supabase      │
+└────────┬────────┘      └────────┬────────┘      └────────┬────────┘
+         │                        │                        │
+         │ 1. Generar nonce       │                        │
+         │    "abc123"            │                        │
+         │                        │                        │
+         │ 2. Calcular hash       │                        │
+         │    SHA-256("abc123")   │                        │
+         │    = "def456..."       │                        │
+         │                        │                        │
+         │ 3. Enviar nonce ───────▶                        │
+         │    original "abc123"   │                        │
+         │                        │                        │
+         │◀── 4. ID Token ────────│                        │
+         │    (contiene hash      │                        │
+         │     "def456...")       │                        │
+         │                        │                        │
+         │ 5. Enviar token + hash ─────────────────────────▶
+         │    nonce: "def456..."  │                        │
+         │                        │                        │
+         │◀───────────────────────────── 6. OK ────────────│
+         │                        │                        │
 ```
 
 ## Resultado Esperado
-Una vez actualizado, el popup automático de Google One Tap debería funcionar correctamente porque:
-1. El Client ID coincidirá con la configuración de Google Cloud Console
-2. Los dominios autorizados ya están configurados correctamente (vibecoders.la, building.vibecoders.la, etc.)
-
-## Verificación Post-Implementación
-1. Cerrar sesión si estás logueado
-2. Ir a la página principal (`/`)
-3. El popup de Google One Tap debería aparecer sin error 401
-
+El login con Google One Tap funcionará correctamente porque:
+- El hash que enviamos a Supabase coincidirá con el hash incluido en el ID token de Google
+- Se elimina el error "Nonces mismatch"
