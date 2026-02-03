@@ -14,14 +14,8 @@ const generateNonce = (): string => {
   return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
 };
 
-// Hashear nonce con SHA-256 (requerido para FedCM)
-const hashNonce = async (nonce: string): Promise<string> => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(nonce);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-};
+// Nota: con FedCM, Google incluye el *hash* del nonce en el id_token.
+// Supabase espera que le pasemos el nonce *crudo* y él mismo calcula/verifica el hash.
 
 interface GoogleOneTapProps {
   onSuccess?: () => void;
@@ -32,15 +26,13 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
   const navigate = useNavigate();
   const initializedRef = useRef(false);
   const nonceRef = useRef<string>('');
-  const nonceHashRef = useRef<string>('');
 
   const handleCredentialResponse = useCallback(async (response: CredentialResponse) => {
     try {
-      // Usar el HASH del nonce para verificar con Supabase
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: response.credential,
-        nonce: nonceHashRef.current,
+        nonce: nonceRef.current,
       });
 
       if (error) {
@@ -70,9 +62,8 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
       // Marcar como inicializado para evitar múltiples inicializaciones
       initializedRef.current = true;
       
-      // Generar nonce único y calcular su hash
+      // Generar nonce único
       nonceRef.current = generateNonce();
-      nonceHashRef.current = await hashNonce(nonceRef.current);
 
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
@@ -82,8 +73,11 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
         context: 'signin',
         itp_support: true,
         use_fedcm_for_prompt: true,
-        nonce: nonceRef.current, // Pasar nonce original a Google (Google lo hashea internamente)
-      });
+        // Chrome 145+: nonce debe ir dentro de `params`
+        params: {
+          nonce: nonceRef.current, // Google lo hashea internamente y lo inserta en el id_token
+        },
+      } as any);
 
       window.google.accounts.id.prompt();
     };

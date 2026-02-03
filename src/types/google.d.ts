@@ -22,7 +22,13 @@ export interface GoogleOneTapConfig {
   context?: 'signin' | 'signup' | 'use';
   itp_support?: boolean;
   use_fedcm_for_prompt?: boolean;
+  // Legacy top-level nonce (deprecated by Google; removal scheduled around Chrome 145)
   nonce?: string;
+  // New structure for FedCM / future Chrome versions
+  params?: {
+    nonce?: string;
+    [key: string]: unknown;
+  };
 }
 
 export interface CredentialResponse {
