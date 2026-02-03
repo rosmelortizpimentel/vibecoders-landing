@@ -89,7 +89,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-8 md:pt-16 overflow-hidden">
+    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 pt-8 md:pt-16 overflow-hidden bg-[#3D5AFE]">
       <UserMenu />
       {/* Top gradient overlay - white fade */}
       <div 
