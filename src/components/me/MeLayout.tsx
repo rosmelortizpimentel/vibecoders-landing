@@ -39,17 +39,9 @@ export function MeLayout() {
   
   const activeTab = getActiveTab();
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
+      {/* Header - always rendered to avoid flash */}
       <MeHeader 
         profile={profile}
         isSaving={isSaving}
@@ -58,44 +50,50 @@ export function MeLayout() {
         onSignOut={signOut}
       />
 
-      <div className="container px-3 sm:px-4 py-4 sm:py-6">
-        <div className="flex gap-4 sm:gap-6">
-          {/* Main content */}
-          <div className={isMobile ? 'w-full' : 'w-[60%]'}>
-            <MeTabs />
-            
-            <div className={`mt-4 sm:mt-6 ${isMobile ? 'pb-20' : ''}`}>
-              {activeTab === 'profile' && (
-                <ProfileTab 
-                  profile={profile} 
-                  onUpdate={profileEditor.updateProfile}
-                  onUploadAvatar={profileEditor.uploadAvatar}
-                  onUploadBanner={profileEditor.uploadBanner}
-                  onDeleteBanner={profileEditor.deleteBanner}
-                />
-              )}
-              {activeTab === 'apps' && (
-                <AppsTab appsHook={appsHook} />
-              )}
-              {activeTab === 'branding' && (
-                <BrandingTab 
-                  profile={profile} 
-                  onUpdate={profileEditor.updateProfile} 
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Preview sidebar - only on desktop */}
-          {!isMobile && (
-            <div className="w-[40%]">
-              <div className="sticky top-20">
-                <ProfilePreview profile={profile} apps={appsHook.apps} />
+      {loading ? (
+        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="container px-3 sm:px-4 py-4 sm:py-6">
+          <div className="flex gap-4 sm:gap-6">
+            {/* Main content */}
+            <div className={isMobile ? 'w-full' : 'w-[60%]'}>
+              <MeTabs />
+              
+              <div className={`mt-4 sm:mt-6 ${isMobile ? 'pb-20' : ''}`}>
+                {activeTab === 'profile' && (
+                  <ProfileTab 
+                    profile={profile} 
+                    onUpdate={profileEditor.updateProfile}
+                    onUploadAvatar={profileEditor.uploadAvatar}
+                    onUploadBanner={profileEditor.uploadBanner}
+                    onDeleteBanner={profileEditor.deleteBanner}
+                  />
+                )}
+                {activeTab === 'apps' && (
+                  <AppsTab appsHook={appsHook} />
+                )}
+                {activeTab === 'branding' && (
+                  <BrandingTab 
+                    profile={profile} 
+                    onUpdate={profileEditor.updateProfile} 
+                  />
+                )}
               </div>
             </div>
-          )}
+
+            {/* Preview sidebar - only on desktop */}
+            {!isMobile && (
+              <div className="w-[40%]">
+                <div className="sticky top-20">
+                  <ProfilePreview profile={profile} apps={appsHook.apps} />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile: Fixed footer preview button + Sheet */}
       {isMobile && (
