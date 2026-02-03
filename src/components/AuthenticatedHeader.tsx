@@ -59,7 +59,7 @@ export function AuthenticatedHeader({
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo - Left */}
         <Link to="/" className="flex items-center shrink-0">
@@ -139,15 +139,15 @@ export function AuthenticatedHeader({
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-[#1c1c1c] border-[#1c1c1c] p-1">
+            <DropdownMenuContent align="end" className="w-48 bg-white border-gray-200 p-1 shadow-lg">
               {/* Profile link */}
-              <DropdownMenuItem asChild className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white">
+              <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white">
                 <Link to="/me/profile" className="flex items-center gap-2 cursor-pointer">
                   <span>Mi Perfil</span>
                 </Link>
               </DropdownMenuItem>
               {publicProfileUrl && (
-                <DropdownMenuItem asChild className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white">
+                <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white">
                   <a 
                     href={publicProfileUrl}
                     target="_blank"
@@ -159,10 +159,10 @@ export function AuthenticatedHeader({
                   </a>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator className="bg-white/20" />
+              <DropdownMenuSeparator className="bg-gray-200" />
               <DropdownMenuItem 
                 onClick={onSignOut}
-                className="flex items-center gap-2 text-white hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer"
+                className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white cursor-pointer"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Cerrar Sesión</span>

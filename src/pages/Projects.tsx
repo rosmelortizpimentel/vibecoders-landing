@@ -2,7 +2,7 @@ import { Rocket } from 'lucide-react';
 import { Link, Navigate } from 'react-router-dom';
 import { AuthenticatedHeader } from '@/components/AuthenticatedHeader';
 import Footer from '@/components/Footer';
-import WaveDivider from '@/components/WaveDivider';
+
 import { ShowcaseCard } from '@/components/showcase/ShowcaseCard';
 import { ShowcaseCardSkeleton } from '@/components/showcase/ShowcaseCardSkeleton';
 import { useShowcase } from '@/hooks/useShowcase';
@@ -37,45 +37,25 @@ export default function Projects() {
         onSignOut={signOut}
       />
       
-      {/* Hero Section - Fondo Azul */}
-      <section className="bg-[#3D5AFE] pt-12 pb-16 md:pb-20">
+      {/* Hero Section - Fondo Blanco Limpio */}
+      <section className="bg-white pt-12 pb-8">
         <div className="container mx-auto px-4 md:px-6">
-          <header className="relative">
-            {/* Desktop: Button positioned absolute right */}
-            <div className="hidden md:block absolute right-0 top-1/2 -translate-y-1/2">
-              <Button
-                asChild
-                className="bg-white text-[#3D5AFE] hover:bg-white/90 rounded-full px-6 py-2 font-medium transition-all hover:shadow-lg"
-              >
-                <Link to="/me/profile">Quiero aparecer aquí</Link>
-              </Button>
-            </div>
-
-            {/* Centered text - BLANCO */}
-            <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                Hecho por Vibecoders
-              </h1>
-              <p className="text-lg text-white/80 max-w-2xl mx-auto">
-                Apps reales creadas por gente como tú. Inspírate y lanza la tuya.
-              </p>
-            </div>
-
-            {/* Mobile: Button stacked below */}
-            <div className="flex justify-center mt-6 md:hidden">
-              <Button
-                asChild
-                className="bg-white text-[#3D5AFE] hover:bg-white/90 rounded-full px-6 py-2 font-medium transition-all hover:shadow-lg"
-              >
-                <Link to="/me/profile">Quiero aparecer aquí</Link>
-              </Button>
-            </div>
+          <header className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-[#1c1c1c] mb-4">
+              Hecho por Vibecoders
+            </h1>
+            <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-8">
+              Apps reales creadas por gente como tú. Inspírate y lanza la tuya.
+            </p>
+            <Button
+              asChild
+              className="bg-[#3D5AFE] text-white hover:bg-[#3D5AFE]/90 rounded-full px-6 py-2 font-medium transition-all hover:shadow-lg"
+            >
+              <Link to="/me/profile">Quiero aparecer aquí</Link>
+            </Button>
           </header>
         </div>
       </section>
-
-      {/* Wave Divider */}
-      <WaveDivider fromColor="#3D5AFE" toColor="#F6F5F4" />
 
       {/* Main Content - Fondo Crema */}
       <main className="flex-1 bg-[#F6F5F4] pb-16">
