@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { CredentialResponse } from '@/types/google';
 
 // Google Client ID - mismo que usas para OAuth en Supabase
-const GOOGLE_CLIENT_ID = '650134857892-uvvnuq2ivb55i7uoq48fqp4sddvngdph.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '787805030135-rm2nv0stobgiuivckbgo2jgoeq12caro.apps.googleusercontent.com';
 
 interface GoogleOneTapProps {
   onSuccess?: () => void;
