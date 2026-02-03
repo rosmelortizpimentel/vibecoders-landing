@@ -246,7 +246,17 @@ export default function BuildLog() {
               <p className="text-gray-600 leading-relaxed">
                 Lovable es increíble para iterar rápido, pero tiene límites de uso. Mi estrategia: uso Lovable 
                 para el 80% del desarrollo inicial y las iteraciones de UI. Para cambios quirúrgicos o refactoring 
-                pesado, abro Cursor (un IDE con IA integrada) conectado al mismo repo. Así maximizo mis créditos 
+                pesado, abro{' '}
+                <a 
+                  href="https://antigravity.google/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  Antigravity
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                {' '}(un IDE con IA integrada) conectado al mismo repo. Así maximizo mis créditos 
                 de Lovable para lo que mejor hace: generar y diseñar rápido.
               </p>
             </section>
