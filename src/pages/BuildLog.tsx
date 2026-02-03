@@ -67,19 +67,49 @@ export default function BuildLog() {
                   logoSrc={lovableLogo}
                   logoAlt="Lovable"
                   title="Frontend & Generación"
-                  description="Lovable. Es la forma más rápida hoy en día de iniciar conectada a Git."
+                  description={
+                    <>
+                      <strong className="text-gray-900">Lovable.</strong>
+                      <br />
+                      Es la forma más rápida hoy en día de iniciar conectada a Git.
+                      <br />
+                      <a href="https://lovable.dev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 mt-2">
+                        lovable.dev <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </>
+                  }
                 />
                 <StackCard
                   logoSrc={supabaseLogo}
                   logoAlt="Supabase"
                   title="Backend"
-                  description="Supabase. Maneja la base de datos, el almacenamiento y la autenticación (Google Auth) en un solo lugar."
+                  description={
+                    <>
+                      <strong className="text-gray-900">Supabase.</strong>
+                      <br />
+                      Maneja la base de datos, el almacenamiento y la autenticación (Google Auth) en un solo lugar.
+                      <br />
+                      <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 mt-2">
+                        supabase.com <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </>
+                  }
                 />
                 <StackCard
                   logoSrc={vercelLogo}
                   logoAlt="Vercel"
                   title="Despliegue"
-                  description="Vercel. Para automatizar el pase a producción."
+                  description={
+                    <>
+                      <strong className="text-gray-900">Vercel.</strong>
+                      <br />
+                      Para automatizar el pase a producción.
+                      <br />
+                      <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 mt-2">
+                        vercel.com <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </>
+                  }
                 />
               </div>
             </section>
