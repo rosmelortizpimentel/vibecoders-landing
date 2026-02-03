@@ -1,164 +1,270 @@
 
-# Plan: Añadir Logo de App y Badge "Creador" al Showcase
+
+# Plan: Implementar Google One Tap Login con Supabase
 
 ## Resumen
 
-Este plan implementa dos mejoras visuales para las tarjetas de Showcase, transformándolas en un directorio profesional estilo Product Hunt:
-
-1. **Logo del proyecto** junto al título
-2. **Badge "Creador"** en el footer junto al nombre del autor
+Implementar Google One Tap Login para que usuarios no autenticados vean automáticamente el prompt de Google al entrar a la página de inicio, permitiendo iniciar sesión con un solo clic.
 
 ---
 
-## Cambios Requeridos
+## Cómo Funciona Google One Tap
 
-### 1. Base de Datos (Supabase)
-
-Añadir una nueva columna a la tabla `showcase_gallery`:
-
-```sql
-ALTER TABLE showcase_gallery
-ADD COLUMN project_logo_url text;
-```
-
-Esta columna es nullable, permitiendo que proyectos existentes funcionen sin logo.
-
----
-
-### 2. Componente ShowcaseCard.tsx
-
-**Estructura visual actualizada:**
+Google One Tap usa el SDK de **Google Identity Services (GIS)** para mostrar un prompt flotante que detecta automáticamente la cuenta de Google del usuario. Al hacer clic, se genera un `id_token` que enviamos a Supabase para autenticar.
 
 ```text
 ┌─────────────────────────────────────────────────────────────────┐
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              THUMBNAIL (16:9)                           │    │
-│  │              object-cover, sin distorsión               │    │
-│  └─────────────────────────────────────────────────────────┘    │
-├─────────────────────────────────────────────────────────────────┤
-│  [Logo]  Título del Proyecto                                    │
-│   40x40  Tagline del proyecto en una o dos líneas...            │
-├─────────────────────────────────────────────────────────────────┤
-│  [Avatar] Nombre del Autor [Creador]        [in] [X] [🌐]       │
+│  Landing Page (usuario no autenticado)                          │
+│                                                          ┌────┐ │
+│   [Logo Vibecoders]                                      │ G  │ │
+│                                                          │One │ │
+│   Tu headline...                                         │Tap │ │
+│                                                          └────┘ │
+│   [Formulario waitlist]                                         │
+│                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-**Cambios en el Body (sección del título):**
+---
 
-- Layout: `flex items-start gap-3`
-- Logo a la izquierda:
-  - Tamaño: `w-10 h-10` (40px)
-  - Estilo: `rounded-lg`, `object-cover`, borde sutil
-  - Si no hay logo: No mostrar nada (el título ocupa todo el ancho)
-- Título y tagline a la derecha en un contenedor flex-1
+## Archivos a Crear/Modificar
 
-**Cambios en el Footer (badge Creador):**
-
-- Añadir Badge después del nombre del autor
-- Estilos del badge:
-  - `text-[10px]` o `text-xs`
-  - `bg-gray-100`
-  - `text-gray-500`
-  - `rounded-full`
-  - `px-2 py-0.5`
+| Archivo | Acción | Descripción |
+|---------|--------|-------------|
+| `index.html` | Modificar | Añadir script de Google Identity Services |
+| `src/components/GoogleOneTap.tsx` | **Crear** | Componente que inicializa y muestra One Tap |
+| `src/hooks/useAuth.ts` | Modificar | Añadir función `signInWithIdToken` |
+| `src/pages/Index.tsx` | Modificar | Renderizar `<GoogleOneTap />` |
 
 ---
 
-### 3. Hook useShowcase.ts
+## Cambios Detallados
 
-Añadir `project_logo_url` a la interface `ShowcaseProject`:
+### 1. index.html - Añadir Script de Google
+
+```html
+<head>
+  ...
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+</head>
+```
+
+### 2. src/components/GoogleOneTap.tsx - Nuevo Componente
+
+Este componente:
+- Solo se renderiza si **no hay usuario autenticado** y **no está cargando**
+- Inicializa Google One Tap con el Client ID de Google
+- Recibe el `id_token` del callback y lo envía a Supabase
+- Maneja el cierre manual del popup (no vuelve a mostrarlo en esa sesión)
 
 ```typescript
-export interface ShowcaseProject {
-  // ... campos existentes
-  project_logo_url: string | null;  // NUEVO
+// Estructura del componente
+interface GoogleOneTapProps {
+  onSuccess?: () => void;
+}
+
+const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
+  const { user, loading, signInWithIdToken } = useAuth();
+  
+  useEffect(() => {
+    // No mostrar si: cargando, ya autenticado, o ya cerró el popup
+    if (loading || user || sessionStorage.getItem('oneTapDismissed')) return;
+    
+    // Esperar a que el script de Google esté listo
+    const initializeOneTap = () => {
+      window.google?.accounts.id.initialize({
+        client_id: 'TU_GOOGLE_CLIENT_ID',
+        callback: handleCredentialResponse,
+        cancel_on_tap_outside: false,
+      });
+      
+      window.google?.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Usuario cerró o no se mostró
+        }
+        if (notification.getDismissedReason() === 'credential_returned') {
+          // ¡Éxito! Token enviado
+        }
+      });
+    };
+    
+    // Inicializar cuando el script esté cargado
+    if (window.google) {
+      initializeOneTap();
+    } else {
+      window.addEventListener('load', initializeOneTap);
+    }
+  }, [user, loading]);
+  
+  const handleCredentialResponse = async (response: { credential: string }) => {
+    try {
+      await signInWithIdToken(response.credential);
+      onSuccess?.();
+    } catch (error) {
+      console.error('Error signing in with One Tap:', error);
+    }
+  };
+  
+  return null; // No renderiza UI, Google lo maneja
+};
+```
+
+### 3. src/hooks/useAuth.ts - Añadir signInWithIdToken
+
+Supabase soporta autenticación con `id_token` de Google directamente:
+
+```typescript
+const signInWithIdToken = async (idToken: string) => {
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: 'google',
+    token: idToken,
+  });
+  
+  if (error) {
+    console.error('Error signing in with ID token:', error);
+    throw error;
+  }
+  
+  return data;
+};
+
+return {
+  // ... existentes
+  signInWithIdToken,
+};
+```
+
+### 4. src/pages/Index.tsx - Renderizar One Tap
+
+```tsx
+import GoogleOneTap from '@/components/GoogleOneTap';
+
+const Index = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  
+  // ... lógica existente de redirección
+  
+  return (
+    <div className="min-h-screen bg-background">
+      {/* One Tap - Solo para usuarios no autenticados */}
+      {!loading && !user && <GoogleOneTap />}
+      
+      <main>
+        <HeroSection />
+        ...
+      </main>
+    </div>
+  );
+};
+```
+
+---
+
+## Tipado TypeScript para Google Identity Services
+
+Crear declaración de tipos para el SDK de Google:
+
+```typescript
+// src/types/google.d.ts
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: GoogleOneTapConfig) => void;
+          prompt: (callback?: (notification: PromptNotification) => void) => void;
+          cancel: () => void;
+        };
+      };
+    };
+  }
+}
+
+interface GoogleOneTapConfig {
+  client_id: string;
+  callback: (response: CredentialResponse) => void;
+  auto_select?: boolean;
+  cancel_on_tap_outside?: boolean;
+  context?: 'signin' | 'signup' | 'use';
+}
+
+interface CredentialResponse {
+  credential: string;
+  select_by: string;
+}
+
+interface PromptNotification {
+  isNotDisplayed: () => boolean;
+  isSkippedMoment: () => boolean;
+  getDismissedReason: () => string;
 }
 ```
 
 ---
 
-### 4. Formulario Admin (ShowcaseForm.tsx)
+## Requisitos Previos (Configuración en Google Cloud)
 
-Añadir campo para subir el logo del proyecto:
+Para que One Tap funcione, debes configurar en Google Cloud Console:
 
-- Nuevo input de archivo junto al thumbnail
-- Mismo patrón de upload que thumbnail pero con dimensiones cuadradas
-- Preview de 40x40 con bordes redondeados
-
----
-
-### 5. ShowcaseManager.tsx
-
-Actualizar la interface del formulario para incluir `project_logo_url`.
+1. **Authorized JavaScript origins**: Añadir las URLs del sitio
+   - `https://vibecoders-la.lovable.app`
+   - `https://id-preview--d38deb66-1267-457d-ba0e-c6a4c8c7efcf.lovable.app`
+   
+2. **Client ID de Google**: El mismo usado para OAuth debe funcionar para One Tap
 
 ---
 
-## Archivos a Modificar
+## Manejo de Estados
 
-| Archivo | Cambios |
-|---------|---------|
-| **Migración SQL** | Añadir columna `project_logo_url` |
-| `src/hooks/useShowcase.ts` | Añadir `project_logo_url` al tipo |
-| `src/components/showcase/ShowcaseCard.tsx` | Logo + Badge "Creador" |
-| `src/components/admin/ShowcaseForm.tsx` | Campo para subir logo |
-| `src/components/admin/ShowcaseManager.tsx` | Incluir logo en el formulario |
+| Estado | Comportamiento |
+|--------|----------------|
+| `loading = true` | No mostrar One Tap |
+| `user != null` | No mostrar One Tap (ya autenticado) |
+| `sessionStorage['oneTapDismissed']` | No mostrar (cerró manualmente) |
+| Usuario hace clic en "X" | Guardar en sessionStorage para no molestar |
+| Éxito de autenticación | Redirigir a `/me` automáticamente |
 
 ---
 
-## Sección Técnica
+## Flujo Completo
 
-### Código del Badge "Creador"
-
-```tsx
-<Badge className="text-[10px] bg-gray-100 text-gray-500 rounded-full px-2 py-0.5 font-normal">
-  Creador
-</Badge>
+```text
+Usuario visita /
+       │
+       ▼
+ ¿Está autenticado?
+       │
+  ┌────┴────┐
+  │ SÍ      │ NO
+  ▼         ▼
+Redirect   ¿Ya cerró One Tap?
+a /me           │
+           ┌────┴────┐
+           │ SÍ      │ NO
+           ▼         ▼
+        (nada)   Mostrar One Tap
+                      │
+                      ▼
+              Usuario hace clic
+                      │
+                      ▼
+              Enviar id_token a Supabase
+                      │
+                      ▼
+              Autenticación exitosa
+                      │
+                      ▼
+              Redirect a /me
 ```
 
-### Código del Logo en el Body
+---
 
-```tsx
-<div className="p-4">
-  <a href={project.project_url} className="flex items-start gap-3 group/title">
-    {/* Logo */}
-    {project.project_logo_url && (
-      <img
-        src={project.project_logo_url}
-        alt={`Logo de ${project.project_title}`}
-        className="w-10 h-10 rounded-lg object-cover border border-stone-200 flex-shrink-0"
-      />
-    )}
-    
-    {/* Title & Tagline */}
-    <div className="flex-1 min-w-0">
-      <h3 className="text-lg font-semibold text-[#1c1c1c] group-hover/title:text-[#3D5AFE] line-clamp-1">
-        {project.project_title}
-      </h3>
-      <p className="mt-1 text-sm text-stone-600 line-clamp-2">
-        {project.project_tagline}
-      </p>
-    </div>
-  </a>
-</div>
-```
+## Beneficios
 
-### Responsividad
+1. **Fricción mínima**: Un solo clic para iniciar sesión
+2. **Conversión alta**: Usuarios ya logueados en Google ven su cuenta automáticamente
+3. **Sin formularios**: No necesita escribir email/password
+4. **Mantiene waitlist**: El formulario de waitlist sigue disponible para quienes prefieran esa opción
 
-La página ya es 100% responsive:
-- **Móvil**: 1 columna (`grid-cols-1`)
-- **Tablet**: 2 columnas (`md:grid-cols-2`)
-- **Desktop**: 3 columnas (`lg:grid-cols-3`)
-
-Los componentes internos usan Flexbox con `flex-wrap` y `min-w-0` para evitar desbordamientos en pantallas pequeñas.
-
-### Migración SQL
-
-```sql
--- Añadir columna para el logo del proyecto
-ALTER TABLE showcase_gallery
-ADD COLUMN project_logo_url text;
-
--- Comentario descriptivo
-COMMENT ON COLUMN showcase_gallery.project_logo_url IS 
-  'URL del logo cuadrado del proyecto (opcional)';
-```
