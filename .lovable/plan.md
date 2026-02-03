@@ -1,99 +1,94 @@
 
-# Plan: Mejoras al Build Log - Diseño Profesional
+# Plan: Reorganizar Header Autenticado
 
-## Resumen de Cambios Solicitados
+## Resumen
+Mover el link de "Mi Perfil" del menú desplegable al header principal como parte de la navegación central, agregar iconos a todos los links de navegación en desktop, y asegurar que Build Log sea visible para usuarios en la waitlist.
 
-1. **Eliminar la sección CTA** al final del artículo ("¿Quieres ver este stack en acción?")
-2. **Sidebar simplificado** - Mostrar solo el item activo (#01), sin los items bloqueados con candado
-3. **Renombrar sección** - "La Arquitectura y el Flujo de Trabajo" (sin "Git Flow")
-4. **Agregar imagen de arquitectura** - Incluir el diagrama compartido en esa sección
-5. **Colores profesionales** - Reemplazar colores "genéricos de IA" (amber, emerald, etc.) por azul (#3D5AFE) y grises
+## Cambios a realizar
 
----
+### 1. Actualizar navegación en AuthenticatedHeader.tsx
 
-## Cambios Técnicos
+**Agregar "Mi Perfil" a la navegación central:**
+- Añadir un nuevo link al inicio del array `navLinks` con path `/me`, label `Mi Perfil` e icono `User`
 
-### 1. BuildLog.tsx - Página Principal
+**Mostrar iconos en desktop:**
+- Modificar el renderizado de los links de navegación en desktop para incluir los iconos (actualmente solo se muestran en móvil)
+- Los iconos serán: User para Mi Perfil, Rocket para Startups, Wrench para Herramientas, y Crown/Sparkles para Build Log
 
-**Eliminar CTA Box (líneas 211-225)**
-- Remover completamente el bloque con gradiente morado y botón
+**Actualizar el dropdown del usuario:**
+- Remover la opción "Mi Perfil" del dropdown ya que ahora estará en la navegación principal
+- Mantener solo "Ver Perfil Público" y "Cerrar Sesión"
 
-**Actualizar título de sección (línea 89-90)**
-- Cambiar de: `"La Arquitectura y el Flujo de Trabajo (Git Flow)"`
-- A: `"La Arquitectura y el Flujo de Trabajo"`
-
-**Agregar imagen de arquitectura**
-- Copiar `Diagrama_de_arquitectura_actual.jpeg` a `src/assets/buildlog/`
-- Importar la imagen en el componente
-- Mostrarla después del texto introductorio de la sección, antes del timeline
+**Cambiar icono de Build Log:**
+- Cambiar el icono de `Sparkles` a `Crown` con color amber para indicar contenido exclusivo/premium
 
 ---
 
-### 2. BuildLogSidebar.tsx - Solo Item Activo
+## Detalles Técnicos
 
-**Simplificar lista de entradas**
-- Eliminar los items 02, 03, 04 (los bloqueados)
-- Mantener solo el item activo (#01)
+### Archivo: `src/components/AuthenticatedHeader.tsx`
 
-```text
-Antes:                          Después:
-├── 01. El Stack (activo)       ├── 01. El Stack (activo)
-├── 02. Filosofía (locked)
-├── 03. Workflow (locked)
-└── 04. Costos (locked)
+**1. Importar iconos adicionales:**
+```tsx
+import { User, Crown } from 'lucide-react';
 ```
 
+**2. Actualizar array navLinks (línea ~71-75):**
+```tsx
+const navLinks = [
+  { path: '/me', label: 'Mi Perfil', icon: User },
+  { path: '/startups', label: 'Startups', icon: Rocket },
+  { path: '/tools', label: 'Herramientas', icon: Wrench },
+  ...(isInWaitlist ? [{ path: '/buildlog', label: 'Build Log', icon: Crown, premium: true }] : []),
+];
+```
+
+**3. Modificar navegación desktop (líneas ~93-110) para mostrar iconos:**
+```tsx
+{!isMobile && (
+  <nav className="flex items-center gap-6 sm:gap-8">
+    {navLinks.map((link) => {
+      const Icon = link.icon;
+      return (
+        <Link
+          key={link.path}
+          to={link.path}
+          className={cn(
+            "flex items-center gap-1.5 text-sm font-medium transition-colors",
+            isActive(link.path)
+              ? "text-[#3D5AFE] font-semibold"
+              : "text-gray-600 hover:text-[#3D5AFE]"
+          )}
+        >
+          <Icon className={cn(
+            "h-4 w-4",
+            link.premium && "text-amber-400"
+          )} />
+          {link.label}
+        </Link>
+      );
+    })}
+  </nav>
+)}
+```
+
+**4. Remover "Mi Perfil" del dropdown (líneas ~166-171):**
+Eliminar el DropdownMenuItem que enlaza a `/me/profile`, dejando solo:
+- Ver Perfil Público
+- Cerrar Sesión
+
 ---
 
-### 3. ProTipCallout.tsx - Colores Profesionales
+## Resultado Visual
 
-**Reemplazar paleta de colores**
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│ [Logo]    👤Mi Perfil  🚀Startups  🔧Herramientas  👑Build Log    [Avatar] │
+│                                                              ├──────────┤
+│                                                              │Ver Público│
+│                                                              │Cerrar Ses.│
+│                                                              └──────────┘
+└────────────────────────────────────────────────────────────────────────┘
+```
 
-| Variante | Antes | Después |
-|----------|-------|---------|
-| warning | amber (naranja) | slate/gray oscuro |
-| info | blue | primary (azul #3D5AFE) |
-| success | emerald (verde) | slate con borde primary |
-
-**Nuevos estilos propuestos:**
-- `warning`: Borde gris oscuro (`border-l-gray-400`), fondo gris claro (`bg-gray-50`)
-- `info`: Borde azul primary (`border-l-primary`), fondo azul muy suave (`bg-primary/5`)
-- `success`: Borde azul primary (`border-l-primary`), fondo blanco (`bg-white`)
-
----
-
-### 4. WorkflowTimeline.tsx - Colores Profesionales
-
-**BranchDiagram - Reemplazar badges de colores**
-- `release`: De amber a gris (`bg-gray-100 text-gray-700`)
-- `main`: De emerald a azul primary (`bg-primary/10 text-primary`)
-
----
-
-### 5. StackCard.tsx - Refinamiento de Hover
-
-**Mejorar consistencia visual**
-- Mantener el hover con `border-primary/30` (ya usa el azul correcto)
-- El fondo del icono ya usa `bg-primary/5` (correcto)
-
----
-
-## Archivos a Modificar
-
-| Archivo | Acción |
-|---------|--------|
-| `src/assets/buildlog/architecture-diagram.jpeg` | Crear (copiar imagen del usuario) |
-| `src/pages/BuildLog.tsx` | Editar (quitar CTA, agregar imagen, cambiar título) |
-| `src/components/buildlog/BuildLogSidebar.tsx` | Editar (solo item activo) |
-| `src/components/buildlog/ProTipCallout.tsx` | Editar (colores profesionales) |
-| `src/components/buildlog/WorkflowTimeline.tsx` | Editar (colores de badges) |
-
----
-
-## Resultado Visual Esperado
-
-- Página más limpia sin CTA redundante
-- Sidebar minimalista con solo el contenido disponible
-- Diagrama de arquitectura visible e integrado en el artículo
-- Paleta de colores coherente: azul primary (#3D5AFE) y grises neutros
-- Aspecto profesional tipo Stripe/Linear, sin "señales de IA"
+El icono de Crown (👑) tendrá color amber para destacar el contenido premium/exclusivo.
