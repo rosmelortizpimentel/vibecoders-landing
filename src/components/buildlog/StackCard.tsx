@@ -6,7 +6,7 @@ interface StackCardProps {
   logoSrc?: string;
   logoAlt?: string;
   title: string;
-  description: string;
+  description: React.ReactNode;
   className?: string;
 }
 
@@ -32,7 +32,7 @@ export function StackCard({ icon: Icon, logoSrc, logoAlt, title, description, cl
         </div>
         <h4 className="font-semibold text-gray-900">{title}</h4>
       </div>
-      <p className="text-sm text-gray-600 leading-relaxed">{description}</p>
+      <div className="text-sm text-gray-600 leading-relaxed">{description}</div>
     </div>
   );
 }
