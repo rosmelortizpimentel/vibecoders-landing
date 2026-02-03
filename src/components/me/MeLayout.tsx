@@ -9,7 +9,7 @@ import { AppsTab } from './AppsTab';
 import { BrandingTab } from './BrandingTab';
 import { ProfilePreview } from './ProfilePreview';
 import { MeHeader } from './MeHeader';
-import { Loader2, Eye, X } from 'lucide-react';
+import { Loader2, Eye, X, Smartphone } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import {
@@ -109,14 +109,20 @@ export function MeLayout() {
               </Button>
             </div>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-            {/* Custom close button */}
-            <button
-              onClick={() => setPreviewOpen(false)}
-              className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50"
-            >
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
+          <SheetContent side="bottom" className="h-full max-h-[100dvh] overflow-y-auto p-0 [&>button]:hidden rounded-none">
+            {/* Header banner */}
+            <div className="sticky top-0 z-10 flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5 text-[#3D5AFE]" />
+                <span className="font-medium text-[#1c1c1c]">Vista Previa</span>
+              </div>
+              <button
+                onClick={() => setPreviewOpen(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-600" />
+              </button>
+            </div>
             <SheetHeader className="sr-only">
               <SheetTitle>Vista previa del perfil</SheetTitle>
             </SheetHeader>
