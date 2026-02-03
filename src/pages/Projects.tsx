@@ -1,19 +1,41 @@
 import { Rocket } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { PublicHeader } from '@/components/PublicHeader';
+import { Link, Navigate } from 'react-router-dom';
+import { AuthenticatedHeader } from '@/components/AuthenticatedHeader';
 import Footer from '@/components/Footer';
 import WaveDivider from '@/components/WaveDivider';
 import { ShowcaseCard } from '@/components/showcase/ShowcaseCard';
 import { ShowcaseCardSkeleton } from '@/components/showcase/ShowcaseCardSkeleton';
 import { useShowcase } from '@/hooks/useShowcase';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
-export default function Inspiration() {
+export default function Projects() {
   const { data: projects, isLoading, error } = useShowcase();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Redirect to home if not authenticated
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <PublicHeader />
+      <AuthenticatedHeader 
+        profile={profile || null}
+        onSignOut={signOut}
+      />
       
       {/* Hero Section - Fondo Azul */}
       <section className="bg-[#3D5AFE] pt-12 pb-16 md:pb-20">
