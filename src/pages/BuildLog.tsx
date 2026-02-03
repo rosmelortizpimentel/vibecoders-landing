@@ -219,7 +219,7 @@ export default function BuildLog() {
                   </p>
                 </ProTipCallout>
                 
-                <ProTipCallout variant="success" title='Regla #3: Robar como un artista (Branding)'>
+                <ProTipCallout variant="success" title='Regla #3: Copiar como un artista (Branding)'>
                   <p>
                     No reinventes la rueda del diseño. Usé{' '}
                     <a 
