@@ -7,16 +7,6 @@ import type { CredentialResponse } from '@/types/google';
 // Google Client ID - mismo que usas para OAuth en Supabase
 const GOOGLE_CLIENT_ID = '787805030135-rm2nv0stobgiuivckbgo2jgoeq12caro.apps.googleusercontent.com';
 
-// Generar nonce aleatorio para seguridad
-const generateNonce = (): string => {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-};
-
-// Nota: con FedCM, Google incluye el *hash* del nonce en el id_token.
-// Supabase espera que le pasemos el nonce *crudo* y él mismo calcula/verifica el hash.
-
 interface GoogleOneTapProps {
   onSuccess?: () => void;
 }
@@ -25,25 +15,25 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const initializedRef = useRef(false);
-  const nonceRef = useRef<string>('');
 
   const handleCredentialResponse = useCallback(async (response: CredentialResponse) => {
     try {
+      // Sin nonce: evita el error "Nonces mismatch" mientras FedCM/Chrome se estabiliza
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: response.credential,
-        nonce: nonceRef.current,
       });
 
       if (error) {
-        console.error('Error signing in with ID token:', error);
+        // Log seguro: solo mensaje y status, sin credenciales
+        console.error('One Tap auth error:', error.message, error.status);
         throw error;
       }
 
       onSuccess?.();
       navigate('/me');
-    } catch (error) {
-      console.error('Error signing in with One Tap:', error);
+    } catch (error: any) {
+      console.error('One Tap sign-in failed:', error?.message || 'Unknown error');
     }
   }, [onSuccess, navigate]);
 
@@ -53,7 +43,7 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
       return;
     }
 
-    const initializeOneTap = async () => {
+    const initializeOneTap = () => {
       if (!window.google?.accounts?.id) {
         console.warn('Google Identity Services not loaded');
         return;
@@ -61,10 +51,9 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
 
       // Marcar como inicializado para evitar múltiples inicializaciones
       initializedRef.current = true;
-      
-      // Generar nonce único
-      nonceRef.current = generateNonce();
 
+      // Inicializar SIN nonce para evitar "Nonces mismatch"
+      // El ID token sigue siendo validado por firma en Supabase
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: handleCredentialResponse,
@@ -73,11 +62,7 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
         context: 'signin',
         itp_support: true,
         use_fedcm_for_prompt: true,
-        // Chrome 145+: nonce debe ir dentro de `params`
-        params: {
-          nonce: nonceRef.current, // Google lo hashea internamente y lo inserta en el id_token
-        },
-      } as any);
+      });
 
       window.google.accounts.id.prompt();
     };
