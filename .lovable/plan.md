@@ -1,79 +1,56 @@
 
-# Plan: Corregir Google One Tap con FedCM y Nonce Hasheado
+Objetivo: eliminar el error **`AuthApiError: Nonces mismatch`** en el flujo de **Google One Tap + Supabase `signInWithIdToken`**, sin depender de los cambios de FedCM/Chrome (que están en transición y están rompiendo el manejo de `nonce`).
 
-## Problema
-Cuando se usa `use_fedcm_for_prompt: true`, Google hashea el nonce con SHA-256 antes de incluirlo en el ID token. Actualmente estamos enviando el nonce original a Supabase, pero el token contiene el hash, causando "Nonces mismatch".
+Contexto (lo que ya sabemos con certeza)
+- El login con botón (OAuth redirect) funciona, así que **Google provider en Supabase está bien configurado**.
+- El flujo que falla es el **grant_type=id_token** (One Tap), y Supabase rechaza el intercambio por **nonce mismatch**.
+- Con FedCM/One Tap, el `nonce` está entrando en un “periodo de cambio” (warning de Chrome 145), y en la práctica hay combinaciones donde Google/FedCM y Supabase no coinciden en cómo se “representa” ese nonce (raw/hash/encoding), produciendo este error.
 
-## Solución
+Decisión técnica (la más confiable hoy)
+- Para que One Tap sea estable, vamos a **NO usar nonce** en One Tap:
+  - No enviar `nonce` a `google.accounts.id.initialize`.
+  - No enviar `nonce` a `supabase.auth.signInWithIdToken`.
+- Esto evita por completo el chequeo de nonce en Supabase (y por tanto elimina el “mismatch”) y también elimina el warning de Chrome 145 relacionado con nonce.
+- Es el único enfoque “definitivo” del lado del cliente mientras FedCM/Google/Supabase no estén totalmente alineados con nonce.
 
-### Archivo a Modificar: `src/components/GoogleOneTap.tsx`
+Cambios a implementar (código)
+1) `src/components/GoogleOneTap.tsx`
+   - Eliminar todo lo relacionado a `nonce`:
+     - Borrar `generateNonce()` si ya no se usa.
+     - Quitar `nonceRef`.
+     - En `initialize`: quitar `params: { nonce: ... }` (y también cualquier `nonce` top-level si existe).
+     - En `signInWithIdToken`: llamar sin `nonce`.
+   - Mantener `use_fedcm_for_prompt: true` (si queremos FedCM) pero sin nonce, o incluso dejarlo en `true` ya que no debería afectar el intercambio con Supabase al no haber nonce.
+   - Mantener el control `initializedRef` para no inicializar varias veces.
 
-**Cambios necesarios:**
+   Resultado esperado del código:
+   - La request a `POST /auth/v1/token?grant_type=id_token` ya no incluirá `nonce`.
+   - El token de Google no traerá nonce.
+   - Supabase no intentará validar nonce.
+   - Se elimina el 400 por “Nonces mismatch”.
 
-1. **Agregar función para hashear nonce con SHA-256**:
-```tsx
-const hashNonce = async (nonce: string): Promise<string> => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(nonce);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-};
-```
+2) (Opcional recomendado) Mejorar diagnóstico en consola (sin filtrar tokens)
+   - Cuando falle, mostrar solo `error.message` y `error.status` (sin imprimir credenciales) para poder distinguir “provider not configured” vs “bad audience” vs etc.
 
-2. **Almacenar el hash además del nonce original**:
-```tsx
-const nonceRef = useRef<string>('');
-const nonceHashRef = useRef<string>(''); // Nuevo: para el hash
-```
+Pasos de verificación (end-to-end)
+1) Probar en ventana incógnito:
+   - Abrir `/`
+   - Esperar One Tap, click “Continuar”
+   - Debe redirigir a `/me` sin 400 en consola.
+2) Verificar que el warning de nonce de Chrome 145 desaparece:
+   - Ya no estamos pasando nonce a Google.
+3) Si aún aparece 400 en Supabase:
+   - Revisar el mensaje exacto del error (ya no debería ser “Nonces mismatch”; si cambia a “invalid aud” o similar, eso apunta a configuración de Google OAuth “Client ID / origins / authorized domains”).
 
-3. **Calcular y guardar el hash al inicializar**:
-```tsx
-// En initializeOneTap
-nonceRef.current = generateNonce();
-nonceHashRef.current = await hashNonce(nonceRef.current);
-```
+Riesgos / trade-offs (transparente)
+- Quitar nonce reduce una protección anti-replay específica del flujo OIDC, pero:
+  - El ID token sigue firmado y validado por Supabase.
+  - En la práctica, para One Tap en web, esto es un workaround común mientras FedCM/nonce se estabiliza.
+- Si en el futuro Supabase/Google/FedCM estandarizan el nonce definitivamente, podemos reintroducirlo con un enfoque compatible (y sin warnings).
 
-4. **Enviar el HASH a Supabase (no el nonce original)**:
-```tsx
-const { data, error } = await supabase.auth.signInWithIdToken({
-  provider: 'google',
-  token: response.credential,
-  nonce: nonceHashRef.current, // Enviar el hash, no el original
-});
-```
-
-5. **Hacer `initializeOneTap` async** para poder usar await en el hash
-
-## Flujo Corregido
-
-```text
-┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
-│   Frontend      │      │   Google        │      │   Supabase      │
-└────────┬────────┘      └────────┬────────┘      └────────┬────────┘
-         │                        │                        │
-         │ 1. Generar nonce       │                        │
-         │    "abc123"            │                        │
-         │                        │                        │
-         │ 2. Calcular hash       │                        │
-         │    SHA-256("abc123")   │                        │
-         │    = "def456..."       │                        │
-         │                        │                        │
-         │ 3. Enviar nonce ───────▶                        │
-         │    original "abc123"   │                        │
-         │                        │                        │
-         │◀── 4. ID Token ────────│                        │
-         │    (contiene hash      │                        │
-         │     "def456...")       │                        │
-         │                        │                        │
-         │ 5. Enviar token + hash ─────────────────────────▶
-         │    nonce: "def456..."  │                        │
-         │                        │                        │
-         │◀───────────────────────────── 6. OK ────────────│
-         │                        │                        │
-```
-
-## Resultado Esperado
-El login con Google One Tap funcionará correctamente porque:
-- El hash que enviamos a Supabase coincidirá con el hash incluido en el ID token de Google
-- Se elimina el error "Nonces mismatch"
+Siguientes mejoras sugeridas (para cuando esto funcione)
+1) Testear el flujo end-to-end en Chrome y Safari (y móvil) para confirmar comportamiento consistente.
+2) Agregar un fallback: si One Tap falla, mostrar botón “Continuar con Google” (OAuth redirect) y/o un CTA visible.
+3) Añadir manejo de estados de `prompt()` (dismissed/skipped) para no re-spamear el One Tap.
+4) Añadir un pequeño panel de debug (solo en dev) para ver razones de prompt y errores de auth sin exponer tokens.
+5) Centralizar auth en un `AuthProvider` para evitar instancias múltiples de `useAuth()` y asegurar redirecciones consistentes.
