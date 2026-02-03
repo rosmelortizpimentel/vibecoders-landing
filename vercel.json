@@ -1,5 +1,5 @@
 {
-  "redirects": [
+  "rewrites": [
     {
       "source": "/@:username",
       "has": [
@@ -9,11 +9,8 @@
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot|Googlebot|bingbot|Baiduspider|yandex|Applebot|Pinterest|vkShare|Viber|Skype|Line|Tumblr|Embed|redditbot|Mastodon|Pleroma).*"
         }
       ],
-      "destination": "/api/og/:username",
-      "permanent": false
-    }
-  ],
-  "rewrites": [
+      "destination": "/api/og/:username"
+    },
     {
       "source": "/(.*)",
       "destination": "/"
