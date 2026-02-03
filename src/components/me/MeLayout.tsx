@@ -9,7 +9,7 @@ import { AppsTab } from './AppsTab';
 import { BrandingTab } from './BrandingTab';
 import { ProfilePreview } from './ProfilePreview';
 import { MeHeader } from './MeHeader';
-import { Loader2, Eye } from 'lucide-react';
+import { Loader2, Eye, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import {
@@ -64,7 +64,7 @@ export function MeLayout() {
           <div className={isMobile ? 'w-full' : 'w-[60%]'}>
             <MeTabs />
             
-            <div className="mt-4 sm:mt-6">
+            <div className={`mt-4 sm:mt-6 ${isMobile ? 'pb-20' : ''}`}>
               {activeTab === 'profile' && (
                 <ProfileTab 
                   profile={profile} 
@@ -111,11 +111,18 @@ export function MeLayout() {
               </Button>
             </div>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto p-0">
+          <SheetContent side="bottom" className="h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
+            {/* Custom close button */}
+            <button
+              onClick={() => setPreviewOpen(false)}
+              className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50"
+            >
+              <X className="h-5 w-5 text-gray-600" />
+            </button>
             <SheetHeader className="sr-only">
               <SheetTitle>Vista previa del perfil</SheetTitle>
             </SheetHeader>
-            <ProfilePreview profile={profile} apps={appsHook.apps} />
+            <ProfilePreview profile={profile} apps={appsHook.apps} isMobileSheet />
           </SheetContent>
         </Sheet>
       )}
