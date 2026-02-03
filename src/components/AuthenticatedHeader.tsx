@@ -16,7 +16,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Sparkles } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
@@ -69,9 +69,10 @@ export function AuthenticatedHeader({
 
   // Build navigation links dynamically based on waitlist status
   const navLinks = [
-    { path: '/startups', label: 'Startups', icon: Rocket },
-    { path: '/tools', label: 'Herramientas', icon: Wrench },
-    ...(isInWaitlist ? [{ path: '/buildlog', label: 'Build Log', icon: Sparkles }] : []),
+    { path: '/me', label: 'Mi Perfil', icon: User, premium: false },
+    { path: '/startups', label: 'Startups', icon: Rocket, premium: false },
+    { path: '/tools', label: 'Herramientas', icon: Wrench, premium: false },
+    ...(isInWaitlist ? [{ path: '/buildlog', label: 'Build Log', icon: Crown, premium: true }] : []),
   ];
 
   const handleNavClick = () => {
@@ -93,20 +94,27 @@ export function AuthenticatedHeader({
         {/* Desktop Navigation - Center (hidden on mobile) */}
         {!isMobile && (
           <nav className="flex items-center gap-6 sm:gap-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={cn(
-                  "text-sm font-medium transition-colors",
-                  isActive(link.path)
-                    ? "text-[#3D5AFE] font-semibold"
-                    : "text-gray-600 hover:text-[#3D5AFE]"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={cn(
+                    "flex items-center gap-1.5 text-sm font-medium transition-colors",
+                    isActive(link.path)
+                      ? "text-[#3D5AFE] font-semibold"
+                      : "text-gray-600 hover:text-[#3D5AFE]"
+                  )}
+                >
+                  <Icon className={cn(
+                    "h-4 w-4",
+                    link.premium && "text-amber-400"
+                  )} />
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
         )}
         
@@ -163,12 +171,6 @@ export function AuthenticatedHeader({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-white border-gray-200 p-1 shadow-lg">
-                {/* Profile link */}
-                <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white">
-                  <Link to="/me/profile" className="flex items-center gap-2 cursor-pointer">
-                    <span>Mi Perfil</span>
-                  </Link>
-                </DropdownMenuItem>
                 {publicProfileUrl && (
                   <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white">
                     <a 
