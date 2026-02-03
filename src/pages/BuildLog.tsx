@@ -1,6 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ExternalLink, ArrowRight } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { BuildLogSidebar } from '@/components/buildlog/BuildLogSidebar';
 import { StackCard } from '@/components/buildlog/StackCard';
 import { ProTipCallout } from '@/components/buildlog/ProTipCallout';
@@ -10,6 +9,7 @@ import { WorkflowTimeline, BranchDiagram } from '@/components/buildlog/WorkflowT
 import lovableLogo from '@/assets/logos/lovable-icon.png';
 import supabaseLogo from '@/assets/logos/supabase.svg';
 import vercelLogo from '@/assets/logos/vercel.svg';
+import architectureDiagram from '@/assets/buildlog/architecture-diagram.jpeg';
 
 export default function BuildLog() {
   return (
@@ -87,12 +87,21 @@ export default function BuildLog() {
             {/* Section: Arquitectura */}
             <section className="mb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                La Arquitectura y el Flujo de Trabajo (Git Flow)
+                La Arquitectura y el Flujo de Trabajo
               </h2>
               <p className="text-gray-600 mb-6">
                 Aquí es donde muchos proyectos "vibe coded" fallan. Sin una estrategia de ramas, terminas con 
                 código espagueti y despliegues rotos. Este es mi flujo:
               </p>
+              
+              {/* Architecture Diagram */}
+              <div className="mb-8">
+                <img 
+                  src={architectureDiagram} 
+                  alt="Diagrama de arquitectura actual" 
+                  className="w-full rounded-xl border border-gray-200 shadow-sm"
+                />
+              </div>
               
               <WorkflowTimeline
                 steps={[
@@ -208,21 +217,6 @@ export default function BuildLog() {
                 a producción de verdad.
               </p>
               
-              {/* CTA Box */}
-              <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-2xl p-8 text-center">
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  ¿Quieres ver este stack en acción?
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Únete a la comunidad de vibecoders y sé parte de la revolución del desarrollo asistido por IA.
-                </p>
-                <Button asChild size="lg" className="gap-2">
-                  <a href="https://vibecoders.la" target="_blank" rel="noopener noreferrer">
-                    Únete a la lista en vibecoders.la
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
-                </Button>
-              </div>
             </section>
           </article>
 

@@ -23,27 +23,6 @@ const entries: BuildLogEntry[] = [
     subtitle: 'Lovable, Supabase & Vercel.',
     isActive: true,
   },
-  {
-    id: '02',
-    number: '02',
-    title: 'Filosofía de Diseño AI',
-    subtitle: 'Por qué prohibí los emojis.',
-    isLocked: true,
-  },
-  {
-    id: '03',
-    number: '03',
-    title: 'Workflow Profesional',
-    subtitle: 'Estrategia de Ramas & Deploy.',
-    isLocked: true,
-  },
-  {
-    id: '04',
-    number: '04',
-    title: 'Optimización de Costos',
-    subtitle: 'Cuándo dejar Lovable.',
-    isLocked: true,
-  },
 ];
 
 export function BuildLogSidebar() {
