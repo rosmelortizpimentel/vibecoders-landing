@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.check-username-available]
 verify_jwt = false
+
+[functions.og-profile-meta]
+verify_jwt = false
