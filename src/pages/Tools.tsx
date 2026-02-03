@@ -1,15 +1,21 @@
-// Stack page - Tools directory
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useToolsStack, getCategories } from '@/hooks/useToolsStack';
 import { ToolCard } from '@/components/stack/ToolCard';
 import { ToolCardSkeleton } from '@/components/stack/ToolCardSkeleton';
-import Navbar from '@/components/Navbar';
+import { AuthenticatedHeader } from '@/components/AuthenticatedHeader';
 import Footer from '@/components/Footer';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { cn } from '@/lib/utils';
+import { Loader2 } from 'lucide-react';
 
-export default function Stack() {
+export default function Tools() {
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const { data: tools, isLoading, error } = useToolsStack();
   const [activeCategory, setActiveCategory] = useState('Todos');
+  
 
   // Filter only active tools for public view
   const activeTools = tools?.filter(t => t.is_active) || [];
@@ -19,9 +25,26 @@ export default function Stack() {
     ? activeTools
     : activeTools.filter(t => t.category === activeCategory);
 
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Redirect to home if not authenticated
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
+      <AuthenticatedHeader 
+        profile={profile || null}
+        onSignOut={signOut}
+      />
 
       <main className="flex-1">
         {/* Header */}

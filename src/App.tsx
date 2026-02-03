@@ -10,8 +10,8 @@ import Admin from "./pages/Admin";
 import PublicProfile from "./pages/PublicProfile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
-import Inspiration from "./pages/Inspiration";
-import Stack from "./pages/Stack";
+import Projects from "./pages/Projects";
+import Tools from "./pages/Tools";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 
 const queryClient = new QueryClient();
@@ -36,10 +36,12 @@ const App = () => (
           {/* Legal pages - must be before /:handle to avoid conflicts */}
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
-          {/* Community Showcase */}
-          <Route path="/inspiration" element={<Inspiration />} />
-          {/* Tools Stack */}
-          <Route path="/stack" element={<Stack />} />
+          {/* Projects Gallery (antes /inspiration) */}
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/inspiration" element={<Navigate to="/projects" replace />} />
+          {/* Tools Directory (antes /stack) */}
+          <Route path="/tools" element={<Tools />} />
+          <Route path="/stack" element={<Navigate to="/tools" replace />} />
           {/* Public profile route - captures /@username, validated in component */}
           <Route path="/:handle" element={<PublicProfile />} />
           {/* Redirect all unknown routes to landing */}
