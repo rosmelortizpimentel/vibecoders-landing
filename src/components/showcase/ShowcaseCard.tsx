@@ -1,9 +1,16 @@
 import { useState } from 'react';
-import { ExternalLink, Linkedin, Twitter, Globe, User } from 'lucide-react';
+import { ExternalLink, Linkedin, Globe, User } from 'lucide-react';
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { ShowcaseProject } from '@/hooks/useShowcase';
+
+// X icon (Twitter/X current logo)
+const XIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+  </svg>
+);
 
 interface ShowcaseCardProps {
   project: ShowcaseProject;
@@ -15,7 +22,7 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
   const hasSocialLinks = project.author_linkedin || project.author_twitter || project.author_website;
 
   return (
-    <article className="group bg-white border border-stone-200 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+    <article className="group bg-card border border-border rounded-lg overflow-hidden transition-all duration-200 hover:border-primary hover:shadow-md">
       {/* Project Image - Clickable */}
       <a
         href={project.project_url}
@@ -26,8 +33,8 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
       >
         <AspectRatio ratio={16 / 9}>
           {imageError ? (
-            <div className="w-full h-full bg-stone-100 flex items-center justify-center">
-              <ExternalLink className="w-8 h-8 text-stone-400" />
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <ExternalLink className="w-8 h-8 text-muted-foreground" />
             </div>
           ) : (
             <img
@@ -42,7 +49,7 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
       </a>
 
       {/* Body */}
-      <div className="p-4">
+      <div className="p-4 md:p-5">
         <a
           href={project.project_url}
           target="_blank"
@@ -54,16 +61,16 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
             <img
               src={project.project_logo_url}
               alt={`Logo de ${project.project_title}`}
-              className="w-10 h-10 rounded-lg object-cover border border-stone-200 flex-shrink-0"
+              className="w-10 h-10 rounded-lg object-cover border border-border flex-shrink-0"
             />
           )}
           
           {/* Title & Tagline */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-[#1c1c1c] group-hover/title:text-[#3D5AFE] transition-colors line-clamp-1">
+            <h3 className="text-lg font-semibold text-foreground group-hover/title:text-primary transition-colors line-clamp-1">
               {project.project_title}
             </h3>
-            <p className="mt-1 text-sm text-stone-600 line-clamp-2">
+            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
               {project.project_tagline}
             </p>
           </div>
@@ -71,23 +78,23 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
       </div>
 
       {/* Separator */}
-      <div className="mx-4 border-t border-stone-100" />
+      <div className="mx-4 md:mx-5 border-t border-border" />
 
       {/* Footer - Author Info */}
-      <div className="p-4 flex items-center justify-between">
+      <div className="p-4 md:p-5 flex items-center justify-between">
         <div className="flex items-center gap-2 min-w-0">
           <Avatar className="h-8 w-8 flex-shrink-0">
             {project.author_avatar ? (
               <AvatarImage src={project.author_avatar} alt={project.author_name} />
             ) : null}
-            <AvatarFallback className="bg-stone-100 text-stone-600 text-xs">
+            <AvatarFallback className="bg-muted text-muted-foreground text-xs">
               <User className="w-4 h-4" />
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium text-stone-700 truncate">
+          <span className="text-sm font-medium text-foreground truncate">
             {project.author_name}
           </span>
-          <Badge className="text-[10px] bg-gray-100 text-gray-500 hover:bg-gray-100 rounded-full px-2 py-0.5 font-normal flex-shrink-0">
+          <Badge variant="secondary" className="text-[10px] rounded-full px-2 py-0.5 font-normal flex-shrink-0">
             Creador
           </Badge>
         </div>
@@ -100,7 +107,7 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
                 href={project.author_linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 text-stone-400 hover:text-[#0A66C2] transition-colors"
+                className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                 aria-label={`LinkedIn de ${project.author_name}`}
               >
                 <Linkedin className="w-4 h-4" />
@@ -111,10 +118,10 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
                 href={project.author_twitter}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 text-stone-400 hover:text-[#1c1c1c] transition-colors"
+                className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                 aria-label={`Twitter de ${project.author_name}`}
               >
-                <Twitter className="w-4 h-4" />
+                <XIcon className="w-4 h-4" />
               </a>
             )}
             {project.author_website && (
@@ -122,7 +129,7 @@ export function ShowcaseCard({ project }: ShowcaseCardProps) {
                 href={project.author_website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 text-stone-400 hover:text-[#3D5AFE] transition-colors"
+                className="p-1.5 text-muted-foreground hover:text-primary transition-colors"
                 aria-label={`Sitio web de ${project.author_name}`}
               >
                 <Globe className="w-4 h-4" />

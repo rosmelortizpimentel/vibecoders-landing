@@ -31,25 +31,25 @@ export default function Projects() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <AuthenticatedHeader 
         profile={profile || null}
         onSignOut={signOut}
       />
       
-      {/* Hero Section - Fondo Blanco Limpio */}
-      <section className="bg-white pt-12 pb-8">
+      {/* Hero Section - Clean White */}
+      <section className="pt-16 pb-8 md:pt-24 md:pb-12">
         <div className="container mx-auto px-4 md:px-6">
-          <header className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-[#1c1c1c] mb-4">
+          <header className="text-center max-w-3xl mx-auto">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-4">
               Hecho por Vibecoders
             </h1>
-            <p className="text-lg text-gray-500 max-w-2xl mx-auto mb-8">
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
               Apps reales creadas por gente como tú. Inspírate y lanza la tuya.
             </p>
             <Button
               asChild
-              className="bg-[#3D5AFE] text-white hover:bg-[#3D5AFE]/90 rounded-full px-6 py-2 font-medium transition-all hover:shadow-lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 py-2 font-medium transition-all hover:shadow-md"
             >
               <Link to="/me/profile">Quiero aparecer aquí</Link>
             </Button>
@@ -57,12 +57,12 @@ export default function Projects() {
         </div>
       </section>
 
-      {/* Main Content - Fondo Crema */}
-      <main className="flex-1 bg-[#F6F5F4] pb-16">
-        <div className="container mx-auto px-4 md:px-6 pt-8">
+      {/* Main Content */}
+      <main className="flex-1 pb-16 md:pb-24">
+        <div className="container mx-auto px-4 md:px-6">
           {/* Loading State */}
           {isLoading && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <ShowcaseCardSkeleton key={i} />
               ))}
@@ -72,7 +72,7 @@ export default function Projects() {
           {/* Error State */}
           {error && (
             <div className="text-center py-16">
-              <p className="text-[#1c1c1c]/70">
+              <p className="text-muted-foreground">
                 Hubo un error al cargar los proyectos. Intenta de nuevo más tarde.
               </p>
             </div>
@@ -81,13 +81,13 @@ export default function Projects() {
           {/* Empty State */}
           {!isLoading && !error && projects?.length === 0 && (
             <div className="text-center py-20">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-stone-100 mb-6">
-                <Rocket className="w-8 h-8 text-stone-400" />
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-6">
+                <Rocket className="w-8 h-8 text-muted-foreground" />
               </div>
-              <h2 className="text-xl font-semibold text-[#1c1c1c] mb-2">
+              <h2 className="text-xl font-semibold text-foreground mb-2">
                 Aún no hay proyectos
               </h2>
-              <p className="text-[#1c1c1c]/60 max-w-md mx-auto">
+              <p className="text-muted-foreground max-w-md mx-auto">
                 Sé el primero en construir algo increíble con Vibecoders y aparecer aquí.
               </p>
             </div>
@@ -95,7 +95,7 @@ export default function Projects() {
 
           {/* Projects Grid */}
           {!isLoading && !error && projects && projects.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {projects.map((project) => (
                 <ShowcaseCard key={project.id} project={project} />
               ))}
