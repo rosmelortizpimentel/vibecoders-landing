@@ -32,6 +32,7 @@ const LovableIcon = ({ className }: { className?: string }) => (
 interface ProfilePreviewProps {
   profile: ProfileData | null;
   apps: AppData[];
+  isMobileSheet?: boolean;
 }
 
 const socialConfig = [
@@ -45,7 +46,7 @@ const socialConfig = [
   { key: 'email_public', icon: Mail, getUrl: (v: string) => `mailto:${v}` },
 ] as const;
 
-export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
+export function ProfilePreview({ profile, apps, isMobileSheet = false }: ProfilePreviewProps) {
   const { statuses } = useStatuses();
   const { stacks } = useTechStacks();
   const visibleApps = apps.filter(app => app.is_visible);
@@ -103,10 +104,12 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
 
   return (
     <div className="space-y-3">
-      {/* Preview Header */}
-      <div className="flex items-center gap-2 px-1">
-        <span className="text-sm font-medium text-slate-500">Vista Previa</span>
-      </div>
+      {/* Preview Header - hide in mobile sheet */}
+      {!isMobileSheet && (
+        <div className="flex items-center gap-2 px-1">
+          <span className="text-sm font-medium text-slate-500">Vista Previa</span>
+        </div>
+      )}
       
       {/* Preview Card */}
       <div 
@@ -125,7 +128,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
       {/* Banner + Avatar */}
       <div className="relative">
         {profile.banner_url ? (
-          <div className={`h-24 md:h-32 w-full flex items-center bg-gray-50 ${bannerPositionClasses[bannerPosition]}`}>
+          <div className={`aspect-[16/5] w-full flex items-center bg-gray-50 ${bannerPositionClasses[bannerPosition]}`}>
             <img 
               src={profile.banner_url} 
               alt="Banner" 
@@ -133,7 +136,7 @@ export function ProfilePreview({ profile, apps }: ProfilePreviewProps) {
             />
           </div>
         ) : (
-          <div className="h-16 md:h-20 w-full bg-gradient-to-r from-gray-100 to-gray-50" />
+          <div className="aspect-[16/5] w-full bg-gradient-to-r from-gray-100 to-gray-50" />
         )}
         
         {/* Avatar with dynamic position */}
