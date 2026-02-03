@@ -16,9 +16,10 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Sparkles } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
@@ -48,10 +49,6 @@ function formatDisplayName(name: string | null | undefined): string {
   return `${firstName} ${lastInitial}.`;
 }
 
-const navLinks = [
-  { path: '/startups', label: 'Startups', icon: Rocket },
-  { path: '/tools', label: 'Herramientas', icon: Wrench },
-];
 
 export function AuthenticatedHeader({ 
   profile, 
@@ -64,10 +61,18 @@ export function AuthenticatedHeader({
   const displayName = formatDisplayName(profile?.name);
   const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
   const { isAdmin } = useUserRole();
+  const { isInWaitlist } = useWaitlistStatus();
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Build navigation links dynamically based on waitlist status
+  const navLinks = [
+    { path: '/startups', label: 'Startups', icon: Rocket },
+    { path: '/tools', label: 'Herramientas', icon: Wrench },
+    ...(isInWaitlist ? [{ path: '/buildlog', label: 'Build Log', icon: Sparkles }] : []),
+  ];
 
   const handleNavClick = () => {
     setSheetOpen(false);
