@@ -1,5 +1,19 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/@:username",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot|Googlebot|bingbot|Baiduspider|yandex|Applebot|Pinterest|vkShare|Viber|Skype|Line|Tumblr|Embed|redditbot|Mastodon|Pleroma).*"
+        }
+      ],
+      "destination": "https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=:username"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
   ]
 }
