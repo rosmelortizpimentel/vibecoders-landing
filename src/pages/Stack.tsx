@@ -1,3 +1,4 @@
+// Stack page - Tools directory
 import { useState } from 'react';
 import { useToolsStack, getCategories } from '@/hooks/useToolsStack';
 import { ToolCard } from '@/components/stack/ToolCard';
