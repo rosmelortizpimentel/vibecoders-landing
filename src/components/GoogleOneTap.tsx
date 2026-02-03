@@ -47,33 +47,23 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
         cancel_on_tap_outside: false,
         context: 'signin',
         itp_support: true,
+        use_fedcm_for_prompt: true,
       });
 
       window.google.accounts.id.prompt((notification: PromptNotification) => {
-        if (notification.isNotDisplayed()) {
-          const reason = notification.getNotDisplayedReason();
-          console.log('One Tap not displayed:', reason);
-          
-          // Si el navegador bloquea, no insistir en esta sesión
-          if (reason === 'opt_out_or_no_session' || reason === 'suppressed_by_user') {
-            sessionStorage.setItem('oneTapDismissed', 'true');
-          }
+        // Con FedCM, los métodos isNotDisplayed/isDismissedMoment/isSkippedMoment 
+        // no funcionan. Solo usamos getDismissedReason que sigue disponible.
+        const dismissReason = notification.getDismissedReason?.();
+        
+        if (dismissReason === 'credential_returned') {
+          // Éxito - el credential fue enviado al callback principal
+          return;
         }
-
-        if (notification.isDismissedMoment()) {
-          const reason = notification.getDismissedReason();
-          console.log('One Tap dismissed:', reason);
-          
-          // Usuario cerró manualmente, no molestar más en esta sesión
-          if (reason === 'credential_returned') {
-            // ¡Éxito! El credential fue enviado al callback
-          } else {
-            sessionStorage.setItem('oneTapDismissed', 'true');
-          }
-        }
-
-        if (notification.isSkippedMoment()) {
-          console.log('One Tap skipped:', notification.getSkippedReason());
+        
+        // Para cualquier otro dismiss, no molestar más en esta sesión
+        if (dismissReason) {
+          console.log('One Tap dismissed:', dismissReason);
+          sessionStorage.setItem('oneTapDismissed', 'true');
         }
       });
     };
