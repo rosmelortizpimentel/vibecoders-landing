@@ -1,30 +1,24 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { Tool } from '@/hooks/useToolsStack';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Star } from 'lucide-react';
 
 interface ToolCardProps {
   tool: Tool;
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
-  const isFree = tool.pricing_model?.toLowerCase().includes('free') || 
-                 tool.pricing_model?.toLowerCase().includes('open source');
-
   return (
     <a
       href={tool.website_url}
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "group block bg-white border rounded-xl p-4 transition-all duration-200",
-        "hover:shadow-md hover:border-primary/50 hover:-translate-y-0.5",
-        tool.is_featured 
-          ? "border-amber-300 bg-amber-50/30 ring-1 ring-amber-200/50" 
-          : "border-stone-200"
+        "group block bg-card border border-border rounded-lg p-4 transition-all duration-200",
+        "hover:border-primary hover:shadow-sm"
       )}
     >
-      {/* Header: Logo + Category Badge */}
+      {/* Header: Logo + Name + Featured */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           {/* Logo */}
@@ -32,11 +26,11 @@ export function ToolCard({ tool }: ToolCardProps) {
             <img
               src={tool.logo_url}
               alt={`${tool.name} logo`}
-              className="w-10 h-10 rounded-lg object-cover border border-stone-200 flex-shrink-0"
+              className="w-10 h-10 rounded-lg object-cover border border-border flex-shrink-0"
             />
           ) : (
-            <div className="w-10 h-10 rounded-lg bg-stone-100 flex items-center justify-center flex-shrink-0">
-              <ExternalLink className="w-5 h-5 text-stone-400" />
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+              <ExternalLink className="w-5 h-5 text-muted-foreground" />
             </div>
           )}
 
@@ -51,29 +45,20 @@ export function ToolCard({ tool }: ToolCardProps) {
           </div>
         </div>
 
-        {/* Featured Star */}
+        {/* Featured indicator - subtle icon */}
         {tool.is_featured && (
-          <span className="text-amber-500 flex-shrink-0" title="Destacado">
-            ⭐
-          </span>
+          <Star className="w-4 h-4 text-primary fill-primary flex-shrink-0" />
         )}
       </div>
 
       {/* Footer: Category & Pricing */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-stone-100">
-        <Badge variant="outline" className="text-xs font-normal text-muted-foreground">
+      <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
+        <Badge variant="secondary" className="text-xs font-normal">
           {tool.category}
         </Badge>
         
         {tool.pricing_model && (
-          <Badge 
-            className={cn(
-              "text-xs font-normal",
-              isFree 
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-50" 
-                : "bg-stone-100 text-stone-600 border-stone-200 hover:bg-stone-100"
-            )}
-          >
+          <Badge variant="outline" className="text-xs font-normal">
             {tool.pricing_model}
           </Badge>
         )}
