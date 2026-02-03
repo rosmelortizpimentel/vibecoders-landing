@@ -11,6 +11,7 @@ import PublicProfile from "./pages/PublicProfile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Inspiration from "./pages/Inspiration";
+import Stack from "./pages/Stack";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,8 @@ const App = () => (
           <Route path="/terms" element={<Terms />} />
           {/* Community Showcase */}
           <Route path="/inspiration" element={<Inspiration />} />
+          {/* Tools Stack */}
+          <Route path="/stack" element={<Stack />} />
           {/* Public profile route - captures /@username, validated in component */}
           <Route path="/:handle" element={<PublicProfile />} />
           {/* Redirect all unknown routes to landing */}

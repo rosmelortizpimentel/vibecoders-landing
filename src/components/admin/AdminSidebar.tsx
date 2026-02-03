@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid } from 'lucide-react';
+import { LayoutGrid, Layers } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
@@ -7,6 +7,11 @@ const menuItems = [
     title: 'Showcases',
     href: '/admin/showcase',
     icon: LayoutGrid,
+  },
+  {
+    title: 'Stack',
+    href: '/admin/stack',
+    icon: Layers,
   },
 ];
 
