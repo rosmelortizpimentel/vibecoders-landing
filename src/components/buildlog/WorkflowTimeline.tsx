@@ -39,12 +39,12 @@ export function BranchDiagram() {
     <div className="bg-gray-50 rounded-lg p-4 my-4">
       <div className="flex items-center gap-3 text-sm">
         <div className="flex items-center gap-2">
-          <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded font-mono text-xs">release</span>
+          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded font-mono text-xs">release</span>
           <span className="text-gray-500">(staging)</span>
         </div>
         <ArrowRight className="h-4 w-4 text-gray-400" />
         <div className="flex items-center gap-2">
-          <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded font-mono text-xs">main</span>
+          <span className="px-2 py-1 bg-primary/10 text-primary rounded font-mono text-xs">main</span>
           <span className="text-gray-500">(production)</span>
         </div>
       </div>

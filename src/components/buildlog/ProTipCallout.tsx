@@ -11,22 +11,22 @@ interface ProTipCalloutProps {
 
 const variantStyles: Record<CalloutVariant, { border: string; bg: string; icon: typeof AlertTriangle; iconColor: string }> = {
   warning: {
-    border: 'border-l-amber-500',
-    bg: 'bg-amber-50/50',
+    border: 'border-l-gray-400',
+    bg: 'bg-gray-50',
     icon: AlertTriangle,
-    iconColor: 'text-amber-600',
+    iconColor: 'text-gray-600',
   },
   info: {
-    border: 'border-l-blue-500',
-    bg: 'bg-blue-50/50',
+    border: 'border-l-primary',
+    bg: 'bg-primary/5',
     icon: Info,
-    iconColor: 'text-blue-600',
+    iconColor: 'text-primary',
   },
   success: {
-    border: 'border-l-emerald-500',
-    bg: 'bg-emerald-50/50',
+    border: 'border-l-primary',
+    bg: 'bg-white border border-gray-100',
     icon: CheckCircle,
-    iconColor: 'text-emerald-600',
+    iconColor: 'text-primary',
   },
 };
 
