@@ -16,7 +16,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
@@ -49,8 +49,8 @@ function formatDisplayName(name: string | null | undefined): string {
 }
 
 const navLinks = [
-  { path: '/startups', label: 'Startups' },
-  { path: '/tools', label: 'Herramientas' },
+  { path: '/startups', label: 'Startups', icon: Rocket },
+  { path: '/tools', label: 'Herramientas', icon: Wrench },
 ];
 
 export function AuthenticatedHeader({ 
@@ -208,21 +208,25 @@ export function AuthenticatedHeader({
               
               {/* Navigation Links - Clean list */}
               <nav className="flex flex-col px-5 py-6 flex-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    onClick={handleNavClick}
-                    className={cn(
-                      "text-base py-3 transition-colors",
-                      isActive(link.path)
-                        ? "text-foreground font-semibold"
-                        : "text-gray-500 hover:text-foreground"
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
+                {navLinks.map((link) => {
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      onClick={handleNavClick}
+                      className={cn(
+                        "flex items-center gap-3 text-base py-3 transition-colors",
+                        isActive(link.path)
+                          ? "text-foreground font-semibold"
+                          : "text-gray-500 hover:text-foreground"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {link.label}
+                    </Link>
+                  );
+                })}
 
                 {/* Admin Link - Only visible for admins */}
                 {isAdmin && (
