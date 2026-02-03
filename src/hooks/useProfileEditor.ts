@@ -16,6 +16,7 @@ export interface ProfileData {
   website: string | null;
   avatar_url: string | null;
   banner_url: string | null;
+  og_image_url: string | null;
   lovable: string | null;
   twitter: string | null;
   github: string | null;
@@ -62,6 +63,7 @@ export function useProfileEditor() {
         website: data.website,
         avatar_url: data.avatar_url,
         banner_url: data.banner_url,
+        og_image_url: data.og_image_url,
         lovable: data.lovable,
         twitter: data.twitter,
         github: data.github,
@@ -238,6 +240,30 @@ export function useProfileEditor() {
     updateProfile({ banner_url: null });
   }, [updateProfile]);
 
+  const uploadOgImage = useCallback(async (file: File) => {
+    if (!user) throw new Error('No user');
+
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user.id}/og_image_${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-assets')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('profile-assets')
+      .getPublicUrl(filePath);
+
+    updateProfile({ og_image_url: publicUrl });
+    return publicUrl;
+  }, [user, updateProfile]);
+
+  const deleteOgImage = useCallback(() => {
+    updateProfile({ og_image_url: null });
+  }, [updateProfile]);
+
   return {
     profile,
     loading,
@@ -248,5 +274,7 @@ export function useProfileEditor() {
     uploadAvatar,
     uploadBanner,
     deleteBanner,
+    uploadOgImage,
+    deleteOgImage,
   };
 }

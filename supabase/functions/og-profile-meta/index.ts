@@ -13,6 +13,7 @@ interface ProfileData {
   tagline: string | null
   bio: string | null
   avatar_url: string | null
+  og_image_url: string | null
 }
 
 Deno.serve(async (req) => {
@@ -66,7 +67,7 @@ Deno.serve(async (req) => {
     // Fetch profile data
     const { data: profile, error } = await supabaseAdmin
       .from('profiles')
-      .select('username, name, tagline, bio, avatar_url')
+      .select('username, name, tagline, bio, avatar_url, og_image_url')
       .eq('username', username.toLowerCase())
       .maybeSingle()
 
@@ -104,8 +105,9 @@ function generateHtmlResponse(
   // Determine meta values - no suffix added to title
   const title = profile?.name || profile?.username || settings.default_og_title
   const description = profile?.tagline || profile?.bio || settings.default_og_description
-  const image = profile?.avatar_url || settings.default_og_image
-  const canonicalUrl = profile 
+  // Priority: og_image_url > avatar_url > default_og_image
+  const image = profile?.og_image_url || profile?.avatar_url || settings.default_og_image
+  const canonicalUrl = profile
     ? `${settings.site_url}/@${profile.username}` 
     : requestedUsername 
       ? `${settings.site_url}/@${requestedUsername}`
