@@ -49,11 +49,26 @@ export function useAuth() {
     }
   };
 
+  const signInWithIdToken = async (idToken: string) => {
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: 'google',
+      token: idToken,
+    });
+
+    if (error) {
+      console.error('Error signing in with ID token:', error);
+      throw error;
+    }
+
+    return data;
+  };
+
   return {
     user,
     session,
     loading,
     signInWithGoogle,
+    signInWithIdToken,
     signOut,
   };
 }
