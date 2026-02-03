@@ -25,7 +25,7 @@ export default function BuildLog() {
               </Badge>
               
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-4">
-                El Stack del Vibecoder: Cómo construí una arquitectura escalable sin abrir un IDE
+                El Stack del Vibecoder
               </h1>
               
               <p className="text-lg sm:text-xl text-gray-600 mb-6">
