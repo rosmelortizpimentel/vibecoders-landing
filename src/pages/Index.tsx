@@ -28,8 +28,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Google One Tap - Solo para usuarios no autenticados */}
-      <GoogleOneTap />
+      {/* Google One Tap - DESHABILITADO temporalmente por problemas con FedCM/nonce */}
+      {/* <GoogleOneTap /> */}
       
       <main>
         <HeroSection />
