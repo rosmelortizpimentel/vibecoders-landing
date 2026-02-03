@@ -1,7 +1,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import type { CredentialResponse, PromptNotification } from '@/types/google';
+import type { CredentialResponse } from '@/types/google';
 
 // Google Client ID - mismo que usas para OAuth en Supabase
 const GOOGLE_CLIENT_ID = '650134857892-uvvnuq2ivb55i7uoq48fqp4sddvngdph.apps.googleusercontent.com';
@@ -50,22 +50,7 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
         use_fedcm_for_prompt: true,
       });
 
-      window.google.accounts.id.prompt((notification: PromptNotification) => {
-        // Con FedCM, los métodos isNotDisplayed/isDismissedMoment/isSkippedMoment 
-        // no funcionan. Solo usamos getDismissedReason que sigue disponible.
-        const dismissReason = notification.getDismissedReason?.();
-        
-        if (dismissReason === 'credential_returned') {
-          // Éxito - el credential fue enviado al callback principal
-          return;
-        }
-        
-        // Para cualquier otro dismiss, no molestar más en esta sesión
-        if (dismissReason) {
-          console.log('One Tap dismissed:', dismissReason);
-          sessionStorage.setItem('oneTapDismissed', 'true');
-        }
-      });
+      window.google.accounts.id.prompt();
     };
 
     // Esperar a que el script de Google esté cargado
