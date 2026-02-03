@@ -22,6 +22,7 @@ export interface GoogleOneTapConfig {
   context?: 'signin' | 'signup' | 'use';
   itp_support?: boolean;
   use_fedcm_for_prompt?: boolean;
+  nonce?: string;
 }
 
 export interface CredentialResponse {

@@ -1,29 +1,49 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import type { CredentialResponse } from '@/types/google';
+import type { CredentialResponse, GoogleOneTapConfig } from '@/types/google';
 
 // Google Client ID - mismo que usas para OAuth en Supabase
 const GOOGLE_CLIENT_ID = '787805030135-rm2nv0stobgiuivckbgo2jgoeq12caro.apps.googleusercontent.com';
+
+// Generar nonce aleatorio para seguridad
+const generateNonce = (): string => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
 
 interface GoogleOneTapProps {
   onSuccess?: () => void;
 }
 
 const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
-  const { user, loading, signInWithIdToken } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const initializedRef = useRef(false);
+  const nonceRef = useRef<string>('');
 
   const handleCredentialResponse = useCallback(async (response: CredentialResponse) => {
     try {
-      await signInWithIdToken(response.credential);
+      // Usar el nonce que generamos al inicializar
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: response.credential,
+        nonce: nonceRef.current,
+      });
+
+      if (error) {
+        console.error('Error signing in with ID token:', error);
+        throw error;
+      }
+
       onSuccess?.();
       navigate('/me');
     } catch (error) {
       console.error('Error signing in with One Tap:', error);
     }
-  }, [signInWithIdToken, onSuccess, navigate]);
+  }, [onSuccess, navigate]);
 
   useEffect(() => {
     // No mostrar si: cargando, ya autenticado, ya cerró el popup, o ya inicializado
@@ -39,6 +59,9 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
 
       // Marcar como inicializado para evitar múltiples inicializaciones
       initializedRef.current = true;
+      
+      // Generar nonce único para esta sesión
+      nonceRef.current = generateNonce();
 
       window.google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
@@ -48,6 +71,7 @@ const GoogleOneTap = ({ onSuccess }: GoogleOneTapProps) => {
         context: 'signin',
         itp_support: true,
         use_fedcm_for_prompt: true,
+        nonce: nonceRef.current, // Pasar el nonce a Google
       });
 
       window.google.accounts.id.prompt();
