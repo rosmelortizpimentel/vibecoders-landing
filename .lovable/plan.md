@@ -1,135 +1,159 @@
 
 
-# Plan: Mejoras de UX para Vista Previa Mobile en Dashboard /me
+# Plan: Header Unificado para Páginas Autenticadas
 
-## Problemas Identificados
+## Resumen
 
-1. **Vista Previa en Sheet**: Muestra una barra azul con "Vista Previa" en la parte superior que ocupa espacio innecesario
-2. **Botón de cerrar**: Actualmente pequeño y poco visible, debería ser un icono X claro en la esquina
-3. **Footer fijo tapa contenido**: El botón "Vista Previa" se superpone al input de redes sociales cuando se expande
-4. **Banner no es responsivo en altura**: El alto del banner no se reduce proporcionalmente en pantallas pequeñas
+Crear un header unificado con navegación central para todas las páginas autenticadas del sitio. Este header incluirá enlaces a "Proyectos" y "Herramientas", además de actualizar las rutas de `/inspiration` → `/projects` y `/stack` → `/tools`.
 
 ---
 
-## Cambios Propuestos
-
-### Archivo 1: `src/components/me/ProfilePreview.tsx`
-
-**Cambio**: Recibir prop `isMobileSheet` para ocultar condicionalmente el header "Vista Previa" cuando se muestra en el Sheet mobile.
+## Diseño Visual
 
 ```text
-Antes:
-- Header siempre visible con "Vista Previa"
-- Banner con altura fija (h-24 md:h-32)
+┌─────────────────────────────────────────────────────────────────────┐
+│  [Logo]          Proyectos    Herramientas           [Avatar ▼]    │
+│   (←/)                                                (menú)       │
+└─────────────────────────────────────────────────────────────────────┘
 
-Despues:
-- Header oculto cuando isMobileSheet = true
-- Banner con aspect-ratio responsivo usando CSS aspect-ratio
+- Izquierda: Logo VibeCoders (enlaza a /)
+- Centro: Enlaces de navegación con indicador activo (azul/bold)
+- Derecha: Avatar con menú desplegable
+- Estilo: glassmorphism (fondo blanco semi-transparente + blur)
 ```
-
-### Archivo 2: `src/components/me/MeLayout.tsx`
-
-**Cambio 1**: Modificar el SheetContent para:
-- Quitar el botón de cierre por defecto del Sheet
-- Añadir un icono X personalizado en la esquina superior derecha del contenido
-- Pasar prop `isMobileSheet={true}` al ProfilePreview
-
-**Cambio 2**: Añadir padding-bottom al contenido principal para evitar que el footer fijo tape el contenido:
-- Añadir `pb-20` (80px de padding inferior) al contenedor principal cuando estamos en mobile
-
-### Archivo 3: `src/components/me/ProfileTab.tsx`
-
-**Cambio**: Hacer el banner responsivo en altura:
-- Cambiar de `h-32` fijo a aspect-ratio `aspect-[16/5]` que mantiene proporcion 
-- Esto hara que el banner se achique proporcionalmente
 
 ---
 
-## Detalles Tecnicos
+## Cambios de Rutas
 
-### ProfilePreview.tsx - Cambios
+| Ruta Actual     | Nueva Ruta   | Descripción                    |
+|-----------------|--------------|--------------------------------|
+| `/inspiration`  | `/projects`  | Galería de proyectos           |
+| `/stack`        | `/tools`     | Directorio de herramientas     |
 
-Añadir prop opcional:
+---
+
+## Archivos a Crear/Modificar
+
+### 1. Nuevo: `src/components/AuthenticatedHeader.tsx`
+- Componente header reutilizable para todas las páginas autenticadas
+- Props opcionales para mostrar indicador de guardado (solo en `/me`)
+- Navegación central con "Proyectos" y "Herramientas"
+- Estado activo basado en `useLocation()` de react-router
+- Estilo glassmorphism: `bg-white/80 backdrop-blur-md`
+
+### 2. Modificar: `src/App.tsx`
+- Cambiar ruta `/inspiration` → `/projects`
+- Cambiar ruta `/stack` → `/tools`
+- Añadir redirects de las rutas antiguas a las nuevas (compatibilidad)
+
+### 3. Modificar: `src/pages/Inspiration.tsx` → Renombrar a `src/pages/Projects.tsx`
+- Cambiar nombre del archivo
+- Usar `AuthenticatedHeader` en lugar de `PublicHeader`
+- Actualizar imports
+
+### 4. Modificar: `src/pages/Stack.tsx` → Renombrar a `src/pages/Tools.tsx`
+- Cambiar nombre del archivo  
+- Usar `AuthenticatedHeader` en lugar de `Navbar`
+- Actualizar imports
+
+### 5. Modificar: `src/components/me/MeHeader.tsx`
+- Delegar la UI al nuevo `AuthenticatedHeader`
+- Solo pasar las props específicas de `/me` (isSaving, lastSaved, error)
+
+### 6. Modificar: `src/components/me/MeLayout.tsx`
+- Actualizar uso del header si es necesario
+
+### 7. Modificar: `src/components/admin/AdminLayout.tsx`
+- Usar `AuthenticatedHeader` para mantener consistencia
+
+### 8. Actualizar referencias internas
+- Buscar y reemplazar `/inspiration` → `/projects` en botones/links
+- Buscar y reemplazar `/stack` → `/tools` en botones/links
+
+---
+
+## Detalles Técnicos
+
+### Estructura del AuthenticatedHeader
 
 ```typescript
-interface ProfilePreviewProps {
+interface AuthenticatedHeaderProps {
+  // Props opcionales para el indicador de guardado (solo /me)
+  isSaving?: boolean;
+  lastSaved?: Date | null;
+  error?: Error | null;
+  onSignOut: () => void;
   profile: ProfileData | null;
-  apps: AppData[];
-  isMobileSheet?: boolean;  // NUEVO
 }
 ```
 
-Condicional para ocultar header:
+### Navegación Central
 
 ```tsx
-{/* Preview Header - ocultar en mobile sheet */}
-{!isMobileSheet && (
-  <div className="flex items-center gap-2 px-1">
-    <span className="text-sm font-medium text-slate-500">Vista Previa</span>
-  </div>
-)}
+const navLinks = [
+  { path: '/projects', label: 'Proyectos' },
+  { path: '/tools', label: 'Herramientas' },
+];
+
+// Estado activo detectado con useLocation
+const location = useLocation();
+const isActive = (path: string) => location.pathname === path;
 ```
 
-### MeLayout.tsx - Cambios
-
-1. Importar icono X de lucide:
-
-```typescript
-import { Loader2, Eye, X } from 'lucide-react';
-```
-
-2. Modificar SheetContent para quitar el boton de cierre por defecto (clase `[&>button]:hidden`) y añadir uno personalizado:
+### Estilo Glassmorphism
 
 ```tsx
-<SheetContent side="bottom" className="h-[90vh] overflow-y-auto p-0 [&>button]:hidden">
-  {/* Close button personalizado */}
-  <button
-    onClick={() => setPreviewOpen(false)}
-    className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-200 shadow-sm hover:bg-gray-50"
-  >
-    <X className="h-5 w-5 text-gray-600" />
-  </button>
-  
-  <SheetHeader className="sr-only">
-    <SheetTitle>Vista previa del perfil</SheetTitle>
-  </SheetHeader>
-  <ProfilePreview profile={profile} apps={appsHook.apps} isMobileSheet />
-</SheetContent>
+<header className="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-md">
 ```
 
-3. Añadir padding-bottom al contenedor principal en mobile:
+### Indicador de Estado Activo
 
 ```tsx
-<div className={`mt-4 sm:mt-6 ${isMobile ? 'pb-20' : ''}`}>
-```
-
-### ProfileTab.tsx - Banner Responsivo
-
-Cambiar altura fija a aspect-ratio:
-
-```tsx
-{/* Banner con aspect ratio responsivo */}
-<div 
-  className="relative aspect-[16/5] bg-muted rounded-lg overflow-hidden cursor-pointer group"
-  onClick={handleBannerClick}
+<NavLink
+  to={link.path}
+  className={cn(
+    "text-sm font-medium transition-colors",
+    isActive(link.path) 
+      ? "text-[#3D5AFE] font-semibold" 
+      : "text-gray-600 hover:text-[#3D5AFE]"
+  )}
 >
 ```
 
 ---
 
-## Resumen de Archivos a Modificar
+## Lista de Archivos
 
-| Archivo | Cambio |
+| Archivo | Acción |
 |---------|--------|
-| `src/components/me/ProfilePreview.tsx` | Añadir prop `isMobileSheet`, ocultar header condicionalmente |
-| `src/components/me/MeLayout.tsx` | Añadir padding-bottom, boton X personalizado en Sheet |
-| `src/components/me/ProfileTab.tsx` | Cambiar banner de altura fija a aspect-ratio responsivo |
+| `src/components/AuthenticatedHeader.tsx` | Crear |
+| `src/pages/Projects.tsx` | Crear (basado en Inspiration.tsx) |
+| `src/pages/Tools.tsx` | Crear (basado en Stack.tsx) |
+| `src/pages/Inspiration.tsx` | Eliminar |
+| `src/pages/Stack.tsx` | Eliminar |
+| `src/App.tsx` | Modificar rutas |
+| `src/components/me/MeHeader.tsx` | Simplificar, usar AuthenticatedHeader |
+| `src/components/me/MeLayout.tsx` | Actualizar si necesario |
+| `src/components/admin/AdminLayout.tsx` | Usar AuthenticatedHeader |
+| Varios componentes | Actualizar enlaces internos |
 
 ---
 
-## Resultado Visual Esperado
+## Comportamiento Esperado
 
-1. Vista previa mobile: Sin barra azul, solo icono X circular en esquina superior derecha
-2. Contenido editable: Nunca tapado por el boton fijo de "Vista Previa" 
-3. Banner: Se achica proporcionalmente al ancho de pantalla
+1. **Usuario autenticado** en cualquier página (`/me`, `/projects`, `/tools`, `/admin`):
+   - Ve header con logo, navegación central, y su avatar con menú
+
+2. **Estado activo**:
+   - En `/projects`: "Proyectos" aparece en azul (#3D5AFE) y negrita
+   - En `/tools`: "Herramientas" aparece en azul (#3D5AFE) y negrita
+
+3. **Usuario no autenticado** que visita `/projects` o `/tools`:
+   - Si se requiere autenticación: redirige a `/`
+   - Si son páginas públicas: muestra header simplificado solo con logo
+
+4. **Redirects de compatibilidad**:
+   - `/inspiration` → `/projects`
+   - `/stack` → `/tools`
 
