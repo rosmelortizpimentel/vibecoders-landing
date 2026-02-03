@@ -6,6 +6,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ShowcaseManager } from '@/components/admin/ShowcaseManager';
 import { StackManager } from '@/components/admin/StackManager';
+import { SettingsManager } from '@/components/admin/SettingsManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -67,6 +68,7 @@ const Admin = () => {
         <Route index element={<Navigate to="/admin/showcase" replace />} />
         <Route path="showcase" element={<ShowcaseManager />} />
         <Route path="stack" element={<StackManager />} />
+        <Route path="settings" element={<SettingsManager />} />
       </Route>
     </Routes>
   );
