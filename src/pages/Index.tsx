@@ -5,6 +5,7 @@ import HeroSection from '@/components/HeroSection';
 import WaveDivider from '@/components/WaveDivider';
 import BentoGrid from '@/components/BentoGrid';
 import Footer from '@/components/Footer';
+import GoogleOneTap from '@/components/GoogleOneTap';
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -27,6 +28,9 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Google One Tap - Solo para usuarios no autenticados */}
+      <GoogleOneTap />
+      
       <main>
         <HeroSection />
         <WaveDivider fromColor="hsl(231, 99%, 62%)" toColor="#F6F5F4" />
