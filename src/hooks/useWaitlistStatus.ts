@@ -2,13 +2,30 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+/**
+ * Normaliza un email removiendo aliases (+algo)
+ * cesaras+test@gmail.com → cesaras@gmail.com
+ */
+function normalizeEmail(email: string): string {
+  const [localPart, domain] = email.toLowerCase().trim().split('@');
+  if (!domain) return email.toLowerCase().trim();
+  
+  const normalizedLocal = localPart.split('+')[0];
+  return `${normalizedLocal}@${domain}`;
+}
+
 export function useWaitlistStatus() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isInWaitlist, setIsInWaitlist] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkWaitlistStatus() {
+      // Wait for auth to finish loading
+      if (authLoading) {
+        return;
+      }
+
       if (!user?.email) {
         setIsInWaitlist(false);
         setLoading(false);
@@ -16,10 +33,11 @@ export function useWaitlistStatus() {
       }
 
       try {
+        const normalizedEmail = normalizeEmail(user.email);
         const { data, error } = await supabase
           .from('waitlist')
           .select('id')
-          .eq('email', user.email)
+          .eq('email', normalizedEmail)
           .maybeSingle();
 
         if (error) {
@@ -37,7 +55,7 @@ export function useWaitlistStatus() {
     }
 
     checkWaitlistStatus();
-  }, [user?.email]);
+  }, [user?.email, authLoading]);
 
   return { isInWaitlist, loading };
 }
