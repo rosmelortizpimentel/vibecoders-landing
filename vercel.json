@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/og/:username",
+      "destination": "https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=:username"
+    },
+    {
       "source": "/@:username",
       "has": [
         {
@@ -10,10 +14,6 @@
         }
       ],
       "destination": "/api/og/:username"
-    },
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
     },
     {
       "source": "/(.*)",
