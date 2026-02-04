@@ -9,7 +9,7 @@
           "value": "1"
         }
       ],
-      "destination": "/api/og/:username"
+      "destination": "/api/og?username=:username"
     },
     {
       "source": "/@:username/",
@@ -20,7 +20,7 @@
           "value": "1"
         }
       ],
-      "destination": "/api/og/:username"
+      "destination": "/api/og?username=:username"
     },
     {
       "source": "/@:username",
@@ -31,7 +31,7 @@
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot|Googlebot|bingbot|Baiduspider|yandex|Applebot|Pinterest|vkShare|Viber|Skype|Line|Tumblr|Embed|redditbot|Mastodon|Pleroma).*"
         }
       ],
-      "destination": "/api/og/:username"
+      "destination": "/api/og?username=:username"
     },
     {
       "source": "/@:username/",
@@ -42,10 +42,14 @@
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot|Googlebot|bingbot|Baiduspider|yandex|Applebot|Pinterest|vkShare|Viber|Skype|Line|Tumblr|Embed|redditbot|Mastodon|Pleroma).*"
         }
       ],
-      "destination": "/api/og/:username"
+      "destination": "/api/og?username=:username"
     },
     {
-      "source": "/(.*)",
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
       "destination": "/"
     }
   ]
