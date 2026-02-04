@@ -1,91 +1,82 @@
 
 
 ## Objetivo
-Hacer que **/api/og/:username** y **/@username (solo bots)** devuelvan siempre el HTML de metadatos dinámicos (ej. “Rosmel Ortiz”), evitando que Vercel entregue el `index.html` genérico del SPA.
+Corregir el rewrite para bots en `/@:username` para que devuelva metadatos dinámicos (ej. "Rosmel Ortiz") en lugar del SPA genérico.
 
 ---
 
-## Diagnóstico (por qué sigue saliendo genérico)
-- El HTML que estás viendo en `curl` coincide exactamente con los meta tags de `index.html` (título “The Official Home for Vibe Coders” e imagen en `storage.googleapis.com/...social-images...`).
-- Eso implica que **Vercel NO está sirviendo la función** `/api/og/[username].ts` (por no estar desplegada, por fallback del enrutamiento, o porque la configuración SPA está interceptando la ruta).
-- Aunque ya intentamos “proteger” `/api/*` con un rewrite no-op, en la práctica **tu deploy sigue cayendo al catch-all** `/(.*) -> /`.
+## Diagnóstico
+- `/api/og/:username` → Supabase funciona correctamente (verificado con curl)
+- `/@:username` con User-Agent de bot → Sigue sirviendo `index.html` del SPA
+- **Causa**: Vercel no encadena rewrites internos. El destino `/api/og/:username` no se re-evalúa contra la regla que apunta a Supabase.
 
 ---
 
-## Solución propuesta (robusta y sin depender de Serverless Functions)
-En vez de depender de `/api/og/[username].ts`, haremos que Vercel **proxy/rewrite directamente** a la Edge Function de Supabase (destino externo).  
-Esto funciona incluso si el proyecto está desplegado como “static SPA” y Vercel no está publicando funciones Node.
+## Solución
+Modificar el rewrite de bots para que apunte **directamente** a la Edge Function de Supabase, eliminando el encadenamiento interno.
 
-### Cambio clave
-1) **Rewrite directo**:
-- `/api/og/:username` → `https://<PROJECT>.supabase.co/functions/v1/og-profile-meta?username=:username`
+### Cambio en `vercel.json`
 
-2) Mantener el rewrite para bots:
-- `/@:username` (si User-Agent es bot) → `/api/og/:username`
+```text
+ANTES (no funciona - encadena):
+/@:username (bot) → /api/og/:username → (no re-evalúa) → SPA
 
-3) Mantener el catch-all del SPA:
-- `/(.*)` → `/`
-
----
-
-## Archivos a tocar
-### 1) `vercel.json`
-Reordenar/regenerar `rewrites` así (conceptualmente):
-- Regla 1 (top priority): `source: /api/og/:username` → `destination: https://...supabase.../og-profile-meta?username=:username`
-- Regla 2: `source: /@:username` + `has User-Agent bot regex` → `destination: /api/og/:username`
-- Regla 3: catch-all SPA → `/`
-
-> Nota: Con esto, **/api/og/rosmelortiz** ya no depende de `api/og/[username].ts`.
-
-### 2) (Opcional pero recomendado) `api/og/[username].ts`
-- Dejarlo como fallback/legacy, pero **quitar la importación de `@vercel/node`** (si Vercel no la resuelve, puede impedir el deploy de la función).
-- Agregar un header de debug tipo `x-og-proxy: vercel-function` para saber si alguna vez se está usando.
-
-(Esto opcional porque con el rewrite externo ya quedas cubierto.)
-
----
-
-## Verificación (Windows)
-Después de desplegar en Vercel:
-
-### A) Probar el endpoint proxy en tu dominio
-```bat
-curl -A "LinkedInBot" "https://building.vibecoders.la/api/og/rosmelortiz" 2>nul | findstr /i "og:title title og:image"
-```
-Esperado:
-- `<title>Rosmel Ortiz</title>` (o su username/nombre real)
-- `og:image` apuntando al avatar/banner/og_image_url del perfil o al default del sitio (pero no el genérico de `index.html`)
-
-### B) Probar el rewrite de bots en /@username
-```bat
-curl -A "LinkedInBot" "https://building.vibecoders.la/@rosmelortiz" 2>nul | findstr /i "og:title title og:image"
+DESPUÉS (funciona - directo):
+/@:username (bot) → https://...supabase.../og-profile-meta?username=:username
 ```
 
-### C) Confirmación extra por headers (para saber si cae en SPA o proxy)
-```bat
-curl -I -A "LinkedInBot" "https://building.vibecoders.la/api/og/rosmelortiz"
+### Nueva configuración:
+
+```json
+{
+  "rewrites": [
+    {
+      "source": "/api/og/:username",
+      "destination": "https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=:username"
+    },
+    {
+      "source": "/@:username",
+      "has": [
+        {
+          "type": "header",
+          "key": "User-Agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot|Googlebot|bingbot|Baiduspider|yandex|Applebot|Pinterest|vkShare|Viber|Skype|Line|Tumblr|Embed|redditbot|Mastodon|Pleroma).*"
+        }
+      ],
+      "destination": "https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=:username"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
 ```
-- Si sigue cayendo en SPA, normalmente verás señales de asset estático y no del proxy.
-- Si está funcionando, debe ser `200` y `content-type: text/html`.
 
 ---
 
-## Post-verificación (caché de redes)
-Cuando A y B ya den “Rosmel Ortiz” en curl:
-- LinkedIn Post Inspector: “Inspect” otra vez
-- Facebook Debug: “Scrape Again”
-- WhatsApp: reenviar el link o usar un número/chat nuevo (WhatsApp cachea fuerte)
+## Archivos a modificar
+1. **`vercel.json`** - Cambiar destination del rewrite de bots de `/api/og/:username` a URL externa completa
 
 ---
 
-## Riesgos / Edge cases
-- Si una plataforma usa un User-Agent no incluido en el regex, seguirá viendo el SPA genérico en `/@username`.
-  - Mitigación: ampliar la lista si detectamos otro UA (ej. `Slackbot-LinkExpanding`, `WhatsApp`, `SkypeUriPreview`, etc.).
+## Verificación post-deploy (Windows)
+
+```bat
+curl -A "LinkedInBot" "https://building.vibecoders.la/@rosmelortiz" 2>nul | findstr /i "og:title title"
+```
+
+**Esperado**:
+```
+<title>Rosmel Ortiz</title>
+<meta property="og:title" content="Rosmel Ortiz">
+```
 
 ---
 
-## Entregable final esperado
-- `curl` a `https://building.vibecoders.la/api/og/rosmelortiz` muestra meta tags dinámicos.
-- `curl` a `https://building.vibecoders.la/@rosmelortiz` con User-Agent de bot también muestra meta tags dinámicos.
-- LinkedIn/WhatsApp dejan de mostrar datos default.
+## Post-verificación en redes sociales
+Una vez confirmado con curl:
+- **LinkedIn Post Inspector**: Volver a inspeccionar la URL
+- **Facebook Debug**: Hacer "Scrape Again"
+- **WhatsApp**: Enviar en un chat nuevo (cachea fuerte)
 
