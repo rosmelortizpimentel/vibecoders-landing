@@ -20,6 +20,7 @@ interface ProfileData {
   avatar_url: string | null
   banner_url: string | null
   og_image_url: string | null
+  updated_at: string | null
 }
 
 Deno.serve(async (req) => {
@@ -78,7 +79,7 @@ Deno.serve(async (req) => {
     // Fetch profile data
     const { data: profile, error } = await supabaseAdmin
       .from('profiles')
-      .select('username, name, tagline, bio, avatar_url, banner_url, og_image_url')
+      .select('username, name, tagline, bio, avatar_url, banner_url, og_image_url, updated_at')
       .eq('username', username.toLowerCase())
       .maybeSingle()
 
@@ -123,6 +124,10 @@ function generateHtmlResponse(
     : requestedUsername 
       ? `${settings.site_url}/@${requestedUsername}`
       : settings.site_url
+  
+  // Author and date for LinkedIn
+  const authorName = profile?.name || profile?.username || null
+  const updatedTime = profile?.updated_at || null
 
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -146,7 +151,9 @@ function generateHtmlResponse(
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="${escapeHtml(title)} - Vibecoders">
   <meta property="og:site_name" content="Vibecoders">
-  <meta property="og:logo" content="${escapeHtml(settings.site_url)}/images/vibecoders-logo.png">
+  <meta property="og:logo" content="${escapeHtml(settings.site_url)}/images/vibecoders-logo.png">${authorName ? `
+  <meta property="article:author" content="${escapeHtml(authorName)}">` : ''}${updatedTime ? `
+  <meta property="article:modified_time" content="${escapeHtml(updatedTime)}">` : ''}
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
