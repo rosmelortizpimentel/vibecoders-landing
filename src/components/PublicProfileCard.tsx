@@ -6,6 +6,7 @@ import { PioneerBadge } from '@/components/PioneerBadge';
 import { PublicProfileHeader } from '@/components/PublicProfileHeader';
 import { FollowButton } from '@/components/FollowButton';
 import { useFollow } from '@/hooks/useFollow';
+import { useFavicon } from '@/hooks/useFavicon';
 import { useAuth } from '@/hooks/useAuth';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import {
@@ -157,6 +158,9 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
 
   // Check if viewing own profile
   const isOwnProfile = user?.id === profile.id;
+
+  // Dynamic favicon with user's avatar
+  useFavicon(profile.avatar_url || undefined);
 
   // Load font dynamically
   useEffect(() => {
