@@ -140,14 +140,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     );
 
+    console.log(`[og-profile-meta] Settings response status: ${settingsResponse.status}`);
+    
     if (settingsResponse.ok) {
       const settingsData = await settingsResponse.json();
+      console.log(`[og-profile-meta] Settings data:`, JSON.stringify(settingsData));
       for (const setting of settingsData) {
         if (setting.key === 'site_url') settings.site_url = setting.value;
         if (setting.key === 'default_og_image') settings.default_og_image = setting.value;
         if (setting.key === 'default_og_title') settings.default_og_title = setting.value;
         if (setting.key === 'default_og_description') settings.default_og_description = setting.value;
       }
+    } else {
+      const errorText = await settingsResponse.text();
+      console.log(`[og-profile-meta] Settings error:`, errorText);
     }
 
     // Fetch profile data
@@ -163,14 +169,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     let profile: ProfileData | null = null;
 
+    console.log(`[og-profile-meta] Profile response status: ${profileResponse.status}`);
+    
     if (profileResponse.ok) {
       const profiles = await profileResponse.json();
+      console.log(`[og-profile-meta] Profile data:`, JSON.stringify(profiles));
       if (profiles && profiles.length > 0) {
         profile = profiles[0];
         console.log(`[og-profile-meta] Found profile: ${profile?.name || profile?.username}`);
       } else {
         console.log(`[og-profile-meta] Profile not found for: ${usernameStr}`);
       }
+    } else {
+      const errorText = await profileResponse.text();
+      console.log(`[og-profile-meta] Profile error:`, errorText);
     }
 
     const html = generateHtml(profile, usernameStr, settings);
