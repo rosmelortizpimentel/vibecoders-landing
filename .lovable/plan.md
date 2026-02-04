@@ -2,75 +2,128 @@
 
 ## Resumen
 
-Cuando alguien visite un perfil público (ej: `vibecoders.la/@rosmel`), el favicon de la pestaña del navegador mostrará la foto de perfil de ese usuario en lugar del logo de Vibecoders.
+Se creará una nueva sección "Usuarios" en el panel de administración que mostrará todos los usuarios registrados con sus datos básicos y estadísticas de seguimiento. Al hacer clic en los contadores de seguidores/siguiendo, se mostrará una lista simple con los perfiles correspondientes.
 
 ---
 
-## Cómo funcionará
+## Vista General
 
-1. El usuario navega a `/@rosmel`
-2. Se carga el perfil con su `avatar_url`
-3. El favicon de la pestaña cambia automáticamente a la foto del usuario
-4. Cuando se sale de esa página, el favicon vuelve al original de Vibecoders
-
----
-
-## Implementación
-
-### 1. Crear hook `useFavicon`
-
-Nuevo archivo: `src/hooks/useFavicon.ts`
-
-Este hook se encarga de:
-- Guardar el favicon original al montarse
-- Cambiar el `<link rel="icon">` al nuevo valor
-- Restaurar el original cuando el componente se desmonta
-
-```
-Lógica:
-1. Buscar el elemento <link rel="icon"> existente
-2. Guardar su href original en una ref
-3. Cambiar el href al nuevo favicon (avatar_url)
-4. En cleanup (useEffect return), restaurar el original
-```
-
-### 2. Usar el hook en PublicProfileCard
-
-Modificar: `src/components/PublicProfileCard.tsx`
-
-Agregar el hook después de los otros efectos existentes:
-
-```
-useFavicon(profile.avatar_url || undefined);
-```
-
-El hook solo cambiará el favicon si `avatar_url` existe. Si no tiene foto, se mantiene el favicon por defecto.
+La nueva sección mostrará:
+- Foto de perfil (avatar)
+- Nombre y username
+- Link al perfil público (`/@username`)
+- Contador de seguidores (clickeable)
+- Contador de siguiendo (clickeable)
 
 ---
 
-## Detalles técnicos
+## Archivos a Crear/Modificar
 
-| Aspecto | Solución |
-|---------|----------|
-| **Encontrar el favicon** | `document.querySelector('link[rel="icon"]')` |
-| **Restaurar al salir** | `useEffect` cleanup function |
-| **Sin avatar** | No se modifica el favicon (mantiene el original) |
-| **Compatibilidad** | Los navegadores modernos soportan cambiar favicon dinámicamente |
-
----
-
-## Archivos a modificar
-
-| Archivo | Cambio |
+| Archivo | Acción |
 |---------|--------|
-| `src/hooks/useFavicon.ts` | **Crear** - Hook para gestionar el favicon dinámico |
-| `src/components/PublicProfileCard.tsx` | **Modificar** - Importar y usar `useFavicon` con el avatar del perfil |
+| `src/components/admin/UsersManager.tsx` | **Crear** - Componente principal de gestión de usuarios |
+| `src/components/admin/FollowListDialog.tsx` | **Crear** - Dialog para mostrar lista de seguidores/siguiendo |
+| `src/components/admin/AdminSidebar.tsx` | **Modificar** - Agregar entrada "Usuarios" al menú |
+| `src/pages/Admin.tsx` | **Modificar** - Agregar ruta para `/admin/users` |
 
 ---
 
-## Experiencia del usuario
+## Diseño de la Interfaz
 
-- **Entrando a un perfil**: El favicon cambia a la foto del usuario
-- **Saliendo del perfil**: El favicon vuelve al logo de Vibecoders
-- **Perfil sin foto**: Se mantiene el favicon de Vibecoders
+### Lista de Usuarios (UsersManager)
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  Gestión de Usuarios                                        │
+│  Ver todos los usuarios registrados en la plataforma        │
+├─────────────────────────────────────────────────────────────┤
+│ ┌──────┬────────────────────┬──────────┬──────────┬───────┐ │
+│ │ 📷   │ Rosmel Cabrera     │ Seguidor │ Siguien. │ Link  │ │
+│ │      │ @rosmel            │    12    │    5     │  ↗    │ │
+│ ├──────┼────────────────────┼──────────┼──────────┼───────┤ │
+│ │ 📷   │ Juan López         │ Seguidor │ Siguien. │ Link  │ │
+│ │      │ @juanlopez         │    8     │    15    │  ↗    │ │
+│ └──────┴────────────────────┴──────────┴──────────┴───────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Dialog de Seguidores/Siguiendo
+
+Al hacer clic en un número, se abre un dialog mostrando:
+- Lista simple con avatar + nombre + username
+- Link para ver cada perfil público
+
+---
+
+## Implementación Técnica
+
+### 1. UsersManager.tsx
+
+```text
+Query principal:
+- Consultar tabla `profiles` (SELECT público disponible por RLS)
+- Para cada perfil, obtener conteo de followers y following
+
+Información mostrada:
+- avatar_url → Foto circular
+- name → Nombre completo
+- username → Username con @
+- Link externo → Abre /@username
+- Contadores → Clicleables para abrir dialog
+```
+
+### 2. FollowListDialog.tsx
+
+```text
+Props:
+- isOpen: boolean
+- onClose: () => void
+- userId: string
+- type: 'followers' | 'following'
+
+Query según tipo:
+- followers: SELECT profiles WHERE id IN (SELECT follower_id FROM follows WHERE following_id = userId)
+- following: SELECT profiles WHERE id IN (SELECT following_id FROM follows WHERE follower_id = userId)
+```
+
+### 3. AdminSidebar.tsx
+
+Agregar nueva entrada al menú:
+```typescript
+{
+  title: 'Usuarios',
+  href: '/admin/users',
+  icon: Users,
+}
+```
+
+### 4. Admin.tsx
+
+Agregar nueva ruta:
+```typescript
+<Route path="users" element={<UsersManager />} />
+```
+
+---
+
+## Flujo de Datos
+
+```text
+1. Admin navega a /admin/users
+2. UsersManager carga todos los profiles
+3. Para cada profile, se consultan los conteos de follows
+4. Al hacer clic en un contador:
+   - Se abre FollowListDialog
+   - Se consultan los profiles relacionados (followers o following)
+   - Se muestran en una lista scrolleable
+```
+
+---
+
+## Consideraciones de Seguridad
+
+- La tabla `profiles` tiene RLS que permite SELECT público
+- La tabla `follows` tiene RLS que permite SELECT público
+- No se requieren cambios en las políticas de seguridad
+- Solo se muestra información ya pública (perfiles y relaciones de seguimiento)
 
