@@ -101,6 +101,9 @@ export function OgImageSection({ profile, onUpload, onDelete }: OgImageSectionPr
               <p className="text-[10px] text-gray-500 uppercase tracking-wide">vibecoders.la</p>
               <p className="text-sm font-semibold text-[#1c1c1c] line-clamp-1">{displayName}</p>
               <p className="text-xs text-gray-600 line-clamp-1">{tagline}</p>
+              {tagline.length < 100 && tagline.length > 0 && (
+                <p className="text-[10px] text-amber-600 mt-1">⚠ Min. 100 caracteres recomendados</p>
+              )}
             </div>
           </div>
         </div>

@@ -277,12 +277,21 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
           <Input
             id="tagline"
             value={profile.tagline || ''}
-            onChange={e => onUpdate({ tagline: e.target.value.slice(0, 100) })}
+            onChange={e => onUpdate({ tagline: e.target.value.slice(0, 160) })}
             placeholder="Una frase que te defina"
-            maxLength={100}
+            maxLength={160}
             className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
           />
-          <p className="text-xs text-muted-foreground text-right">{profile.tagline?.length || 0}/100</p>
+          <div className="flex justify-between text-xs">
+            <span className={cn(
+              "text-muted-foreground",
+              (profile.tagline?.length || 0) < 100 && (profile.tagline?.length || 0) > 0 && "text-amber-600"
+            )}>
+              {(profile.tagline?.length || 0) > 0 && (profile.tagline?.length || 0) < 100 && 
+                "LinkedIn recomienda min. 100 caracteres"}
+            </span>
+            <span className="text-muted-foreground">{profile.tagline?.length || 0}/160</span>
+          </div>
         </div>
 
         {/* Bio */}

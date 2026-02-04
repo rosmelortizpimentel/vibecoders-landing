@@ -1,5 +1,6 @@
 import { Lock, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Tooltip,
   TooltipContent,
@@ -11,7 +12,7 @@ interface BuildLogEntry {
   number: string;
   title: string;
   subtitle: string;
-  isActive?: boolean;
+  href: string;
   isLocked?: boolean;
 }
 
@@ -21,7 +22,14 @@ const entries: BuildLogEntry[] = [
     number: '01',
     title: 'El Stack & Arquitectura',
     subtitle: 'Lovable, Supabase & Vercel.',
-    isActive: true,
+    href: '/buildlog',
+  },
+  {
+    id: '02',
+    number: '02',
+    title: 'OG Dinámico en Redes',
+    subtitle: 'LinkedIn, WhatsApp & X.',
+    href: '/buildlog/og-dynamic',
   },
 ];
 
@@ -45,11 +53,14 @@ export function BuildLogSidebar() {
 }
 
 function BuildLogMenuItem({ entry }: { entry: BuildLogEntry }) {
+  const location = useLocation();
+  const isActive = location.pathname === entry.href;
+
   const content = (
     <div
       className={cn(
-        "group relative flex flex-col px-4 py-3 rounded-lg transition-all cursor-pointer",
-        entry.isActive 
+        "group relative flex flex-col px-4 py-3 rounded-lg transition-all",
+        isActive 
           ? "bg-primary/5 border-l-2 border-primary" 
           : "hover:bg-gray-50 border-l-2 border-transparent",
         entry.isLocked && "opacity-60"
@@ -59,7 +70,7 @@ function BuildLogMenuItem({ entry }: { entry: BuildLogEntry }) {
         <span 
           className={cn(
             "text-sm font-medium",
-            entry.isActive ? "text-primary" : "text-gray-700"
+            isActive ? "text-primary" : "text-gray-700"
           )}
         >
           {entry.number}. {entry.title}
@@ -87,5 +98,9 @@ function BuildLogMenuItem({ entry }: { entry: BuildLogEntry }) {
     );
   }
 
-  return content;
+  return (
+    <Link to={entry.href} className="block">
+      {content}
+    </Link>
+  );
 }
