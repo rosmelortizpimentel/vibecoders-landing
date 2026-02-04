@@ -278,13 +278,13 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
           <div className={`flex items-center gap-2 text-sm text-gray-500 mt-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
             <button 
               onClick={() => setViewMode(viewMode === 'following' ? 'apps' : 'following')}
-              className={`hover:text-gray-900 transition-colors ${viewMode === 'following' ? 'text-gray-900 font-medium' : ''}`}
+              className={`cursor-pointer hover:text-gray-900 hover:underline transition-colors ${viewMode === 'following' ? 'text-gray-900 font-medium underline' : ''}`}
             >
               <strong className="text-gray-900">{followingCount}</strong> siguiendo
             </button>
             <button 
               onClick={() => setViewMode(viewMode === 'followers' ? 'apps' : 'followers')}
-              className={`hover:text-gray-900 transition-colors ${viewMode === 'followers' ? 'text-gray-900 font-medium' : ''}`}
+              className={`cursor-pointer hover:text-gray-900 hover:underline transition-colors ${viewMode === 'followers' ? 'text-gray-900 font-medium underline' : ''}`}
             >
               <strong className="text-gray-900">{followersCount}</strong> seguidores
             </button>
