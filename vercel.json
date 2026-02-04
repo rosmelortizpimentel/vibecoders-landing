@@ -5,7 +5,7 @@
       "has": [
         {
           "type": "header",
-          "key": "user-agent",
+          "key": "User-Agent",
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|TelegramBot|Slackbot|Discordbot|Googlebot|bingbot|Baiduspider|yandex|Applebot|Pinterest|vkShare|Viber|Skype|Line|Tumblr|Embed|redditbot|Mastodon|Pleroma).*"
         }
       ],
