@@ -1,129 +1,224 @@
 
-
 ## Resumen
 
-Se creará una nueva sección "Usuarios" en el panel de administración que mostrará todos los usuarios registrados con sus datos básicos y estadísticas de seguimiento. Al hacer clic en los contadores de seguidores/siguiendo, se mostrará una lista simple con los perfiles correspondientes.
+Implementar un sistema interactivo de seguidores/siguiendo en los perfiles públicos que permita:
+- Ver la lista de seguidores/siguiendo en lugar de las apps
+- Seguir usuarios con un solo clic
+- Dejar de seguir con confirmación personalizada
+- Navegar entre perfiles sin recargar la página completa
 
 ---
 
-## Vista General
-
-La nueva sección mostrará:
-- Foto de perfil (avatar)
-- Nombre y username
-- Link al perfil público (`/@username`)
-- Contador de seguidores (clickeable)
-- Contador de siguiendo (clickeable)
-
----
-
-## Archivos a Crear/Modificar
-
-| Archivo | Acción |
-|---------|--------|
-| `src/components/admin/UsersManager.tsx` | **Crear** - Componente principal de gestión de usuarios |
-| `src/components/admin/FollowListDialog.tsx` | **Crear** - Dialog para mostrar lista de seguidores/siguiendo |
-| `src/components/admin/AdminSidebar.tsx` | **Modificar** - Agregar entrada "Usuarios" al menú |
-| `src/pages/Admin.tsx` | **Modificar** - Agregar ruta para `/admin/users` |
-
----
-
-## Diseño de la Interfaz
-
-### Lista de Usuarios (UsersManager)
+## Comportamiento del Usuario
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
-│  Gestión de Usuarios                                        │
-│  Ver todos los usuarios registrados en la plataforma        │
+│ Perfil de @rosmelortiz                                      │
+│                                                             │
+│  [Avatar]  Rosmel Ortiz                                     │
+│            1 siguiendo  2 seguidores  ·  @rosmelortiz       │
+│                   ↑            ↑                            │
+│              CLICKEABLE    CLICKEABLE                       │
+└─────────────────────────────────────────────────────────────┘
+                        │
+                        ▼
+        ┌───────────────────────────────────┐
+        │ Si hace clic en "siguiendo" o     │
+        │ "seguidores", la sección APPS     │
+        │ cambia a mostrar esa lista        │
+        └───────────────────────────────────┘
+```
+
+---
+
+## Nueva Sección de Seguidores/Siguiendo
+
+Cuando el usuario hace clic en los contadores, la sección de apps se reemplaza por:
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  ← Volver a Apps                          SIGUIENDO (5)     │
 ├─────────────────────────────────────────────────────────────┤
-│ ┌──────┬────────────────────┬──────────┬──────────┬───────┐ │
-│ │ 📷   │ Rosmel Cabrera     │ Seguidor │ Siguien. │ Link  │ │
-│ │      │ @rosmel            │    12    │    5     │  ↗    │ │
-│ ├──────┼────────────────────┼──────────┼──────────┼───────┤ │
-│ │ 📷   │ Juan López         │ Seguidor │ Siguien. │ Link  │ │
-│ │      │ @juanlopez         │    8     │    15    │  ↗    │ │
-│ └──────┴────────────────────┴──────────┴──────────┴───────┘ │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │  [Avatar]  Juan López                      [Siguiendo ▼]│ │
+│ │            @juanlopez                                    │ │
+│ │            Frontend developer & indie hacker             │ │
+│ └─────────────────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │  [Avatar]  María García                    [Seguir]      │ │
+│ │            @mariagarcia                                  │ │
+│ │            Building cool stuff with AI                   │ │
+│ └─────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### Dialog de Seguidores/Siguiendo
+---
 
-Al hacer clic en un número, se abre un dialog mostrando:
-- Lista simple con avatar + nombre + username
-- Link para ver cada perfil público
+## Lógica de Botones
+
+| Acción | Comportamiento |
+|--------|----------------|
+| **Seguir** | Se ejecuta inmediatamente sin confirmación |
+| **Dejar de Seguir** | Muestra popup de confirmación con tarjeta del usuario |
+
+### Popup de Confirmación (Dejar de Seguir)
+
+```text
+┌─────────────────────────────────────────┐
+│                                         │
+│        [Avatar grande]                  │
+│        Juan López                       │
+│        @juanlopez                       │
+│                                         │
+│   ¿Dejar de seguir a @juanlopez?        │
+│                                         │
+│   [Cancelar]      [Dejar de Seguir]     │
+│                                         │
+└─────────────────────────────────────────┘
+```
 
 ---
 
-## Implementación Técnica
+## Navegación Entre Perfiles
 
-### 1. UsersManager.tsx
+Al hacer clic en un usuario de la lista:
+- El contenido del perfil se reemplaza por el nuevo perfil
+- El header y footer NO se recargan
+- Se añade un botón de "← Atrás" en el header para navegar hacia atrás
+- Se mantiene un historial interno de perfiles visitados
 
-```text
-Query principal:
-- Consultar tabla `profiles` (SELECT público disponible por RLS)
-- Para cada perfil, obtener conteo de followers y following
-
-Información mostrada:
-- avatar_url → Foto circular
-- name → Nombre completo
-- username → Username con @
-- Link externo → Abre /@username
-- Contadores → Clicleables para abrir dialog
-```
-
-### 2. FollowListDialog.tsx
+### Flujo de Navegación
 
 ```text
-Props:
-- isOpen: boolean
-- onClose: () => void
-- userId: string
-- type: 'followers' | 'following'
-
-Query según tipo:
-- followers: SELECT profiles WHERE id IN (SELECT follower_id FROM follows WHERE following_id = userId)
-- following: SELECT profiles WHERE id IN (SELECT following_id FROM follows WHERE follower_id = userId)
+@rosmel → click en @juan → click en @maria → click ← Atrás
+    │                                              │
+    └──────────────────────────────────────────────┘
+                    vuelve a @juan
 ```
 
-### 3. AdminSidebar.tsx
+---
 
-Agregar nueva entrada al menú:
+## Archivos a Crear
+
+| Archivo | Descripción |
+|---------|-------------|
+| `src/components/profile/FollowersList.tsx` | Lista de seguidores/siguiendo con botón de seguir |
+| `src/components/profile/FollowerCard.tsx` | Tarjeta individual de un seguidor |
+| `src/components/profile/UnfollowConfirmDialog.tsx` | Popup de confirmación para dejar de seguir |
+| `src/components/profile/ProfileNavigator.tsx` | Wrapper que maneja navegación entre perfiles |
+| `src/hooks/useFollowList.ts` | Hook para obtener lista de seguidores/siguiendo con sus perfiles |
+| `src/hooks/useFollowAction.ts` | Hook para seguir/dejar de seguir con estado optimista |
+
+---
+
+## Archivos a Modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/components/PublicProfileCard.tsx` | - Hacer los contadores clickeables<br>- Agregar estado para mostrar apps vs. lista<br>- Integrar `FollowersList` |
+| `src/pages/PublicProfile.tsx` | - Integrar `ProfileNavigator` para manejar historial de navegación |
+| `src/hooks/usePublicProfile.ts` | - Agregar método de refetch para actualizar datos |
+
+---
+
+## Detalles Técnicos
+
+### 1. Estado del Perfil Público
+
 ```typescript
-{
-  title: 'Usuarios',
-  href: '/admin/users',
-  icon: Users,
+// Nuevo estado en PublicProfileCard
+type ViewMode = 'apps' | 'followers' | 'following';
+const [viewMode, setViewMode] = useState<ViewMode>('apps');
+```
+
+### 2. Hook useFollowList
+
+```typescript
+interface FollowerProfile {
+  id: string;
+  username: string;
+  name: string | null;
+  avatar_url: string | null;
+  tagline: string | null;
+  isFollowing: boolean; // Si el usuario actual sigue a este perfil
+}
+
+function useFollowList(
+  profileId: string,
+  type: 'followers' | 'following'
+): {
+  profiles: FollowerProfile[];
+  loading: boolean;
+  refetch: () => void;
 }
 ```
 
-### 4. Admin.tsx
+### 3. Navegación Sin Recarga
 
-Agregar nueva ruta:
 ```typescript
-<Route path="users" element={<UsersManager />} />
+// ProfileNavigator mantiene un stack de perfiles
+const [profileStack, setProfileStack] = useState<string[]>([initialUsername]);
+
+// Navegar a nuevo perfil
+const pushProfile = (username: string) => {
+  setProfileStack(prev => [...prev, username]);
+};
+
+// Volver atrás
+const popProfile = () => {
+  setProfileStack(prev => prev.slice(0, -1));
+};
+
+// El perfil actual es el último del stack
+const currentUsername = profileStack[profileStack.length - 1];
+```
+
+### 4. Optimización del Botón Seguir
+
+```typescript
+// Usar estado optimista para respuesta inmediata
+const handleFollow = async () => {
+  setIsFollowingOptimistic(true); // Inmediato
+  try {
+    await supabase.from('follows').insert({...});
+  } catch {
+    setIsFollowingOptimistic(false); // Revertir si falla
+  }
+};
 ```
 
 ---
 
-## Flujo de Datos
+## Diseño Visual
 
-```text
-1. Admin navega a /admin/users
-2. UsersManager carga todos los profiles
-3. Para cada profile, se consultan los conteos de follows
-4. Al hacer clic en un contador:
-   - Se abre FollowListDialog
-   - Se consultan los profiles relacionados (followers o following)
-   - Se muestran en una lista scrolleable
-```
+### Tarjeta de Seguidor
+
+- Avatar circular (40x40px) a la izquierda
+- Nombre en negrita, username debajo en gris
+- Tagline en texto más pequeño (line-clamp-2)
+- Botón de seguir/siguiendo a la derecha
+- Hacer clic en la tarjeta (excepto botón) navega al perfil
+
+### Botón de Seguir
+
+| Estado | Estilo |
+|--------|--------|
+| No siguiendo | Fondo negro (#1c1c1c), texto blanco, "Seguir" |
+| Siguiendo | Borde gris, fondo blanco, "Siguiendo" |
+| Hover en Siguiendo | Cambia a "Dejar de seguir" en rojo |
 
 ---
 
-## Consideraciones de Seguridad
+## Flujo Completo
 
-- La tabla `profiles` tiene RLS que permite SELECT público
-- La tabla `follows` tiene RLS que permite SELECT público
-- No se requieren cambios en las políticas de seguridad
-- Solo se muestra información ya pública (perfiles y relaciones de seguimiento)
-
+1. Usuario visita `/@rosmel`
+2. Ve el perfil con apps
+3. Hace clic en "5 seguidores"
+4. La sección de apps cambia a mostrar la lista de seguidores
+5. Ve los 5 usuarios con sus fotos, nombres y botones
+6. Hace clic en "Seguir" → Se sigue inmediatamente
+7. Hace clic en "Siguiendo" (otro usuario) → Popup de confirmación
+8. Confirma → Se deja de seguir
+9. Hace clic en una tarjeta de usuario → Se carga ese perfil en la misma página
+10. Aparece botón "← Atrás" en el header
+11. Hace clic en "← Atrás" → Vuelve al perfil de @rosmel
