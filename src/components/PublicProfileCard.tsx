@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink } from 'lucide-react';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
 import { PioneerBadge } from '@/components/PioneerBadge';
-import { PublicProfileHeader } from '@/components/PublicProfileHeader';
+
 import { FollowButton } from '@/components/FollowButton';
 import { FollowersList } from '@/components/profile/FollowersList';
 import { useFollow } from '@/hooks/useFollow';
@@ -226,12 +226,9 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
 
   return (
     <div 
-      className="w-full min-h-screen bg-white"
+      className="w-full bg-white"
       style={{ fontFamily }}
     >
-      {/* Header - Shows user menu if logged in */}
-      <PublicProfileHeader profileUsername={profile.username} />
-
       {/* Content container - centered on desktop */}
       <div className="w-full max-w-4xl mx-auto">
         {/* Banner + Avatar */}

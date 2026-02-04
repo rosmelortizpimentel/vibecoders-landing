@@ -21,11 +21,16 @@ export function useFollowList(
   profileId: string | undefined,
   type: 'followers' | 'following'
 ): UseFollowListResult {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profiles, setProfiles] = useState<FollowerProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchProfiles = useCallback(async () => {
+    // Wait for auth to finish loading before fetching
+    if (authLoading) {
+      return;
+    }
+
     if (!profileId) {
       setLoading(false);
       return;
@@ -102,7 +107,7 @@ export function useFollowList(
     } finally {
       setLoading(false);
     }
-  }, [profileId, type, user]);
+  }, [profileId, type, user, authLoading]);
 
   useEffect(() => {
     fetchProfiles();
