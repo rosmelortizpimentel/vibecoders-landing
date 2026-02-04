@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink } from 'lucide-react';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
 import { PioneerBadge } from '@/components/PioneerBadge';
 import { PublicProfileHeader } from '@/components/PublicProfileHeader';
 import { FollowButton } from '@/components/FollowButton';
+import { FollowersList } from '@/components/profile/FollowersList';
 import { useFollow } from '@/hooks/useFollow';
 import { useFavicon } from '@/hooks/useFavicon';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,7 +19,10 @@ import {
 
 interface PublicProfileCardProps {
   profile: PublicProfile;
+  onNavigateToProfile?: (username: string) => void;
 }
+
+type ViewMode = 'apps' | 'followers' | 'following';
 
 // X icon (current logo)
 const XIcon = ({ className }: { className?: string }) => (
@@ -43,7 +47,7 @@ const socialConfig = [
   { key: 'lovable', icon: LovableIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://lovable.dev/@${v}` },
   { key: 'linkedin', icon: Linkedin, getUrl: (v: string) => v.startsWith('http') ? v : `https://linkedin.com/in/${v}` },
   { key: 'twitter', icon: XIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://x.com/${v}` },
-  { key: 'instagram', icon: Instagram, getUrl: (v: string) => v.startsWith('http') ? v : `https://instagram.com/${v}` },
+  { key: 'instagram', icon: Instagram, getUrl: (v: string) => v.startsWith('http') ? v : `https://instagram.com/@${v}` },
   { key: 'youtube', icon: Youtube, getUrl: (v: string) => v.startsWith('http') ? v : `https://youtube.com/@${v}` },
   { key: 'tiktok', icon: TikTokIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://tiktok.com/@${v}` },
   { key: 'github', icon: Github, getUrl: (v: string) => v.startsWith('http') ? v : `https://github.com/${v}` },
@@ -152,15 +156,21 @@ function PublicAppCard({ app }: { app: PublicApp }) {
   );
 }
 
-export function PublicProfileCard({ profile }: PublicProfileCardProps) {
+export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfileCardProps) {
   const { user } = useAuth();
   const { isFollowing, isLoading: followLoading, followersCount, followingCount, toggleFollow } = useFollow(profile.id);
+  const [viewMode, setViewMode] = useState<ViewMode>('apps');
 
   // Check if viewing own profile
   const isOwnProfile = user?.id === profile.id;
 
   // Dynamic favicon with user's avatar
   useFavicon(profile.avatar_url || undefined);
+
+  // Reset view mode when profile changes
+  useEffect(() => {
+    setViewMode('apps');
+  }, [profile.id]);
 
   // Load font dynamically
   useEffect(() => {
@@ -207,6 +217,12 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
 
   // Get active socials
   const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof PublicProfile]);
+
+  const handleNavigateToProfile = (targetUsername: string) => {
+    if (onNavigateToProfile) {
+      onNavigateToProfile(targetUsername);
+    }
+  };
 
   return (
     <div 
@@ -258,10 +274,20 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
             )}
           </div>
 
-          {/* Username + Followers */}
+          {/* Username + Followers (Clickeable) */}
           <div className={`flex items-center gap-2 text-sm text-gray-500 mt-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-            <span><strong className="text-gray-900">{followingCount}</strong> siguiendo</span>
-            <span><strong className="text-gray-900">{followersCount}</strong> seguidores</span>
+            <button 
+              onClick={() => setViewMode(viewMode === 'following' ? 'apps' : 'following')}
+              className={`hover:text-gray-900 transition-colors ${viewMode === 'following' ? 'text-gray-900 font-medium' : ''}`}
+            >
+              <strong className="text-gray-900">{followingCount}</strong> siguiendo
+            </button>
+            <button 
+              onClick={() => setViewMode(viewMode === 'followers' ? 'apps' : 'followers')}
+              className={`hover:text-gray-900 transition-colors ${viewMode === 'followers' ? 'text-gray-900 font-medium' : ''}`}
+            >
+              <strong className="text-gray-900">{followersCount}</strong> seguidores
+            </button>
             <span>·</span>
             <span>@{username}</span>
           </div>
@@ -331,19 +357,28 @@ export function PublicProfileCard({ profile }: PublicProfileCardProps) {
           )}
         </div>
 
-        {/* Apps Section */}
-        {profile.apps.length > 0 && (
-          <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-              Apps
-            </p>
-            {/* Mobile: single column, Desktop: grid of 2 */}
-            <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
-              {profile.apps.map(app => (
-                <PublicAppCard key={app.id} app={app} />
-              ))}
+        {/* Apps Section OR Followers/Following List */}
+        {viewMode === 'apps' ? (
+          profile.apps.length > 0 && (
+            <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+                Apps
+              </p>
+              {/* Mobile: single column, Desktop: grid of 2 */}
+              <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+                {profile.apps.map(app => (
+                  <PublicAppCard key={app.id} app={app} />
+                ))}
+              </div>
             </div>
-          </div>
+          )
+        ) : (
+          <FollowersList
+            profileId={profile.id}
+            type={viewMode}
+            onBack={() => setViewMode('apps')}
+            onNavigateToProfile={handleNavigateToProfile}
+          />
         )}
 
         {/* Footer */}
