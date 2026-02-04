@@ -8,6 +8,7 @@ import { ShowcaseManager } from '@/components/admin/ShowcaseManager';
 import { StackManager } from '@/components/admin/StackManager';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { UsersManager } from '@/components/admin/UsersManager';
+import { WaitlistManager } from '@/components/admin/WaitlistManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -70,6 +71,7 @@ const Admin = () => {
         <Route path="showcase" element={<ShowcaseManager />} />
         <Route path="stack" element={<StackManager />} />
         <Route path="users" element={<UsersManager />} />
+        <Route path="waitlist" element={<WaitlistManager />} />
         <Route path="settings" element={<SettingsManager />} />
       </Route>
     </Routes>
