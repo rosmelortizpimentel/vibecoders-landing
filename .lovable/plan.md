@@ -1,72 +1,68 @@
 
-
 ## Objetivo
-Resolver el error 500 que LinkedIn Post Inspector recibe al inspeccionar URLs como `https://building.vibecoders.la/@hgf`, mientras WhatsApp y Twitter funcionan correctamente.
+Resolver el error 500 de LinkedIn haciendo que la función de Vercel pueda acceder a los datos de perfiles usando la **anon key pública** (que ya tenemos).
 
 ---
 
-## Diagnóstico completo
+## Diagnóstico actualizado
 
-### Lo que funciona ✅
-- **WhatsApp**: Muestra los metadatos correctamente
-- **Twitter**: Título y descripción se muestran (imagen pendiente)
-- **curl directo a `/api/og/`**: Devuelve "Rosmel Ortiz" correctamente
-- **Edge Function de Supabase**: Responde 200 OK con los metadatos correctos
+### Problema actual
+La función de Vercel (`api/og/[username].ts`) necesita `SUPABASE_SERVICE_ROLE_KEY` porque la tabla `profiles` tiene RLS que **solo permite que cada usuario vea su propio perfil**:
 
-### Lo que falla ❌
-- **LinkedIn Post Inspector**: Recibe 500 cuando inspecciona `/@username`
-
-### Evidencia técnica
-| Componente | Status | Timestamp |
-|------------|--------|-----------|
-| Supabase Edge Function | 200 OK | 1770177766889 |
-| LinkedIn recibe | 500 | 1770177766923 |
-| Diferencia | **34ms** | - |
-
-El 500 se genera **después** de que Supabase responde exitosamente, lo que indica que **Vercel está fallando al procesar la respuesta proxy**.
-
----
-
-## Causa probable
-El header `Content-Security-Policy: default-src 'none'; sandbox` que Supabase agrega automáticamente puede estar causando que Vercel rechace o modifique la respuesta de manera incompatible con LinkedIn.
-
-Además, la Edge Function no tiene headers CORS explícitos, lo cual algunos proxies intermedios pueden requerir.
-
----
-
-## Solución propuesta
-
-### Cambio 1: Agregar CORS headers a la Edge Function
-Agregar headers CORS permisivos para asegurar que cualquier proxy/crawler pueda recibir la respuesta correctamente:
-
-```typescript
-// En og-profile-meta/index.ts
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': '*',
-}
-
-// En generateHtmlResponse()
-return new Response(html, {
-  status: 200,
-  headers: {
-    ...corsHeaders,
-    'Content-Type': 'text/html; charset=utf-8',
-    'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-    'X-Content-Type-Options': 'nosniff',
-  },
-})
+```sql
+-- Política actual en profiles
+SELECT: "Users can view own profile" → qual: (auth.uid() = id)
 ```
 
-### Cambio 2: Agregar handler OPTIONS
-Para manejar preflight requests que algunos proxies pueden enviar:
+Esto significa que con la anon key, nadie puede leer perfiles de otros usuarios.
+
+### Solución
+Agregar una política RLS que permita **lectura pública** de la tabla profiles. Esto es seguro porque:
+1. Solo exponemos campos que ya son públicos (nombre, username, avatar, tagline, bio, etc.)
+2. La Edge Function `get-public-profile` ya hace exactamente esto (usa service_role para leer)
+3. Los perfiles públicos están diseñados para ser... públicos
+
+---
+
+## Cambios necesarios
+
+### Paso 1: Agregar política RLS para lectura pública de profiles
+Nueva política en la tabla `profiles`:
+```sql
+CREATE POLICY "Public profiles are viewable by everyone" 
+ON public.profiles 
+FOR SELECT 
+TO anon, authenticated
+USING (true);
+```
+
+### Paso 2: Actualizar la función de Vercel para usar anon key
+Cambiar `api/og/[username].ts` para usar la anon key pública (que ya está hardcodeada en el proyecto) en lugar de la service role key:
 
 ```typescript
-// Al inicio de Deno.serve()
-if (req.method === 'OPTIONS') {
-  return new Response('ok', { headers: corsHeaders })
-}
+// Cambiar de:
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// A:
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // La que ya tenemos
 ```
+
+---
+
+## ¿Por qué es seguro?
+
+| Campo | ¿Ya es público? | Notas |
+|-------|-----------------|-------|
+| username | ✅ | Visible en URL |
+| name | ✅ | Visible en perfil público |
+| tagline | ✅ | Visible en perfil público |
+| bio | ✅ | Visible en perfil público |
+| avatar_url | ✅ | Visible en perfil público |
+| banner_url | ✅ | Visible en perfil público |
+| og_image_url | ✅ | Para metadatos OG |
+| redes sociales | ✅ | Usuario las hace públicas |
+
+La Edge Function `get-public-profile` ya expone todos estos campos. Solo estamos permitiendo el mismo acceso vía RLS.
 
 ---
 
@@ -74,34 +70,14 @@ if (req.method === 'OPTIONS') {
 
 | Archivo | Cambio |
 |---------|--------|
-| `supabase/functions/og-profile-meta/index.ts` | Agregar CORS headers y handler OPTIONS |
+| Migración SQL | Agregar política RLS de lectura pública |
+| `api/og/[username].ts` | Usar anon key en lugar de service role key |
 
 ---
 
-## Verificación post-deploy
+## Beneficios de esta solución
 
-### 1. Desplegar Edge Function
-Los cambios se desplegarán automáticamente.
-
-### 2. Probar con curl
-```bat
-curl -A "LinkedInBot" "https://building.vibecoders.la/@hgf" 2>nul | findstr /i "og:title title"
-```
-
-### 3. Re-inspeccionar en LinkedIn
-1. Ir a [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/inspect/https%3A%2F%2Fbuilding.vibecoders.la%2F%40hgf)
-2. Click "Inspect" nuevamente
-3. Verificar que ya no muestre 500
-
----
-
-## Por qué esto debería funcionar
-1. Los headers CORS explícitos aseguran que Vercel no bloquee/modifique la respuesta
-2. El handler OPTIONS maneja cualquier preflight request que pueda estar causando el 500
-3. Los headers adicionales (`X-Content-Type-Options`) ayudan a que los proxies traten la respuesta correctamente
-
----
-
-## Riesgo / Fallback
-Si después de estos cambios LinkedIn sigue dando 500, la alternativa sería cambiar de estrategia y usar Vercel Serverless Functions en vez de rewrites externos (esto requeriría habilitar Node.js functions en el proyecto).
-
+1. **No requiere configurar secretos en Vercel** - usa la anon key pública
+2. **Consistente con el diseño actual** - los perfiles ya son públicos
+3. **Funciona inmediatamente** - sin dependencias externas
+4. **LinkedIn recibirá 200 OK** - Vercel genera el HTML directamente sin proxy
