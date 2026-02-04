@@ -158,7 +158,7 @@ function PublicAppCard({ app }: { app: PublicApp }) {
 
 export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfileCardProps) {
   const { user } = useAuth();
-  const { isFollowing, isLoading: followLoading, followersCount, followingCount, toggleFollow } = useFollow(profile.id);
+  const { isFollowing, isLoading: followLoading, followersCount, followingCount, toggleFollow, refetch: refetchFollowData } = useFollow(profile.id);
   const [viewMode, setViewMode] = useState<ViewMode>('apps');
 
   // Check if viewing own profile
@@ -378,6 +378,7 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
             type={viewMode}
             onBack={() => setViewMode('apps')}
             onNavigateToProfile={handleNavigateToProfile}
+            onFollowChange={refetchFollowData}
           />
         )}
 
