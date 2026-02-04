@@ -1,130 +1,140 @@
 
-## Objetivo
-Restaurar previews OG por usuario (nombre/tagline/imagen) en **LinkedIn + WhatsApp + X** al compartir:
-- `https://building.vibecoders.la/@ros1`
-sin exponer claves críticas (service role) y con un método de debugging verificable.
+## Diagnóstico Final
+
+La Edge Function de Supabase funciona perfectamente (logs confirman: "Found profile: Rosmel Ortiz", responde 200 con todos los datos correctos). El problema es que **Vercel está fallando al hacer el rewrite externo a Supabase** para el User-Agent de LinkedIn.
+
+### Por qué WhatsApp funciona y LinkedIn no:
+- Vercel `rewrites` a URLs externas puede tener comportamiento inconsistente
+- El rewrite externo puede funcionar para algunos bots pero fallar para otros
+- LinkedIn reporta exactamente HTTP 500 desde `building.vibecoders.la`, lo que indica que Vercel falla al hacer proxy de la respuesta
 
 ---
 
-## Lo que ya comprobamos (y por qué NO es “permisos”)
-1. **RLS en Supabase está bien para lectura pública**:
-   - `general_settings`: `SELECT` para `anon, authenticated`
-   - `profiles`: existe `Public profiles are viewable by everyone` para `anon, authenticated`
-2. En DB existe el perfil y datos de `ros1`:
-   - `name = "Rosmel Ortiz"`, `tagline` y `og_image_url` existen.
-3. La razón más probable de que **todas las redes muestren genérico** es que los bots están recibiendo **el `index.html` del SPA** (OG genérico), porque el rewrite condicional por User-Agent **no está activándose** (config de `vercel.json`) o porque el HTML OG actual induce redirect/fallback.
+## Solución Propuesta
 
-Esto encaja perfecto con tu síntoma: “todo responde 200 pero con datos genéricos” → significa que el crawler no está viendo el HTML OG dinámico.
+En lugar de hacer rewrite externo a Supabase (que es problemático), hacer que `vercel.json` redirija a la **función local de Vercel** (`/api/og/:username`) y **convertir esa función en un proxy** que llama a la Edge Function de Supabase.
+
+### Ventajas de este enfoque:
+1. Los rewrites internos de Vercel son 100% confiables
+2. La función de Vercel actúa como proxy transparente
+3. La Edge Function de Supabase sigue manejando la lógica (con service_role)
+4. No hay keys críticas expuestas adicionales
 
 ---
 
-## Causa raíz más probable en `vercel.json`
-Tu `vercel.json` usa:
+## Cambios a Implementar
+
+### 1) `vercel.json` - Volver a rewrites internos
+
 ```json
-"has": [{ "type": "header", "key": "User-Agent", ... }]
+{
+  "rewrites": [
+    {
+      "source": "/@:username",
+      "has": [{ "type": "query", "key": "og", "value": "1" }],
+      "destination": "/api/og/:username"
+    },
+    {
+      "source": "/@:username/",
+      "has": [{ "type": "query", "key": "og", "value": "1" }],
+      "destination": "/api/og/:username"
+    },
+    {
+      "source": "/@:username",
+      "has": [{
+        "type": "header",
+        "key": "user-agent",
+        "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|...).*"
+      }],
+      "destination": "/api/og/:username"
+    },
+    {
+      "source": "/@:username/",
+      "has": [{
+        "type": "header",
+        "key": "user-agent",
+        "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|WhatsApp|...).*"
+      }],
+      "destination": "/api/og/:username"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
+  ]
+}
 ```
-En Vercel, el matching de headers en `has` suele requerir el header key en minúscula (`user-agent`). Con `User-Agent`, el match puede no ocurrir y entonces **cae al catch-all**:
-```json
-{ "source": "/(.*)", "destination": "/" }
+
+### 2) `api/og/[username].ts` - Convertir en proxy a Supabase Edge Function
+
+En lugar de hacer las consultas directamente a la DB con anon key, la función hará:
+
+```typescript
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const { username } = req.query;
+  const usernameStr = Array.isArray(username) ? username[0] : username || '';
+
+  try {
+    // Proxy a la Edge Function de Supabase
+    const response = await fetch(
+      `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=${encodeURIComponent(usernameStr)}`
+    );
+
+    // Copiar headers relevantes
+    res.setHeader('Content-Type', response.headers.get('Content-Type') || 'text/html');
+    res.setHeader('Cache-Control', response.headers.get('Cache-Control') || 'public, max-age=3600');
+    
+    // Headers de debug
+    res.setHeader('X-Og-Source', 'vercel-proxy');
+    res.setHeader('X-Og-Username', usernameStr);
+    res.setHeader('X-Og-Upstream-Status', response.status.toString());
+
+    const html = await response.text();
+    return res.status(response.status).send(html);
+
+  } catch (error) {
+    console.error('[og-proxy] Error:', error);
+    // Fallback a HTML genérico
+    return res.status(500).send('Error fetching OG metadata');
+  }
+}
 ```
-y eso sirve el SPA con OG genérico.
+
+Este enfoque:
+- Elimina la `anon_key` hardcodeada de la función de Vercel
+- Usa la Edge Function de Supabase que ya funciona y tiene `service_role`
+- Los rewrites internos de Vercel son confiables
+- Mantiene logs en ambos lados (Vercel + Supabase) para debugging
 
 ---
 
-## Estrategia (robusta y sin claves críticas)
-En vez de depender de la Function de Vercel que consulta Supabase con anon key, vamos a hacer que Vercel entregue el HTML OG desde **la Edge Function de Supabase** (`og-profile-meta`), que:
-- ya está construida para esto,
-- usa `SUPABASE_SERVICE_ROLE_KEY` guardada en **secrets de Supabase** (no en repo),
-- y tiene logs en Supabase para debugging confiable.
+## Archivos a Modificar
 
-Vercel solo hace rewrite de bots → Supabase Edge Function.
+| Archivo | Cambio |
+|---------|--------|
+| `vercel.json` | Cambiar destination de URL externa a `/api/og/:username` |
+| `api/og/[username].ts` | Convertir en proxy simple que llama a la Edge Function de Supabase |
 
 ---
 
-## Cambios a implementar (código)
-### 1) `vercel.json`: arreglar “has header” + apuntar a Supabase Edge Function
-- Cambiar header key a `user-agent` (minúscula).
-- Cambiar el `destination` a URL externa (Supabase Edge Function):
-  - `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/og-profile-meta?username=:username`
-- Agregar ruta de debug manual para forzar OG sin depender del User-Agent:
-  - `https://building.vibecoders.la/@ros1?og=1` debe devolver HTML OG (aunque seas humano en Chrome).
-- Agregar compatibilidad con trailing slash por si algún crawler pide `.../@ros1/`.
+## Verificación Post-Deploy
 
-Resultado: si el bot es bot (o si usas `?og=1`), **no ve el SPA**, ve HTML OG dinámico.
+1. **Test manual**: `https://building.vibecoders.la/@ros1?og=1` debe mostrar HTML con datos de Rosmel
+2. **LinkedIn Post Inspector**: Re-scrape de `https://building.vibecoders.la/@ros1`
+3. **WhatsApp**: Compartir link (debería seguir funcionando)
 
-### 2) `supabase/functions/og-profile-meta/index.ts`: eliminar el meta-refresh en `<noscript>` (muy importante)
-Ahora la Edge Function incluye:
-```html
-<noscript>
-  <meta http-equiv="refresh" content="0; url=...">
-</noscript>
+---
+
+## Por qué esto funciona
+
+El flujo será:
+```text
+LinkedIn Bot → Vercel (rewrite) → /api/og/ros1 → Proxy → Supabase Edge Function → HTML OG
 ```
-Algunos crawlers/parsers pueden tratar eso como redirect “real” y terminar en el SPA, lo cual vuelve a “genérico”.
 
-Plan:
-- Remover el `<noscript>` meta refresh.
-- (Opcional) Mantener o remover el `<script>window.location.replace(...)`:
-  - Como este endpoint idealmente lo reciben bots, se puede dejar sin redirect para hacerlo “crawler-puro”.
-- Agregar headers de diagnóstico no sensibles:
-  - `X-Og-Username: ros1`
-  - `X-Og-Profile-Found: true/false`
-  - `X-Og-Source: supabase-edge`
+En lugar de:
+```text
+LinkedIn Bot → Vercel (rewrite externo) → ??? → 500 Error
+```
 
-### 3) `api/og/[username].ts` (Vercel Function): dejarlo como fallback o desactivarlo
-Para evitar más iteraciones:
-- Opción A (recomendada): dejarlo pero ya no usarlo en rewrites (no importa si existe).
-- Opción B: convertirlo en **proxy** que simplemente hace fetch a la Edge Function y devuelve el HTML (sin keys hardcodeadas).
-- En ambos casos, no agregaremos service role ni claves críticas a Vercel.
-
----
-
-## Deploy: qué tienes que hacer y qué NO
-### Vercel
-No hay “deploy especial” para functions.
-- Si tu proyecto Vercel está conectado al repo, basta con:
-  1) commit de cambios (`vercel.json` y si aplica `api/og/...`)
-  2) Vercel hace build/deploy automáticamente
-  3) verificar que el dominio `building.vibecoders.la` apunta al deployment “Production” correcto
-
-No necesitas permisos extra en Vercel para rewrites.
-
-### Supabase Edge Function
-Si modificamos `og-profile-meta`, sí hay que asegurarse de que el código actualizado esté desplegado en Supabase.
-- Lo validaremos por logs en Supabase Function Logs luego de probar.
-
----
-
-## Cómo vamos a verificar (paso a paso, sin adivinar)
-1) **Prueba directa (manual debug)**:
-   - Abrir: `https://building.vibecoders.la/@ros1?og=1`
-   - Debe mostrarse HTML con:
-     - `<title>Rosmel Ortiz</title>`
-     - `og:title = Rosmel Ortiz`
-     - `og:image = (og_image_url o avatar_url)`
-2) **Ver logs en Supabase Edge Function** (fuente de verdad):
-   - Debe aparecer request con `username=ros1` y “Found profile”.
-3) **Rescrape redes** (porque cachean fuerte):
-   - LinkedIn Post Inspector: “Scrape again”
-   - WhatsApp: compartir una vez con cache-buster si hace falta:
-     - `https://building.vibecoders.la/@ros1?v=1700000000`
-   (El preview final debe mostrar datos del usuario.)
-
----
-
-## Seguridad (explícito)
-- NO se agregará `SUPABASE_SERVICE_ROLE_KEY` a Vercel, repo, frontend ni functions de Vercel.
-- La Edge Function de Supabase seguirá usando la service role desde **secrets del proyecto Supabase**.
-- La anon key no es crítica, pero igualmente reduciremos su uso para minimizar superficie de ataque y confusión.
-
----
-
-## Plan de rollback (si algo sale mal)
-- Revertir `vercel.json` al estado actual para volver al comportamiento anterior del SPA.
-- Mantener la Edge Function sin cambios si el rewrite externo no fuese viable (raro, pero posible).
-
----
-
-## Próximas mejoras sugeridas (para evitar futuras iteraciones)
-- Agregar un endpoint de “health/debug” tipo `/og-debug/@:username` que siempre entregue HTML OG (sin depender de User-Agent).
-- Añadir tests automatizados (snapshot) para el HTML OG generado.
-
+Los rewrites internos de Vercel son 100% confiables, el problema estaba en el rewrite externo.
