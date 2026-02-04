@@ -1,46 +1,27 @@
-import { useState, useCallback } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePublicProfile } from '@/hooks/usePublicProfile';
 import { PublicProfileCard } from '@/components/PublicProfileCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PublicProfileHeader } from '@/components/PublicProfileHeader';
 
 interface ProfileNavigatorProps {
   initialUsername: string;
 }
 
 export function ProfileNavigator({ initialUsername }: ProfileNavigatorProps) {
-  const [profileStack, setProfileStack] = useState<string[]>([initialUsername]);
-  const currentUsername = profileStack[profileStack.length - 1];
-  const canGoBack = profileStack.length > 1;
+  const navigate = useNavigate();
 
-  const pushProfile = useCallback((username: string) => {
-    setProfileStack((prev) => [...prev, username]);
-  }, []);
+  // Navigate to another profile by updating the URL (no full refresh)
+  const navigateToProfile = useCallback((username: string) => {
+    navigate(`/@${username}`);
+  }, [navigate]);
 
-  const popProfile = useCallback(() => {
-    setProfileStack((prev) => (prev.length > 1 ? prev.slice(0, -1) : prev));
-  }, []);
-
-  const { profile, loading, error, notFound } = usePublicProfile(currentUsername);
-
-  // Show back button in header when navigating between profiles
-  const BackButton = canGoBack ? (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={popProfile}
-      className="absolute left-2 top-2 z-10 text-gray-600 hover:text-gray-900 bg-white/80 backdrop-blur-sm"
-    >
-      <ArrowLeft className="h-4 w-4 mr-1" />
-      Atrás
-    </Button>
-  ) : null;
+  const { profile, loading, error, notFound } = usePublicProfile(initialUsername);
 
   if (loading) {
     return (
       <div className="w-full min-h-screen bg-white">
-        {BackButton}
         <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-100">
           <Skeleton className="h-10 w-10 rounded-full" />
           <div className="flex items-center gap-2">
@@ -64,26 +45,23 @@ export function ProfileNavigator({ initialUsername }: ProfileNavigatorProps) {
 
   if (notFound || error || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        {BackButton}
-        <div className="text-center text-gray-500">
-          <p className="text-lg">Perfil no encontrado</p>
-          {canGoBack && (
-            <Button variant="link" onClick={popProfile} className="mt-2">
-              Volver al perfil anterior
-            </Button>
-          )}
+      <div className="min-h-screen bg-white">
+        <PublicProfileHeader />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center text-gray-500">
+            <p className="text-lg">Perfil no encontrado</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      {BackButton}
+    <div className="min-h-screen bg-white">
+      <PublicProfileHeader profileUsername={profile.username} />
       <PublicProfileCard 
         profile={profile} 
-        onNavigateToProfile={pushProfile}
+        onNavigateToProfile={navigateToProfile}
       />
     </div>
   );
