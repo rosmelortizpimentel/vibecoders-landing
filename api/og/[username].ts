@@ -117,16 +117,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   try {
-    const SUPABASE_URL = process.env.SUPABASE_URL || 'https://zkotnnmrehzqonlyeorv.supabase.co';
-    const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('[og-profile-meta] Missing SUPABASE_SERVICE_ROLE_KEY');
-      const html = generateHtml(null, usernameStr, settings);
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
-      return res.status(200).send(html);
-    }
+    const SUPABASE_URL = 'https://zkotnnmrehzqonlyeorv.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inprb3Rubm1yZWh6cW9ubHllb3J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3MTQyOTAsImV4cCI6MjA4NTI5MDI5MH0.s0WbMl0Grma_x7lrpsJ2bLf8x81iDvvi0tNaX801DHk';
 
     // Validate username format
     if (!usernameStr || !/^[a-zA-Z0-9_]{1,20}$/.test(usernameStr)) {
@@ -142,8 +134,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `${SUPABASE_URL}/rest/v1/general_settings?key=in.(site_url,default_og_image,default_og_title,default_og_description)&select=key,value`,
       {
         headers: {
-          'apikey': SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         }
       }
     );
@@ -163,8 +155,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `${SUPABASE_URL}/rest/v1/profiles?username=eq.${usernameStr.toLowerCase()}&select=username,name,tagline,bio,avatar_url,banner_url,og_image_url`,
       {
         headers: {
-          'apikey': SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         }
       }
     );
