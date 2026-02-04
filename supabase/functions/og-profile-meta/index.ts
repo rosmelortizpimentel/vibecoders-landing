@@ -1,5 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': '*',
+}
+
 interface GeneralSettings {
   site_url: string
   default_og_image: string
@@ -18,6 +23,11 @@ interface ProfileData {
 }
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
   try {
     const url = new URL(req.url)
     const username = url.searchParams.get('username')
@@ -173,8 +183,10 @@ function generateHtmlResponse(
   return new Response(html, {
     status: 200,
     headers: {
+      ...corsHeaders,
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'X-Content-Type-Options': 'nosniff',
     },
   })
 }
