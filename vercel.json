@@ -12,6 +12,10 @@
       "destination": "/api/og/:username"
     },
     {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }
