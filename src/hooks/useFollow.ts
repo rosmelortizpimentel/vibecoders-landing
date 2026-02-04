@@ -8,6 +8,7 @@ interface UseFollowResult {
   followersCount: number;
   followingCount: number;
   toggleFollow: () => Promise<void>;
+  refetch: () => void;
 }
 
 export function useFollow(profileId: string | undefined): UseFollowResult {
@@ -17,52 +18,52 @@ export function useFollow(profileId: string | undefined): UseFollowResult {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
-  // Fetch follow status and counts
-  useEffect(() => {
+  const fetchFollowData = useCallback(async () => {
     if (!profileId) {
       setIsLoading(false);
       return;
     }
 
-    const fetchFollowData = async () => {
-      setIsLoading(true);
+    setIsLoading(true);
+    
+    try {
+      // Get followers count (people following this profile)
+      const { count: followers } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', profileId);
       
-      try {
-        // Get followers count (people following this profile)
-        const { count: followers } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('following_id', profileId);
-        
-        // Get following count (people this profile follows)
-        const { count: following } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('follower_id', profileId);
-        
-        setFollowersCount(followers || 0);
-        setFollowingCount(following || 0);
+      // Get following count (people this profile follows)
+      const { count: following } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', profileId);
+      
+      setFollowersCount(followers || 0);
+      setFollowingCount(following || 0);
 
-        // Check if current user is following this profile
-        if (user) {
-          const { data: followData } = await supabase
-            .from('follows')
-            .select('id')
-            .eq('follower_id', user.id)
-            .eq('following_id', profileId)
-            .maybeSingle();
-          
-          setIsFollowing(!!followData);
-        }
-      } catch (error) {
-        console.error('Error fetching follow data:', error);
-      } finally {
-        setIsLoading(false);
+      // Check if current user is following this profile
+      if (user) {
+        const { data: followData } = await supabase
+          .from('follows')
+          .select('id')
+          .eq('follower_id', user.id)
+          .eq('following_id', profileId)
+          .maybeSingle();
+        
+        setIsFollowing(!!followData);
       }
-    };
-
-    fetchFollowData();
+    } catch (error) {
+      console.error('Error fetching follow data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [profileId, user]);
+
+  // Fetch follow status and counts
+  useEffect(() => {
+    fetchFollowData();
+  }, [fetchFollowData]);
 
   const toggleFollow = useCallback(async () => {
     if (!user || !profileId) return;
@@ -100,6 +101,7 @@ export function useFollow(profileId: string | undefined): UseFollowResult {
     isLoading,
     followersCount,
     followingCount,
-    toggleFollow
+    toggleFollow,
+    refetch: fetchFollowData,
   };
 }

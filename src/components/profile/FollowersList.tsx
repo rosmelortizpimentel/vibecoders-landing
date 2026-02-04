@@ -10,6 +10,7 @@ interface FollowersListProps {
   type: 'followers' | 'following';
   onBack: () => void;
   onNavigateToProfile: (username: string) => void;
+  onFollowChange?: () => void;
 }
 
 export function FollowersList({
@@ -17,6 +18,7 @@ export function FollowersList({
   type,
   onBack,
   onNavigateToProfile,
+  onFollowChange,
 }: FollowersListProps) {
   const { profiles, loading, refetch } = useFollowList(profileId, type);
   const { follow, unfollow } = useFollowAction();
@@ -25,6 +27,7 @@ export function FollowersList({
     const success = await follow(userId);
     if (success) {
       refetch();
+      onFollowChange?.();
     }
     return success;
   };
@@ -33,6 +36,7 @@ export function FollowersList({
     const success = await unfollow(userId);
     if (success) {
       refetch();
+      onFollowChange?.();
     }
     return success;
   };
@@ -44,10 +48,10 @@ export function FollowersList({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={onBack}
-          className="text-gray-600 hover:text-gray-900 -ml-2"
+          className="text-primary border-primary hover:bg-primary hover:text-white -ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Volver a Apps
