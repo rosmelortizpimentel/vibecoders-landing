@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Layers, Settings, Users } from 'lucide-react';
+import { LayoutGrid, Layers, Settings, Users, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
@@ -17,6 +17,11 @@ const menuItems = [
     title: 'Usuarios',
     href: '/admin/users',
     icon: Users,
+  },
+  {
+    title: 'Waitlist',
+    href: '/admin/waitlist',
+    icon: Mail,
   },
   {
     title: 'Settings',

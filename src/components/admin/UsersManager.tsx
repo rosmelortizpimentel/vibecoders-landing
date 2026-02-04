@@ -18,8 +18,22 @@ interface UserWithCounts {
   name: string | null;
   username: string | null;
   avatar_url: string | null;
+  created_at: string | null;
   followersCount: number;
   followingCount: number;
+}
+
+function formatTorontoDate(dateString: string | null): string {
+  if (!dateString) return '—';
+  const date = new Date(dateString);
+  return date.toLocaleString('es-ES', {
+    timeZone: 'America/Toronto',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export function UsersManager() {
@@ -35,10 +49,11 @@ export function UsersManager() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      // Fetch all profiles
+      // Fetch only profiles with username (registered users)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, name, username, avatar_url')
+        .select('id, name, username, avatar_url, created_at')
+        .not('username', 'is', null)
         .order('created_at', { ascending: false });
 
       if (profilesError) throw profilesError;
@@ -96,9 +111,9 @@ export function UsersManager() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Gestión de Usuarios</h1>
+        <h1 className="text-2xl font-bold text-foreground">Usuarios Registrados</h1>
         <p className="text-muted-foreground">
-          Ver todos los usuarios registrados en la plataforma ({users.length})
+          {users.length} usuarios con cuenta activa
         </p>
       </div>
 
@@ -109,6 +124,7 @@ export function UsersManager() {
               <TableHead className="w-[300px]">Usuario</TableHead>
               <TableHead className="text-center">Seguidores</TableHead>
               <TableHead className="text-center">Siguiendo</TableHead>
+              <TableHead>Registro (Toronto)</TableHead>
               <TableHead className="text-center">Perfil</TableHead>
             </TableRow>
           </TableHeader>
@@ -123,9 +139,7 @@ export function UsersManager() {
                     </Avatar>
                     <div>
                       <p className="font-medium text-foreground">{user.name || 'Sin nombre'}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {user.username ? `@${user.username}` : 'Sin username'}
-                      </p>
+                      <p className="text-sm text-muted-foreground">@{user.username}</p>
                     </div>
                   </div>
                 </TableCell>
@@ -153,20 +167,19 @@ export function UsersManager() {
                     {user.followingCount}
                   </Button>
                 </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {formatTorontoDate(user.created_at)}
+                </TableCell>
                 <TableCell className="text-center">
-                  {user.username ? (
-                    <Button variant="ghost" size="sm" asChild>
-                      <a
-                        href={`/@${user.username}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    </Button>
-                  ) : (
-                    <span className="text-muted-foreground text-sm">—</span>
-                  )}
+                  <Button variant="ghost" size="sm" asChild>
+                    <a
+                      href={`/@${user.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
