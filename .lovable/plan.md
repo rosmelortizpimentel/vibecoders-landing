@@ -1,118 +1,163 @@
 
-## Qué pasó (explicación clara)
 
-- La Edge Function de Supabase **sí está generando HTML correcto por usuario** (tu prueba directa con `.../og-profile-meta?username=ros2` lo confirma: título “Rosmel Ortiz”, description y og:image correctos).
-- Pero cuando las redes sociales (y tu prueba `/?og=1`) piden `https://building.vibecoders.la/@ros2`, **no están recibiendo ese HTML**, sino el `index.html` de la SPA.
-- Por eso todas las redes muestran el preview genérico: están parseando los OG tags estáticos de `index.html`.
+## Resumen
 
-La señal más fuerte es esta:  
-- `/@ros1?og=1` te muestra “tu página” (SPA) y **no** el HTML “simple” que genera OG.  
-Eso significa que el rewrite a `/api/og/...` no está ejecutándose o no está llegando a una Function.
-
-## Causa probable (la que vamos a atacar)
-
-Hay 2 fallas típicas en Vercel con SPAs + Functions:
-
-1) **El “catch-all” de la SPA está ganando/interfiriendo**, y al final se termina sirviendo `index.html` en lugar de ejecutar `/api/og/...`.
-
-2) **La ruta dinámica `api/og/[username].ts` no está siendo alcanzable** en tu setup (según configuración/framework), entonces `/api/og/ros2` no “existe” para Vercel y se cae al fallback de SPA.
-
-En ambos casos el resultado es el mismo: nunca se ejecuta la function => no hay logs => previews genéricos.
-
-## Objetivo del fix
-
-Garantizar 100% que:
-
-- `GET /@ros2?og=1` → reescribe a un endpoint de Vercel que **sí corre** → proxy a Supabase → devuelve HTML OG.
-- Los bots (LinkedInBot/WhatsApp/etc) → también reciben ese HTML OG.
-- La navegación normal en browser `GET /@ros2` (sin `og=1` y sin bot UA) → sigue sirviendo la SPA.
+Vamos a hacer dos cosas:
+1. **Crear una nueva entrada en Build Log** explicando cómo logramos mostrar perfiles dinámicos en redes sociales (LinkedIn, WhatsApp, X, etc.)
+2. **Actualizar el campo Tagline en el perfil** para indicar que LinkedIn requiere al menos 100 caracteres en la descripción
 
 ---
 
-## Implementación (cambios a realizar)
+## 1. Nueva Página: "OG Dinámico para Redes Sociales" (Build Log #02)
 
-### A) Hacer el routing “a prueba de balas” en `vercel.json`
+### Estructura del contenido
 
-1) **Proteger explícitamente `/api/*`** para que nunca se lo trague el catch-all de la SPA.
-   - Opción 1 (recomendada): cambiar el catch-all para que **excluya** `api/`.
-     - Ejemplo: `"/((?!api/).*)"` en vez de `"/(.*)"`.
-   - Opción 2: agregar una regla prioritaria de “passthrough” para `/api/(.*)` antes del catch-all.
+La página seguirá el mismo estilo editorial que el Build Log #01, con:
 
-2) Mantener las reglas actuales para:
-   - `?og=1`
-   - User-Agent bots
+**Explicación Funcional (para no-técnicos):**
+- El problema: cuando compartes un link en redes sociales, estas muestran una "tarjeta" con imagen, título y descripción
+- Por defecto, las SPAs (apps de una sola página) muestran siempre la misma tarjeta genérica
+- La solución: detectar cuando una red social pide el link y servirle HTML personalizado con los datos del usuario
 
-3) Ajuste adicional recomendado: excluir también otros paths “de infraestructura” si aplica (por ejemplo `favicon.ico`, `robots.txt`, `images/*`) para evitar efectos colaterales del catch-all.
+**Explicación Técnica (en términos simples):**
+- Arquitectura de 3 capas: Vercel (router) + Vercel Functions (proxy) + Supabase Edge Functions (generador de HTML)
+- El flujo paso a paso de cómo una petición de LinkedIn termina mostrando los datos correctos
+- Por qué necesitamos un "proxy" intermedio (evitar errores 500 de LinkedIn por redirects cross-domain)
 
-### B) Evitar dependencia de ruta dinámica `[username]` (robustez máxima)
+**Diagrama visual:**
+- Flujo desde que LinkedIn hace scrape hasta que recibe el HTML personalizado
+- Implementado con componentes de React (boxes, arrows) o una imagen
 
-Aunque `api/og/[username].ts` debería funcionar, para eliminar la duda al 100%:
+### Archivos a crear/modificar
 
-1) Crear un endpoint **no-dinámico**:
-   - `api/og.ts` (o `api/og/index.ts`) que lea `username` desde query:
-     - `/api/og?username=ros2`
-
-2) Actualizar `vercel.json` para que los rewrites apunten a:
-   - **Destino:** `/api/og?username=:username`
-   - En vez de `/api/og/:username`
-
-3) Mantener `api/og/[username].ts` como compatibilidad (opcional):
-   - Puede seguir existiendo, pero el routing principal usará el endpoint “seguro” con query param.
-
-### C) Headers / caching (para que las redes lo lean bien y puedas debuggear)
-
-En el proxy de Vercel (`api/og.ts`):
-
-1) Forzar siempre:
-   - `Content-Type: text/html; charset=utf-8`
-
-2) Mantener headers de debug:
-   - `X-Og-Source: vercel-proxy`
-   - `X-Og-Username: ...`
-   - `X-Og-Upstream-Status: ...`
-   - y reenviar `X-Og-Profile-Found` si existe
-
-3) (Opcional para diagnóstico rápido) Reducir cache temporalmente:
-   - `Cache-Control: public, max-age=60, s-maxage=60`
-   - Esto no elimina la cache de LinkedIn, pero ayuda a no “pelearte” con cache intermedia/CDN mientras verificamos.
+| Archivo | Acción |
+|---------|--------|
+| `src/pages/BuildLogOgDynamic.tsx` | **Crear** - Nueva página con el contenido del Build Log #02 |
+| `src/components/buildlog/OgFlowDiagram.tsx` | **Crear** - Componente visual del diagrama de flujo |
+| `src/components/buildlog/BuildLogSidebar.tsx` | **Modificar** - Agregar entrada #02 al sidebar |
+| `src/App.tsx` | **Modificar** - Agregar ruta `/buildlog/og-dynamic` |
 
 ---
 
-## Verificación (paso a paso, sin herramientas raras)
+## 2. Advertencia de 100 caracteres para LinkedIn
 
-Después del deploy:
+### Ubicación del cambio
 
-1) Probar directamente la Function (esto debe generar logs sí o sí en Vercel):
-   - `https://building.vibecoders.la/api/og?username=ros2`
-   - Resultado esperado: HTML simple con `<title>Rosmel Ortiz</title>`.
+En la sección **Branding** (`/me/branding`), dentro del componente `OgImageSection.tsx`, agregaremos una nota informativa debajo del tagline preview en el mock de LinkedIn.
 
-2) Probar el rewrite manual:
-   - `https://building.vibecoders.la/@ros2?og=1`
-   - Resultado esperado: el mismo HTML simple (no la SPA).
+Alternativamente (y más útil), podemos agregar la advertencia en el campo **Tagline** del `ProfileTab.tsx` ya que es ahí donde el usuario ingresa la descripción que se usa como `og:description`.
 
-3) “Ver código fuente”:
-   - View Source del URL anterior debe mostrar OG tags de Rosmel, no el `index.html` con `<script type="module" src="/src/main.tsx">`.
+### Implementación
 
-4) Re-scrape:
-   - LinkedIn Post Inspector con `https://building.vibecoders.la/@ros2`
-   - WhatsApp share del mismo link
+**En `ProfileTab.tsx` - Campo Tagline:**
+- Agregar un indicador visual cuando el tagline tenga menos de 100 caracteres
+- Mostrar un mensaje tipo: "LinkedIn recomienda al menos 100 caracteres"
+- Cambiar el maxLength de 100 a 160 (límite óptimo para SEO)
 
-Si (1) funciona pero (2) no, el problema quedó 100% reducido a `vercel.json` (matching/precedencia).  
-Si (1) no funciona, el problema es que la Function no está desplegada/alcanzable (y entonces ajustamos de inmediato la estructura del endpoint).
+**En `OgImageSection.tsx` - Mock de LinkedIn:**
+- Mostrar badge de advertencia si el tagline tiene menos de 100 caracteres
+- Añadir nota en la sección informativa sobre el requisito de LinkedIn
 
 ---
 
-## Archivos que se van a tocar
+## Sección Técnica: Detalles de Implementación
 
-- `vercel.json` (prioridad: routing correcto + excluir `/api`)
-- `api/og.ts` (nuevo, endpoint estable con query param)
-- (Opcional) `api/og/[username].ts` (dejarlo o ajustar para compatibilidad)
+### Nueva página BuildLogOgDynamic.tsx
+
+```text
+Estructura:
+├── Header (Badge #02, Título, Subtítulo, Meta)
+├── Sección: El Problema (por qué las SPAs fallan)
+├── Sección: La Solución Funcional
+│   └── Explicación simple con analogía
+├── Sección: Arquitectura Técnica
+│   └── OgFlowDiagram component
+│   └── Explicación paso a paso
+├── Sección: Componentes Clave
+│   └── StackCards para Vercel, Supabase
+│   └── ProTipCallouts con tips
+└── Conclusión
+```
+
+### Diagrama de Flujo (OgFlowDiagram.tsx)
+
+```text
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  LinkedIn   │────▶│   Vercel    │────▶│   Vercel    │────▶│  Supabase   │
+│   Scraper   │     │   Router    │     │  Function   │     │    Edge     │
+│             │     │ (rewrite)   │     │  (proxy)    │     │  Function   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+      │                   │                   │                   │
+      │  GET /@username   │  /@username →     │  fetch() →        │  Query DB
+      │  User-Agent:      │  /api/og?user=    │  Supabase         │  Return HTML
+      │  LinkedInBot      │                   │                   │
+      │                   │                   │                   │
+      └───────────────────┴───────────────────┴───────────────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │   HTML Response     │
+                         │   <og:title>        │
+                         │   <og:description>  │
+                         │   <og:image>        │
+                         └─────────────────────┘
+```
+
+### Sidebar actualizado
+
+```typescript
+const entries: BuildLogEntry[] = [
+  {
+    id: '01',
+    number: '01',
+    title: 'El Stack & Arquitectura',
+    subtitle: 'Lovable, Supabase & Vercel.',
+    href: '/buildlog',
+  },
+  {
+    id: '02',
+    number: '02',
+    title: 'OG Dinámico en Redes',
+    subtitle: 'LinkedIn, WhatsApp & X.',
+    href: '/buildlog/og-dynamic',
+    isActive: false, // Dinámico según ruta
+  },
+];
+```
+
+### Campo Tagline con advertencia
+
+```typescript
+// En ProfileTab.tsx
+<div className="space-y-2">
+  <Label htmlFor="tagline">Tagline</Label>
+  <Input
+    value={profile.tagline || ''}
+    onChange={e => onUpdate({ tagline: e.target.value.slice(0, 160) })}
+    maxLength={160}
+  />
+  <div className="flex justify-between text-xs text-muted-foreground">
+    <span className={cn(
+      (profile.tagline?.length || 0) < 100 && "text-amber-600"
+    )}>
+      {(profile.tagline?.length || 0) < 100 && 
+        "LinkedIn recomienda min. 100 caracteres"}
+    </span>
+    <span>{profile.tagline?.length || 0}/160</span>
+  </div>
+</div>
+```
 
 ---
 
-## Riesgos / edge cases contemplados
+## Resumen de Archivos
 
-- Username inválido: se devuelve HTML default (pero siempre HTML válido).
-- Error llamando a Supabase: fallback HTML (ya lo tienes) para no romper previews.
-- Bots que no matchean el regex de UA: seguirá funcionando `?og=1` para test y se puede ampliar el regex luego.
+| Archivo | Cambio |
+|---------|--------|
+| `src/pages/BuildLogOgDynamic.tsx` | Crear - Página completa del Build Log #02 |
+| `src/components/buildlog/OgFlowDiagram.tsx` | Crear - Diagrama visual del flujo |
+| `src/components/buildlog/BuildLogSidebar.tsx` | Modificar - Agregar entrada #02, hacer items clickeables |
+| `src/App.tsx` | Modificar - Agregar ruta `/buildlog/og-dynamic` |
+| `src/components/me/ProfileTab.tsx` | Modificar - Aumentar maxLength a 160, agregar warning |
+| `src/components/me/OgImageSection.tsx` | Modificar - Agregar nota sobre requisito de LinkedIn |
 
