@@ -123,9 +123,6 @@ function generateHtmlResponse(
     : requestedUsername 
       ? `${settings.site_url}/@${requestedUsername}`
       : settings.site_url
-  
-  // Favicon - use avatar if available
-  const favicon = profile?.avatar_url || '/favicon.ico'
 
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -137,9 +134,6 @@ function generateHtmlResponse(
   <title>${escapeHtml(title)}</title>
   <meta name="title" content="${escapeHtml(title)}">
   <meta name="description" content="${escapeHtml(description)}">
-  
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="${escapeHtml(favicon)}">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:locale" content="es_LA">
@@ -164,19 +158,11 @@ function generateHtmlResponse(
   
   <!-- Canonical -->
   <link rel="canonical" href="${escapeHtml(canonicalUrl)}">
-  
-  <!-- Redirect real users to SPA -->
-  <script>
-    // Crawlers don't execute JS, so only real users will be redirected
-    window.location.replace("${escapeHtml(canonicalUrl)}");
-  </script>
-  
-  <noscript>
-    <meta http-equiv="refresh" content="0; url=${escapeHtml(canonicalUrl)}">
-  </noscript>
 </head>
 <body>
-  <p>Redirecting to <a href="${escapeHtml(canonicalUrl)}">${escapeHtml(canonicalUrl)}</a>...</p>
+  <h1>${escapeHtml(title)}</h1>
+  <p>${escapeHtml(description)}</p>
+  <p><a href="${escapeHtml(canonicalUrl)}">Ver perfil en Vibecoders</a></p>
 </body>
 </html>`
 
@@ -187,6 +173,9 @@ function generateHtmlResponse(
       'Content-Type': 'text/html; charset=utf-8',
       'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       'X-Content-Type-Options': 'nosniff',
+      'X-Og-Username': requestedUsername || '',
+      'X-Og-Profile-Found': profile ? 'true' : 'false',
+      'X-Og-Source': 'supabase-edge',
     },
   })
 }
