@@ -108,7 +108,7 @@ export function AuthenticatedHeader({
                   asChild
                   className={cn(
                     "gap-1.5",
-                    isActive(link.path) && "bg-accent text-primary font-semibold"
+                    isActive(link.path) && "bg-primary text-primary-foreground font-semibold hover:bg-primary/90 hover:text-primary-foreground"
                   )}
                 >
                   <Link to={link.path}>
@@ -179,45 +179,45 @@ export function AuthenticatedHeader({
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-background border border-border p-0 shadow-xl">
+              <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-foreground border border-border p-0 shadow-xl">
                 {/* Identity Header - Non-clickable */}
                 <div className="px-3 py-3 flex items-center gap-3">
                   <Avatar className="h-10 w-10 border border-border shrink-0">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
-                    <AvatarFallback className="text-sm bg-primary/10 text-primary font-medium">
+                    <AvatarFallback className="text-sm bg-background text-foreground font-medium">
                       {profile?.name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-semibold text-foreground truncate">
+                    <span className="text-sm font-semibold text-background truncate">
                       {profile?.name || 'Usuario'}
                     </span>
-                    <span className="text-xs text-muted-foreground truncate">
+                    <span className="text-xs text-background/70 truncate">
                       {profile?.username ? `@${profile.username}` : 'Sin username'}
                     </span>
                   </div>
                 </div>
-                <DropdownMenuSeparator className="my-0" />
+                <DropdownMenuSeparator className="my-0 bg-background/20" />
                 
                 {/* Menu Items */}
                 <div className="py-1">
                   {publicProfileUrl && (
-                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-foreground/80 hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground">
+                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-background/80 hover:bg-background hover:text-foreground focus:bg-background focus:text-foreground">
                       <a 
                         href={publicProfileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                        <ExternalLink className="h-4 w-4" />
                         <span>Ver Perfil Público</span>
                       </a>
                     </DropdownMenuItem>
                   )}
                   
                   {isAdmin && (
-                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-foreground/80 hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground">
+                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-background/80 hover:bg-background hover:text-foreground focus:bg-background focus:text-foreground">
                       <Link to="/admin">
-                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
+                        <LayoutDashboard className="h-4 w-4" />
                         <span>Panel Admin</span>
                       </Link>
                     </DropdownMenuItem>
@@ -225,13 +225,13 @@ export function AuthenticatedHeader({
                 </div>
                 
                 {/* Footer - Sign Out */}
-                <DropdownMenuSeparator className="my-0" />
+                <DropdownMenuSeparator className="my-0 bg-background/20" />
                 <div className="py-1">
                   <DropdownMenuItem 
                     onClick={onSignOut}
-                    className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-foreground/80 hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
+                    className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-background/80 hover:bg-background hover:text-foreground focus:bg-background focus:text-foreground"
                   >
-                    <LogOut className="h-4 w-4 text-muted-foreground" />
+                    <LogOut className="h-4 w-4" />
                     <span>Cerrar Sesión</span>
                   </DropdownMenuItem>
                 </div>
