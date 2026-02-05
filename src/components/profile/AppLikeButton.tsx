@@ -69,6 +69,8 @@ export function AppLikeButton({ appId, showCount = false, isOwner = false, owner
  
   const handleSignIn = async () => {
     try {
+      // Save return URL before redirecting
+      localStorage.setItem('authReturnUrl', window.location.pathname);
       await signInWithGoogle(window.location.href);
     } catch (error) {
       console.error('Error signing in:', error);

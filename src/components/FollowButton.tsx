@@ -51,7 +51,8 @@ export function FollowButton({
         localStorage.setItem('pendingFollow', profileId);
       }
       
-      // Redirect back to current page after login
+      // Save return URL and redirect back after login
+      localStorage.setItem('authReturnUrl', window.location.pathname);
       await signInWithGoogle(window.location.href);
     } catch (error) {
       console.error('Error signing in:', error);
