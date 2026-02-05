@@ -21,7 +21,7 @@ const UserMenu = () => {
     return (
       <div className="fixed right-4 top-4 z-50">
         <Button
-          onClick={signInWithGoogle}
+          onClick={() => signInWithGoogle()}
           className="gap-2 bg-white text-[#1c1c1c] hover:bg-white/90 font-semibold shadow-lg"
         >
           <LogIn className="h-4 w-4" />

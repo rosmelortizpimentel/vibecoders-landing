@@ -16,13 +16,15 @@ interface FollowButtonProps {
   isLoading: boolean;
   onToggleFollow: () => Promise<void>;
   profileUsername?: string;
+  profileId?: string;
 }
 
 export function FollowButton({ 
   isFollowing, 
   isLoading, 
   onToggleFollow,
-  profileUsername 
+  profileUsername,
+  profileId
 }: FollowButtonProps) {
   const { user, signInWithGoogle } = useAuth();
   const [showAuthDialog, setShowAuthDialog] = useState(false);
@@ -44,8 +46,13 @@ export function FollowButton({
 
   const handleSignIn = async () => {
     try {
-      await signInWithGoogle();
-      // After sign in, the page will redirect/reload and the follow will happen
+      // Save pending follow intent before redirecting
+      if (profileId) {
+        localStorage.setItem('pendingFollow', profileId);
+      }
+      
+      // Redirect back to current page after login
+      await signInWithGoogle(window.location.href);
     } catch (error) {
       console.error('Error signing in:', error);
     }
@@ -93,7 +100,7 @@ export function FollowButton({
                 className="h-16 w-16 rounded-full border-[3px] border-white shadow-lg"
               />
             </div>
-            <DialogTitle className="text-xl text-white">
+            <DialogTitle className="text-xl text-white text-center">
               Únete a Vibecoders
             </DialogTitle>
             <DialogDescription className="text-center text-white/90">

@@ -346,6 +346,7 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
                 isLoading={followLoading}
                 onToggleFollow={toggleFollow}
                 profileUsername={profile.username}
+                profileId={profile.id}
               />
             </div>
           )}
