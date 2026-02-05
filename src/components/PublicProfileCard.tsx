@@ -9,6 +9,10 @@ import { FollowersList } from '@/components/profile/FollowersList';
 import { useFollow } from '@/hooks/useFollow';
 import { useFavicon } from '@/hooks/useFavicon';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfileStats } from '@/hooks/useProfileStats';
+import { useProfileTracking, trackAppClick } from '@/hooks/useProfileTracking';
+import { ProfileStatsCard } from '@/components/profile/ProfileStatsCard';
+import { AppLikeButton } from '@/components/profile/AppLikeButton';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import {
   Tooltip,
@@ -55,7 +59,17 @@ const socialConfig = [
 ] as const;
 
 // App Card Component for public profile
-function PublicAppCard({ app }: { app: PublicApp }) {
+function PublicAppCard({ 
+  app, 
+  profileId,
+  isOwner,
+  ownerLikeCount
+}: { 
+  app: PublicApp; 
+  profileId: string;
+  isOwner: boolean;
+  ownerLikeCount?: number;
+}) {
   const appUrl = (() => {
     try {
       const url = new URL(app.url);
@@ -66,11 +80,17 @@ function PublicAppCard({ app }: { app: PublicApp }) {
     }
   })();
 
+  const handleClick = () => {
+    // Track the click asynchronously
+    trackAppClick(app.id, profileId);
+  };
+
   return (
     <a 
       href={appUrl}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={handleClick}
       className="block p-3 rounded-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
     >
       {/* Top Row: Logo + Title + Status */}
@@ -130,10 +150,11 @@ function PublicAppCard({ app }: { app: PublicApp }) {
       </div>
 
       {/* Bottom Row: Tech Stack Icons */}
-      {app.stacks.length > 0 && (
-        <div className="flex items-center gap-2 mt-3 pt-2 border-t border-gray-100">
+      <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-gray-100">
+        {/* Tech Stack Icons */}
+        <div className="flex items-center gap-2">
           <TooltipProvider delayDuration={200}>
-            {app.stacks.map(stack => (
+            {app.stacks.slice(0, 4).map(stack => (
               <Tooltip key={stack.id}>
                 <TooltipTrigger asChild>
                   <div className="w-5 h-5 flex items-center justify-center">
@@ -151,7 +172,14 @@ function PublicAppCard({ app }: { app: PublicApp }) {
             ))}
           </TooltipProvider>
         </div>
-      )}
+
+        {/* Like Button */}
+        <AppLikeButton 
+          appId={app.id} 
+          isOwner={isOwner}
+          ownerLikeCount={ownerLikeCount}
+        />
+      </div>
     </a>
   );
 }
@@ -160,9 +188,11 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
   const { user } = useAuth();
   const { isFollowing, isLoading: followLoading, followersCount, followingCount, toggleFollow, refetch: refetchFollowData } = useFollow(profile.id);
   const [viewMode, setViewMode] = useState<ViewMode>('apps');
+  const { stats, isOwnProfile } = useProfileStats(profile.id);
 
-  // Check if viewing own profile
-  const isOwnProfile = user?.id === profile.id;
+  // Track profile view
+  useProfileTracking(profile.id);
+
 
   // Dynamic favicon with user's avatar
   useFavicon(profile.avatar_url || undefined);
@@ -355,6 +385,16 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
         </div>
 
         {/* Apps Section OR Followers/Following List */}
+        {/* Profile Stats - Only visible to owner */}
+        {isOwnProfile && stats && (
+          <div className="px-4 md:px-6 pt-4">
+            <ProfileStatsCard
+              profileViews={stats.profileViews}
+              appClicks={stats.appClicks}
+            />
+          </div>
+        )}
+
         {viewMode === 'apps' ? (
           profile.apps.length > 0 && (
             <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
@@ -364,7 +404,13 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
               {/* Mobile: single column, Desktop: grid of 2 */}
               <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
                 {profile.apps.map(app => (
-                  <PublicAppCard key={app.id} app={app} />
+                  <PublicAppCard 
+                    key={app.id} 
+                    app={app} 
+                    profileId={profile.id}
+                    isOwner={isOwnProfile}
+                    ownerLikeCount={stats?.appLikes[app.id]}
+                  />
                 ))}
               </div>
             </div>

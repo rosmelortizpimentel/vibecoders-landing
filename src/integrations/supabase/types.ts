@@ -41,6 +41,91 @@ export type Database = {
         }
         Relationships: []
       }
+      app_clicks: {
+        Row: {
+          app_id: string
+          created_at: string
+          device_fingerprint: string
+          id: string
+          profile_id: string
+          visitor_id: string | null
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          device_fingerprint: string
+          id?: string
+          profile_id: string
+          visitor_id?: string | null
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          device_fingerprint?: string
+          id?: string
+          profile_id?: string
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_clicks_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_clicks_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_clicks_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      app_likes: {
+        Row: {
+          app_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_likes_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_stacks: {
         Row: {
           app_id: string
@@ -242,6 +327,51 @@ export type Database = {
           value?: string
         }
         Relationships: []
+      }
+      profile_views: {
+        Row: {
+          created_at: string
+          device_fingerprint: string
+          device_type: string | null
+          id: string
+          profile_id: string
+          referrer: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint: string
+          device_type?: string | null
+          id?: string
+          profile_id: string
+          referrer?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string
+          device_type?: string | null
+          id?: string
+          profile_id?: string
+          referrer?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_views_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profile_views_visitor_id_fkey"
+            columns: ["visitor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
