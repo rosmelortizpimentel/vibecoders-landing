@@ -94,15 +94,36 @@ export function useProfile() {
               .maybeSingle();
             
             if (existingProfile) {
-              setProfile(existingProfile);
+              // Apply Google fallback
+              const googleName = user.user_metadata?.full_name;
+              const googleAvatar = user.user_metadata?.avatar_url;
+              setProfile({
+                ...existingProfile,
+                name: existingProfile.name || googleName || null,
+                avatar_url: existingProfile.avatar_url || googleAvatar || null,
+              });
               return;
             }
           }
           throw insertError;
         }
-        setProfile(newProfile);
+        // Apply Google fallback for new profile
+        const googleName = user.user_metadata?.full_name;
+        const googleAvatar = user.user_metadata?.avatar_url;
+        setProfile(newProfile ? {
+          ...newProfile,
+          name: newProfile.name || googleName || null,
+          avatar_url: newProfile.avatar_url || googleAvatar || null,
+        } : null);
       } else {
-        setProfile(data);
+        // Apply Google fallback for existing profile
+        const googleName = user.user_metadata?.full_name;
+        const googleAvatar = user.user_metadata?.avatar_url;
+        setProfile({
+          ...data,
+          name: data.name || googleName || null,
+          avatar_url: data.avatar_url || googleAvatar || null,
+        });
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
