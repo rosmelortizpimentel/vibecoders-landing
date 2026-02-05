@@ -1,175 +1,114 @@
 
 
-## Mejoras al Sistema de Follow y Likes
+## Botón de Login en Header de Perfiles Públicos
 
 ### Objetivo
-1. **Popup de login para seguir**: Centrar texto, permanecer en la página actual tras login, y auto-seguir
-2. **Sistema de likes en apps**: Permitir dar/quitar corazones y detectar estado al visitar un perfil
+Agregar un botón "Continuar con Google" en el lado derecho del header cuando el usuario visita un perfil público sin estar logueado. Este botón debe iniciar sesión y mantener al usuario en la misma página.
 
 ---
 
-### Cambio 1: Centrar texto "Únete a Vibecoders"
-
-En `FollowButton.tsx`, el `DialogTitle` necesita clase de centrado:
-
-```text
-Antes:  <DialogTitle className="text-xl text-white">
-Después: <DialogTitle className="text-xl text-white text-center">
-```
-
----
-
-### Cambio 2: Permanecer en la misma página tras login
-
-**Problema actual:**
-- `signInWithGoogle()` redirige siempre a `/me`
-
-**Solución:**
-- Crear versión de `signInWithGoogle` que acepte URL de retorno
-- Usar `window.location.href` como redirect para volver a la página actual
-
-**Archivo: `src/hooks/useAuth.ts`**
-- Modificar `signInWithGoogle` para aceptar `redirectTo?: string` opcional
-- Si no se pasa, usar la URL actual como fallback
-
-**Archivo: `src/components/FollowButton.tsx`**
-- Pasar `window.location.href` al llamar `signInWithGoogle`
-
----
-
-### Cambio 3: Auto-seguir tras login
-
-**Estrategia:**
-1. Guardar en `localStorage` el `profile_id` a seguir antes del login
-2. Después del login, detectar si hay un "pending follow" y ejecutarlo automáticamente
-
-**Archivo: `src/components/FollowButton.tsx`**
-- Antes de llamar `signInWithGoogle`, guardar en `localStorage`:
-  - `pendingFollow`: profile ID a seguir
-
-**Archivo: `src/hooks/useFollow.ts`**
-- Agregar lógica para detectar `pendingFollow` al montar
-- Si existe y usuario está logueado, ejecutar follow automáticamente
-- Limpiar `localStorage` después de ejecutar
-
----
-
-### Cambio 4: Sistema de likes visible para visitantes
+### Cambio en `src/components/PublicProfileHeader.tsx`
 
 **Estado actual:**
-- `AppLikeButton` solo muestra botón si `isAuthenticated`
-- `useAppLike` ya detecta si usuario dio like (`checkLikeStatus`)
+- Línea 50-103: Solo renderiza el menú de usuario si `user` existe
+- Si no hay usuario, el lado derecho del header queda vacío
 
-**El sistema ya funciona correctamente:**
-1. `useAppLike` verifica si el usuario actual dio like a cada app
-2. `toggleLike` llama a Edge Function para agregar/quitar like
-3. El corazón muestra estado `filled` si `isLiked` es true
-
-**Lo que falta revisar:**
-- Confirmar que el botón de corazón aparece para usuarios logueados (no dueños)
-- El corazón debe mostrarse clickeable y cambiar su estado visual
-
----
-
-### Flujo de auto-follow propuesto
+**Cambio propuesto:**
+Agregar un bloque `else` que muestre el botón de Google cuando no hay usuario:
 
 ```text
-Usuario anónimo en /@vibecoder
-         │
-         ▼
-    Click "Seguir"
-         │
-         ▼
-   Popup de login aparece
-         │
-         ▼
-  localStorage.set('pendingFollow', profileId)
-  localStorage.set('pendingFollowPath', currentPath)
-         │
-         ▼
-  signInWithGoogle(currentUrl)
-         │
-         ▼
-  ─── Google OAuth ───
-         │
-         ▼
-  Regresa a /@vibecoder
-         │
-         ▼
-  useFollow detecta pendingFollow
-         │
-         ▼
-  Ejecuta toggleFollow automáticamente
-         │
-         ▼
-  Limpia localStorage
+{user ? (
+  // ... menú de usuario existente (DropdownMenu)
+) : (
+  <Button
+    onClick={handleGoogleSignIn}
+    variant="outline"
+    className="flex items-center gap-2 ..."
+  >
+    <GoogleIcon />
+    <span>Continuar con Google</span>
+  </Button>
+)}
 ```
-
----
-
-### Archivos a Modificar
-
-| Archivo | Cambio |
-|---------|--------|
-| `src/hooks/useAuth.ts` | Agregar parámetro `redirectTo` a `signInWithGoogle` |
-| `src/components/FollowButton.tsx` | Centrar título, guardar pending follow, pasar redirect URL |
-| `src/hooks/useFollow.ts` | Detectar y ejecutar pending follow tras login |
 
 ---
 
 ### Detalles de Implementación
 
-#### useAuth.ts
-```typescript
-const signInWithGoogle = async (redirectTo?: string) => {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: redirectTo || `${window.location.origin}/me`,
-    },
-  });
-  // ...
-};
-```
+1. **Importar Button** del UI components
 
-#### FollowButton.tsx
-```typescript
-const handleSignIn = async () => {
-  // Guardar intención de follow
-  localStorage.setItem('pendingFollow', profileId);
-  
-  // Redirigir a la página actual después del login
-  await signInWithGoogle(window.location.href);
-};
-```
+2. **Agregar función `handleGoogleSignIn`:**
+   - Guardar `authReturnUrl` en localStorage con la ruta actual
+   - Llamar `signInWithGoogle(window.location.href)`
 
-#### useFollow.ts
-```typescript
-useEffect(() => {
-  if (!user || !profileId) return;
-  
-  const pendingFollow = localStorage.getItem('pendingFollow');
-  if (pendingFollow === profileId && !isFollowing) {
-    localStorage.removeItem('pendingFollow');
-    // Ejecutar follow automáticamente
-    toggleFollow();
+3. **Crear/usar ícono de Google:**
+   - SVG inline del logo de Google (colores oficiales)
+   - Tamaño pequeño (16x16px)
+
+4. **Estilo del botón:**
+   - Variante `outline` con borde gris
+   - Fondo blanco con hover suave
+   - Texto oscuro
+   - Gap entre ícono y texto
+
+---
+
+### Código del botón
+
+```tsx
+// Función de login
+const handleGoogleSignIn = async () => {
+  try {
+    localStorage.setItem('authReturnUrl', window.location.pathname);
+    await signInWithGoogle(window.location.href);
+  } catch (error) {
+    console.error('Error signing in:', error);
   }
-}, [user, profileId, isFollowing]);
+};
+
+// Logo de Google SVG
+const GoogleIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+);
 ```
 
 ---
 
-### Sobre el sistema de likes (ya implementado)
+### Flujo de Usuario
 
-El código actual ya soporta:
-- Detectar si usuario dio like (`checkLikeStatus` en useAppLike)
-- Toggle de like/unlike (`toggleLike`)
-- Mostrar corazón relleno si `isLiked`
-- Ocultar para no-autenticados (line 43 de AppLikeButton)
+```text
+Usuario anónimo visita /@rosmelortiz
+         │
+         ▼
+   Ve header con logo izquierda
+   y botón "Continuar con Google" derecha
+         │
+         ▼
+   Click en el botón
+         │
+         ▼
+   localStorage.set('authReturnUrl', '/@rosmelortiz')
+   signInWithGoogle(currentUrl)
+         │
+         ▼
+   ─── Google OAuth ───
+         │
+         ▼
+   useAuth detecta SIGNED_IN
+   Lee authReturnUrl de localStorage
+   Redirige a /@rosmelortiz (no a /me/profile)
+```
 
-El flujo funciona porque:
-1. Al visitar un perfil, cada `AppLikeButton` ejecuta `useAppLike(appId)`
-2. `useAppLike` consulta `app_likes` para ver si existe registro con `user_id` actual
-3. Si existe, `isLiked = true` y el corazón se muestra relleno
-4. Al hacer click, `toggleLike` agrega o elimina el registro
+---
+
+### Archivo a Modificar
+
+| Archivo | Cambio |
+|---------|--------|
+| `src/components/PublicProfileHeader.tsx` | Agregar botón de Google para usuarios no autenticados |
 
