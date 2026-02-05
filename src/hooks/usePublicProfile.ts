@@ -12,6 +12,7 @@ export interface PublicApp {
   name: string | null;
   tagline: string | null;
   logo_url: string | null;
+  is_verified: boolean;
   status: { name: string; slug: string } | null;
   stacks: PublicAppStack[];
 }

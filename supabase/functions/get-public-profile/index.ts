@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     const { data: appsData, error: appsError } = await supabaseAdmin
       .from('apps')
       .select(`
-        id, url, name, tagline, logo_url, status_id, display_order,
+        id, url, name, tagline, logo_url, status_id, display_order, is_verified,
         app_stacks(stack_id)
       `)
       .eq('user_id', profile.id)
@@ -154,6 +154,7 @@ Deno.serve(async (req) => {
         name: app.name,
         tagline: app.tagline,
         logo_url: app.logo_url,
+        is_verified: app.is_verified || false,
         status: status ? { name: status.name, slug: status.slug } : null,
         stacks: appStacks
       }

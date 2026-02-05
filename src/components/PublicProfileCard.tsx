@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck } from 'lucide-react';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
 import { PioneerBadge } from '@/components/PioneerBadge';
 
@@ -115,11 +115,23 @@ function PublicAppCard({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Title Row with Status Badge */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <h4 className="text-sm font-semibold text-gray-900 truncate">
               {app.name || (() => { try { return new URL(app.url).hostname; } catch { return 'App'; } })()}
             </h4>
             
+            {/* Verified Badge */}
+            {app.is_verified && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="text-xs">
+                  Propietario Verificado
+                </TooltipContent>
+              </Tooltip>
+            )}
+
             {/* Status Badge */}
             {app.status && (
               <span 

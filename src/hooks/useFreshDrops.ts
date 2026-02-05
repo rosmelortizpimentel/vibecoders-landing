@@ -8,6 +8,7 @@
    tagline: string | null;
    url: string;
    logo_url: string | null;
+  is_verified: boolean;
    created_at: string;
    profiles: {
      username: string | null;
@@ -36,6 +37,7 @@
            url,
            logo_url,
            created_at,
+            is_verified,
            profiles:user_id (
              username,
              name,
