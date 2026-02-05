@@ -4,14 +4,16 @@ import { useStatuses } from '@/hooks/useStatuses';
 import { Switch } from '@/components/ui/switch';
 import { ExternalLink, GripVertical } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+ import { VerificationBadge } from './VerificationBadge';
 
 interface AppCardProps {
   app: AppData;
   onExpand: () => void;
   onToggleVisibility: () => void;
+   onVerify: () => void;
 }
 
-export function AppCard({ app, onExpand, onToggleVisibility }: AppCardProps) {
+ export function AppCard({ app, onExpand, onToggleVisibility, onVerify }: AppCardProps) {
   const { categories } = useCategories();
   const { statuses } = useStatuses();
 
@@ -73,6 +75,12 @@ export function AppCard({ app, onExpand, onToggleVisibility }: AppCardProps) {
 
         {/* Tags */}
         <div className="flex items-center gap-2 mt-2">
+           <VerificationBadge 
+             isVerified={app.is_verified}
+             onClick={() => {
+               if (!app.is_verified) onVerify();
+             }}
+           />
           {status && StatusIcon && (
             <span 
               className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"

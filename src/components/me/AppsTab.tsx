@@ -28,14 +28,16 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableAppCard } from './SortableAppCard';
+ import { VerifyDomainModal } from './VerifyDomainModal';
 
 interface AppsTabProps {
   appsHook: ReturnType<typeof useApps>;
 }
 
 export function AppsTab({ appsHook }: AppsTabProps) {
-  const { apps, loading, createApp, updateApp, deleteApp, uploadAppLogo, reorderApps } = appsHook;
+   const { apps, loading, createApp, updateApp, deleteApp, uploadAppLogo, reorderApps, verifyApp } = appsHook;
   const [isCreating, setIsCreating] = useState(false);
+   const [verifyingApp, setVerifyingApp] = useState<AppData | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -61,6 +63,10 @@ export function AppsTab({ appsHook }: AppsTabProps) {
   const [newUrl, setNewUrl] = useState('');
   const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+   
+   const handleVerify = async (appId: string) => {
+     return await verifyApp(appId);
+   };
 
   const handleCreate = async () => {
     if (!newUrl.trim()) return;
@@ -150,12 +156,14 @@ export function AppsTab({ appsHook }: AppsTabProps) {
                       onUploadLogo={uploadAppLogo}
                       onDelete={() => setDeleteConfirmId(app.id)}
                       onCollapse={() => setExpandedAppId(null)}
+                       onVerify={() => handleVerify(app.id)}
                     />
                   ) : (
                     <SortableAppCard
                       app={app}
                       onExpand={() => setExpandedAppId(app.id)}
                       onToggleVisibility={() => updateApp(app.id, { is_visible: !app.is_visible })}
+                       onVerify={() => setVerifyingApp(app)}
                     />
                   )}
                 </div>
@@ -184,6 +192,19 @@ export function AppsTab({ appsHook }: AppsTabProps) {
           </div>
         </DialogContent>
       </Dialog>
+       
+       {/* Verify Domain Modal */}
+       {verifyingApp && (
+         <VerifyDomainModal
+           open={!!verifyingApp}
+           onOpenChange={(open) => !open && setVerifyingApp(null)}
+           appName={verifyingApp.name || ''}
+           appUrl={verifyingApp.url}
+           verificationToken={verifyingApp.verification_token}
+           onVerify={() => handleVerify(verifyingApp.id)}
+           onSuccess={() => setVerifyingApp(null)}
+         />
+       )}
     </div>
   );
 }

@@ -16,8 +16,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TechStackSelector } from './TechStackSelector';
-import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer } from 'lucide-react';
+ import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
+ import { VerificationBadge } from './VerificationBadge';
+ import { VerifyDomainModal } from './VerifyDomainModal';
 
 interface AppEditorProps {
   app: AppData;
@@ -25,15 +27,17 @@ interface AppEditorProps {
   onUploadLogo: (appId: string, file: File) => Promise<string>;
   onDelete: () => void;
   onCollapse: () => void;
+   onVerify: () => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
-export function AppEditor({ app, onUpdate, onUploadLogo, onDelete, onCollapse }: AppEditorProps) {
+ export function AppEditor({ app, onUpdate, onUploadLogo, onDelete, onCollapse, onVerify }: AppEditorProps) {
   const { categories } = useCategories();
   const { statuses } = useStatuses();
   const { groupedStacks, stacks } = useTechStacks();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [localApp, setLocalApp] = useState(app);
+   const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   const saveApp = useCallback(async (data: Partial<AppData>) => {
     await onUpdate(app.id, data);
@@ -81,6 +85,27 @@ export function AppEditor({ app, onUpdate, onUploadLogo, onDelete, onCollapse }:
     return (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>)[pascalCase];
   };
 
+   const handleVerificationSuccess = () => {
+     setLocalApp(prev => ({ 
+       ...prev, 
+       is_verified: true, 
+       verified_at: new Date().toISOString() 
+     }));
+   };
+ 
+   const formatVerifiedDate = (dateStr: string | null) => {
+     if (!dateStr) return '';
+     try {
+       return new Date(dateStr).toLocaleDateString('es-ES', {
+         day: 'numeric',
+         month: 'short',
+         year: 'numeric',
+       });
+     } catch {
+       return '';
+     }
+   };
+ 
   const descriptionLength = localApp.description?.length || 0;
 
   return (
@@ -274,7 +299,31 @@ export function AppEditor({ app, onUpdate, onUploadLogo, onDelete, onCollapse }:
         />
 
         {/* Delete */}
-        <div className="pt-4 border-t border-gray-200">
+         <div className="pt-4 border-t border-gray-200 space-y-4">
+           {/* Verification Section */}
+           <div className="flex items-center justify-between">
+             <div className="flex items-center gap-2">
+               <VerificationBadge isVerified={localApp.is_verified} />
+               <span className="text-sm text-gray-600">
+                 {localApp.is_verified 
+                   ? `Verificado el ${formatVerifiedDate(localApp.verified_at)}`
+                   : 'Verifica la propiedad de este dominio'
+                 }
+               </span>
+             </div>
+             {!localApp.is_verified && (
+               <Button 
+                 variant="outline" 
+                 size="sm"
+                 onClick={() => setShowVerifyModal(true)}
+                 className="border-[#3D5AFE] text-[#3D5AFE] hover:bg-[#3D5AFE]/10"
+               >
+                 <Shield className="h-4 w-4 mr-2" />
+                 Verificar
+               </Button>
+             )}
+           </div>
+ 
           <Button
             variant="ghost"
             className="text-red-500 hover:text-red-600 hover:bg-red-50"
@@ -285,6 +334,17 @@ export function AppEditor({ app, onUpdate, onUploadLogo, onDelete, onCollapse }:
           </Button>
         </div>
       </div>
+       
+       {/* Verify Modal */}
+       <VerifyDomainModal
+         open={showVerifyModal}
+         onOpenChange={setShowVerifyModal}
+         appName={localApp.name || ''}
+         appUrl={localApp.url}
+         verificationToken={localApp.verification_token}
+         onVerify={onVerify}
+         onSuccess={handleVerificationSuccess}
+       />
     </div>
   );
 }

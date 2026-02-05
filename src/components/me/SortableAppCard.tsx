@@ -7,9 +7,10 @@ interface SortableAppCardProps {
   app: AppData;
   onExpand: () => void;
   onToggleVisibility: () => void;
+   onVerify: () => void;
 }
 
-export function SortableAppCard({ app, onExpand, onToggleVisibility }: SortableAppCardProps) {
+ export function SortableAppCard({ app, onExpand, onToggleVisibility, onVerify }: SortableAppCardProps) {
   const {
     attributes,
     listeners,
@@ -32,6 +33,7 @@ export function SortableAppCard({ app, onExpand, onToggleVisibility }: SortableA
         app={app}
         onExpand={onExpand}
         onToggleVisibility={onToggleVisibility}
+         onVerify={onVerify}
       />
     </div>
   );

@@ -23,3 +23,6 @@ verify_jwt = false
  
  [functions.get-profile-stats]
  verify_jwt = false
+ 
+ [functions.verify-app-domain]
+ verify_jwt = false
