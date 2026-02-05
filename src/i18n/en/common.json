@@ -4,9 +4,8 @@
   },
   "footer": {
     "copyright": "© 2026 vibecoders.la",
-    "builtAt": "Built at",
-    "temperature": "-20°C",
-    "inCanada": "in",
+    "builtWith": "Built with",
+    "in": "in",
     "by": "by",
     "authorName": "Rosmel Ortiz",
     "linkedIn": "https://www.linkedin.com/in/rosmelortiz/",

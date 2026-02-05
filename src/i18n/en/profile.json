@@ -31,6 +31,12 @@
     "bannerRight": "Banner to the right",
     "earlyFoundingMember": "Early Founding Member"
   },
+  "username": {
+    "label": "Username",
+    "placeholder": "your_username",
+    "hint": "Up to 20 characters (letters, numbers or _)",
+    "notAvailable": "Username not available"
+  },
   "saving": "Saving...",
   "saved": "Saved",
   "error": "Error",

@@ -83,15 +83,15 @@ const translations = {
   },
 } as const;
 
-type Translations = typeof translations;
-type Section = keyof Translations['es'];
+type Section = keyof typeof translations['es'];
 
 export function useTranslation<T extends Section>(section: T) {
   const { language } = useLanguage();
-  return translations[language][section] as Translations['es'][T];
+  // Using any to avoid complex type inference issues with dynamic imports
+  return translations[language][section] as any;
 }
 
 // Static function for use outside React components (with explicit language)
 export function t<T extends Section>(section: T, lang: Language = 'es') {
-  return translations[lang][section] as Translations['es'][T];
+  return translations[lang][section] as any;
 }

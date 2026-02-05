@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -12,9 +13,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ExternalLink, LogOut, ChevronDown, Shield, Settings } from 'lucide-react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
-function formatDisplayName(name: string | null | undefined): string {
-  if (!name) return 'Usuario';
+function formatDisplayName(name: string | null | undefined, fallback: string): string {
+  if (!name) return fallback;
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0];
   const firstName = parts[0];
@@ -26,8 +28,9 @@ export function PublicHeader() {
   const { user, signOut } = useAuth();
   const { profile } = useProfile();
   const { isAdmin } = useUserRole();
+  const t = useTranslation('auth');
 
-  const displayName = formatDisplayName(profile?.name);
+  const displayName = formatDisplayName(profile?.name, t.user);
   const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
 
   return (
@@ -76,7 +79,7 @@ export function PublicHeader() {
                 <DropdownMenuItem asChild className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white">
                   <Link to="/me/profile" className="flex items-center gap-2 cursor-pointer">
                     <Settings className="h-4 w-4" />
-                    <span>Mi Perfil</span>
+                    <span>{t.editProfile}</span>
                   </Link>
                 </DropdownMenuItem>
                 {publicProfileUrl && (
@@ -88,17 +91,19 @@ export function PublicHeader() {
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      <span>Ver Perfil Público</span>
+                      <span>{t.viewPublicProfile}</span>
                     </a>
                   </DropdownMenuItem>
                 )}
+                <DropdownMenuSeparator className="bg-white/20" />
+                <LanguageSwitcher />
                 <DropdownMenuSeparator className="bg-white/20" />
                 <DropdownMenuItem 
                   onClick={() => signOut()}
                   className="flex items-center gap-2 text-white hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
-                  <span>Cerrar Sesión</span>
+                  <span>{t.signOut}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

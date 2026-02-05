@@ -1,58 +1,164 @@
 {
   "privacy": {
     "title": "Privacy Policy",
-    "lastUpdated": "Last updated",
+    "lastUpdated": "Last updated: January 31, 2026",
     "sections": [
       {
-        "title": "1. Information We Collect",
-        "content": "We collect information you provide directly, such as your name, email address, and any content you share on the platform. We also automatically collect certain technical data like your browser type and IP address."
+        "title": "1. Introduction",
+        "content": "Vibecoders.la (\"we\", \"our\" or \"the Platform\") is a community that connects developers and creators who build with vibe coding tools. Your privacy is important to us. This policy describes how we collect, use and protect your personal information."
       },
       {
-        "title": "2. How We Use Your Information",
-        "content": "We use your information to provide and improve our services, communicate with you, and personalize your experience. We never sell your personal information to third parties."
+        "title": "2. Information We Collect",
+        "content": "We collect the following types of information:",
+        "list": [
+          "Account information: When you sign in with Google, we receive your name, email address and profile photo.",
+          "Profile information: The username you choose for your public page at vibecoders.la.",
+          "Technical information: Device, browser and operating system data to improve your experience.",
+          "Usage information: How you interact with the platform to improve our services."
+        ]
       },
       {
-        "title": "3. Data Security",
-        "content": "We implement appropriate security measures to protect your personal information. However, no method of transmission over the Internet is 100% secure."
+        "title": "3. Google Authentication",
+        "content": "We use Google Sign-In to offer you a secure experience without needing to create passwords. We only access your basic profile information (name, email and photo). We do not access your Google Drive, contacts, calendar or any other Google service."
       },
       {
-        "title": "4. Your Rights",
-        "content": "You have the right to access, correct, or delete your personal information. You can also request a copy of your data or opt out of certain data processing activities."
+        "title": "4. How We Use Your Information",
+        "content": "We use your information to:",
+        "list": [
+          "Create and maintain your account at vibecoders.la",
+          "Allow you to reserve your personalized page",
+          "Communicate with you about service updates",
+          "Improve and personalize your experience",
+          "Prevent fraud and misuse"
+        ]
       },
       {
-        "title": "5. Contact",
-        "content": "If you have questions about this privacy policy, please contact us at privacy@vibecoders.la"
+        "title": "5. Storage and Security",
+        "content": "Your information is stored securely on protected servers. We use Supabase as our infrastructure provider, which complies with industry security standards. We implement technical and organizational measures to protect your data."
+      },
+      {
+        "title": "6. Sharing Information",
+        "content": "We do not sell or rent your personal information. We only share data with:",
+        "list": [
+          "Essential service providers (hosting, authentication)",
+          "When required by law",
+          "With your explicit consent"
+        ]
+      },
+      {
+        "title": "7. Your Rights",
+        "content": "You have the right to:",
+        "list": [
+          "Access your personal data",
+          "Correct incorrect information",
+          "Delete your account and data",
+          "Export your data"
+        ],
+        "footer": "To exercise these rights, contact us."
+      },
+      {
+        "title": "8. Cookies",
+        "content": "We use essential cookies for site functionality and authentication. We do not use third-party tracking cookies for advertising purposes."
+      },
+      {
+        "title": "9. Changes to this Policy",
+        "content": "We may update this policy occasionally. We will notify you of significant changes by email or through a notice on the platform."
+      },
+      {
+        "title": "10. Contact",
+        "content": "For privacy questions:",
+        "email": "contact@vibecoders.la"
       }
     ]
   },
   "terms": {
     "title": "Terms of Service",
-    "lastUpdated": "Last updated",
+    "lastUpdated": "Last updated: January 31, 2026",
     "sections": [
       {
         "title": "1. Acceptance of Terms",
-        "content": "By accessing and using Vibecoders, you agree to be bound by these Terms of Service. If you do not agree, please do not use our services."
+        "content": "By accessing or using vibecoders.la, you accept these terms of service. If you do not agree, please do not use the platform."
       },
       {
-        "title": "2. Use of Service",
-        "content": "You agree to use the service only for lawful purposes and in accordance with these terms. You are responsible for all content you publish on the platform."
+        "title": "2. Description of Service",
+        "content": "Vibecoders.la is a community for developers and creators who build digital products using artificial intelligence tools and vibe coding. We offer:",
+        "list": [
+          "Personalized profile pages",
+          "Vibecoders community directory",
+          "Resources and connections for creators"
+        ]
       },
       {
-        "title": "3. User Content",
-        "content": "You retain ownership of the content you create. By publishing content, you grant us a license to display and distribute it on the platform."
+        "title": "3. Registration and Account",
+        "content": "By registering, you agree that:",
+        "list": [
+          "You must provide truthful information when registering",
+          "You are responsible for maintaining the security of your account",
+          "You must be at least 13 years old",
+          "One person may have only one account"
+        ]
       },
       {
-        "title": "4. Prohibited Conduct",
-        "content": "You may not use the service to harass others, spread malware, infringe copyrights, or engage in any illegal activity."
+        "title": "4. Usernames",
+        "content": "Regarding usernames:",
+        "list": [
+          "Usernames must be appropriate and not offensive",
+          "You cannot use names that infringe trademarks",
+          "You cannot impersonate other people or entities",
+          "We reserve the right to reclaim inactive usernames or those that violate these policies"
+        ]
       },
       {
-        "title": "5. Termination",
-        "content": "We reserve the right to suspend or terminate accounts that violate these terms or for any other reason at our discretion."
+        "title": "5. Acceptable Use",
+        "content": "You agree not to:",
+        "list": [
+          "Violate applicable laws or regulations",
+          "Publish offensive, defamatory or illegal content",
+          "Attempt to access other users' accounts",
+          "Interfere with the platform's operation",
+          "Use the platform for spam or fraudulent activities"
+        ]
       },
       {
-        "title": "6. Changes",
-        "content": "We may update these terms from time to time. Continued use of the service after changes constitutes acceptance of the new terms."
+        "title": "6. Intellectual Property",
+        "content": "Regarding intellectual property:",
+        "list": [
+          "Content you publish remains yours",
+          "You grant us license to display your content on the platform",
+          "Respect the intellectual property rights of third parties",
+          "The design and code of vibecoders.la are our property"
+        ]
+      },
+      {
+        "title": "7. Limitation of Liability",
+        "content": "The platform is provided \"as is\". We do not guarantee continuous or error-free availability. We are not responsible for:",
+        "list": [
+          "Losses arising from the use of the platform",
+          "Content published by other users",
+          "Service interruptions"
+        ]
+      },
+      {
+        "title": "8. Service Modifications",
+        "content": "We may modify, suspend or discontinue any aspect of the service at any time. We will notify you of significant changes with reasonable notice."
+      },
+      {
+        "title": "9. Termination",
+        "content": "We may suspend or terminate your account if you violate these terms. You can delete your account at any time from your profile."
+      },
+      {
+        "title": "10. Applicable Law",
+        "content": "These terms are governed by the applicable laws in the jurisdiction where vibecoders.la operates."
+      },
+      {
+        "title": "11. Contact",
+        "content": "For questions about these terms:",
+        "email": "contact@vibecoders.la"
       }
     ]
+  },
+  "common": {
+    "backToHome": "Back to home",
+    "logo": "vibecoders.la"
   }
 }
