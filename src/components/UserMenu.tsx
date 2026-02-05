@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { User, ArrowLeft, LogOut, LogIn, LayoutDashboard } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 const UserMenu = () => {
   const { user, loading, signInWithGoogle, signOut } = useAuth();
@@ -19,17 +21,20 @@ const UserMenu = () => {
   const location = useLocation();
   const { profile } = useProfile();
   const { isAdmin } = useUserRole();
+  const t = useTranslation('auth');
+  const tCommon = useTranslation('common');
 
   // Mostrar botón de Ingresar si no hay usuario (solo en landing)
   if (!loading && !user && location.pathname === '/') {
     return (
-      <div className="fixed right-4 top-4 z-50">
+      <div className="fixed right-4 top-4 z-50 flex items-center gap-2">
+        <LanguageSwitcher variant="header" className="text-white" />
         <Button
           onClick={() => signInWithGoogle()}
           className="gap-2 bg-white text-[#1c1c1c] hover:bg-white/90 font-semibold shadow-lg"
         >
           <LogIn className="h-4 w-4" />
-          Ingresar
+          {t.signIn}
         </Button>
       </div>
     );
@@ -78,10 +83,10 @@ const UserMenu = () => {
             </Avatar>
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-semibold text-gray-900 truncate">
-                {profile?.name || fullName || 'Usuario'}
+                {profile?.name || fullName || t.user}
               </span>
               <span className="text-xs text-gray-500 truncate">
-                {profile?.username ? `@${profile.username}` : 'Sin username'}
+                {profile?.username ? `@${profile.username}` : t.noUsername}
               </span>
             </div>
           </div>
@@ -95,7 +100,7 @@ const UserMenu = () => {
                 className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
               >
                 <ArrowLeft className="h-4 w-4 text-gray-400" />
-                <span>Volver al Inicio</span>
+                <span>{tCommon.navigation.startups}</span>
               </DropdownMenuItem>
             ) : (
               <DropdownMenuItem 
@@ -103,7 +108,7 @@ const UserMenu = () => {
                 className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
               >
                 <User className="h-4 w-4 text-gray-400" />
-                <span>Mi Perfil</span>
+                <span>{tCommon.navigation.myProfile}</span>
               </DropdownMenuItem>
             )}
             
@@ -113,9 +118,10 @@ const UserMenu = () => {
                 className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
               >
                 <LayoutDashboard className="h-4 w-4 text-gray-400" />
-                <span>Panel Admin</span>
+                <span>{t.adminPanel}</span>
               </DropdownMenuItem>
             )}
+            <LanguageSwitcher />
           </div>
           
           {/* Footer - Sign Out */}
@@ -126,7 +132,7 @@ const UserMenu = () => {
               className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
             >
               <LogOut className="h-4 w-4 text-gray-400" />
-              <span>Cerrar Sesión</span>
+              <span>{t.signOut}</span>
             </DropdownMenuItem>
           </div>
         </DropdownMenuContent>

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface UsernameEditorProps {
   currentUsername: string | null;
@@ -11,6 +12,7 @@ interface UsernameEditorProps {
 }
 
 export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEditorProps) {
+  const t = useTranslation('profile');
   const [username, setUsername] = useState(currentUsername || '');
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -73,7 +75,7 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
       setIsChecking(false);
       
       if (!available) {
-        setError('Username no disponible');
+        setError(t.username.notAvailable);
       } else {
         setError(null);
         // Auto-save when available
@@ -98,7 +100,7 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="username" className="text-[#1c1c1c]">Username</Label>
+      <Label htmlFor="username" className="text-[#1c1c1c]">{t.username.label}</Label>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">
           @
@@ -108,7 +110,7 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
           type="text"
           value={username}
           onChange={handleUsernameChange}
-          placeholder="tu_username"
+          placeholder={t.username.placeholder}
           className="pl-7 pr-10 border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -127,7 +129,7 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
         <p className="text-xs text-red-500">{error}</p>
       )}
       <p className="text-xs text-gray-500">
-        Hasta 20 caracteres (letras, números o _)
+        {t.username.hint}
       </p>
     </div>
   );
