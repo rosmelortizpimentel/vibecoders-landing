@@ -7,7 +7,36 @@ export interface TechStack {
   logo_url: string;
   tags: string[];
   display_order: number;
+   website_url: string | null;
+   referral_url: string | null;
+   referral_param: string | null;
+   default_referral_code: string | null;
 }
+ 
+ // Build referral URL for a tech stack with optional custom code
+ export function buildStackReferralUrl(
+   stack: TechStack, 
+   customCode?: string | null
+ ): string | null {
+   const code = customCode || stack.default_referral_code;
+   
+   // If there's a referral template and a code, use it
+   if (stack.referral_url && code) {
+     return stack.referral_url.replace('{code}', code);
+   }
+   // If there's a param and code, append to website URL
+   if (stack.referral_param && code && stack.website_url) {
+     try {
+       const url = new URL(stack.website_url);
+       url.searchParams.set(stack.referral_param, code);
+       return url.toString();
+     } catch {
+       return stack.website_url;
+     }
+   }
+   // Default to website URL (can be null)
+   return stack.website_url;
+ }
 
 export function useTechStacks() {
   const [stacks, setStacks] = useState<TechStack[]>([]);

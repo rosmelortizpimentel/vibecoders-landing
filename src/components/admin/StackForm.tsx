@@ -17,6 +17,9 @@ export interface StackFormData {
   is_featured: boolean;
   is_active: boolean;
   display_order: number;
+   referral_url: string | null;
+   referral_param: string | null;
+   default_referral_code: string | null;
 }
 
 interface StackFormProps {
@@ -36,6 +39,9 @@ const emptyForm: StackFormData = {
   is_featured: false,
   is_active: true,
   display_order: 0,
+   referral_url: null,
+   referral_param: null,
+   default_referral_code: null,
 };
 
 const CATEGORIES = [
@@ -206,6 +212,47 @@ export function StackForm({ initialData, onSubmit, onCancel, isLoading }: StackF
             />
           </div>
 
+           {/* Referral Configuration */}
+           <div className="border border-gray-200 rounded-lg p-3 space-y-3 bg-gray-50">
+             <Label className="text-xs font-medium text-[#1c1c1c]">Configuración de Referidos (opcional)</Label>
+             
+             <div className="space-y-1">
+               <Label htmlFor="referral_url" className="text-[10px] text-gray-500">
+                 Template URL (usa {'{code}'} como placeholder)
+               </Label>
+               <input
+                 id="referral_url"
+                 className={inputClassName}
+                 value={formData.referral_url || ''}
+                 onChange={(e) => handleChange('referral_url', e.target.value || null)}
+                 placeholder="https://example.com/invite/{code}"
+               />
+             </div>
+ 
+             <div className="grid grid-cols-2 gap-2">
+               <div className="space-y-1">
+                 <Label htmlFor="referral_param" className="text-[10px] text-gray-500">Param Name</Label>
+                 <input
+                   id="referral_param"
+                   className={inputClassName}
+                   value={formData.referral_param || ''}
+                   onChange={(e) => handleChange('referral_param', e.target.value || null)}
+                   placeholder="ref"
+                 />
+               </div>
+               <div className="space-y-1">
+                 <Label htmlFor="default_referral_code" className="text-[10px] text-gray-500">Código Default</Label>
+                 <input
+                   id="default_referral_code"
+                   className={inputClassName}
+                   value={formData.default_referral_code || ''}
+                   onChange={(e) => handleChange('default_referral_code', e.target.value || null)}
+                   placeholder="MYCODE"
+                 />
+               </div>
+             </div>
+           </div>
+ 
           {/* Category & Pricing */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">

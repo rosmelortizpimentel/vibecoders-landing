@@ -56,6 +56,9 @@ interface Tool {
   is_active: boolean;
   display_order: number;
   created_at: string;
+   referral_url: string | null;
+   referral_param: string | null;
+   default_referral_code: string | null;
 }
 
 // Sortable Row Component
@@ -223,6 +226,9 @@ export function StackManager() {
         is_featured: data.is_featured,
         is_active: data.is_active,
         display_order: data.display_order,
+         referral_url: data.referral_url,
+         referral_param: data.referral_param,
+         default_referral_code: data.default_referral_code,
       });
       if (error) throw error;
     },
@@ -254,6 +260,9 @@ export function StackManager() {
           is_featured: data.is_featured,
           is_active: data.is_active,
           display_order: data.display_order,
+           referral_url: data.referral_url,
+           referral_param: data.referral_param,
+           default_referral_code: data.default_referral_code,
         })
         .eq('id', data.id);
       if (error) throw error;
@@ -449,6 +458,9 @@ export function StackManager() {
             is_featured: editingTool.is_featured,
             is_active: editingTool.is_active,
             display_order: editingTool.display_order,
+             referral_url: editingTool.referral_url,
+             referral_param: editingTool.referral_param,
+             default_referral_code: editingTool.default_referral_code,
           } : undefined}
           onSubmit={handleFormSubmit}
           onCancel={() => {

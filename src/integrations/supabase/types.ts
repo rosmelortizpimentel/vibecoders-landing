@@ -393,27 +393,39 @@ export type Database = {
       tech_stacks: {
         Row: {
           created_at: string
+          default_referral_code: string | null
           display_order: number
           id: string
           logo_url: string
           name: string
+          referral_param: string | null
+          referral_url: string | null
           tags: Json
+          website_url: string | null
         }
         Insert: {
           created_at?: string
+          default_referral_code?: string | null
           display_order?: number
           id?: string
           logo_url: string
           name: string
+          referral_param?: string | null
+          referral_url?: string | null
           tags?: Json
+          website_url?: string | null
         }
         Update: {
           created_at?: string
+          default_referral_code?: string | null
           display_order?: number
           id?: string
           logo_url?: string
           name?: string
+          referral_param?: string | null
+          referral_url?: string | null
           tags?: Json
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -421,6 +433,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          default_referral_code: string | null
           display_order: number
           id: string
           is_active: boolean
@@ -428,12 +441,15 @@ export type Database = {
           logo_url: string | null
           name: string
           pricing_model: string | null
+          referral_param: string | null
+          referral_url: string | null
           tagline: string
           website_url: string
         }
         Insert: {
           category: string
           created_at?: string
+          default_referral_code?: string | null
           display_order?: number
           id?: string
           is_active?: boolean
@@ -441,12 +457,15 @@ export type Database = {
           logo_url?: string | null
           name: string
           pricing_model?: string | null
+          referral_param?: string | null
+          referral_url?: string | null
           tagline: string
           website_url: string
         }
         Update: {
           category?: string
           created_at?: string
+          default_referral_code?: string | null
           display_order?: number
           id?: string
           is_active?: boolean
@@ -454,6 +473,8 @@ export type Database = {
           logo_url?: string | null
           name?: string
           pricing_model?: string | null
+          referral_param?: string | null
+          referral_url?: string | null
           tagline?: string
           website_url?: string
         }
@@ -479,6 +500,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_stack_referrals: {
+        Row: {
+          created_at: string | null
+          id: string
+          referral_code: string
+          stack_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          referral_code: string
+          stack_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          referral_code?: string
+          stack_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_stack_referrals_stack_id_fkey"
+            columns: ["stack_id"]
+            isOneToOne: false
+            referencedRelation: "tech_stacks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       waitlist: {
         Row: {

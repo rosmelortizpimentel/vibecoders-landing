@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Layers, Settings, Users, Mail } from 'lucide-react';
+ import { LayoutGrid, Layers, Settings, Users, Mail, Cpu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
@@ -13,6 +13,11 @@ const menuItems = [
     href: '/admin/stack',
     icon: Layers,
   },
+   {
+     title: 'Tech Stacks',
+     href: '/admin/tech-stacks',
+     icon: Cpu,
+   },
   {
     title: 'Usuarios',
     href: '/admin/users',
