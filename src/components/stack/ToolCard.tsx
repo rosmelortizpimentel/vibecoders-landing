@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import type { Tool } from '@/hooks/useToolsStack';
+ import { type Tool, buildReferralUrl } from '@/hooks/useToolsStack';
 import { ExternalLink, Star } from 'lucide-react';
 
 interface ToolCardProps {
@@ -8,9 +8,11 @@ interface ToolCardProps {
 }
 
 export function ToolCard({ tool }: ToolCardProps) {
+   const href = buildReferralUrl(tool);
+ 
   return (
     <a
-      href={tool.website_url}
+       href={href}
       target="_blank"
       rel="noopener noreferrer"
       className={cn(

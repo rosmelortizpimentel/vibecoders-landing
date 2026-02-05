@@ -13,7 +13,30 @@ export interface Tool {
   is_active: boolean;
   display_order: number;
   created_at: string;
+   referral_url: string | null;
+   referral_param: string | null;
+   default_referral_code: string | null;
 }
+ 
+ // Build the final referral URL from tool data
+ export function buildReferralUrl(tool: Tool): string {
+   // If there's a referral template and a code, use it
+   if (tool.referral_url && tool.default_referral_code) {
+     return tool.referral_url.replace('{code}', tool.default_referral_code);
+   }
+   // If there's a param and code, append to website URL
+   if (tool.referral_param && tool.default_referral_code && tool.website_url) {
+     try {
+       const url = new URL(tool.website_url);
+       url.searchParams.set(tool.referral_param, tool.default_referral_code);
+       return url.toString();
+     } catch {
+       return tool.website_url;
+     }
+   }
+   // Default to website URL
+   return tool.website_url;
+ }
 
 async function fetchTools(): Promise<Tool[]> {
   const { data, error } = await supabase

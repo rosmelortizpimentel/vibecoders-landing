@@ -1,4 +1,4 @@
-// Force deploy: 2026-02-01-v2
+ // Force deploy: 2026-02-05-v1
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -37,6 +37,28 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
+     // Helper function to build referral URL
+     function buildStackReferralUrl(
+       stack: { website_url?: string | null; referral_url?: string | null; referral_param?: string | null; default_referral_code?: string | null },
+       customCode?: string | null
+     ): string | null {
+       const code = customCode || stack.default_referral_code;
+       
+       if (stack.referral_url && code) {
+         return stack.referral_url.replace('{code}', code);
+       }
+       if (stack.referral_param && code && stack.website_url) {
+         try {
+           const url = new URL(stack.website_url);
+           url.searchParams.set(stack.referral_param, code);
+           return url.toString();
+         } catch {
+           return stack.website_url;
+         }
+       }
+       return stack.website_url || null;
+     }
+ 
     // 1. Search profile by username (case-insensitive) with all public fields
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
@@ -93,9 +115,15 @@ Deno.serve(async (req) => {
 
     // 3. Get statuses and stacks to resolve IDs
     const { data: statuses } = await supabaseAdmin.from('app_statuses').select('id, name, slug')
-    const { data: stacks } = await supabaseAdmin.from('tech_stacks').select('id, name, logo_url')
+     const { data: stacks } = await supabaseAdmin.from('tech_stacks').select('id, name, logo_url, website_url, referral_url, referral_param, default_referral_code')
+ 
+     // 5. Get user's custom referral codes
+     const { data: userReferrals } = await supabaseAdmin
+       .from('user_stack_referrals')
+       .select('stack_id, referral_code')
+       .eq('user_id', profile.id)
 
-    // 4. Map apps with resolved status and stacks
+     // 6. Map apps with resolved status and stacks (including referral URLs)
     const apps = (appsData || []).map(app => {
       const status = app.status_id && statuses 
         ? statuses.find(s => s.id === app.status_id) 
@@ -104,7 +132,18 @@ Deno.serve(async (req) => {
       const appStacks = (app.app_stacks || [])
         .map((as: { stack_id: string }) => {
           const stack = stacks?.find(s => s.id === as.stack_id)
-          return stack ? { id: stack.id, name: stack.name, logo_url: stack.logo_url } : null
+           if (!stack) return null
+           
+           // Check for user's custom referral code
+           const userReferral = userReferrals?.find(r => r.stack_id === stack.id)
+           const url = buildStackReferralUrl(stack, userReferral?.referral_code)
+           
+           return { 
+             id: stack.id, 
+             name: stack.name, 
+             logo_url: stack.logo_url,
+             url
+           }
         })
         .filter(Boolean)
         .slice(0, 4) // Max 4 stacks per app
