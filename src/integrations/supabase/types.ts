@@ -198,6 +198,7 @@ export type Database = {
           hours_building: number | null
           hours_ideation: number | null
           id: string
+          is_verified: boolean
           is_visible: boolean
           logo_url: string | null
           name: string | null
@@ -206,6 +207,9 @@ export type Database = {
           updated_at: string
           url: string
           user_id: string
+          verification_token: string | null
+          verified_at: string | null
+          verified_url: string | null
         }
         Insert: {
           category_id?: string | null
@@ -215,6 +219,7 @@ export type Database = {
           hours_building?: number | null
           hours_ideation?: number | null
           id?: string
+          is_verified?: boolean
           is_visible?: boolean
           logo_url?: string | null
           name?: string | null
@@ -223,6 +228,9 @@ export type Database = {
           updated_at?: string
           url: string
           user_id: string
+          verification_token?: string | null
+          verified_at?: string | null
+          verified_url?: string | null
         }
         Update: {
           category_id?: string | null
@@ -232,6 +240,7 @@ export type Database = {
           hours_building?: number | null
           hours_ideation?: number | null
           id?: string
+          is_verified?: boolean
           is_visible?: boolean
           logo_url?: string | null
           name?: string | null
@@ -240,6 +249,9 @@ export type Database = {
           updated_at?: string
           url?: string
           user_id?: string
+          verification_token?: string | null
+          verified_at?: string | null
+          verified_url?: string | null
         }
         Relationships: [
           {

@@ -19,6 +19,10 @@ export interface AppData {
   created_at: string;
   updated_at: string;
   stacks?: string[];
+   is_verified: boolean;
+   verification_token: string;
+   verified_at: string | null;
+   verified_url: string | null;
 }
 
 export function useApps() {
@@ -169,6 +173,24 @@ export function useApps() {
     setApps(reorderedApps.map((app, index) => ({ ...app, display_order: index })));
   }, []);
 
+   const verifyApp = useCallback(async (appId: string) => {
+     const { data, error } = await supabase.functions.invoke('verify-app-domain', {
+       body: { app_id: appId }
+     });
+ 
+     if (error) {
+       console.error('Error verifying app:', error);
+       return { success: false, error: 'invoke_error', message: 'Error al conectar con el servidor' };
+     }
+ 
+     if (data?.success) {
+       // Refetch to get updated state from server
+       await fetchApps();
+     }
+ 
+     return data;
+   }, [fetchApps]);
+ 
   return {
     apps,
     loading,
@@ -179,5 +201,6 @@ export function useApps() {
     uploadAppLogo,
     reorderApps,
     refetch: fetchApps,
+     verifyApp,
   };
 }
