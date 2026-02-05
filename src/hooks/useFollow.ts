@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -17,6 +17,7 @@ export function useFollow(profileId: string | undefined): UseFollowResult {
   const [isLoading, setIsLoading] = useState(true);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
+  const pendingFollowExecuted = useRef(false);
 
   const fetchFollowData = useCallback(async () => {
     if (!profileId) {
@@ -95,6 +96,21 @@ export function useFollow(profileId: string | undefined): UseFollowResult {
       console.error('Error toggling follow:', error);
     }
   }, [user, profileId, isFollowing]);
+
+  // Handle pending follow after login
+  useEffect(() => {
+    if (!user || !profileId || isLoading || pendingFollowExecuted.current) return;
+    
+    const pendingFollow = localStorage.getItem('pendingFollow');
+    if (pendingFollow === profileId && !isFollowing) {
+      pendingFollowExecuted.current = true;
+      localStorage.removeItem('pendingFollow');
+      // Execute follow automatically after a short delay to ensure state is ready
+      setTimeout(() => {
+        toggleFollow();
+      }, 100);
+    }
+  }, [user, profileId, isFollowing, isLoading, toggleFollow]);
 
   return {
     isFollowing,
