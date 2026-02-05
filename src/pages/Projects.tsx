@@ -20,12 +20,6 @@ export default function Projects() {
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
               Apps reales creadas por gente como tú. Inspírate y lanza la tuya.
             </p>
-            <Button
-              asChild
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 py-2 font-medium transition-all hover:shadow-md"
-            >
-              <Link to="/me/profile">Quiero aparecer aquí</Link>
-            </Button>
           </header>
         </div>
       </section>
