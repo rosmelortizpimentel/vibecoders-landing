@@ -7,7 +7,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Pencil, LogOut, ExternalLink } from 'lucide-react';
+import { Pencil, LogOut, ExternalLink, LayoutDashboard } from 'lucide-react';
+import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
@@ -30,6 +32,8 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
   const { profile } = useProfile();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { isAdmin } = useUserRole();
 
   // Detect context
   const isOnOwnPublicProfile = profileUsername && profile?.username === profileUsername;
@@ -91,40 +95,72 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            className="w-48 bg-[#1c1c1c] border-[#1c1c1c] text-white"
-          >
-            {/* Edit profile option - show when on own public profile or other pages (not /me/*) */}
-            {!isOnEditPage && (
-              <DropdownMenuItem 
-                onClick={() => navigate('/me')}
-                className="flex items-center gap-2 cursor-pointer hover:bg-white/10 text-white focus:bg-white/10 focus:text-white"
-              >
-                <Pencil className="h-4 w-4" />
-                Editar Mi Perfil
-              </DropdownMenuItem>
-            )}
+          <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-white border border-gray-100 p-0 shadow-xl">
+            {/* Identity Header - Non-clickable */}
+            <div className="px-3 py-3 flex items-center gap-3">
+              <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
+                <AvatarImage src={avatarUrl} alt={getDisplayName()} />
+                <AvatarFallback className="text-sm bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
+                  {(profile?.name || user?.user_metadata?.full_name || '?').charAt(0)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-semibold text-gray-900 truncate">
+                  {profile?.name || user?.user_metadata?.full_name || 'Usuario'}
+                </span>
+                <span className="text-xs text-gray-500 truncate">
+                  {profile?.username ? `@${profile.username}` : 'Sin username'}
+                </span>
+              </div>
+            </div>
+            <DropdownMenuSeparator className="my-0" />
             
-            {/* View public profile - show when on /me/* or other pages (not on own public profile) */}
-            {!isOnOwnPublicProfile && profile?.username && (
-              <DropdownMenuItem 
-                onClick={() => navigate(`/@${profile.username}`)}
-                className="flex items-center gap-2 cursor-pointer hover:bg-white/10 text-white focus:bg-white/10 focus:text-white"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Ver Perfil Público
-              </DropdownMenuItem>
-            )}
+            {/* Menu Items */}
+            <div className="py-1">
+              {/* Edit profile option - show when on own public profile or other pages (not /me/*) */}
+              {!isOnEditPage && (
+                <DropdownMenuItem 
+                  onClick={() => navigate('/me')}
+                  className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                >
+                  <Pencil className="h-4 w-4 text-gray-400" />
+                  <span>Editar Mi Perfil</span>
+                </DropdownMenuItem>
+              )}
+              
+              {/* View public profile - show when on /me/* or other pages (not on own public profile) */}
+              {!isOnOwnPublicProfile && profile?.username && (
+                <DropdownMenuItem 
+                  onClick={() => navigate(`/@${profile.username}`)}
+                  className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                >
+                  <ExternalLink className="h-4 w-4 text-gray-400" />
+                  <span>Ver Perfil Público</span>
+                </DropdownMenuItem>
+              )}
+              
+              {isAdmin && (
+                <DropdownMenuItem 
+                  onClick={() => navigate('/admin')}
+                  className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                >
+                  <LayoutDashboard className="h-4 w-4 text-gray-400" />
+                  <span>Panel Admin</span>
+                </DropdownMenuItem>
+              )}
+            </div>
             
-            {/* Sign out */}
-            <DropdownMenuItem 
-              onClick={handleSignOut}
-              className="flex items-center gap-2 cursor-pointer hover:bg-white/10 text-white focus:bg-white/10 focus:text-white"
-            >
-              <LogOut className="h-4 w-4" />
-              Cerrar Sesión
-            </DropdownMenuItem>
+            {/* Footer - Sign Out */}
+            <DropdownMenuSeparator className="my-0" />
+            <div className="py-1">
+              <DropdownMenuItem 
+                onClick={handleSignOut}
+                className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+              >
+                <LogOut className="h-4 w-4 text-gray-400" />
+                <span>Cerrar Sesión</span>
+              </DropdownMenuItem>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
