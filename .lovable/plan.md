@@ -1,107 +1,111 @@
 
-
-## Botón de Login en Header de Perfiles Públicos
+## Modificar el Menú Superior del Header
 
 ### Objetivo
-Agregar un botón "Continuar con Google" en el lado derecho del header cuando el usuario visita un perfil público sin estar logueado. Este botón debe iniciar sesión y mantener al usuario en la misma página.
+Mejorar el menú de usuario en el header de perfiles publicos para:
+1. Mostrar el nombre y foto correctos (con fallback a datos de Google si el perfil no tiene nombre/foto)
+2. Cambiar dinamicamente las opciones del menu segun donde este el usuario
 
 ---
 
-### Cambio en `src/components/PublicProfileHeader.tsx`
-
-**Estado actual:**
-- Línea 50-103: Solo renderiza el menú de usuario si `user` existe
-- Si no hay usuario, el lado derecho del header queda vacío
-
-**Cambio propuesto:**
-Agregar un bloque `else` que muestre el botón de Google cuando no hay usuario:
+### Logica de Nombre y Foto (Fallback)
 
 ```text
-{user ? (
-  // ... menú de usuario existente (DropdownMenu)
-) : (
-  <Button
-    onClick={handleGoogleSignIn}
-    variant="outline"
-    className="flex items-center gap-2 ..."
-  >
-    <GoogleIcon />
-    <span>Continuar con Google</span>
-  </Button>
-)}
+Nombre a mostrar:
+  1. profile.name (de la tabla profiles)
+  2. user.user_metadata.full_name (de Google OAuth)
+  3. "Usuario" (fallback final)
+
+Foto a mostrar:
+  1. profile.avatar_url (de la tabla profiles)
+  2. user.user_metadata.avatar_url (de Google OAuth)
+  3. Inicial del nombre (fallback final)
 ```
 
 ---
 
-### Detalles de Implementación
+### Logica Condicional del Menu
 
-1. **Importar Button** del UI components
+```text
+Ruta actual                 | Opciones del menu
+----------------------------|----------------------------------------
+/@miUsername (propio)       | "Editar Mi Perfil" + "Cerrar Sesion"
+/me/* (edicion)             | "Ver Perfil Publico" + "Cerrar Sesion"
+Cualquier otra pagina       | "Editar Mi Perfil" + "Ver Perfil Publico" + "Cerrar Sesion"
+```
 
-2. **Agregar función `handleGoogleSignIn`:**
-   - Guardar `authReturnUrl` en localStorage con la ruta actual
-   - Llamar `signInWithGoogle(window.location.href)`
-
-3. **Crear/usar ícono de Google:**
-   - SVG inline del logo de Google (colores oficiales)
-   - Tamaño pequeño (16x16px)
-
-4. **Estilo del botón:**
-   - Variante `outline` con borde gris
-   - Fondo blanco con hover suave
-   - Texto oscuro
-   - Gap entre ícono y texto
+**Deteccion de "perfil propio":**
+- Comparar `profileUsername` (el username del perfil que se esta viendo, pasado como prop) con `profile.username` (el username del usuario logueado)
 
 ---
 
-### Código del botón
+### Cambios en `PublicProfileHeader.tsx`
 
-```tsx
-// Función de login
-const handleGoogleSignIn = async () => {
-  try {
-    localStorage.setItem('authReturnUrl', window.location.pathname);
-    await signInWithGoogle(window.location.href);
-  } catch (error) {
-    console.error('Error signing in:', error);
-  }
+1. **Obtener `user` de `useAuth`** para acceder a los metadatos de Google
+
+2. **Modificar `getDisplayName()`**:
+   ```text
+   Prioridad:
+   1. profile?.name
+   2. user?.user_metadata?.full_name
+   3. "Usuario"
+   ```
+
+3. **Modificar avatar**:
+   ```text
+   src = profile?.avatar_url || user?.user_metadata?.avatar_url || ''
+   ```
+
+4. **Agregar `useLocation()`** para detectar la ruta actual
+
+5. **Calcular variables de estado**:
+   ```text
+   isOnOwnPublicProfile = profileUsername && profile?.username === profileUsername
+   isOnEditPage = pathname.startsWith('/me')
+   ```
+
+6. **Renderizar opciones del menu condicionalmente**:
+   - Si `isOnOwnPublicProfile`: Solo "Editar Mi Perfil" (icono Pencil o User)
+   - Si `isOnEditPage`: Solo "Ver Perfil Publico"
+   - Si ninguno: Ambas opciones
+
+---
+
+### Iconos y Textos
+
+| Contexto | Opcion | Icono | Texto |
+|----------|--------|-------|-------|
+| Perfil propio | Editar | `Pencil` o `User` | "Editar Mi Perfil" |
+| Pagina /me/* | Ver publico | `ExternalLink` | "Ver Perfil Publico" |
+| Otras paginas | Editar | `User` | "Editar Mi Perfil" |
+| Otras paginas | Ver publico | `ExternalLink` | "Ver Perfil Publico" |
+| Siempre | Cerrar sesion | `LogOut` | "Cerrar Sesion" |
+
+---
+
+### Codigo de la Logica Principal
+
+```typescript
+// En PublicProfileHeader.tsx
+const { user, signOut, signInWithGoogle } = useAuth();
+const { profile } = useProfile();
+const location = useLocation();
+
+// Detectar contexto
+const isOnOwnPublicProfile = profileUsername && profile?.username === profileUsername;
+const isOnEditPage = location.pathname.startsWith('/me');
+
+// Nombre con fallback a Google
+const getDisplayName = () => {
+  const name = profile?.name || user?.user_metadata?.full_name;
+  if (!name) return 'Usuario';
+  const parts = name.trim().split(' ');
+  if (parts.length === 1) return parts[0];
+  return `${parts[0]} ${parts[1].charAt(0)}.`;
 };
 
-// Logo de Google SVG
-const GoogleIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24">
-    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-  </svg>
-);
-```
-
----
-
-### Flujo de Usuario
-
-```text
-Usuario anónimo visita /@rosmelortiz
-         │
-         ▼
-   Ve header con logo izquierda
-   y botón "Continuar con Google" derecha
-         │
-         ▼
-   Click en el botón
-         │
-         ▼
-   localStorage.set('authReturnUrl', '/@rosmelortiz')
-   signInWithGoogle(currentUrl)
-         │
-         ▼
-   ─── Google OAuth ───
-         │
-         ▼
-   useAuth detecta SIGNED_IN
-   Lee authReturnUrl de localStorage
-   Redirige a /@rosmelortiz (no a /me/profile)
+// Avatar con fallback a Google
+const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || '';
 ```
 
 ---
@@ -110,5 +114,19 @@ Usuario anónimo visita /@rosmelortiz
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/PublicProfileHeader.tsx` | Agregar botón de Google para usuarios no autenticados |
+| `src/components/PublicProfileHeader.tsx` | Agregar logica de fallback y menu condicional |
 
+---
+
+### Flujo Visual del Menu
+
+```text
+Usuario ve /@rosmelortiz (su propio perfil)
+    Menu: [Editar Mi Perfil] [Cerrar Sesion]
+
+Usuario esta en /me/profile (editando)
+    Menu: [Ver Perfil Publico] [Cerrar Sesion]
+
+Usuario ve /@otrousuario o esta en /startups
+    Menu: [Editar Mi Perfil] [Ver Perfil Publico] [Cerrar Sesion]
+```
