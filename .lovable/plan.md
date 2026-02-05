@@ -1,155 +1,97 @@
 
-## Sistema de Estadísticas de Perfiles
 
-### Objetivo
+## Mejoras al Sistema de Estadísticas de Perfiles
 
-Implementar un sistema de analytics para perfiles que rastree:
-1. **Visitas al perfil** (Profile Views)
-2. **Clicks en apps** (App Clicks) 
-3. **Likes en apps** (App Likes - corazones)
+### Cambios Solicitados
 
-### Diseño de Base de Datos
+1. **Quitar botón "Quiero aparecer aquí"** de `/p/startups`
+2. **No contar visitas/clicks propios** - Excluir cuando el usuario visita su propio perfil o hace click en sus propias apps
+3. **Mover estadísticas de visitas** al header (junto a seguidores, estilo minimalista)
+4. **Mostrar likes y clicks en cada app** de manera elegante estilo LinkedIn
 
-Se crearán 3 tablas optimizadas para alto volumen de registros:
+---
 
-| Tabla | Propósito | Campos Clave |
-|-------|-----------|--------------|
-| `profile_views` | Registrar visitas a perfiles | profile_id, visitor_id (nullable), device_fingerprint, timestamp |
-| `app_clicks` | Registrar clicks en apps | app_id, profile_id, visitor_id (nullable), device_fingerprint, timestamp |
-| `app_likes` | Likes de usuarios logueados | app_id, user_id, timestamp |
+### Diseño Visual Propuesto
 
+**Header del perfil (solo para el dueño):**
 ```text
-profile_views                          app_clicks                           app_likes
-┌──────────────────────┐              ┌──────────────────────┐              ┌──────────────────────┐
-│ id (uuid PK)         │              │ id (uuid PK)         │              │ id (uuid PK)         │
-│ profile_id (FK)      │              │ app_id (FK)          │              │ app_id (FK)          │
-│ visitor_id (FK null) │              │ profile_id (FK)      │              │ user_id (FK)         │
-│ device_fingerprint   │              │ visitor_id (FK null) │              │ created_at           │
-│ device_type          │              │ device_fingerprint   │              └──────────────────────┘
-│ referrer             │              │ created_at           │
-│ created_at           │              └──────────────────────┘
-└──────────────────────┘
+15 siguiendo  2 seguidores  ·  @rosmelortiz  ·  👁 442 visitas
 ```
 
-### Identificación de Usuarios Anónimos
-
-Para visitantes no logueados, se generará un **fingerprint** usando datos del dispositivo:
-- User Agent + Timezone + Language + Screen Size
-- Se almacenará como hash para anonimidad
-
-### Arquitectura de Tracking
-
+**Tarjeta de App con métricas (solo dueño ve números):**
 ```text
-Usuario visita /@username
-        │
-        ▼
-┌───────────────────────────────┐
-│  PublicProfileCard.tsx       │
-│  (al montar el componente)   │
-└───────────────────────────────┘
-        │
-        ▼
-┌───────────────────────────────┐
-│  Edge Function:              │
-│  track-profile-view          │
-│  - Recibe profile_id         │
-│  - Token JWT (si logueado)   │
-│  - Device info               │
-└───────────────────────────────┘
-        │
-        ▼
-┌───────────────────────────────┐
-│  Inserta en profile_views    │
-│  con visitor_id o fingerprint│
-└───────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│  [Logo]  Vibecoders  ● Building...              [🔗]    │
+│          The Official Home for Vibe Coders.             │
+│  ─────────────────────────────────────────────────────  │
+│  🛠️ Lovable  📦 Supabase       ♥ 12  ·  🖱️ 45 clicks   │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### Componentes del Sistema
+---
 
-| Componente | Función |
-|------------|---------|
-| `track-profile-view` | Edge Function para registrar visitas |
-| `track-app-click` | Edge Function para registrar clicks |
-| `toggle-app-like` | Edge Function para agregar/quitar likes |
-| `get-profile-stats` | Edge Function para obtener estadísticas del dueño |
-| `useProfileStats` | Hook React para consumir stats |
-| `ProfileStatsCard` | Componente UI para mostrar stats |
+### Cambios Técnicos
 
-### Visualización en Perfil Propio
+#### 1. Página Projects.tsx
+Eliminar el botón "Quiero aparecer aquí" de la sección hero.
 
-Solo visible cuando el usuario está logueado viendo su propio perfil:
+#### 2. Edge Functions - Excluir visitas propias
 
-```text
-┌─────────────────────────────────────────┐
-│  ┌─────────────────┐ ┌───────────────┐  │
-│  │ 👁️ 442          │ │ 🖱️ 78,941     │  │
-│  │ Profile viewers │ │ Apps clicks   │  │
-│  └─────────────────┘ └───────────────┘  │
-└─────────────────────────────────────────┘
-```
+**track-profile-view/index.ts**
+- Verificar si `visitor_id === profile_id`
+- Si son iguales, retornar sin insertar registro
 
-Ubicación: Al lado derecho del perfil (zona marcada en la imagen de referencia).
+**track-app-click/index.ts**
+- Obtener el `user_id` de la app
+- Verificar si el visitante es el dueño de la app
+- Si son iguales, retornar sin insertar registro
 
-### Likes en Apps
+#### 3. Edge Function get-profile-stats
+- Agregar estadísticas de clicks por app individual
+- Retornar `app_clicks_by_app: Record<string, number>` además del total
 
-Para cada app visible, usuarios logueados pueden dar "like" (corazón):
+#### 4. Componente PublicProfileCard.tsx
 
-```text
-┌─────────────────────────────────────────┐
-│  Vibecoders  ● Building...         🔗   │
-│  The Official Home for Vibe Coders.     │
-│  ♥ 12  │  🛠️ Lovable  📦 Supabase      │
-└─────────────────────────────────────────┘
-```
+**Mover stats al header:**
+- Eliminar `ProfileStatsCard` de la posición actual
+- Agregar las visitas inline junto a los seguidores (solo visible para el dueño)
+- Formato: `· 👁 {visitas} visitas` después del username
 
-- El corazón es clickeable para usuarios logueados
-- El contador solo es visible para el dueño del perfil
+**Actualizar PublicAppCard:**
+- Recibir `ownerClickCount` además de `ownerLikeCount`
+- Mostrar ambas métricas en el footer de la tarjeta (solo para el dueño)
+- Estilo minimalista: `♥ 12 · 🖱️ 45` en gris suave
 
-### Políticas RLS
+#### 5. Componente AppLikeButton.tsx
+- Mostrar siempre el contador si `isOwner`
+- Agregar soporte para mostrar clicks junto a likes
 
-| Tabla | SELECT | INSERT | UPDATE/DELETE |
-|-------|--------|--------|---------------|
-| `profile_views` | Solo dueño del perfil | Público (via Edge Function) | No permitido |
-| `app_clicks` | Solo dueño del perfil | Público (via Edge Function) | No permitido |
-| `app_likes` | Público (para mostrar count) | Autenticado | Solo quien dio like |
+#### 6. Hook useProfileStats.ts
+- Agregar `appClicksByApp: Record<string, number>` al estado
+- Parsear la nueva respuesta del edge function
 
-### Archivos a Crear/Modificar
+---
+
+### Archivos a Modificar
 
 | Archivo | Cambio |
 |---------|--------|
-| `supabase/migrations/` | Crear tablas de estadísticas |
-| `supabase/functions/track-profile-view/` | Nueva Edge Function |
-| `supabase/functions/track-app-click/` | Nueva Edge Function |
-| `supabase/functions/toggle-app-like/` | Nueva Edge Function |
-| `supabase/functions/get-profile-stats/` | Nueva Edge Function |
-| `src/lib/deviceFingerprint.ts` | Generar fingerprint del dispositivo |
-| `src/hooks/useProfileStats.ts` | Hook para obtener stats |
-| `src/hooks/useAppLike.ts` | Hook para manejar likes |
-| `src/components/profile/ProfileStatsCard.tsx` | UI de estadísticas |
-| `src/components/PublicProfileCard.tsx` | Integrar tracking y stats |
+| `src/pages/Projects.tsx` | Eliminar botón CTA |
+| `supabase/functions/track-profile-view/index.ts` | Excluir visitas propias |
+| `supabase/functions/track-app-click/index.ts` | Excluir clicks propios |
+| `supabase/functions/get-profile-stats/index.ts` | Agregar clicks por app |
+| `src/hooks/useProfileStats.ts` | Agregar clicks por app al estado |
+| `src/components/PublicProfileCard.tsx` | Mover stats al header, mostrar clicks por app |
+| `src/components/profile/ProfileStatsCard.tsx` | Eliminar (ya no se usa) |
+| `src/components/profile/AppLikeButton.tsx` | Refactorizar para incluir clicks |
 
-### Detalles Técnicos
-
-**Generación de Fingerprint**:
-```text
-hash(user_agent + timezone + language + screen_resolution)
-```
-
-**Prevención de spam**:
-- Un mismo fingerprint no puede registrar más de 1 vista por perfil cada 24 horas
-- Los clicks se registran sin límite (son acciones intencionales)
-
-**Formato de números grandes**:
-- 1,234 → "1,234"
-- 78,941 → "78,941"
-- 1,234,567 → "1.2M"
+---
 
 ### Flujo de Implementación
 
-1. Crear tablas en Supabase con índices optimizados
-2. Implementar Edge Functions de tracking
-3. Crear funciones de fingerprinting en cliente
-4. Implementar hooks React
-5. Integrar tracking en PublicProfileCard
-6. Crear componente de visualización de stats
-7. Agregar sistema de likes en apps
+1. Modificar Edge Functions para excluir visitas/clicks propios
+2. Actualizar `get-profile-stats` para retornar clicks por app
+3. Eliminar botón de Projects.tsx
+4. Actualizar hook useProfileStats
+5. Refactorizar PublicProfileCard con nuevo diseño de stats
+6. Actualizar AppLikeButton para mostrar métricas de forma elegante
