@@ -1,74 +1,109 @@
 
 
-## Mejoras al Sistema de Estadísticas de Perfiles
+## Mejoras al Sistema de Follow y Likes
 
-### Cambios Solicitados
-
-1. **Quitar botón "Quiero aparecer aquí"** de `/p/startups`
-2. **No contar visitas/clicks propios** - Excluir cuando el usuario visita su propio perfil o hace click en sus propias apps
-3. **Mover estadísticas de visitas** al header (junto a seguidores, estilo minimalista)
-4. **Mostrar likes y clicks en cada app** de manera elegante estilo LinkedIn
+### Objetivo
+1. **Popup de login para seguir**: Centrar texto, permanecer en la página actual tras login, y auto-seguir
+2. **Sistema de likes en apps**: Permitir dar/quitar corazones y detectar estado al visitar un perfil
 
 ---
 
-### Diseño Visual Propuesto
+### Cambio 1: Centrar texto "Únete a Vibecoders"
 
-**Header del perfil (solo para el dueño):**
-```text
-15 siguiendo  2 seguidores  ·  @rosmelortiz  ·  👁 442 visitas
-```
+En `FollowButton.tsx`, el `DialogTitle` necesita clase de centrado:
 
-**Tarjeta de App con métricas (solo dueño ve números):**
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  [Logo]  Vibecoders  ● Building...              [🔗]    │
-│          The Official Home for Vibe Coders.             │
-│  ─────────────────────────────────────────────────────  │
-│  🛠️ Lovable  📦 Supabase       ♥ 12  ·  🖱️ 45 clicks   │
-└─────────────────────────────────────────────────────────┘
+Antes:  <DialogTitle className="text-xl text-white">
+Después: <DialogTitle className="text-xl text-white text-center">
 ```
 
 ---
 
-### Cambios Técnicos
+### Cambio 2: Permanecer en la misma página tras login
 
-#### 1. Página Projects.tsx
-Eliminar el botón "Quiero aparecer aquí" de la sección hero.
+**Problema actual:**
+- `signInWithGoogle()` redirige siempre a `/me`
 
-#### 2. Edge Functions - Excluir visitas propias
+**Solución:**
+- Crear versión de `signInWithGoogle` que acepte URL de retorno
+- Usar `window.location.href` como redirect para volver a la página actual
 
-**track-profile-view/index.ts**
-- Verificar si `visitor_id === profile_id`
-- Si son iguales, retornar sin insertar registro
+**Archivo: `src/hooks/useAuth.ts`**
+- Modificar `signInWithGoogle` para aceptar `redirectTo?: string` opcional
+- Si no se pasa, usar la URL actual como fallback
 
-**track-app-click/index.ts**
-- Obtener el `user_id` de la app
-- Verificar si el visitante es el dueño de la app
-- Si son iguales, retornar sin insertar registro
+**Archivo: `src/components/FollowButton.tsx`**
+- Pasar `window.location.href` al llamar `signInWithGoogle`
 
-#### 3. Edge Function get-profile-stats
-- Agregar estadísticas de clicks por app individual
-- Retornar `app_clicks_by_app: Record<string, number>` además del total
+---
 
-#### 4. Componente PublicProfileCard.tsx
+### Cambio 3: Auto-seguir tras login
 
-**Mover stats al header:**
-- Eliminar `ProfileStatsCard` de la posición actual
-- Agregar las visitas inline junto a los seguidores (solo visible para el dueño)
-- Formato: `· 👁 {visitas} visitas` después del username
+**Estrategia:**
+1. Guardar en `localStorage` el `profile_id` a seguir antes del login
+2. Después del login, detectar si hay un "pending follow" y ejecutarlo automáticamente
 
-**Actualizar PublicAppCard:**
-- Recibir `ownerClickCount` además de `ownerLikeCount`
-- Mostrar ambas métricas en el footer de la tarjeta (solo para el dueño)
-- Estilo minimalista: `♥ 12 · 🖱️ 45` en gris suave
+**Archivo: `src/components/FollowButton.tsx`**
+- Antes de llamar `signInWithGoogle`, guardar en `localStorage`:
+  - `pendingFollow`: profile ID a seguir
 
-#### 5. Componente AppLikeButton.tsx
-- Mostrar siempre el contador si `isOwner`
-- Agregar soporte para mostrar clicks junto a likes
+**Archivo: `src/hooks/useFollow.ts`**
+- Agregar lógica para detectar `pendingFollow` al montar
+- Si existe y usuario está logueado, ejecutar follow automáticamente
+- Limpiar `localStorage` después de ejecutar
 
-#### 6. Hook useProfileStats.ts
-- Agregar `appClicksByApp: Record<string, number>` al estado
-- Parsear la nueva respuesta del edge function
+---
+
+### Cambio 4: Sistema de likes visible para visitantes
+
+**Estado actual:**
+- `AppLikeButton` solo muestra botón si `isAuthenticated`
+- `useAppLike` ya detecta si usuario dio like (`checkLikeStatus`)
+
+**El sistema ya funciona correctamente:**
+1. `useAppLike` verifica si el usuario actual dio like a cada app
+2. `toggleLike` llama a Edge Function para agregar/quitar like
+3. El corazón muestra estado `filled` si `isLiked` es true
+
+**Lo que falta revisar:**
+- Confirmar que el botón de corazón aparece para usuarios logueados (no dueños)
+- El corazón debe mostrarse clickeable y cambiar su estado visual
+
+---
+
+### Flujo de auto-follow propuesto
+
+```text
+Usuario anónimo en /@vibecoder
+         │
+         ▼
+    Click "Seguir"
+         │
+         ▼
+   Popup de login aparece
+         │
+         ▼
+  localStorage.set('pendingFollow', profileId)
+  localStorage.set('pendingFollowPath', currentPath)
+         │
+         ▼
+  signInWithGoogle(currentUrl)
+         │
+         ▼
+  ─── Google OAuth ───
+         │
+         ▼
+  Regresa a /@vibecoder
+         │
+         ▼
+  useFollow detecta pendingFollow
+         │
+         ▼
+  Ejecuta toggleFollow automáticamente
+         │
+         ▼
+  Limpia localStorage
+```
 
 ---
 
@@ -76,22 +111,65 @@ Eliminar el botón "Quiero aparecer aquí" de la sección hero.
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/pages/Projects.tsx` | Eliminar botón CTA |
-| `supabase/functions/track-profile-view/index.ts` | Excluir visitas propias |
-| `supabase/functions/track-app-click/index.ts` | Excluir clicks propios |
-| `supabase/functions/get-profile-stats/index.ts` | Agregar clicks por app |
-| `src/hooks/useProfileStats.ts` | Agregar clicks por app al estado |
-| `src/components/PublicProfileCard.tsx` | Mover stats al header, mostrar clicks por app |
-| `src/components/profile/ProfileStatsCard.tsx` | Eliminar (ya no se usa) |
-| `src/components/profile/AppLikeButton.tsx` | Refactorizar para incluir clicks |
+| `src/hooks/useAuth.ts` | Agregar parámetro `redirectTo` a `signInWithGoogle` |
+| `src/components/FollowButton.tsx` | Centrar título, guardar pending follow, pasar redirect URL |
+| `src/hooks/useFollow.ts` | Detectar y ejecutar pending follow tras login |
 
 ---
 
-### Flujo de Implementación
+### Detalles de Implementación
 
-1. Modificar Edge Functions para excluir visitas/clicks propios
-2. Actualizar `get-profile-stats` para retornar clicks por app
-3. Eliminar botón de Projects.tsx
-4. Actualizar hook useProfileStats
-5. Refactorizar PublicProfileCard con nuevo diseño de stats
-6. Actualizar AppLikeButton para mostrar métricas de forma elegante
+#### useAuth.ts
+```typescript
+const signInWithGoogle = async (redirectTo?: string) => {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: redirectTo || `${window.location.origin}/me`,
+    },
+  });
+  // ...
+};
+```
+
+#### FollowButton.tsx
+```typescript
+const handleSignIn = async () => {
+  // Guardar intención de follow
+  localStorage.setItem('pendingFollow', profileId);
+  
+  // Redirigir a la página actual después del login
+  await signInWithGoogle(window.location.href);
+};
+```
+
+#### useFollow.ts
+```typescript
+useEffect(() => {
+  if (!user || !profileId) return;
+  
+  const pendingFollow = localStorage.getItem('pendingFollow');
+  if (pendingFollow === profileId && !isFollowing) {
+    localStorage.removeItem('pendingFollow');
+    // Ejecutar follow automáticamente
+    toggleFollow();
+  }
+}, [user, profileId, isFollowing]);
+```
+
+---
+
+### Sobre el sistema de likes (ya implementado)
+
+El código actual ya soporta:
+- Detectar si usuario dio like (`checkLikeStatus` en useAppLike)
+- Toggle de like/unlike (`toggleLike`)
+- Mostrar corazón relleno si `isLiked`
+- Ocultar para no-autenticados (line 43 de AppLikeButton)
+
+El flujo funciona porque:
+1. Al visitar un perfil, cada `AppLikeButton` ejecuta `useAppLike(appId)`
+2. `useAppLike` consulta `app_likes` para ver si existe registro con `user_id` actual
+3. Si existe, `isLiked = true` y el corazón se muestra relleno
+4. Al hacer click, `toggleLike` agrega o elimina el registro
+
