@@ -166,7 +166,7 @@ export function AuthenticatedHeader({
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20">
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-foreground hover:text-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20">
                   <Avatar className="h-8 w-8 border border-border">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
                     <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
