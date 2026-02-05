@@ -1,104 +1,117 @@
 
 
-## Plan: Corregir Fresh Drops para mostrar Apps de Usuarios
+## Plan: Rediseño Premium del User Menu y Header Glassmorphism
 
-### Problema Identificado
+### Resumen de Cambios
 
-El hook `useFreshDrops` consulta la tabla equivocada:
-- **Actual**: `showcase_gallery` (proyectos curados por admin)
-- **Correcto**: `apps` (apps registradas por usuarios en sus perfiles)
+Se transformará el menú desplegable del avatar a un estilo "Enterprise/SaaS" (tipo Vercel/Linear) y se añadirá el efecto de vidrio esmerilado al header para todas las páginas autenticadas.
 
-### Datos Reales en la Tabla `apps`
+---
+
+### Cambios en `AuthenticatedHeader.tsx`
+
+#### 1. Header con Glassmorphism
+
+Modificar la etiqueta `<header>` actual:
 
 ```text
-App                | Usuario                      | Fecha
--------------------|------------------------------|------------------
-PymesGEO           | @gotaluism                   | 2026-02-03
-Vibecoders         | @rosmelortiz                 | 2026-01-31
-HubMenu            | @rosmelortiz                 | 2026-01-31
-ToggleUp           | @rosmelortiz                 | 2026-01-31
+Actual:
+  className="sticky top-0 z-50 border-b border-gray-100 bg-white"
+
+Nuevo:
+  className="sticky top-0 z-50 border-b border-gray-100/50 bg-white/80 backdrop-blur-md"
 ```
+
+Esto crea el efecto de vidrio esmerilado donde el contenido "pasa por debajo" al hacer scroll.
 
 ---
 
-### Cambios Necesarios
-
-#### 1. Modificar `useFreshDrops.ts`
-
-Cambiar la consulta para obtener apps de la tabla `apps` con datos del perfil del autor:
-
-```typescript
-// Consulta corregida
-const { data, error } = await supabase
-  .from('apps')
-  .select(`
-    id,
-    name,
-    tagline,
-    url,
-    logo_url,
-    created_at,
-    profiles:user_id (
-      username,
-      name,
-      avatar_url
-    )
-  `)
-  .eq('is_visible', true)
-  .order('created_at', { ascending: false })
-  .limit(freshDropsCount);
-```
-
-Nueva interfaz para el tipo de dato:
-
-```typescript
-export interface FreshDropApp {
-  id: string;
-  name: string | null;
-  tagline: string | null;
-  url: string;
-  logo_url: string | null;
-  created_at: string;
-  profiles: {
-    username: string | null;
-    name: string | null;
-    avatar_url: string | null;
-  };
-}
-```
-
----
-
-#### 2. Modificar `FreshDropsCarousel.tsx`
-
-Actualizar para usar la nueva estructura de datos:
-
-| Campo Actual (ShowcaseProject) | Campo Nuevo (FreshDropApp) |
-|-------------------------------|----------------------------|
-| `project.project_title`       | `app.name`                 |
-| `project.project_tagline`     | `app.tagline`              |
-| `project.project_url`         | `app.url`                  |
-| `project.project_logo_url`    | `app.logo_url`             |
-
-Tambien mostrar el autor con link a su perfil:
+#### 2. Estructura del Dropdown Premium (Desktop)
 
 ```text
-+---------------------------------------------------+
-|  +--------+                                       |
-|  |  Logo  |   Nombre de la App                    |
-|  |  96px  |   Tagline                             |
-|  +--------+   por @username                       |
-|               [Ver Proyecto ->]                   |
-+---------------------------------------------------+
++------------------------------------------+
+|  [Avatar 32px]  Nombre Completo          |  <- Cabecera de identidad
+|                 @username (gris, truncado)|     (no clicable)
++------------------------------------------+
+|  [Separator]                             |
++------------------------------------------+
+|  [ExternalLink]  Ver Perfil Público      |  <- Items con más padding
++------------------------------------------+
+|  [Separator]                             |
++------------------------------------------+
+|  [LogOut]        Cerrar Sesión           |  <- Footer separado
++------------------------------------------+
+```
+
+#### 3. Especificaciones del Dropdown
+
+| Propiedad | Valor Actual | Valor Nuevo |
+|-----------|--------------|-------------|
+| Ancho | `w-48` | `w-64` |
+| Sombra | `shadow-lg` | `shadow-xl` |
+| Borde | `border-gray-200` | `border border-gray-100` |
+| Offset | default | `mt-2` (sideOffset=8) |
+| Padding items | `py-1.5` | `py-2.5` |
+| Hover items | `hover:bg-[#3D5AFE]` | `hover:bg-gray-100` |
+
+---
+
+#### 4. Nueva Cabecera de Identidad
+
+Se añadirá un bloque no interactivo al inicio del dropdown:
+
+```tsx
+{/* Identity Header - No clicable */}
+<div className="px-3 py-3 flex items-center gap-3">
+  <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
+    <AvatarImage src={profile?.avatar_url || ''} />
+    <AvatarFallback>...</AvatarFallback>
+  </Avatar>
+  <div className="flex flex-col min-w-0">
+    <span className="text-sm font-semibold text-gray-900 truncate">
+      {profile?.name || 'Usuario'}
+    </span>
+    <span className="text-xs text-gray-500 truncate">
+      {profile?.username ? `@${profile.username}` : 'Sin username'}
+    </span>
+  </div>
+</div>
+<DropdownMenuSeparator />
 ```
 
 ---
 
-#### 3. Modificar `Home.tsx`
+#### 5. Items del Cuerpo con Iconos Alineados
 
-- Eliminar la seccion "Explorar Todo" completamente
-- Remover el import y uso de `useShowcase`
-- Actualizar el tipo de datos pasados al carousel
+```tsx
+<DropdownMenuItem className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+  <ExternalLink className="h-4 w-4 text-gray-400" />
+  <span>Ver Perfil Público</span>
+</DropdownMenuItem>
+```
+
+---
+
+#### 6. Footer con Separador Visual
+
+```tsx
+<DropdownMenuSeparator className="my-1" />
+<DropdownMenuItem 
+  onClick={onSignOut}
+  className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+>
+  <LogOut className="h-4 w-4 text-gray-400" />
+  <span>Cerrar Sesión</span>
+</DropdownMenuItem>
+```
+
+---
+
+### Compatibilidad Móvil
+
+El Sheet móvil ya tiene una sección de usuario en el footer que muestra avatar, nombre y username - no requiere cambios ya que el diseño premium solo aplica al dropdown de desktop.
+
+El efecto `backdrop-blur-md` es compatible con todos los navegadores móviles modernos y se degradará suavemente a un fondo sólido en navegadores antiguos.
 
 ---
 
@@ -106,19 +119,21 @@ Tambien mostrar el autor con link a su perfil:
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/hooks/useFreshDrops.ts` | Cambiar consulta de `showcase_gallery` a `apps` con join a `profiles` |
-| `src/components/home/FreshDropsCarousel.tsx` | Actualizar interfaz y campos a la nueva estructura |
-| `src/pages/Home.tsx` | Eliminar seccion "Explorar Todo" |
+| `src/components/AuthenticatedHeader.tsx` | Header glassmorphism + Dropdown premium |
 
 ---
 
-### Resultado Esperado
+### Resultado Visual
 
-El carousel "Acaba de salir del horno" mostrara:
-1. PymesGEO por @gotaluism
-2. Vibecoders por @rosmelortiz
-3. HubMenu por @rosmelortiz
-4. ToggleUp por @rosmelortiz
+**Header:**
+- Fondo semi-transparente (80% opacidad)
+- Blur suave que muestra el contenido debajo al hacer scroll
+- Efecto estilo Apple/Stripe
 
-Ordenados por fecha de creacion (mas recientes primero), con cantidad configurable desde `general_settings.fresh_drops_count`.
+**Dropdown:**
+- Más ancho y con mejor espaciado
+- Cabecera con identidad del usuario (avatar + nombre + @username)
+- Items con iconos alineados y mayor área de clic
+- Sombra más sofisticada
+- Hover sutil en gris (no azul agresivo)
 
