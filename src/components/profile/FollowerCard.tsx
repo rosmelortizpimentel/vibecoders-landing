@@ -116,7 +116,7 @@ export function FollowerCard({
             className={cn(
               'flex-shrink-0 min-w-[100px] text-xs h-8',
               isFollowing && !isHovering && 'border-gray-300 text-gray-700 bg-white',
-              isFollowing && isHovering && 'border-red-300 text-red-600 bg-red-50 hover:bg-red-100 hover:border-red-400'
+            isFollowing && isHovering && 'border-red-300 bg-red-50 hover:bg-red-100 hover:border-red-400 [&]:text-red-600 hover:text-red-700'
             )}
           >
             {isProcessing
