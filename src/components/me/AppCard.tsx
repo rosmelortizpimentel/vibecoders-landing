@@ -56,7 +56,7 @@ interface AppCardProps {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <h3 className="font-medium text-[#1c1c1c] truncate">
-            {app.name || new URL(app.url).hostname}
+            {app.name || (() => { try { return new URL(app.url).hostname; } catch { return 'App'; } })()}
           </h3>
           <a
             href={app.url}

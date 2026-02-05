@@ -58,7 +58,7 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
           {/* Title Row with Status Badge */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <h4 className="text-sm font-semibold text-gray-900 truncate">
-              {app.name || new URL(app.url).hostname}
+              {app.name || (() => { try { return new URL(app.url).hostname; } catch { return 'App'; } })()}
             </h4>
             
             {/* Verified Badge */}
