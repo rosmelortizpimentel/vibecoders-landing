@@ -101,9 +101,20 @@
            {/* Label */}
            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Código a insertar</p>
  
-           {/* Code block */}
-           <div className="relative bg-[#1c1c1c] rounded-lg overflow-hidden">
-             <pre className="p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm text-white font-mono whitespace-pre-wrap break-all">
+            {/* Code block with copy icon */}
+            <div className="relative bg-[#1c1c1c] rounded-lg overflow-hidden group">
+              <button
+                onClick={handleCopy}
+                className="absolute top-2 right-2 p-1.5 rounded bg-white/10 hover:bg-white/20 transition-colors"
+                title="Copiar código"
+              >
+                {copied ? (
+                  <Check className="h-4 w-4 text-green-400" />
+                ) : (
+                  <Copy className="h-4 w-4 text-white/70" />
+                )}
+              </button>
+              <pre className="p-3 sm:p-4 pr-12 overflow-x-auto text-xs sm:text-sm text-white font-mono whitespace-pre-wrap break-all">
                {metaTag}
              </pre>
            </div>
@@ -138,7 +149,7 @@
            <Button
              variant="outline"
              onClick={handleCopy}
-             className="flex-1 border-gray-300 text-[#1c1c1c] hover:bg-gray-100"
+              className="flex-1 border-gray-300 text-[#1c1c1c] hover:bg-gray-100 hover:text-[#1c1c1c]"
            >
              {copied ? (
                <>
