@@ -14,6 +14,7 @@ import { useProfileTracking, trackAppClick } from '@/hooks/useProfileTracking';
  import { Eye } from 'lucide-react';
 import { AppLikeButton } from '@/components/profile/AppLikeButton';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import {
   Tooltip,
   TooltipContent,
@@ -443,12 +444,32 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
         )}
 
         {/* Footer */}
-        <div className="py-3 text-center border-t border-gray-100 bg-white">
-          <p className="text-[10px] md:text-xs text-gray-400">
-            <span className="text-gray-500">
-              vibecoders.la/@{username}
+        <div className="py-4 border-t border-gray-100 bg-white">
+          <button
+            onClick={() => {
+              // Save return URL for post-login redirect to /me/profile
+              localStorage.setItem('authReturnUrl', '/me/profile');
+              // Trigger Google sign-in
+              import('@/integrations/supabase/client').then(({ supabase }) => {
+                supabase.auth.signInWithOAuth({
+                  provider: 'google',
+                  options: {
+                    redirectTo: `${window.location.origin}/me/profile`,
+                  },
+                });
+              });
+            }}
+            className="flex items-center justify-center gap-2 mx-auto px-4 py-2 rounded-full bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors group"
+          >
+            <img 
+              src={vibecodersLogo} 
+              alt="Vibecoders" 
+              className="h-6 w-6 rounded-full border-2 border-white shadow-sm"
+            />
+            <span className="text-xs font-medium text-gray-600 group-hover:text-gray-900 transition-colors">
+              Crea tu Perfil
             </span>
-          </p>
+          </button>
         </div>
       </div>
     </div>
