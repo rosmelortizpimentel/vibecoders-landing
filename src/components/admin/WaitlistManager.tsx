@@ -16,14 +16,14 @@ import { ExternalLink, Loader2, CheckCircle, Clock } from 'lucide-react';
 interface WaitlistEntry {
   id: string;
   email: string;
+  timezone: string | null;
   created_at: string;
-  // Linked profile info (if registered)
-  profile?: {
+  registered: boolean;
+  profile: {
     id: string;
     name: string | null;
     username: string | null;
     avatar_url: string | null;
-    created_at: string | null;
   } | null;
 }
 
@@ -42,6 +42,7 @@ function formatTorontoDate(dateString: string): string {
 export function WaitlistManager() {
   const [entries, setEntries] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchWaitlist();
@@ -49,65 +50,22 @@ export function WaitlistManager() {
 
   const fetchWaitlist = async () => {
     setLoading(true);
+    setError(null);
     try {
-      // Fetch waitlist entries
-      const { data: waitlistData, error: waitlistError } = await supabase
-        .from('waitlist')
-        .select('id, email, created_at')
-        .order('created_at', { ascending: false });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No session');
 
-      if (waitlistError) throw waitlistError;
-
-      // Fetch all profiles to match by email
-      // Note: We need to get emails from auth.users, but we can't access that directly
-      // Instead, we'll fetch profiles and try to match by normalized email in the profile
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, name, username, avatar_url, created_at, email_public');
-
-      if (profilesError) throw profilesError;
-
-      // Create a map of normalized emails to profiles
-      const emailToProfile = new Map<string, typeof profilesData[0]>();
-      profilesData?.forEach((profile) => {
-        if (profile.email_public) {
-          const normalizedEmail = profile.email_public.toLowerCase().split('+')[0].split('@')[0] + '@' + profile.email_public.toLowerCase().split('@')[1];
-          emailToProfile.set(normalizedEmail, profile);
-        }
+      const response = await supabase.functions.invoke('admin-waitlist-status', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
-      // Also try to match by username patterns (some users might have username = email prefix)
-      const usernameToProfile = new Map<string, typeof profilesData[0]>();
-      profilesData?.forEach((profile) => {
-        if (profile.username) {
-          usernameToProfile.set(profile.username.toLowerCase(), profile);
-        }
-      });
-
-      // Map waitlist entries with profile info
-      const entriesWithProfiles: WaitlistEntry[] = (waitlistData || []).map((entry) => {
-        // Normalize waitlist email for matching
-        const [localPart, domain] = entry.email.toLowerCase().split('@');
-        const normalizedEmail = localPart.split('+')[0] + '@' + domain;
-        
-        // Try to find matching profile
-        let matchedProfile = emailToProfile.get(normalizedEmail);
-        
-        // If no direct email match, try username match with email prefix
-        if (!matchedProfile) {
-          const emailPrefix = localPart.split('+')[0];
-          matchedProfile = usernameToProfile.get(emailPrefix);
-        }
-
-        return {
-          ...entry,
-          profile: matchedProfile || null,
-        };
-      });
-
-      setEntries(entriesWithProfiles);
-    } catch (error) {
-      console.error('Error fetching waitlist:', error);
+      if (response.error) throw response.error;
+      setEntries(response.data || []);
+    } catch (err) {
+      console.error('Error fetching waitlist:', err);
+      setError(err instanceof Error ? err.message : 'Error al cargar la waitlist');
     } finally {
       setLoading(false);
     }
@@ -123,12 +81,20 @@ export function WaitlistManager() {
       .slice(0, 2);
   };
 
-  const registeredCount = entries.filter((e) => e.profile).length;
+  const registeredCount = entries.filter((e) => e.registered).length;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-destructive">{error}</p>
       </div>
     );
   }
@@ -146,10 +112,11 @@ export function WaitlistManager() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">Email</TableHead>
+              <TableHead className="w-[280px]">Email</TableHead>
+              <TableHead>Timezone</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Usuario Registrado</TableHead>
-              <TableHead className="text-right">Fecha Waitlist (Toronto)</TableHead>
+              <TableHead className="text-right">Fecha (Toronto)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -159,7 +126,12 @@ export function WaitlistManager() {
                   <span className="font-mono text-sm">{entry.email}</span>
                 </TableCell>
                 <TableCell>
-                  {entry.profile ? (
+                  <span className="text-sm text-muted-foreground">
+                    {entry.timezone || '—'}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {entry.registered ? (
                     <Badge className="bg-[hsl(142,76%,36%)] hover:bg-[hsl(142,76%,30%)] text-white">
                       <CheckCircle className="mr-1 h-3 w-3" />
                       Registrado
