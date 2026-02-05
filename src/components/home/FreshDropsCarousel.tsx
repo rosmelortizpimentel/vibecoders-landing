@@ -1,7 +1,7 @@
  import { useRef, useCallback } from 'react';
  import { Link } from 'react-router-dom';
  import Autoplay from 'embla-carousel-autoplay';
- import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BadgeCheck } from 'lucide-react';
  import {
    Carousel,
    CarouselContent,
@@ -10,6 +10,12 @@
    CarouselNext,
  } from '@/components/ui/carousel';
  import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
  import type { FreshDropApp } from '@/hooks/useFreshDrops';
  
  interface FreshDropsCarouselProps {
@@ -68,9 +74,23 @@
  
                {/* Content */}
                <div className="flex-1 text-center sm:text-left min-w-0">
-                 <h3 className="font-semibold text-foreground text-lg truncate">
-                   {app.name || 'Sin nombre'}
-                 </h3>
+                  <div className="flex items-center justify-center sm:justify-start gap-1.5">
+                    <h3 className="font-semibold text-foreground text-lg truncate">
+                      {app.name || 'Sin nombre'}
+                    </h3>
+                    {app.is_verified && (
+                      <TooltipProvider delayDuration={200}>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <BadgeCheck className="h-[18px] w-[18px] text-primary flex-shrink-0" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">
+                            Propietario Verificado
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                  {app.tagline && (
                    <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                      {app.tagline}
