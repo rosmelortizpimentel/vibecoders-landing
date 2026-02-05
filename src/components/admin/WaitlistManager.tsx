@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ExternalLink, Loader2, CheckCircle, Clock } from 'lucide-react';
+import { ExternalLink, Loader2, CheckCircle, Clock, Mail } from 'lucide-react';
 
 interface WaitlistEntry {
   id: string;
@@ -83,6 +83,17 @@ export function WaitlistManager() {
 
   const registeredCount = entries.filter((e) => e.registered).length;
 
+  const handleOpenGmail = () => {
+    // Get all emails and join them for BCC
+    const allEmails = entries.map((e) => e.email);
+    const bccEmails = allEmails.join(',');
+    
+    // Gmail compose URL with BCC
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(bccEmails)}`;
+    
+    window.open(gmailUrl, '_blank');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -106,6 +117,17 @@ export function WaitlistManager() {
         <p className="text-muted-foreground">
           {entries.length} emails en la lista de espera · {registeredCount} ya registrados
         </p>
+      </div>
+
+      <div className="flex gap-2">
+        <Button
+          onClick={handleOpenGmail}
+          disabled={entries.length === 0}
+          className="gap-2"
+        >
+          <Mail className="h-4 w-4" />
+          Enviar correo a todos ({entries.length})
+        </Button>
       </div>
 
       <div className="rounded-lg border bg-card">
