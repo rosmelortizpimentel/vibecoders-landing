@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +16,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Separator } from '@/components/ui/separator';
 import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -80,56 +80,65 @@ export function AuthenticatedHeader({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100/50 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 h-16 border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo - Left */}
         <Link to="/" className="flex items-center shrink-0">
           <img 
             src={vibecodersLogo} 
             alt="Vibecoders" 
-            className="h-10 w-10 rounded-full border-2 border-gray-200 hover:border-[#3D5AFE] transition-colors"
+            className="h-10 w-10 rounded-full border-2 border-border hover:border-primary transition-colors"
           />
         </Link>
 
-        {/* Desktop Navigation - Center (hidden on mobile) */}
-        {!isMobile && (
-          <nav className="flex items-center gap-6 sm:gap-8">
+        {/* Desktop Layout - hidden on mobile */}
+        <div className="hidden md:flex items-center flex-1">
+          {/* Separator 1 - after logo */}
+          <div className="h-6 w-px bg-border/60 mx-4" />
+          
+          {/* Central Navigation with Ghost Buttons */}
+          <nav className="flex items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
               return (
-                <Link
+                <Button
                   key={link.path}
-                  to={link.path}
+                  variant="ghost"
+                  size="sm"
+                  asChild
                   className={cn(
-                    "flex items-center gap-1.5 text-sm font-medium transition-colors",
-                    isActive(link.path)
-                      ? "text-[#3D5AFE] font-semibold"
-                      : "text-gray-600 hover:text-[#3D5AFE]"
+                    "gap-1.5",
+                    isActive(link.path) && "bg-accent text-primary font-semibold"
                   )}
                 >
-                  <Icon className={cn(
-                    "h-4 w-4",
-                    link.premium && "text-amber-400"
-                  )} />
-                  {link.label}
-                </Link>
+                  <Link to={link.path}>
+                    <Icon className={cn(
+                      "h-4 w-4",
+                      link.premium && "text-amber-400"
+                    )} />
+                    {link.label}
+                  </Link>
+                </Button>
               );
             })}
           </nav>
-        )}
-        
-        {/* Desktop Right section (hidden on mobile) */}
-        {!isMobile && (
+          
+          {/* Spacer to push right zone */}
+          <div className="flex-1" />
+          
+          {/* Separator 2 - before avatar */}
+          <div className="h-6 w-px bg-border/60 mx-4" />
+          
+          {/* Right Zone: Admin + Save Status + Avatar */}
           <div className="flex items-center gap-3 sm:gap-4">
             {/* Admin Link - Only visible for admins */}
             {isAdmin && (
-              <Link
-                to="/admin"
-                className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-[#3D5AFE] hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Admin</span>
-              </Link>
+              <Button variant="ghost" size="sm" asChild className="gap-1.5">
+                <Link to="/admin">
+                  <Shield className="h-4 w-4" />
+                  <span>Admin</span>
+                </Link>
+              </Button>
             )}
 
             {/* Save status indicator - only shown when props are provided */}
@@ -137,18 +146,18 @@ export function AuthenticatedHeader({
               <div className="flex items-center gap-2 text-sm">
                 {isSaving ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                    <span className="text-gray-500 hidden sm:inline">Guardando...</span>
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-muted-foreground">Guardando...</span>
                   </>
                 ) : error ? (
                   <>
                     <AlertCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-red-500 hidden sm:inline">Error</span>
+                    <span className="text-red-500">Error</span>
                   </>
                 ) : lastSaved ? (
                   <>
-                    <Check className="h-4 w-4 text-[#3D5AFE]" />
-                    <span className="text-gray-500 hidden sm:inline">Guardado</span>
+                    <Check className="h-4 w-4 text-primary" />
+                    <span className="text-muted-foreground">Guardado</span>
                   </>
                 ) : null}
               </div>
@@ -157,33 +166,33 @@ export function AuthenticatedHeader({
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3D5AFE]/20">
-                  <Avatar className="h-8 w-8 border border-gray-200">
+                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20">
+                  <Avatar className="h-8 w-8 border border-border">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
-                    <AvatarFallback className="text-xs bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
                       {profile?.name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium text-[#1c1c1c] hidden sm:inline">
+                  <span className="text-sm font-medium text-foreground">
                     {displayName}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-white border border-gray-100 p-0 shadow-xl">
+              <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-background border border-border p-0 shadow-xl">
                 {/* Identity Header - Non-clickable */}
                 <div className="px-3 py-3 flex items-center gap-3">
-                  <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
+                  <Avatar className="h-10 w-10 border border-border shrink-0">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
-                    <AvatarFallback className="text-sm bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
+                    <AvatarFallback className="text-sm bg-primary/10 text-primary font-medium">
                       {profile?.name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-semibold text-gray-900 truncate">
+                    <span className="text-sm font-semibold text-foreground truncate">
                       {profile?.name || 'Usuario'}
                     </span>
-                    <span className="text-xs text-gray-500 truncate">
+                    <span className="text-xs text-muted-foreground truncate">
                       {profile?.username ? `@${profile.username}` : 'Sin username'}
                     </span>
                   </div>
@@ -193,22 +202,22 @@ export function AuthenticatedHeader({
                 {/* Menu Items */}
                 <div className="py-1">
                   {publicProfileUrl && (
-                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900">
+                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-foreground/80 hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground">
                       <a 
                         href={publicProfileUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        <ExternalLink className="h-4 w-4 text-gray-400" />
+                        <ExternalLink className="h-4 w-4 text-muted-foreground" />
                         <span>Ver Perfil Público</span>
                       </a>
                     </DropdownMenuItem>
                   )}
                   
                   {isAdmin && (
-                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900">
+                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-foreground/80 hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground">
                       <Link to="/admin">
-                        <LayoutDashboard className="h-4 w-4 text-gray-400" />
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                         <span>Panel Admin</span>
                       </Link>
                     </DropdownMenuItem>
@@ -220,30 +229,27 @@ export function AuthenticatedHeader({
                 <div className="py-1">
                   <DropdownMenuItem 
                     onClick={onSignOut}
-                    className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                    className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-foreground/80 hover:bg-accent hover:text-foreground focus:bg-accent focus:text-foreground"
                   >
-                    <LogOut className="h-4 w-4 text-gray-400" />
+                    <LogOut className="h-4 w-4 text-muted-foreground" />
                     <span>Cerrar Sesión</span>
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        )}
+        </div>
 
-        {/* Mobile Menu Button (only on mobile) */}
-        {isMobile && (
+        {/* Mobile Layout - only hamburger menu */}
+        <div className="flex md:hidden items-center">
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <button 
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#3D5AFE]/20"
-                aria-label="Abrir menú"
-              >
-                <Menu className="h-6 w-6 text-gray-700" />
-              </button>
+              <Button variant="ghost" size="icon" aria-label="Abrir menú">
+                <Menu className="h-5 w-5" />
+              </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] bg-white p-0 flex flex-col">
-              <SheetHeader className="p-5 border-b border-gray-100">
+            <SheetContent side="right" className="w-[280px] bg-background p-0 flex flex-col">
+              <SheetHeader className="p-5 border-b border-border">
                 <SheetTitle className="text-left text-base font-medium text-foreground">Menú</SheetTitle>
               </SheetHeader>
               
@@ -260,7 +266,7 @@ export function AuthenticatedHeader({
                         "flex items-center gap-3 text-base py-3 transition-colors",
                         isActive(link.path)
                           ? "text-foreground font-semibold"
-                          : "text-gray-500 hover:text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
                       )}
                     >
                       <Icon className="h-4 w-4" />
@@ -278,7 +284,7 @@ export function AuthenticatedHeader({
                       "flex items-center gap-2 text-base py-3 transition-colors",
                       isActive('/admin')
                         ? "text-foreground font-semibold"
-                        : "text-gray-500 hover:text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <Shield className="h-4 w-4" />
@@ -288,13 +294,13 @@ export function AuthenticatedHeader({
               </nav>
 
               {/* User Section - Anchored to bottom */}
-              <div className="mt-auto border-t border-gray-100 p-5">
+              <div className="mt-auto border-t border-border p-5">
                 <Link 
                   to="/me/profile"
                   onClick={handleNavClick}
                   className="flex items-center gap-3 group"
                 >
-                  <Avatar className="h-10 w-10 border border-gray-200 group-hover:border-gray-300 transition-colors">
+                  <Avatar className="h-10 w-10 border border-border group-hover:border-muted-foreground transition-colors">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
                     <AvatarFallback className="text-sm bg-muted text-muted-foreground font-medium">
                       {profile?.name?.charAt(0) || '?'}
@@ -315,7 +321,7 @@ export function AuthenticatedHeader({
                       handleNavClick();
                       onSignOut();
                     }}
-                    className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
                     aria-label="Cerrar sesión"
                   >
                     <LogOut className="h-5 w-5" />
@@ -324,7 +330,7 @@ export function AuthenticatedHeader({
               </div>
             </SheetContent>
           </Sheet>
-        )}
+        </div>
       </div>
     </header>
   );
