@@ -42,6 +42,15 @@
          visitor_id = user.id;
        }
      }
+
+     // Don't track if user is viewing their own profile
+     if (visitor_id && visitor_id === profile_id) {
+       console.log("Skipping self-view tracking");
+       return new Response(
+         JSON.stringify({ success: true, skipped: true, reason: "self_view" }),
+         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+       );
+     }
  
      // Check if same fingerprint already viewed this profile in last 24 hours
      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();

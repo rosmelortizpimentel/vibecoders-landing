@@ -42,6 +42,21 @@
          visitor_id = user.id;
        }
      }
+
+     // Check if visitor is the owner of the app
+     const { data: appData } = await supabaseAdmin
+       .from("apps")
+       .select("user_id")
+       .eq("id", app_id)
+       .single();
+
+     if (appData && visitor_id && visitor_id === appData.user_id) {
+       console.log("Skipping self-click tracking");
+       return new Response(
+         JSON.stringify({ success: true, skipped: true, reason: "self_click" }),
+         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+       );
+     }
  
      // Insert click (no deduplication for clicks - they are intentional actions)
      const { error } = await supabaseAdmin

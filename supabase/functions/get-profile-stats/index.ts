@@ -64,11 +64,12 @@
        .eq("is_visible", true);
  
      const appLikes: Record<string, number> = {};
+     const appClicks: Record<string, number> = {};
      
      if (userApps && userApps.length > 0) {
        const appIds = userApps.map(app => app.id);
        
-       // Get like counts for each app
+       // Get like and click counts for each app
        for (const appId of appIds) {
          const { count } = await supabaseAdmin
            .from("app_likes")
@@ -76,6 +77,13 @@
            .eq("app_id", appId);
          
          appLikes[appId] = count || 0;
+
+         const { count: clickCount } = await supabaseAdmin
+           .from("app_clicks")
+           .select("*", { count: "exact", head: true })
+           .eq("app_id", appId);
+         
+         appClicks[appId] = clickCount || 0;
        }
      }
  
@@ -86,6 +94,7 @@
          profile_views: viewsCount || 0,
          app_clicks: clicksCount || 0,
          app_likes: appLikes,
+         app_clicks_by_app: appClicks,
        }),
        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
      );

@@ -11,7 +11,7 @@ import { useFavicon } from '@/hooks/useFavicon';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileStats } from '@/hooks/useProfileStats';
 import { useProfileTracking, trackAppClick } from '@/hooks/useProfileTracking';
-import { ProfileStatsCard } from '@/components/profile/ProfileStatsCard';
+ import { Eye } from 'lucide-react';
 import { AppLikeButton } from '@/components/profile/AppLikeButton';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import {
@@ -63,12 +63,14 @@ function PublicAppCard({
   app, 
   profileId,
   isOwner,
-  ownerLikeCount
+   ownerLikeCount,
+   ownerClickCount
 }: { 
   app: PublicApp; 
   profileId: string;
   isOwner: boolean;
   ownerLikeCount?: number;
+   ownerClickCount?: number;
 }) {
   const appUrl = (() => {
     try {
@@ -178,6 +180,7 @@ function PublicAppCard({
           appId={app.id} 
           isOwner={isOwner}
           ownerLikeCount={ownerLikeCount}
+         ownerClickCount={ownerClickCount}
         />
       </div>
     </a>
@@ -317,6 +320,15 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
             </button>
             <span>·</span>
             <span>@{username}</span>
+           {isOwnProfile && stats && stats.profileViews > 0 && (
+             <>
+               <span>·</span>
+               <span className="flex items-center gap-1">
+                 <Eye className="w-3.5 h-3.5" />
+                 {stats.profileViews} visitas
+               </span>
+             </>
+           )}
           </div>
 
           {/* Tagline */}
@@ -385,16 +397,6 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
         </div>
 
         {/* Apps Section OR Followers/Following List */}
-        {/* Profile Stats - Only visible to owner */}
-        {isOwnProfile && stats && (
-          <div className="px-4 md:px-6 pt-4">
-            <ProfileStatsCard
-              profileViews={stats.profileViews}
-              appClicks={stats.appClicks}
-            />
-          </div>
-        )}
-
         {viewMode === 'apps' ? (
           profile.apps.length > 0 && (
             <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
@@ -410,6 +412,7 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
                     profileId={profile.id}
                     isOwner={isOwnProfile}
                     ownerLikeCount={stats?.appLikes[app.id]}
+                   ownerClickCount={stats?.appClicksByApp[app.id]}
                   />
                 ))}
               </div>

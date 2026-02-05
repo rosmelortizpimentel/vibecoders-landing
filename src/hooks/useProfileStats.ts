@@ -6,6 +6,7 @@
    profileViews: number;
    appClicks: number;
    appLikes: Record<string, number>;
+   appClicksByApp: Record<string, number>;
  }
  
  export function useProfileStats(profileId: string | null) {
@@ -34,6 +35,7 @@
          profileViews: data.profile_views || 0,
          appClicks: data.app_clicks || 0,
          appLikes: data.app_likes || {},
+         appClicksByApp: data.app_clicks_by_app || {},
        });
      } catch (error) {
        console.error('Error fetching profile stats:', error);

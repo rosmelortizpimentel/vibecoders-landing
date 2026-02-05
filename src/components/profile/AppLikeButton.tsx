@@ -1,4 +1,4 @@
- import { Heart } from 'lucide-react';
+ import { Heart, MousePointerClick } from 'lucide-react';
  import { useAppLike } from '@/hooks/useAppLike';
  import { cn } from '@/lib/utils';
  
@@ -7,20 +7,34 @@
    showCount?: boolean;
    isOwner?: boolean;
    ownerLikeCount?: number;
+   ownerClickCount?: number;
  }
  
- export function AppLikeButton({ appId, showCount = false, isOwner = false, ownerLikeCount }: AppLikeButtonProps) {
+ export function AppLikeButton({ appId, showCount = false, isOwner = false, ownerLikeCount, ownerClickCount }: AppLikeButtonProps) {
    const { isLiked, likeCount, isLoading, toggleLike, isAuthenticated } = useAppLike(appId);
  
    // If owner, show the count from stats
    if (isOwner) {
      const count = ownerLikeCount ?? likeCount;
-     if (count === 0) return null;
+     const clicks = ownerClickCount ?? 0;
+     
+     // Don't show anything if both are 0
+     if (count === 0 && clicks === 0) return null;
      
      return (
-       <div className="flex items-center gap-1 text-pink-500">
-         <Heart className="w-3.5 h-3.5 fill-current" />
-         <span className="text-xs font-medium">{count}</span>
+       <div className="flex items-center gap-3 text-gray-400">
+         {count > 0 && (
+           <div className="flex items-center gap-1">
+             <Heart className="w-3 h-3" />
+             <span className="text-xs">{count}</span>
+           </div>
+         )}
+         {clicks > 0 && (
+           <div className="flex items-center gap-1">
+             <MousePointerClick className="w-3 h-3" />
+             <span className="text-xs">{clicks}</span>
+           </div>
+         )}
        </div>
      );
    }
