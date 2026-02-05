@@ -1,0 +1,13 @@
+{
+  "generic": "Algo salió mal",
+  "tryAgain": "Por favor intenta de nuevo",
+  "notFound": "Página no encontrada",
+  "notFoundDescription": "La página que buscas no existe",
+  "returnHome": "Volver al inicio",
+  "unauthorized": "No autorizado",
+  "forbidden": "Acceso denegado",
+  "serverError": "Error del servidor",
+  "networkError": "Error de conexión",
+  "loadingError": "Error al cargar",
+  "saveError": "Error al guardar"
+}

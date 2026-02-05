@@ -10,5 +10,14 @@
       "empty": "Ingresa tu correo electrónico",
       "invalid": "Hmm, ese correo no parece válido"
     }
+  },
+  "loggedIn": {
+    "greeting": "¡Hola",
+    "viewProfile": "Ver mi perfil"
+  },
+  "notLoggedIn": {
+    "urgency": "Los nombres de usuario cortos se están agotando.",
+    "claimButton": "Reclamar mi @username",
+    "microcopy": "Sin listas de espera. Únete y publica tu primer proyecto hoy mismo."
   }
 }

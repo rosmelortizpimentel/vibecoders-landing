@@ -1,0 +1,11 @@
+{
+  "title": "Seguidores",
+  "followersTab": "Seguidores",
+  "followingTab": "Siguiendo",
+  "noFollowers": "Aún no tienes seguidores",
+  "noFollowing": "Aún no sigues a nadie",
+  "unfollowConfirmTitle": "¿Dejar de seguir?",
+  "unfollowConfirmDescription": "¿Estás seguro de que quieres dejar de seguir a {name}?",
+  "confirm": "Confirmar",
+  "cancel": "Cancelar"
+}

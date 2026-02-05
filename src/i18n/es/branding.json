@@ -1,0 +1,18 @@
+{
+  "typography": {
+    "title": "Tipografía",
+    "description": "Esta fuente se aplicará a tu perfil público"
+  },
+  "colors": {
+    "title": "Colores",
+    "description": "Personaliza los colores de tu perfil",
+    "photoBorder": "Borde de Foto"
+  },
+  "ogImage": {
+    "title": "Imagen Social (OG Image)",
+    "description": "Esta imagen aparecerá cuando compartas tu perfil en redes sociales",
+    "upload": "Subir imagen",
+    "delete": "Eliminar imagen",
+    "recommended": "Tamaño recomendado: 1200×630px"
+  }
+}

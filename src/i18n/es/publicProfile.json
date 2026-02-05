@@ -1,0 +1,19 @@
+{
+  "follow": "Seguir",
+  "following": "Siguiendo",
+  "unfollow": "Dejar de seguir",
+  "followers": "Seguidores",
+  "followersCount": "seguidores",
+  "followingCount": "siguiendo",
+  "projects": "Proyectos",
+  "noProjects": "Aún no hay proyectos",
+  "memberSince": "Miembro desde",
+  "verified": "Verificado",
+  "verifiedOwner": "Propietario Verificado",
+  "visitWebsite": "Visitar sitio web",
+  "visits": "visitas",
+  "apps": "Apps",
+  "poweredBy": "Potenciado por",
+  "joinVibecoders": "Únete a Vibecoders",
+  "createProfile": "Crea tu perfil de vibecoder"
+}

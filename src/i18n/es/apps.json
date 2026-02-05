@@ -1,0 +1,15 @@
+{
+  "addApp": "Agregar App",
+  "add": "Agregar",
+  "cancel": "Cancelar",
+  "delete": "Eliminar",
+  "noApps": "No tienes apps todavía",
+  "noAppsHint": "Agrega tu primer proyecto para mostrarlo en tu perfil",
+  "urlPlaceholder": "https://tu-app.com",
+  "deleteConfirmTitle": "¿Eliminar esta app?",
+  "deleteConfirmDescription": "Esta acción no se puede deshacer. La app será eliminada permanentemente de tu perfil.",
+  "verifyDomain": "Verificar dominio",
+  "verified": "Verificado",
+  "visible": "Visible",
+  "hidden": "Oculto"
+}

@@ -1,16 +1,18 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { User, Layers, Palette } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
-
-const tabs = [
-  { id: 'profile', label: 'Perfil', icon: User, path: '/me/profile' },
-  { id: 'apps', label: 'Apps', icon: Layers, path: '/me/apps' },
-  { id: 'branding', label: 'Branding', icon: Palette, path: '/me/branding' },
-];
 
 export function MeTabs() {
   const navigate = useNavigate();
   const location = useLocation();
+  const t = useTranslation('profile');
+  
+  const tabs = [
+    { id: 'profile', label: t.tabs.profile, icon: User, path: '/me/profile' },
+    { id: 'apps', label: t.tabs.apps, icon: Layers, path: '/me/apps' },
+    { id: 'branding', label: t.tabs.branding, icon: Palette, path: '/me/branding' },
+  ];
   
   const activeTab = tabs.find(tab => location.pathname === tab.path)?.id || 'profile';
 

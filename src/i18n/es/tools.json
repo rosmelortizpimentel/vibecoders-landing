@@ -1,0 +1,18 @@
+{
+  "title": "The Vibe Stack",
+  "subtitle": "Las herramientas que usamos para construir productos escalables a velocidad récord.",
+  "noTools": "No hay herramientas disponibles aún.",
+  "loading": "Cargando...",
+  "visit": "Visitar",
+  "featured": "Destacado",
+  "all": "Todos",
+  "categories": {
+    "all": "Todas",
+    "ide": "IDE",
+    "ai": "IA",
+    "database": "Base de datos",
+    "hosting": "Hosting",
+    "design": "Diseño",
+    "other": "Otros"
+  }
+}

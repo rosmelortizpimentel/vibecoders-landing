@@ -401,6 +401,7 @@ export type Database = {
           id: string
           instagram: string | null
           is_pioneer: boolean
+          language: string | null
           linkedin: string | null
           location: string | null
           lovable: string | null
@@ -432,6 +433,7 @@ export type Database = {
           id: string
           instagram?: string | null
           is_pioneer?: boolean
+          language?: string | null
           linkedin?: string | null
           location?: string | null
           lovable?: string | null
@@ -463,6 +465,7 @@ export type Database = {
           id?: string
           instagram?: string | null
           is_pioneer?: boolean
+          language?: string | null
           linkedin?: string | null
           location?: string | null
           lovable?: string | null

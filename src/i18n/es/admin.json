@@ -1,0 +1,20 @@
+{
+  "title": "Panel de Administración",
+  "dashboard": "Dashboard",
+  "users": "Usuarios",
+  "waitlist": "Waitlist",
+  "showcase": "Showcase",
+  "techStack": "Tech Stack",
+  "tools": "Herramientas",
+  "settings": "Configuración",
+  "actions": {
+    "add": "Agregar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "confirmDelete": "¿Estás seguro de que quieres eliminar este elemento?",
+  "noData": "No hay datos",
+  "loading": "Cargando..."
+}

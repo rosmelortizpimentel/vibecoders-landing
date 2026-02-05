@@ -1,0 +1,39 @@
+{
+  "tabs": {
+    "profile": "Perfil",
+    "apps": "Apps",
+    "branding": "Branding"
+  },
+  "fields": {
+    "name": "Nombre",
+    "tagline": "Tagline",
+    "location": "Ubicación",
+    "website": "Website",
+    "socialNetworks": "Redes Sociales",
+    "banner": "Banner"
+  },
+  "placeholders": {
+    "name": "Tu nombre completo",
+    "tagline": "Una frase que te defina",
+    "location": "Ciudad, País",
+    "website": "https://tuwebsite.com"
+  },
+  "labels": {
+    "addBanner": "Añadir banner",
+    "suggestedRatio": "Ratio Sugerido 4:1 (1584×396px)",
+    "showBadge": "Mostrar badge",
+    "deleteBanner": "Eliminar banner",
+    "avatarLeft": "Avatar a la izquierda",
+    "avatarCenter": "Avatar centrado",
+    "avatarRight": "Avatar a la derecha",
+    "bannerLeft": "Banner a la izquierda",
+    "bannerCenter": "Banner centrado",
+    "bannerRight": "Banner a la derecha",
+    "earlyFoundingMember": "Early Founding Member"
+  },
+  "saving": "Guardando...",
+  "saved": "Guardado",
+  "error": "Error",
+  "preview": "Vista Previa",
+  "required": "requerido"
+}

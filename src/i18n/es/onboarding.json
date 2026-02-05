@@ -1,0 +1,14 @@
+{
+  "title": "¡Bienvenido a Vibecoders!",
+  "subtitle": "Completa tu perfil para destacar",
+  "steps": {
+    "username": "Elige tu @username",
+    "avatar": "Sube tu foto",
+    "bio": "Escribe tu bio",
+    "app": "Agrega tu primer proyecto"
+  },
+  "skip": "Saltar por ahora",
+  "next": "Siguiente",
+  "finish": "Finalizar",
+  "profileCompletion": "Perfil completado"
+}

@@ -12,7 +12,9 @@ import { DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useTranslation } from '@/hooks/useTranslation';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24">
@@ -32,6 +34,7 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
   const { profile } = useProfile();
   const location = useLocation();
   const navigate = useNavigate();
+  const tAuth = useTranslation('auth');
 
   const { isAdmin } = useUserRole();
 
@@ -59,7 +62,7 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
   // Get display name with fallback to Google metadata
   const getDisplayName = () => {
     const name = profile?.name || user?.user_metadata?.full_name;
-    if (!name) return 'Usuario';
+    if (!name) return tAuth.user;
     const parts = name.trim().split(' ');
     if (parts.length === 1) return parts[0];
     return `${parts[0]} ${parts[1].charAt(0)}.`;
@@ -79,101 +82,109 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
         />
       </Link>
 
-      {/* User menu - right side (only if logged in) */}
-      {user ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none">
-              <span className="text-sm font-medium text-gray-700 hidden sm:block">
-                {getDisplayName()}
-              </span>
-              <Avatar className="h-8 w-8 border border-gray-200">
-                <AvatarImage src={avatarUrl} alt={getDisplayName()} />
-                <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                  {(profile?.name || user?.user_metadata?.full_name || '?').charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-white border border-gray-100 p-0 shadow-xl">
-            {/* Identity Header - Non-clickable */}
-            <div className="px-3 py-3 flex items-center gap-3">
-              <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
-                <AvatarImage src={avatarUrl} alt={getDisplayName()} />
-                <AvatarFallback className="text-sm bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
-                  {(profile?.name || user?.user_metadata?.full_name || '?').charAt(0)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-semibold text-gray-900 truncate">
-                  {profile?.name || user?.user_metadata?.full_name || 'Usuario'}
+      {/* Right side */}
+      <div className="flex items-center gap-2">
+        {/* Language toggle for non-authenticated users */}
+        {!user && (
+          <LanguageSwitcher variant="header" className="text-gray-600" />
+        )}
+        
+        {/* User menu (only if logged in) */}
+        {user ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none">
+                <span className="text-sm font-medium text-gray-700 hidden sm:block">
+                  {getDisplayName()}
                 </span>
-                <span className="text-xs text-gray-500 truncate">
-                  {profile?.username ? `@${profile.username}` : 'Sin username'}
-                </span>
+                <Avatar className="h-8 w-8 border border-gray-200">
+                  <AvatarImage src={avatarUrl} alt={getDisplayName()} />
+                  <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
+                    {(profile?.name || user?.user_metadata?.full_name || '?').charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-white border border-gray-100 p-0 shadow-xl">
+              {/* Identity Header - Non-clickable */}
+              <div className="px-3 py-3 flex items-center gap-3">
+                <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
+                  <AvatarImage src={avatarUrl} alt={getDisplayName()} />
+                  <AvatarFallback className="text-sm bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
+                    {(profile?.name || user?.user_metadata?.full_name || '?').charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm font-semibold text-gray-900 truncate">
+                    {profile?.name || user?.user_metadata?.full_name || tAuth.user}
+                  </span>
+                  <span className="text-xs text-gray-500 truncate">
+                    {profile?.username ? `@${profile.username}` : tAuth.noUsername}
+                  </span>
+                </div>
               </div>
-            </div>
-            <DropdownMenuSeparator className="my-0" />
-            
-            {/* Menu Items */}
-            <div className="py-1">
-              {/* Edit profile option - show when on own public profile or other pages (not /me/*) */}
-              {!isOnEditPage && (
-                <DropdownMenuItem 
-                  onClick={() => navigate('/me')}
-                  className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
-                >
-                  <Pencil className="h-4 w-4 text-gray-400" />
-                  <span>Editar Mi Perfil</span>
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuSeparator className="my-0" />
               
-              {/* View public profile - show when on /me/* or other pages (not on own public profile) */}
-              {!isOnOwnPublicProfile && profile?.username && (
-                <DropdownMenuItem 
-                  onClick={() => navigate(`/@${profile.username}`)}
-                  className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
-                >
-                  <ExternalLink className="h-4 w-4 text-gray-400" />
-                  <span>Ver Perfil Público</span>
-                </DropdownMenuItem>
-              )}
+              {/* Menu Items */}
+              <div className="py-1">
+                {/* Edit profile option - show when on own public profile or other pages (not /me/*) */}
+                {!isOnEditPage && (
+                  <DropdownMenuItem 
+                    onClick={() => navigate('/me')}
+                    className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                  >
+                    <Pencil className="h-4 w-4 text-gray-400" />
+                    <span>{tAuth.editProfile}</span>
+                  </DropdownMenuItem>
+                )}
+                
+                {/* View public profile - show when on /me/* or other pages (not on own public profile) */}
+                {!isOnOwnPublicProfile && profile?.username && (
+                  <DropdownMenuItem 
+                    onClick={() => navigate(`/@${profile.username}`)}
+                    className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                  >
+                    <ExternalLink className="h-4 w-4 text-gray-400" />
+                    <span>{tAuth.viewPublicProfile}</span>
+                  </DropdownMenuItem>
+                )}
+                
+                {isAdmin && (
+                  <DropdownMenuItem 
+                    onClick={() => navigate('/admin')}
+                    className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                  >
+                    <LayoutDashboard className="h-4 w-4 text-gray-400" />
+                    <span>{tAuth.adminPanel}</span>
+                  </DropdownMenuItem>
+                )}
+              </div>
               
-              {isAdmin && (
+              {/* Footer - Sign Out */}
+              <DropdownMenuSeparator className="my-0" />
+              <div className="py-1">
                 <DropdownMenuItem 
-                  onClick={() => navigate('/admin')}
+                  onClick={handleSignOut}
                   className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
                 >
-                  <LayoutDashboard className="h-4 w-4 text-gray-400" />
-                  <span>Panel Admin</span>
+                  <LogOut className="h-4 w-4 text-gray-400" />
+                  <span>{tAuth.signOut}</span>
                 </DropdownMenuItem>
-              )}
-            </div>
-            
-            {/* Footer - Sign Out */}
-            <DropdownMenuSeparator className="my-0" />
-            <div className="py-1">
-              <DropdownMenuItem 
-                onClick={handleSignOut}
-                className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
-              >
-                <LogOut className="h-4 w-4 text-gray-400" />
-                <span>Cerrar Sesión</span>
-              </DropdownMenuItem>
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ) : (
-        <Button
-          onClick={handleGoogleSignIn}
-          variant="outline"
-          className="flex items-center gap-2 border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium"
-        >
-          <GoogleIcon />
-          <span className="hidden sm:inline">Continuar con Google</span>
-          <span className="sm:hidden">Entrar</span>
-        </Button>
-      )}
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <Button
+            onClick={handleGoogleSignIn}
+            variant="outline"
+            className="flex items-center gap-2 border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium"
+          >
+            <GoogleIcon />
+            <span className="hidden sm:inline">{tAuth.signInWithGoogle}</span>
+            <span className="sm:hidden">{tAuth.signIn}</span>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useProfileEditor } from '@/hooks/useProfileEditor';
 import { useApps } from '@/hooks/useApps';
+import { useTranslation } from '@/hooks/useTranslation';
 import { MeTabs } from '@/components/me/MeTabs';
 import { ProfileTab } from '@/components/me/ProfileTab';
 import { AppsTab } from '@/components/me/AppsTab';
@@ -23,6 +24,7 @@ const Me = () => {
   const profileEditor = useProfileEditor();
   const appsHook = useApps();
   const isMobile = useIsMobile();
+  const t = useTranslation('profile');
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const { profile, loading } = profileEditor;
@@ -97,7 +99,7 @@ const Me = () => {
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Eye className="h-5 w-5 mr-2" />
-                Vista Previa
+                {t.preview}
               </Button>
             </div>
           </SheetTrigger>
@@ -106,7 +108,7 @@ const Me = () => {
             <div className="sticky top-0 z-10 flex items-center justify-between bg-background border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-5 w-5 text-primary" />
-                <span className="font-medium text-foreground">Vista Previa</span>
+                <span className="font-medium text-foreground">{t.preview}</span>
               </div>
               <button
                 onClick={() => setPreviewOpen(false)}
@@ -116,7 +118,7 @@ const Me = () => {
               </button>
             </div>
             <SheetHeader className="sr-only">
-              <SheetTitle>Vista previa del perfil</SheetTitle>
+              <SheetTitle>{t.preview}</SheetTitle>
             </SheetHeader>
             <ProfilePreview profile={profile} apps={appsHook.apps} isMobileSheet />
           </SheetContent>
