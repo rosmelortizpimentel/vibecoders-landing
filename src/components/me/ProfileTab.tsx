@@ -27,6 +27,9 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
 
   if (!profile) return null;
 
+  const avatarPosition = profile.avatar_position || 'center';
+  const bannerPosition = profile.banner_position || 'center';
+
   const handleAvatarClick = () => {
     fileInputRef.current?.click();
   };
@@ -61,10 +64,6 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
     e.stopPropagation();
     onDeleteBanner?.();
   };
-
-  const bioLength = profile.bio?.length || 0;
-  const avatarPosition = profile.avatar_position || 'center';
-  const bannerPosition = profile.banner_position || 'center';
 
   // Banner position classes (flexbox alignment for contain mode)
   const bannerPositionClasses = {
@@ -282,34 +281,9 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
             maxLength={160}
             className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
           />
-          <div className="flex justify-between text-xs">
-            <span className={cn(
-              "text-muted-foreground",
-              (profile.tagline?.length || 0) < 100 && (profile.tagline?.length || 0) > 0 && "text-amber-600"
-            )}>
-              {(profile.tagline?.length || 0) > 0 && (profile.tagline?.length || 0) < 100 && 
-                "LinkedIn recomienda min. 100 caracteres"}
-            </span>
-            <span className="text-muted-foreground">{profile.tagline?.length || 0}/160</span>
-          </div>
+          <p className="text-xs text-muted-foreground text-right">{profile.tagline?.length || 0}/160</p>
         </div>
 
-        {/* Bio */}
-        <div className="space-y-2">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
-            <Label htmlFor="bio" className="text-[#1C1C1C]">Bio</Label>
-            <span className="text-xs text-muted-foreground">Soporta **negritas**, *italica* y listas</span>
-          </div>
-          <Textarea
-            id="bio"
-            value={profile.bio || ''}
-            onChange={e => onUpdate({ bio: e.target.value.slice(0, 500) })}
-            placeholder="Cuéntanos sobre ti, tus proyectos, tu experiencia..."
-            className="min-h-[120px] resize-none border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
-            maxLength={500}
-          />
-          <p className="text-xs text-muted-foreground text-right">{bioLength}/500</p>
-        </div>
       </section>
 
       {/* Divider */}
