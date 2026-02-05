@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User, LogOut, ExternalLink } from 'lucide-react';
+import { Pencil, LogOut, ExternalLink } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
@@ -28,6 +28,12 @@ interface PublicProfileHeaderProps {
 export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProps) {
   const { user, signOut, signInWithGoogle } = useAuth();
   const { profile } = useProfile();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Detect context
+  const isOnOwnPublicProfile = profileUsername && profile?.username === profileUsername;
+  const isOnEditPage = location.pathname.startsWith('/me');
 
   const handleSignOut = async () => {
     try {
@@ -46,13 +52,17 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
     }
   };
 
-  // Get display name (first name + initial)
+  // Get display name with fallback to Google metadata
   const getDisplayName = () => {
-    if (!profile?.name) return 'Usuario';
-    const parts = profile.name.trim().split(' ');
+    const name = profile?.name || user?.user_metadata?.full_name;
+    if (!name) return 'Usuario';
+    const parts = name.trim().split(' ');
     if (parts.length === 1) return parts[0];
     return `${parts[0]} ${parts[1].charAt(0)}.`;
   };
+
+  // Avatar with fallback to Google metadata
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || '';
 
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-100">
@@ -74,9 +84,9 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
                 {getDisplayName()}
               </span>
               <Avatar className="h-8 w-8 border border-gray-200">
-                <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || ''} />
+                <AvatarImage src={avatarUrl} alt={getDisplayName()} />
                 <AvatarFallback className="bg-gray-100 text-gray-600 text-xs">
-                  {profile?.name?.charAt(0) || '?'}
+                  {(profile?.name || user?.user_metadata?.full_name || '?').charAt(0)}
                 </AvatarFallback>
               </Avatar>
             </button>
@@ -85,27 +95,25 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
             align="end" 
             className="w-48 bg-[#1c1c1c] border-[#1c1c1c] text-white"
           >
-            {/* My profile option */}
-            <DropdownMenuItem asChild>
-              <Link 
-                to="/me" 
+            {/* Edit profile option - show when on own public profile or other pages (not /me/*) */}
+            {!isOnEditPage && (
+              <DropdownMenuItem 
+                onClick={() => navigate('/me')}
                 className="flex items-center gap-2 cursor-pointer hover:bg-white/10 text-white focus:bg-white/10 focus:text-white"
               >
-                <User className="h-4 w-4" />
-                Mi Perfil
-              </Link>
-            </DropdownMenuItem>
+                <Pencil className="h-4 w-4" />
+                Editar Mi Perfil
+              </DropdownMenuItem>
+            )}
             
-            {/* View public profile */}
-            {profile?.username && (
-              <DropdownMenuItem asChild>
-                <Link 
-                  to={`/@${profile.username}`}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-white/10 text-white focus:bg-white/10 focus:text-white"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Ver Perfil Público
-                </Link>
+            {/* View public profile - show when on /me/* or other pages (not on own public profile) */}
+            {!isOnOwnPublicProfile && profile?.username && (
+              <DropdownMenuItem 
+                onClick={() => navigate(`/@${profile.username}`)}
+                className="flex items-center gap-2 cursor-pointer hover:bg-white/10 text-white focus:bg-white/10 focus:text-white"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Ver Perfil Público
               </DropdownMenuItem>
             )}
             
