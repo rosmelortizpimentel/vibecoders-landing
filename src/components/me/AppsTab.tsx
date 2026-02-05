@@ -5,6 +5,7 @@ import { AppEditor } from './AppEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Loader2 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Dialog,
   DialogContent,
@@ -28,16 +29,17 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { SortableAppCard } from './SortableAppCard';
- import { VerifyDomainModal } from './VerifyDomainModal';
+import { VerifyDomainModal } from './VerifyDomainModal';
 
 interface AppsTabProps {
   appsHook: ReturnType<typeof useApps>;
 }
 
 export function AppsTab({ appsHook }: AppsTabProps) {
-   const { apps, loading, createApp, updateApp, deleteApp, uploadAppLogo, reorderApps, verifyApp } = appsHook;
+  const { apps, loading, createApp, updateApp, deleteApp, uploadAppLogo, reorderApps, verifyApp } = appsHook;
+  const t = useTranslation('apps');
   const [isCreating, setIsCreating] = useState(false);
-   const [verifyingApp, setVerifyingApp] = useState<AppData | null>(null);
+  const [verifyingApp, setVerifyingApp] = useState<AppData | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -64,9 +66,9 @@ export function AppsTab({ appsHook }: AppsTabProps) {
   const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
    
-   const handleVerify = async (appId: string) => {
-     return await verifyApp(appId);
-   };
+  const handleVerify = async (appId: string) => {
+    return await verifyApp(appId);
+  };
 
   const handleCreate = async () => {
     if (!newUrl.trim()) return;
@@ -106,35 +108,35 @@ export function AppsTab({ appsHook }: AppsTabProps) {
       {!isCreating ? (
         <button
           onClick={() => setIsCreating(true)}
-          className="w-full border border-dashed border-gray-300 rounded-lg h-14 hover:border-gray-400 hover:bg-gray-50 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+          className="w-full border border-dashed border-border rounded-lg h-14 hover:border-muted-foreground hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm font-medium"
         >
           <Plus className="h-4 w-4" />
-          Agregar App
+          {t.addApp}
         </button>
       ) : (
-        <div className="flex gap-2 p-4 border border-gray-200 rounded-lg bg-white">
+        <div className="flex gap-2 p-4 border border-border rounded-lg bg-background">
           <Input
             value={newUrl}
             onChange={e => setNewUrl(e.target.value)}
-            placeholder="https://tu-app.com"
-            className="flex-1 border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-0"
+            placeholder={t.urlPlaceholder}
+            className="flex-1 border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-0"
             autoFocus
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
           />
-          <Button onClick={handleCreate} disabled={!newUrl.trim()} className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white">
-            Agregar
+          <Button onClick={handleCreate} disabled={!newUrl.trim()} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            {t.add}
           </Button>
-          <Button variant="ghost" onClick={() => { setIsCreating(false); setNewUrl(''); }} className="text-gray-500 hover:text-[#1c1c1c]">
-            Cancelar
+          <Button variant="ghost" onClick={() => { setIsCreating(false); setNewUrl(''); }} className="text-muted-foreground hover:text-foreground">
+            {t.cancel}
           </Button>
         </div>
       )}
 
       {/* Apps List */}
       {apps.length === 0 && !isCreating ? (
-        <div className="text-center py-12 text-gray-500">
-          <p>No tienes apps todavía</p>
-          <p className="text-sm mt-1">Agrega tu primer proyecto para mostrarlo en tu perfil</p>
+        <div className="text-center py-12 text-muted-foreground">
+          <p>{t.noApps}</p>
+          <p className="text-sm mt-1">{t.noAppsHint}</p>
         </div>
       ) : (
         <DndContext
@@ -156,14 +158,14 @@ export function AppsTab({ appsHook }: AppsTabProps) {
                       onUploadLogo={uploadAppLogo}
                       onDelete={() => setDeleteConfirmId(app.id)}
                       onCollapse={() => setExpandedAppId(null)}
-                       onVerify={() => handleVerify(app.id)}
+                      onVerify={() => handleVerify(app.id)}
                     />
                   ) : (
                     <SortableAppCard
                       app={app}
                       onExpand={() => setExpandedAppId(app.id)}
                       onToggleVisibility={() => updateApp(app.id, { is_visible: !app.is_visible })}
-                       onVerify={() => setVerifyingApp(app)}
+                      onVerify={() => setVerifyingApp(app)}
                     />
                   )}
                 </div>
@@ -177,34 +179,34 @@ export function AppsTab({ appsHook }: AppsTabProps) {
       <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>¿Eliminar esta app?</DialogTitle>
+            <DialogTitle>{t.deleteConfirmTitle}</DialogTitle>
             <DialogDescription>
-              Esta acción no se puede deshacer. La app será eliminada permanentemente de tu perfil.
+              {t.deleteConfirmDescription}
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
             <Button variant="ghost" onClick={() => setDeleteConfirmId(null)}>
-              Cancelar
+              {t.cancel}
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
-              Eliminar
+              {t.delete}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
        
-       {/* Verify Domain Modal */}
-       {verifyingApp && (
-         <VerifyDomainModal
-           open={!!verifyingApp}
-           onOpenChange={(open) => !open && setVerifyingApp(null)}
-           appName={verifyingApp.name || ''}
-           appUrl={verifyingApp.url}
-           verificationToken={verifyingApp.verification_token}
-           onVerify={() => handleVerify(verifyingApp.id)}
-           onSuccess={() => setVerifyingApp(null)}
-         />
-       )}
+      {/* Verify Domain Modal */}
+      {verifyingApp && (
+        <VerifyDomainModal
+          open={!!verifyingApp}
+          onOpenChange={(open) => !open && setVerifyingApp(null)}
+          appName={verifyingApp.name || ''}
+          appUrl={verifyingApp.url}
+          verificationToken={verifyingApp.verification_token}
+          onVerify={() => handleVerify(verifyingApp.id)}
+          onSuccess={() => setVerifyingApp(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,14 @@
+{
+  "welcome": "Welcome",
+  "explore": "Explore",
+  "freshDrops": {
+    "title": "Fresh out of the oven",
+    "subtitle": "The latest projects from the community"
+  },
+  "onboarding": {
+    "title": "Complete your profile",
+    "description": "Add information to stand out in the community",
+    "viewProfile": "View my profile",
+    "complete": "Complete"
+  }
+}

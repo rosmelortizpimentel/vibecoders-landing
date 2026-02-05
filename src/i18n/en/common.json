@@ -4,18 +4,19 @@
   },
   "footer": {
     "copyright": "© 2026 vibecoders.la",
-    "builtWith": "Construido con",
-    "in": "en",
-    "by": "por",
+    "builtAt": "Built at",
+    "temperature": "-20°C",
+    "inCanada": "in",
+    "by": "by",
     "authorName": "Rosmel Ortiz",
     "linkedIn": "https://www.linkedin.com/in/rosmelortiz/",
-    "privacy": "Privacidad",
-    "terms": "Términos"
+    "privacy": "Privacy",
+    "terms": "Terms"
   },
   "navigation": {
-    "myProfile": "Mi Perfil",
+    "myProfile": "My Profile",
     "startups": "Startups",
-    "tools": "Herramientas",
+    "tools": "Tools",
     "buildLog": "Build Log",
     "admin": "Admin"
   }

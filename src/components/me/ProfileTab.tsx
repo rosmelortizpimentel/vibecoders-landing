@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { PioneerBadge } from '@/components/PioneerBadge';
 import { Camera, MapPin, Globe, ImagePlus, AlignLeft, AlignCenter, AlignRight, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 
 interface ProfileTabProps {
@@ -22,6 +23,7 @@ interface ProfileTabProps {
 
 export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, onDeleteBanner }: ProfileTabProps) {
   const { user } = useAuth();
+  const t = useTranslation('profile');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,7 +78,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
     <div className="space-y-8">
       {/* Banner Upload Section */}
       <section className="space-y-2">
-        <Label className="text-[#1C1C1C]">Banner</Label>
+        <Label className="text-foreground">{t.fields.banner}</Label>
         
         {/* Banner with hover overlays - 4:1 aspect ratio (1584x396) */}
         <div 
@@ -94,14 +96,14 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <ImagePlus className="h-8 w-8 mb-2" />
-              <span className="text-sm">Añadir banner</span>
+              <span className="text-sm">{t.labels.addBanner}</span>
             </div>
           )}
           
           {/* Camera overlay with size recommendation */}
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
             <Camera className="h-6 w-6 text-white mb-1" />
-            <span className="text-xs text-white/80">Ratio Sugerido 4:1 (1584×396px)</span>
+            <span className="text-xs text-white/80">{t.labels.suggestedRatio}</span>
           </div>
           
           {/* Delete button - top right corner, only with banner */}
@@ -110,7 +112,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
               type="button"
               onClick={handleDeleteBanner}
               className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80"
-              title="Eliminar banner"
+              title={t.labels.deleteBanner}
             >
               <Trash2 className="h-4 w-4 text-white" />
             </button>
@@ -135,7 +137,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                 "p-1.5 rounded transition-colors",
                 bannerPosition === 'left' ? "bg-background shadow-sm" : "hover:bg-background/50"
               )}
-              title="Banner a la izquierda"
+              title={t.labels.bannerLeft}
             >
               <AlignLeft className="h-4 w-4 text-muted-foreground" />
             </button>
@@ -146,7 +148,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                 "p-1.5 rounded transition-colors",
                 bannerPosition === 'center' ? "bg-background shadow-sm" : "hover:bg-background/50"
               )}
-              title="Banner centrado"
+              title={t.labels.bannerCenter}
             >
               <AlignCenter className="h-4 w-4 text-muted-foreground" />
             </button>
@@ -157,7 +159,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                 "p-1.5 rounded transition-colors",
                 bannerPosition === 'right' ? "bg-background shadow-sm" : "hover:bg-background/50"
               )}
-              title="Banner a la derecha"
+              title={t.labels.bannerRight}
             >
               <AlignRight className="h-4 w-4 text-muted-foreground" />
             </button>
@@ -201,7 +203,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                   "p-1.5 rounded transition-colors",
                   avatarPosition === 'left' ? "bg-background shadow-sm" : "hover:bg-background/50"
                 )}
-                title="Avatar a la izquierda"
+                title={t.labels.avatarLeft}
               >
                 <AlignLeft className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -212,7 +214,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                   "p-1.5 rounded transition-colors",
                   avatarPosition === 'center' ? "bg-background shadow-sm" : "hover:bg-background/50"
                 )}
-                title="Avatar centrado"
+                title={t.labels.avatarCenter}
               >
                 <AlignCenter className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -223,7 +225,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                   "p-1.5 rounded transition-colors",
                   avatarPosition === 'right' ? "bg-background shadow-sm" : "hover:bg-background/50"
                 )}
-                title="Avatar a la derecha"
+                title={t.labels.avatarRight}
               >
                 <AlignRight className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -233,13 +235,13 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
           {/* Name and Username */}
           <div className="flex-1 w-full space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-[#1C1C1C]">Nombre *</Label>
+              <Label htmlFor="name" className="text-foreground">{t.fields.name} *</Label>
               <Input
                 id="name"
                 value={profile.name || ''}
                 onChange={e => onUpdate({ name: e.target.value })}
-                placeholder="Tu nombre completo"
-                className="text-base sm:text-lg border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
+                placeholder={t.placeholders.name}
+                className="text-base sm:text-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
               />
             </div>
             
@@ -255,9 +257,9 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                 {profile.is_pioneer && (
                   <div className="flex items-center gap-2 flex-wrap">
                     <PioneerBadge className="w-5 h-5" />
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">Early Founding Member</span>
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">{t.labels.earlyFoundingMember}</span>
                     <div className="flex items-center gap-2 ml-auto sm:ml-2">
-                      <span className="text-sm text-muted-foreground">Mostrar badge</span>
+                      <span className="text-sm text-muted-foreground">{t.labels.showBadge}</span>
                       <Switch
                         checked={profile.show_pioneer_badge}
                         onCheckedChange={(checked) => onUpdate({ show_pioneer_badge: checked })}
@@ -272,14 +274,14 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
 
         {/* Tagline */}
         <div className="space-y-2">
-          <Label htmlFor="tagline" className="text-[#1C1C1C]">Tagline</Label>
+          <Label htmlFor="tagline" className="text-foreground">{t.fields.tagline}</Label>
           <Input
             id="tagline"
             value={profile.tagline || ''}
             onChange={e => onUpdate({ tagline: e.target.value.slice(0, 160) })}
-            placeholder="Una frase que te defina"
+            placeholder={t.placeholders.tagline}
             maxLength={160}
-            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
+            className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
           />
           <p className="text-xs text-muted-foreground text-right">{profile.tagline?.length || 0}/160</p>
         </div>
@@ -292,31 +294,31 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
       {/* Location & Website - Responsive grid */}
       <section className="grid grid-cols-1 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="location" className="flex items-center gap-2 text-[#1C1C1C]">
+          <Label htmlFor="location" className="flex items-center gap-2 text-foreground">
             <MapPin className="h-4 w-4 text-muted-foreground" />
-            Ubicación
+            {t.fields.location}
           </Label>
           <Input
             id="location"
             value={profile.location || ''}
             onChange={e => onUpdate({ location: e.target.value })}
-            placeholder="Ciudad, País"
-            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
+            placeholder={t.placeholders.location}
+            className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="website" className="flex items-center gap-2 text-[#1C1C1C]">
+          <Label htmlFor="website" className="flex items-center gap-2 text-foreground">
             <Globe className="h-4 w-4 text-muted-foreground" />
-            Website
+            {t.fields.website}
           </Label>
           <Input
             id="website"
             value={profile.website || ''}
             onChange={e => onUpdate({ website: e.target.value })}
-            placeholder="https://tuwebsite.com"
+            placeholder={t.placeholders.website}
             type="url"
-            className="border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
+            className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
           />
         </div>
       </section>
@@ -326,7 +328,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
 
       {/* Social Networks */}
       <section>
-        <h3 className="text-sm font-medium mb-4 text-[#1C1C1C]">Redes Sociales</h3>
+        <h3 className="text-sm font-medium mb-4 text-foreground">{t.fields.socialNetworks}</h3>
         <ProfileSocials profile={profile} onUpdate={onUpdate} />
       </section>
     </div>

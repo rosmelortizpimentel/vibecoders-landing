@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { UserPlus, UserCheck, Loader2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/hooks/useTranslation';
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,8 @@ export function FollowButton({
   profileId
 }: FollowButtonProps) {
   const { user, signInWithGoogle } = useAuth();
+  const t = useTranslation('publicProfile');
+  const tAuth = useTranslation('auth');
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -71,8 +74,8 @@ export function FollowButton({
         className={`
           rounded-full px-4 h-9 font-medium transition-all
           ${isFollowing 
-            ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400' 
-            : 'bg-[#1c1c1c] text-white hover:bg-[#2c2c2c]'
+            ? 'bg-background border-border text-foreground hover:bg-muted hover:border-muted-foreground' 
+            : 'bg-foreground text-background hover:bg-foreground/90'
           }
         `}
       >
@@ -81,18 +84,18 @@ export function FollowButton({
         ) : isFollowing ? (
           <>
             <UserCheck className="h-4 w-4 mr-1.5" />
-            Siguiendo
+            {t.following}
           </>
         ) : (
           <>
             <UserPlus className="h-4 w-4 mr-1.5" />
-            Seguir
+            {t.follow}
           </>
         )}
       </Button>
 
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <DialogContent className="sm:max-w-md bg-[#3D5AFE] border-none text-white">
+        <DialogContent className="sm:max-w-md bg-primary border-none text-primary-foreground">
           <DialogHeader className="text-center">
             <div className="flex justify-center mb-4">
               <img 
@@ -101,13 +104,13 @@ export function FollowButton({
                 className="h-16 w-16 rounded-full border-[3px] border-white shadow-lg"
               />
             </div>
-            <DialogTitle className="text-xl text-white text-center">
-              Únete a Vibecoders
+            <DialogTitle className="text-xl text-primary-foreground text-center">
+              Vibecoders
             </DialogTitle>
-            <DialogDescription className="text-center text-white/90">
+            <DialogDescription className="text-center text-primary-foreground/90">
               {profileUsername 
-                ? `Inicia sesión para seguir a @${profileUsername} y descubrir más vibecoders.`
-                : 'Inicia sesión para seguir a este vibecoder y descubrir más perfiles.'
+                ? `${tAuth.signIn} @${profileUsername}`
+                : tAuth.signIn
               }
             </DialogDescription>
           </DialogHeader>
@@ -115,7 +118,7 @@ export function FollowButton({
           <div className="flex flex-col gap-3 mt-4">
             <Button
               onClick={handleSignIn}
-              className="w-full bg-[#1c1c1c] hover:bg-[#2c2c2c] text-white"
+              className="w-full bg-foreground hover:bg-foreground/90 text-background"
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -135,15 +138,15 @@ export function FollowButton({
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              Continuar con Google
+              {tAuth.signInWithGoogle}
             </Button>
             
             <Button
               variant="ghost"
               onClick={() => setShowAuthDialog(false)}
-              className="text-white/70 hover:text-white hover:bg-white/10"
+              className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-white/10"
             >
-              Ahora no
+              {/* Not now */}
             </Button>
           </div>
         </DialogContent>

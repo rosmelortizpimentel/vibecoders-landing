@@ -1,0 +1,23 @@
+{
+  "badge": "The Official Home for Vibe Coders",
+  "headline": "Your identity doesn't fit in a CV. It's proven with products.",
+  "subheadline": "LinkedIn lists your past jobs. Here you validate your talent by showing the real software you're capable of launching today.",
+  "form": {
+    "placeholder": "Enter your email to start",
+    "button": "Claim my @username now",
+    "success": "You're in!",
+    "error": {
+      "empty": "Enter your email address",
+      "invalid": "Hmm, that email doesn't look valid"
+    }
+  },
+  "loggedIn": {
+    "greeting": "Hello",
+    "viewProfile": "View my profile"
+  },
+  "notLoggedIn": {
+    "urgency": "Short usernames are running out.",
+    "claimButton": "Claim my @username",
+    "microcopy": "No waitlists. Join and publish your first project today."
+  }
+}

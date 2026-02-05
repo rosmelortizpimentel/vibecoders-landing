@@ -1,0 +1,16 @@
+{
+  "cards": [
+    {
+      "title": "Show Off Your Build",
+      "description": "Your projects don't deserve to die in a private folder. Give them the stage they deserve."
+    },
+    {
+      "title": "Community Feedback",
+      "description": "Honest opinions from people who understand your code, not bots or HR."
+    },
+    {
+      "title": "Builder Zone",
+      "description": "Zero corporate spam. Pure creation and collaboration energy."
+    }
+  ]
+}

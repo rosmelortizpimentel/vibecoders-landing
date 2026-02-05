@@ -2,6 +2,7 @@ import { ProfileData } from '@/hooks/useProfileEditor';
 import { FontSelector } from './FontSelector';
 import { ColorPicker } from './ColorPicker';
 import { OgImageSection } from './OgImageSection';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BrandingTabProps {
   profile: ProfileData | null;
@@ -11,6 +12,8 @@ interface BrandingTabProps {
 }
 
 export function BrandingTab({ profile, onUpdate, onUploadOgImage, onDeleteOgImage }: BrandingTabProps) {
+  const t = useTranslation('branding');
+  
   if (!profile) return null;
 
   return (
@@ -18,9 +21,9 @@ export function BrandingTab({ profile, onUpdate, onUploadOgImage, onDeleteOgImag
       {/* Typography */}
       <section className="space-y-4">
         <div>
-          <h3 className="text-sm font-medium text-[#1c1c1c]">Tipografía</h3>
-          <p className="text-xs text-gray-500 mt-1">
-            Esta fuente se aplicará a tu perfil público
+          <h3 className="text-sm font-medium text-foreground">{t.typography.title}</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t.typography.description}
           </p>
         </div>
         <FontSelector
@@ -29,24 +32,24 @@ export function BrandingTab({ profile, onUpdate, onUploadOgImage, onDeleteOgImag
         />
       </section>
 
-      <hr className="border-gray-200" />
+      <hr className="border-border" />
 
       {/* Colors */}
       <section className="space-y-4">
         <div>
-          <h3 className="text-sm font-medium text-[#1c1c1c]">Colores</h3>
-          <p className="text-xs text-gray-500 mt-1">
-            Personaliza los colores de tu perfil
+          <h3 className="text-sm font-medium text-foreground">{t.colors.title}</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            {t.colors.description}
           </p>
         </div>
         <ColorPicker
-          label="Borde de Foto"
+          label={t.colors.photoBorder}
           value={profile.accent_color || '#FFFFFF'}
           onChange={color => onUpdate({ accent_color: color })}
         />
       </section>
 
-      <hr className="border-gray-200" />
+      <hr className="border-border" />
 
       {/* OG Image for Social Media */}
       <OgImageSection

@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useToolsStack, getCategories } from '@/hooks/useToolsStack';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ToolCard } from '@/components/stack/ToolCard';
 import { ToolCardSkeleton } from '@/components/stack/ToolCardSkeleton';
 import { cn } from '@/lib/utils';
 
 export default function Tools() {
   const { data: tools, isLoading, error } = useToolsStack();
+  const t = useTranslation('tools');
+  const tErrors = useTranslation('errors');
   const [activeCategory, setActiveCategory] = useState('Todos');
 
   // Filter only active tools for public view
@@ -22,10 +25,10 @@ export default function Tools() {
       <section className="py-16 md:py-24 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
-            The Vibe Stack
+            {t.title}
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Las herramientas que usamos para construir productos escalables a velocidad récord.
+            {t.subtitle}
           </p>
         </div>
       </section>
@@ -57,7 +60,7 @@ export default function Tools() {
         <div className="max-w-6xl mx-auto">
           {error ? (
             <div className="text-center py-16">
-              <p className="text-destructive">Error al cargar las herramientas</p>
+              <p className="text-destructive">{tErrors.loadingError}</p>
             </div>
           ) : isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -68,9 +71,7 @@ export default function Tools() {
           ) : filteredTools.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-muted-foreground">
-                {activeCategory === 'Todos' 
-                  ? 'No hay herramientas disponibles aún.' 
-                  : `No hay herramientas en la categoría "${activeCategory}".`}
+                {t.noTools}
               </p>
             </div>
           ) : (

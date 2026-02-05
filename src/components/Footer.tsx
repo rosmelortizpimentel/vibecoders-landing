@@ -32,17 +32,17 @@ const Footer = () => {
         {/* Right: Built info */}
         <div className="flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-1.5">
           <p className="flex items-center gap-1.5 text-white/70">
-            Construido con{' '}
+            {t.footer.builtWith}{' '}
             <Heart className="h-3.5 w-3.5 text-pink-500 fill-pink-500" />
-            {' '}en{' '}
+            {' '}{t.footer.in}{' '}
             <img 
               src={canadaFlag} 
-              alt="Bandera de Canadá" 
+              alt="Canada" 
               className="inline-block h-4 w-auto"
             />
           </p>
           <p className="flex items-center gap-1.5 text-white/70">
-            por{' '}
+            {t.footer.by}{' '}
             <a
               href="https://www.vibecoders.la/@rosmelortiz"
               target="_blank"

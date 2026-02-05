@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 import { ShowcaseCard } from '@/components/showcase/ShowcaseCard';
 import { ShowcaseCardSkeleton } from '@/components/showcase/ShowcaseCardSkeleton';
 import { useShowcase } from '@/hooks/useShowcase';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 
 export default function Projects() {
   const { data: projects, isLoading, error } = useShowcase();
+  const t = useTranslation('projects');
+  const tErrors = useTranslation('errors');
 
   return (
     <>
@@ -15,10 +18,10 @@ export default function Projects() {
         <div className="container mx-auto px-4 md:px-6">
           <header className="text-center max-w-3xl mx-auto">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight mb-4">
-              Hecho por Vibecoders
+              {t.title}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Apps reales creadas por gente como tú. Inspírate y lanza la tuya.
+              {t.subtitle}
             </p>
           </header>
         </div>
@@ -40,7 +43,7 @@ export default function Projects() {
           {error && (
             <div className="text-center py-16">
               <p className="text-muted-foreground">
-                Hubo un error al cargar los proyectos. Intenta de nuevo más tarde.
+                {tErrors.loadingError}. {tErrors.tryAgain}
               </p>
             </div>
           )}
@@ -52,11 +55,8 @@ export default function Projects() {
                 <Rocket className="w-8 h-8 text-muted-foreground" />
               </div>
               <h2 className="text-xl font-semibold text-foreground mb-2">
-                Aún no hay proyectos
+                {t.noProjects}
               </h2>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Sé el primero en construir algo increíble con Vibecoders y aparecer aquí.
-              </p>
             </div>
           )}
 

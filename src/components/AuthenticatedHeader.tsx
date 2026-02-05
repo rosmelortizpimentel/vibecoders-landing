@@ -20,8 +20,10 @@ import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield,
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface AuthenticatedHeaderProps {
   profile: {
@@ -37,8 +39,8 @@ interface AuthenticatedHeaderProps {
 }
 
 // Format name as "FirstName L." where L is the initial of the last name/word
-function formatDisplayName(name: string | null | undefined): string {
-  if (!name) return 'Usuario';
+function formatDisplayName(name: string | null | undefined, fallback: string): string {
+  if (!name) return fallback;
   
   const parts = name.trim().split(/\s+/);
   if (parts.length === 1) return parts[0];
@@ -58,7 +60,11 @@ export function AuthenticatedHeader({
   error 
 }: AuthenticatedHeaderProps) {
   const location = useLocation();
-  const displayName = formatDisplayName(profile?.name);
+  const t = useTranslation('common');
+  const tAuth = useTranslation('auth');
+  const tProfile = useTranslation('profile');
+  
+  const displayName = formatDisplayName(profile?.name, tAuth.user);
   const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
   const { isAdmin } = useUserRole();
   const { isInWaitlist } = useWaitlistStatus();
@@ -69,10 +75,10 @@ export function AuthenticatedHeader({
 
   // Build navigation links dynamically based on waitlist status
   const navLinks = [
-    { path: '/me', label: 'Mi Perfil', icon: User, premium: false },
-    { path: '/startups', label: 'Startups', icon: Rocket, premium: false },
-    { path: '/tools', label: 'Herramientas', icon: Wrench, premium: false },
-    ...(isInWaitlist ? [{ path: '/buildlog', label: 'Build Log', icon: Crown, premium: true }] : []),
+    { path: '/me', label: t.navigation.myProfile, icon: User, premium: false },
+    { path: '/startups', label: t.navigation.startups, icon: Rocket, premium: false },
+    { path: '/tools', label: t.navigation.tools, icon: Wrench, premium: false },
+    ...(isInWaitlist ? [{ path: '/buildlog', label: t.navigation.buildLog, icon: Crown, premium: true }] : []),
   ];
 
   const handleNavClick = () => {
@@ -136,7 +142,7 @@ export function AuthenticatedHeader({
               <Button variant="ghost" size="sm" asChild className="gap-1.5">
                 <Link to="/admin">
                   <Shield className="h-4 w-4" />
-                  <span>Admin</span>
+                  <span>{t.navigation.admin}</span>
                 </Link>
               </Button>
             )}
@@ -147,17 +153,17 @@ export function AuthenticatedHeader({
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <span className="text-muted-foreground">Guardando...</span>
+                    <span className="text-muted-foreground">{tProfile.saving}</span>
                   </>
                 ) : error ? (
                   <>
                     <AlertCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-red-500">Error</span>
+                    <span className="text-red-500">{tProfile.error}</span>
                   </>
                 ) : lastSaved ? (
                   <>
                     <Check className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">Guardado</span>
+                    <span className="text-muted-foreground">{tProfile.saved}</span>
                   </>
                 ) : null}
               </div>
@@ -190,13 +196,18 @@ export function AuthenticatedHeader({
                   </Avatar>
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm font-semibold text-background truncate">
-                      {profile?.name || 'Usuario'}
+                      {profile?.name || tAuth.user}
                     </span>
                     <span className="text-xs text-background/70 truncate">
-                      {profile?.username ? `@${profile.username}` : 'Sin username'}
+                      {profile?.username ? `@${profile.username}` : tAuth.noUsername}
                     </span>
                   </div>
                 </div>
+                <DropdownMenuSeparator className="my-0 bg-background/20" />
+                
+                {/* Language Switcher */}
+                <LanguageSwitcher variant="dropdown" />
+                
                 <DropdownMenuSeparator className="my-0 bg-background/20" />
                 
                 {/* Menu Items */}
@@ -209,7 +220,7 @@ export function AuthenticatedHeader({
                         rel="noopener noreferrer"
                       >
                         <ExternalLink className="h-4 w-4" />
-                        <span>Ver Perfil Público</span>
+                        <span>{tAuth.viewPublicProfile}</span>
                       </a>
                     </DropdownMenuItem>
                   )}
@@ -218,7 +229,7 @@ export function AuthenticatedHeader({
                     <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-background/80 hover:bg-background hover:text-foreground focus:bg-background focus:text-foreground">
                       <Link to="/admin">
                         <LayoutDashboard className="h-4 w-4" />
-                        <span>Panel Admin</span>
+                        <span>{tAuth.adminPanel}</span>
                       </Link>
                     </DropdownMenuItem>
                   )}
@@ -232,7 +243,7 @@ export function AuthenticatedHeader({
                     className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-background/80 hover:bg-background hover:text-foreground focus:bg-background focus:text-foreground"
                   >
                     <LogOut className="h-4 w-4" />
-                    <span>Cerrar Sesión</span>
+                    <span>{tAuth.signOut}</span>
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
@@ -244,13 +255,13 @@ export function AuthenticatedHeader({
         <div className="flex md:hidden items-center">
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Abrir menú">
+              <Button variant="ghost" size="icon" aria-label={tAuth.menu}>
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] bg-background p-0 flex flex-col">
               <SheetHeader className="p-5 border-b border-border">
-                <SheetTitle className="text-left text-base font-medium text-foreground">Menú</SheetTitle>
+                <SheetTitle className="text-left text-base font-medium text-foreground">{tAuth.menu}</SheetTitle>
               </SheetHeader>
               
               {/* Navigation Links - Clean list */}
@@ -288,7 +299,7 @@ export function AuthenticatedHeader({
                     )}
                   >
                     <Shield className="h-4 w-4" />
-                    Admin
+                    {t.navigation.admin}
                   </Link>
                 )}
               </nav>
@@ -308,7 +319,7 @@ export function AuthenticatedHeader({
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate group-hover:text-foreground/80 transition-colors">
-                      {profile?.name || 'Usuario'}
+                      {profile?.name || tAuth.user}
                     </p>
                     {profile?.username && (
                       <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>
@@ -322,7 +333,7 @@ export function AuthenticatedHeader({
                       onSignOut();
                     }}
                     className="p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
-                    aria-label="Cerrar sesión"
+                    aria-label={tAuth.signOut}
                   >
                     <LogOut className="h-5 w-5" />
                   </button>
