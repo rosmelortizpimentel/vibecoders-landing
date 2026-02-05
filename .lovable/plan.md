@@ -1,139 +1,189 @@
 
 
-## Plan: Rediseño Premium del User Menu y Header Glassmorphism
+## Plan: Rediseño Premium del Header con Separadores y Responsividad
 
-### Resumen de Cambios
+### Objetivo
 
-Se transformará el menú desplegable del avatar a un estilo "Enterprise/SaaS" (tipo Vercel/Linear) y se añadirá el efecto de vidrio esmerilado al header para todas las páginas autenticadas.
+Transformar el header en un componente "SaaS Premium" estilo Vercel/Linear con:
+- Separadores verticales sutiles en desktop
+- Navegación con botones ghost
+- Header limpio en móvil (solo logo + hamburguesa + avatar)
 
 ---
 
-### Cambios en `AuthenticatedHeader.tsx`
-
-#### 1. Header con Glassmorphism
-
-Modificar la etiqueta `<header>` actual:
+### Estructura Visual en Desktop
 
 ```text
-Actual:
-  className="sticky top-0 z-50 border-b border-gray-100 bg-white"
-
-Nuevo:
-  className="sticky top-0 z-50 border-b border-gray-100/50 bg-white/80 backdrop-blur-md"
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  [Logo]  │  [Mi Perfil] [Startups] [Herramientas] [Build Log]  │  [Avatar] │
+│          │                                                      │           │
+│   ↑      │                    ↑                                 │     ↑     │
+│ Separador 1              Botones Ghost                     Separador 2      │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Esto crea el efecto de vidrio esmerilado donde el contenido "pasa por debajo" al hacer scroll.
-
----
-
-#### 2. Estructura del Dropdown Premium (Desktop)
+### Estructura Visual en Móvil
 
 ```text
-+------------------------------------------+
-|  [Avatar 32px]  Nombre Completo          |  <- Cabecera de identidad
-|                 @username (gris, truncado)|     (no clicable)
-+------------------------------------------+
-|  [Separator]                             |
-+------------------------------------------+
-|  [ExternalLink]  Ver Perfil Público      |  <- Items con más padding
-+------------------------------------------+
-|  [Separator]                             |
-+------------------------------------------+
-|  [LogOut]        Cerrar Sesión           |  <- Footer separado
-+------------------------------------------+
+┌──────────────────────────────────────┐
+│  [Logo]           [Hamburguesa]      │
+└──────────────────────────────────────┘
 ```
-
-#### 3. Especificaciones del Dropdown
-
-| Propiedad | Valor Actual | Valor Nuevo |
-|-----------|--------------|-------------|
-| Ancho | `w-48` | `w-64` |
-| Sombra | `shadow-lg` | `shadow-xl` |
-| Borde | `border-gray-200` | `border border-gray-100` |
-| Offset | default | `mt-2` (sideOffset=8) |
-| Padding items | `py-1.5` | `py-2.5` |
-| Hover items | `hover:bg-[#3D5AFE]` | `hover:bg-gray-100` |
 
 ---
 
-#### 4. Nueva Cabecera de Identidad
+### Cambios Técnicos en `AuthenticatedHeader.tsx`
 
-Se añadirá un bloque no interactivo al inicio del dropdown:
+#### 1. Contenedor Principal (Sin cambios mayores)
+
+El header ya tiene las clases correctas:
+```tsx
+className="sticky top-0 z-50 border-b border-gray-100/50 bg-white/80 backdrop-blur-md"
+```
+
+Mantener `h-16` como altura fija.
+
+---
+
+#### 2. Nueva Estructura Desktop con Separadores
+
+Reemplazar el layout actual por tres zonas con separadores:
 
 ```tsx
-{/* Identity Header - No clicable */}
-<div className="px-3 py-3 flex items-center gap-3">
-  <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
-    <AvatarImage src={profile?.avatar_url || ''} />
-    <AvatarFallback>...</AvatarFallback>
-  </Avatar>
-  <div className="flex flex-col min-w-0">
-    <span className="text-sm font-semibold text-gray-900 truncate">
-      {profile?.name || 'Usuario'}
-    </span>
-    <span className="text-xs text-gray-500 truncate">
-      {profile?.username ? `@${profile.username}` : 'Sin username'}
-    </span>
+{/* Desktop Layout - hidden on mobile */}
+<div className="hidden md:flex items-center flex-1">
+  
+  {/* Separador 1 - después del logo */}
+  <div className="h-6 w-px bg-border/60 mx-4" />
+  
+  {/* Navegación Central con Botones Ghost */}
+  <nav className="flex items-center gap-1">
+    {navLinks.map((link) => (
+      <Button variant="ghost" size="sm" asChild>
+        <Link to={link.path}>
+          <Icon /> {link.label}
+        </Link>
+      </Button>
+    ))}
+  </nav>
+  
+  {/* Spacer para empujar la zona derecha */}
+  <div className="flex-1" />
+  
+  {/* Separador 2 - antes del avatar */}
+  <div className="h-6 w-px bg-border/60 mx-4" />
+  
+  {/* Zona Derecha: Admin + Save Status + Avatar */}
+  <div className="flex items-center gap-2">
+    {/* ... admin link, save status, user menu ... */}
   </div>
 </div>
-<DropdownMenuSeparator />
 ```
 
 ---
 
-#### 5. Items del Cuerpo con Iconos Alineados
+#### 3. Estilo de Botones Ghost para Navegación
 
+Cambiar de `<Link>` con clases manuales a `<Button variant="ghost">`:
+
+| Antes | Después |
+|-------|---------|
+| `className="flex items-center gap-1.5 text-sm..."` | `<Button variant="ghost" size="sm" asChild>` |
+| Hover manual con Tailwind | Hover automático del componente Button |
+| Sin borde redondeado visible | Rounded automático del Button |
+
+Estilo del estado activo:
 ```tsx
-<DropdownMenuItem className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-  <ExternalLink className="h-4 w-4 text-gray-400" />
-  <span>Ver Perfil Público</span>
-</DropdownMenuItem>
-```
-
----
-
-#### 6. Footer con Separador Visual
-
-```tsx
-<DropdownMenuSeparator className="my-1" />
-<DropdownMenuItem 
-  onClick={onSignOut}
-  className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+<Button 
+  variant="ghost" 
+  size="sm"
+  className={cn(
+    "gap-1.5",
+    isActive(link.path) && "bg-gray-100 text-[#3D5AFE] font-semibold"
+  )}
 >
-  <LogOut className="h-4 w-4 text-gray-400" />
-  <span>Cerrar Sesión</span>
-</DropdownMenuItem>
 ```
 
 ---
 
-### Compatibilidad Móvil
+#### 4. Layout Móvil Limpio
 
-El Sheet móvil ya tiene una sección de usuario en el footer que muestra avatar, nombre y username - no requiere cambios ya que el diseño premium solo aplica al dropdown de desktop.
+Simplificar para mostrar solo:
+- Logo (izquierda)
+- Hamburguesa (derecha)
 
-El efecto `backdrop-blur-md` es compatible con todos los navegadores móviles modernos y se degradará suavemente a un fondo sólido en navegadores antiguos.
+```tsx
+{/* Mobile Layout - shown only on mobile */}
+<div className="flex md:hidden items-center gap-2">
+  <Sheet>
+    <SheetTrigger asChild>
+      <Button variant="ghost" size="icon">
+        <Menu className="h-5 w-5" />
+      </Button>
+    </SheetTrigger>
+    {/* ... Sheet content igual ... */}
+  </Sheet>
+</div>
+```
+
+**Elementos a ocultar en móvil (con `hidden md:flex`):**
+- Navegación central (textos)
+- Separadores verticales
+- Admin link inline
+- Save status inline
+- User dropdown con ChevronDown
+
+**Elementos a mostrar en móvil:**
+- Logo (siempre visible)
+- Botón hamburguesa (abre Sheet con navegación completa)
 
 ---
 
-### Archivos a Modificar
+#### 5. Sheet Móvil (Mantener igual)
 
-| Archivo | Cambio |
-|---------|--------|
-| `src/components/AuthenticatedHeader.tsx` | Header glassmorphism + Dropdown premium |
+El Sheet actual ya está bien diseñado con:
+- Header con título "Menú"
+- Links de navegación con iconos
+- Footer con avatar y logout
+
+Solo asegurar que el avatar NO aparezca duplicado en el header móvil.
 
 ---
 
-### Resultado Visual
+### Especificaciones de los Separadores
 
-**Header:**
-- Fondo semi-transparente (80% opacidad)
-- Blur suave que muestra el contenido debajo al hacer scroll
-- Efecto estilo Apple/Stripe
+```tsx
+// Separador vertical sutil
+<div className="h-6 w-px bg-border/60" />
+```
 
-**Dropdown:**
-- Más ancho y con mejor espaciado
-- Cabecera con identidad del usuario (avatar + nombre + @username)
-- Items con iconos alineados y mayor área de clic
-- Sombra más sofisticada
-- Hover sutil en gris (no azul agresivo)
+| Propiedad | Valor |
+|-----------|-------|
+| Alto | `h-6` (24px) |
+| Ancho | `w-px` (1px) |
+| Color | `bg-border/60` (gris muy sutil) |
+| Margin | `mx-4` (16px a cada lado) |
+| Visibilidad | `hidden md:block` |
+
+---
+
+### Archivo a Modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/components/AuthenticatedHeader.tsx` | Reestructurar layout, añadir separadores, convertir links a Button ghost, limpiar móvil |
+
+---
+
+### Resultado Final
+
+**Desktop:**
+- Logo | Separador | [Mi Perfil] [Startups] [Herramientas] [Build Log] | Separador | [Admin?] [Avatar ▼]
+- Botones ghost con hover sutil
+- Separadores visuales que organizan las zonas
+
+**Móvil:**
+- Logo | [☰ Hamburguesa]
+- Sin textos apretados
+- Navegación completa dentro del Sheet lateral
 
