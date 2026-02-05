@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import canadaFlag from '@/assets/canada-flag.png';
 
@@ -31,7 +32,9 @@ const Footer = () => {
         {/* Right: Built info */}
         <div className="flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-1.5">
           <p className="flex items-center gap-1.5 text-white/70">
-            {t.footer.builtAt} {t.footer.inCanada}{' '}
+            Construido con{' '}
+            <Heart className="h-3.5 w-3.5 text-pink-500 fill-pink-500" />
+            {' '}en{' '}
             <img 
               src={canadaFlag} 
               alt="Bandera de Canadá" 
@@ -39,7 +42,7 @@ const Footer = () => {
             />
           </p>
           <p className="flex items-center gap-1.5 text-white/70">
-            {t.footer.by}{' '}
+            por{' '}
             <a
               href="https://www.vibecoders.la/@rosmelortiz"
               target="_blank"
