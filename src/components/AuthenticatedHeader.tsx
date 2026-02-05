@@ -16,7 +16,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
@@ -80,7 +80,7 @@ export function AuthenticatedHeader({
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white">
+    <header className="sticky top-0 z-50 border-b border-gray-100/50 bg-white/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo - Left */}
         <Link to="/" className="flex items-center shrink-0">
@@ -170,28 +170,62 @@ export function AuthenticatedHeader({
                   <ChevronDown className="h-4 w-4 text-gray-400" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-white border-gray-200 p-1 shadow-lg">
-                {publicProfileUrl && (
-                  <DropdownMenuItem asChild className="text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white">
-                    <a 
-                      href={publicProfileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      <span>Ver Perfil Público</span>
-                    </a>
+              <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-white border border-gray-100 p-0 shadow-xl">
+                {/* Identity Header - Non-clickable */}
+                <div className="px-3 py-3 flex items-center gap-3">
+                  <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
+                    <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
+                    <AvatarFallback className="text-sm bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
+                      {profile?.name?.charAt(0) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-semibold text-gray-900 truncate">
+                      {profile?.name || 'Usuario'}
+                    </span>
+                    <span className="text-xs text-gray-500 truncate">
+                      {profile?.username ? `@${profile.username}` : 'Sin username'}
+                    </span>
+                  </div>
+                </div>
+                <DropdownMenuSeparator className="my-0" />
+                
+                {/* Menu Items */}
+                <div className="py-1">
+                  {publicProfileUrl && (
+                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900">
+                      <a 
+                        href={publicProfileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4 text-gray-400" />
+                        <span>Ver Perfil Público</span>
+                      </a>
+                    </DropdownMenuItem>
+                  )}
+                  
+                  {isAdmin && (
+                    <DropdownMenuItem asChild className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900">
+                      <Link to="/admin">
+                        <LayoutDashboard className="h-4 w-4 text-gray-400" />
+                        <span>Panel Admin</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                </div>
+                
+                {/* Footer - Sign Out */}
+                <DropdownMenuSeparator className="my-0" />
+                <div className="py-1">
+                  <DropdownMenuItem 
+                    onClick={onSignOut}
+                    className="flex items-center gap-2 py-2.5 px-3 cursor-pointer text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus:bg-gray-100 focus:text-gray-900"
+                  >
+                    <LogOut className="h-4 w-4 text-gray-400" />
+                    <span>Cerrar Sesión</span>
                   </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator className="bg-gray-200" />
-                <DropdownMenuItem 
-                  onClick={onSignOut}
-                  className="flex items-center gap-2 text-gray-700 hover:bg-gray-100 focus:bg-[#3D5AFE] focus:text-white cursor-pointer"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
