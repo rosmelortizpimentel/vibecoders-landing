@@ -112,23 +112,14 @@
      await onSubmit(formData);
    };
  
-   // Preview referral URL
-   const previewUrl = (() => {
-     const code = formData.default_referral_code || '{code}';
-     if (formData.referral_url) {
-       return formData.referral_url.replace('{code}', code);
-     }
-     if (formData.referral_param && formData.website_url) {
-       try {
-         const url = new URL(formData.website_url);
-         url.searchParams.set(formData.referral_param, code);
-         return url.toString();
-       } catch {
-         return formData.website_url || '';
-       }
-     }
-     return formData.website_url || '';
-   })();
+  // Preview referral URL - simplified logic
+  const previewUrl = (() => {
+    const code = formData.default_referral_code || '{code}';
+    if (formData.referral_url) {
+      return formData.referral_url.replace('{code}', code);
+    }
+    return formData.website_url || '';
+  })();
  
    return (
      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -264,41 +255,17 @@
                />
              </div>
  
-             {/* Referral Param */}
-             <div className="grid grid-cols-2 gap-3">
-               <div className="space-y-1">
-                 <div className="flex items-center gap-1">
-                   <Label htmlFor="referral_param" className="text-xs text-[#1c1c1c]">Param Name</Label>
-                   <TooltipProvider>
-                     <Tooltip>
-                       <TooltipTrigger asChild>
-                         <Info className="h-3 w-3 text-gray-400 cursor-help" />
-                       </TooltipTrigger>
-                       <TooltipContent className="bg-[#1c1c1c] text-white">
-                         <p className="text-xs">Alternativa al template. Ej: referral_code</p>
-                       </TooltipContent>
-                     </Tooltip>
-                   </TooltipProvider>
-                 </div>
-                 <input
-                   id="referral_param"
-                   className={inputClassName}
-                   value={formData.referral_param || ''}
-                   onChange={(e) => handleChange('referral_param', e.target.value || null)}
-                   placeholder="referral_code"
-                 />
-               </div>
-               <div className="space-y-1">
-                 <Label htmlFor="default_referral_code" className="text-xs text-[#1c1c1c]">Código Default</Label>
-                 <input
-                   id="default_referral_code"
-                   className={inputClassName}
-                   value={formData.default_referral_code || ''}
-                   onChange={(e) => handleChange('default_referral_code', e.target.value || null)}
-                   placeholder="KFET6W5"
-                 />
-               </div>
-             </div>
+            {/* Default Referral Code */}
+            <div className="space-y-1">
+              <Label htmlFor="default_referral_code" className="text-xs text-[#1c1c1c]">Código Default</Label>
+              <input
+                id="default_referral_code"
+                className={inputClassName}
+                value={formData.default_referral_code || ''}
+                onChange={(e) => handleChange('default_referral_code', e.target.value || null)}
+                placeholder="KFET6W5"
+              />
+            </div>
  
              {/* Preview */}
              {previewUrl && (

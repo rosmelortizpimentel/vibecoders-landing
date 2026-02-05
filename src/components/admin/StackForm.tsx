@@ -229,27 +229,15 @@ export function StackForm({ initialData, onSubmit, onCancel, isLoading }: StackF
                />
              </div>
  
-             <div className="grid grid-cols-2 gap-2">
-               <div className="space-y-1">
-                 <Label htmlFor="referral_param" className="text-[10px] text-gray-500">Param Name</Label>
-                 <input
-                   id="referral_param"
-                   className={inputClassName}
-                   value={formData.referral_param || ''}
-                   onChange={(e) => handleChange('referral_param', e.target.value || null)}
-                   placeholder="ref"
-                 />
-               </div>
-               <div className="space-y-1">
-                 <Label htmlFor="default_referral_code" className="text-[10px] text-gray-500">Código Default</Label>
-                 <input
-                   id="default_referral_code"
-                   className={inputClassName}
-                   value={formData.default_referral_code || ''}
-                   onChange={(e) => handleChange('default_referral_code', e.target.value || null)}
-                   placeholder="MYCODE"
-                 />
-               </div>
+             <div className="space-y-1">
+               <Label htmlFor="default_referral_code" className="text-[10px] text-gray-500">Código Default</Label>
+               <input
+                 id="default_referral_code"
+                 className={inputClassName}
+                 value={formData.default_referral_code || ''}
+                 onChange={(e) => handleChange('default_referral_code', e.target.value || null)}
+                 placeholder="MYCODE"
+               />
              </div>
            </div>
  
