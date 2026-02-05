@@ -180,7 +180,8 @@ function PublicAppCard({
           appId={app.id} 
           isOwner={isOwner}
           ownerLikeCount={ownerLikeCount}
-         ownerClickCount={ownerClickCount}
+          ownerClickCount={ownerClickCount}
+          appName={app.name || undefined}
         />
       </div>
     </a>

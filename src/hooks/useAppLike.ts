@@ -1,4 +1,4 @@
- import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
  import { supabase } from '@/integrations/supabase/client';
  import { useAuth } from './useAuth';
  
@@ -7,6 +7,7 @@
    const [isLiked, setIsLiked] = useState(false);
    const [likeCount, setLikeCount] = useState(0);
    const [isLoading, setIsLoading] = useState(false);
+  const pendingLikeExecuted = useRef(false);
  
    // Check if user has liked this app
    const checkLikeStatus = useCallback(async () => {
@@ -47,6 +48,21 @@
      fetchLikeCount();
    }, [checkLikeStatus, fetchLikeCount]);
  
+  // Handle pending like after login
+  useEffect(() => {
+    if (!user || !appId || pendingLikeExecuted.current) return;
+    
+    const pendingLike = localStorage.getItem('pendingLike');
+    if (pendingLike === appId && !isLiked) {
+      pendingLikeExecuted.current = true;
+      localStorage.removeItem('pendingLike');
+      // Execute like automatically after a short delay
+      setTimeout(() => {
+        toggleLike();
+      }, 100);
+    }
+  }, [user, appId, isLiked]);
+
    const toggleLike = async () => {
      if (!user || isLoading) return;
  
