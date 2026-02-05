@@ -31,9 +31,7 @@ const Footer = () => {
         {/* Right: Built info */}
         <div className="flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-1.5">
           <p className="flex items-center gap-1.5 text-white/70">
-            {t.footer.builtAt}{' '}
-            <span className="font-semibold text-white">{t.footer.temperature}</span>{' '}
-            {t.footer.inCanada}{' '}
+            {t.footer.builtAt} {t.footer.inCanada}{' '}
             <img 
               src={canadaFlag} 
               alt="Bandera de Canadá" 
@@ -43,10 +41,10 @@ const Footer = () => {
           <p className="flex items-center gap-1.5 text-white/70">
             {t.footer.by}{' '}
             <a
-              href={t.footer.linkedIn}
+              href="https://www.vibecoders.la/@rosmelortiz"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium text-white underline-offset-4 transition-colors hover:text-white/80 hover:underline"
+              className="font-medium text-white underline underline-offset-4 transition-colors hover:text-white/80"
             >
               {t.footer.authorName}
             </a>
