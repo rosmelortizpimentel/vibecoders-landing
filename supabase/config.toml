@@ -8,3 +8,18 @@ verify_jwt = false
 
 [functions.og-profile-meta]
 verify_jwt = false
+ 
+ [functions.get-follow-list]
+ verify_jwt = false
+ 
+ [functions.track-profile-view]
+ verify_jwt = false
+ 
+ [functions.track-app-click]
+ verify_jwt = false
+ 
+ [functions.toggle-app-like]
+ verify_jwt = false
+ 
+ [functions.get-profile-stats]
+ verify_jwt = false
