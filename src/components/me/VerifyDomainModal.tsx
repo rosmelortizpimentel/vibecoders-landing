@@ -1,7 +1,7 @@
  import { useState } from 'react';
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
  import { Button } from '@/components/ui/button';
- import { Shield, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
+ import { Code, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
  import { toast } from 'sonner';
  
  interface VerifyDomainModalProps {
@@ -86,45 +86,36 @@
  
    return (
      <Dialog open={open} onOpenChange={handleOpenChange}>
-       <DialogContent className="sm:max-w-lg bg-white">
+       <DialogContent className="w-[95vw] max-w-lg bg-white p-4 sm:p-6">
          <DialogHeader>
            <DialogTitle className="flex items-center gap-2 text-[#1c1c1c]">
-             <Shield className="h-5 w-5 text-[#3D5AFE]" />
+             <Code className="h-5 w-5 text-[#3D5AFE]" />
              Verifica que {appName || 'tu app'} es tuya
            </DialogTitle>
-           <DialogDescription className="text-gray-600">
-             Añade la siguiente etiqueta meta en la sección <code className="bg-gray-100 px-1 rounded">&lt;head&gt;</code> de tu página de inicio:
+           <DialogDescription className="text-gray-600 text-sm sm:text-base">
+             Añade la siguiente etiqueta en la sección <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs sm:text-sm">&lt;head&gt;</code> de tu página de inicio.
            </DialogDescription>
          </DialogHeader>
  
-         <div className="space-y-4 py-4">
+         <div className="space-y-4 py-2 sm:py-4">
+           {/* Label */}
+           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Código a insertar</p>
+ 
            {/* Code block */}
-           <div className="relative">
-             <pre className="bg-gray-100 p-4 pr-12 rounded-lg overflow-x-auto text-sm text-[#1c1c1c] font-mono">
+           <div className="relative bg-[#1c1c1c] rounded-lg overflow-hidden">
+             <pre className="p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm text-white font-mono whitespace-pre-wrap break-all">
                {metaTag}
              </pre>
-             <Button
-               variant="ghost"
-               size="icon"
-               className="absolute top-2 right-2 h-8 w-8 text-gray-500 hover:text-[#3D5AFE] hover:bg-gray-200"
-               onClick={handleCopy}
-             >
-               {copied ? (
-                 <Check className="h-4 w-4 text-green-600" />
-               ) : (
-                 <Copy className="h-4 w-4" />
-               )}
-             </Button>
            </div>
  
            {/* URL to verify */}
-           <p className="text-sm text-gray-600">
+           <p className="text-xs sm:text-sm text-gray-600">
              Verificaremos: <span className="font-medium text-[#1c1c1c]">{hostname}</span>
            </p>
  
            {/* Error message */}
            {state === 'error' && errorMessage && (
-             <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+             <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-700">
                <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
                <div>
                  <p>{errorMessage}</p>
@@ -134,19 +125,39 @@
  
            {/* Success state */}
            {state === 'success' && (
-             <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+             <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-xs sm:text-sm text-green-700">
                <Check className="h-5 w-5" />
                ¡Verificación exitosa!
              </div>
            )}
          </div>
  
-         {/* Action button */}
-         <div className="flex justify-end">
+         {/* Action buttons */}
+         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+           {/* Copy Button */}
+           <Button
+             variant="outline"
+             onClick={handleCopy}
+             className="flex-1 border-gray-300 text-[#1c1c1c] hover:bg-gray-100"
+           >
+             {copied ? (
+               <>
+                 <Check className="h-4 w-4 mr-2 text-green-600" />
+                 ¡Copiado!
+               </>
+             ) : (
+               <>
+                 <Copy className="h-4 w-4 mr-2" />
+                 Copiar Código
+               </>
+             )}
+           </Button>
+ 
+           {/* Verify Button */}
            <Button
              onClick={handleVerify}
              disabled={state === 'verifying' || state === 'success'}
-             className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white min-w-[160px]"
+             className="flex-1 bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white"
            >
              {state === 'verifying' ? (
                <>

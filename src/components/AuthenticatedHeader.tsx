@@ -166,17 +166,17 @@ export function AuthenticatedHeader({
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-foreground hover:text-background transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20">
+                 <button className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 group">
                   <Avatar className="h-8 w-8 border border-border">
                     <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
                     <AvatarFallback className="text-xs bg-primary/10 text-primary font-medium">
                       {profile?.name?.charAt(0) || '?'}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium text-foreground">
+                   <span className="text-sm font-medium text-foreground group-hover:text-white">
                     {displayName}
                   </span>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                   <ChevronDown className="h-4 w-4 text-muted-foreground group-hover:text-white" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" sideOffset={8} className="w-64 bg-foreground border border-border p-0 shadow-xl">
