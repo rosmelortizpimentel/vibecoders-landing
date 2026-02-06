@@ -16,7 +16,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
@@ -74,9 +74,10 @@ export function AuthenticatedHeader({
   const isActive = (path: string) => location.pathname === path;
 
   // Build navigation links dynamically based on waitlist status
-  const navLinks = [
+  const navLinks: { path: string; label: string; icon: typeof User; premium: boolean; isNew?: boolean }[] = [
     { path: '/me', label: t.navigation.myProfile, icon: User, premium: false },
     { path: '/startups', label: t.navigation.startups, icon: Rocket, premium: false },
+    { path: '/beta-squads', label: t.navigation.betaSquads, icon: FlaskConical, premium: false, isNew: true },
     { path: '/tools', label: t.navigation.tools, icon: Wrench, premium: false },
     { path: '/hablemos', label: t.navigation.feedback, icon: MessageCircle, premium: false },
     ...(isInWaitlist ? [{ path: '/buildlog', label: t.navigation.buildLog, icon: Crown, premium: true }] : []),
@@ -124,6 +125,11 @@ export function AuthenticatedHeader({
                       link.premium && "text-amber-400"
                     )} />
                     {link.label}
+                    {link.isNew && (
+                      <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold bg-primary text-primary-foreground rounded-full">
+                        New
+                      </span>
+                    )}
                   </Link>
                 </Button>
               );
@@ -267,7 +273,7 @@ export function AuthenticatedHeader({
               
               {/* Navigation Links - Clean list */}
               <nav className="flex flex-col px-5 py-6 flex-1">
-                {navLinks.map((link) => {
+              {navLinks.map((link) => {
                   const Icon = link.icon;
                   return (
                     <Link
@@ -283,6 +289,11 @@ export function AuthenticatedHeader({
                     >
                       <Icon className="h-4 w-4" />
                       {link.label}
+                      {link.isNew && (
+                        <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold bg-primary text-primary-foreground rounded-full">
+                          New
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

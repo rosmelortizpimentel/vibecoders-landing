@@ -19,6 +19,7 @@ import Tools from "./pages/Tools";
 import Feedback from "./pages/Feedback";
 import AppDetail from "./pages/AppDetail";
 import Post from "./pages/Post";
+import BetaSquads from "./pages/BetaSquads";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { AuthenticatedLayout } from "./layouts/AuthenticatedLayout";
 
@@ -48,6 +49,7 @@ const App = () => (
           {/* Authenticated routes with shared layout (persistent header/footer) */}
           <Route element={<AuthenticatedLayout />}>
             <Route path="/startups" element={<Projects />} />
+            <Route path="/beta-squads" element={<BetaSquads />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/buildlog" element={<BuildLog />} />
             <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
