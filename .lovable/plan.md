@@ -1,280 +1,154 @@
 
-# Plan: Sistema Completo de Beta Squads - Flujo de Unirse, Feedback con Imagenes y Workflow de Bugs
+# Plan: Rediseno Compacto de Pagina de Detalle de App (/app/:id)
 
-## Resumen Ejecutivo
+## Resumen de Cambios Solicitados
 
-Este plan implementa un sistema completo de gestion de Beta Squads con:
-1. Popup de confirmacion para unirse (en el feed)
-2. Vista de estado del usuario (pendiente/aprobado/rechazado) en lugar del boton "Unirse"
-3. Nuevo sistema de feedback con soporte para hasta 10 imagenes por reporte
-4. Workflow de bugs: Owner marca para revision, Tester puede confirmar solucion o devolver
-5. Vista de feedback para testers (solo lectura de sus propios reportes)
-6. Menu de tres puntos para acciones multiples
-7. Detalle compacto de app con cabecera resumida
-8. Filtros por estado en listas de testers
+1. **Header personalizado**: Reemplazar logo de Vibecoders por logo de la app, mostrar titulo y tagline (truncado con ellipsis en movil)
+2. **Card resumen compacto**: Diseño similar a la tercera imagen de referencia
+3. **Seccion de autor mejorada**: Sin texto "por", con contadores de seguidores/siguiendo clickeables para ver popup
+4. **Panel de tester integrado**: Mostrar "Bienvenido al Squad" directamente si es tester aceptado
+5. **Formulario de feedback simplificado**: Quitar "Puntuacion general", lista de reportes con efecto flip
+6. **Visualizador de imagenes**: Carousel en popup para ver imagenes adjuntas
+7. **100% responsive**
 
 ---
 
-## 1. Cambios en Base de Datos
+## Cambios Detallados
 
-### 1.1 Modificar tabla `beta_feedback`
+### 1. Header Personalizado de la App
 
-Agregar nuevas columnas para soportar el workflow de bugs:
+**Archivo**: `src/pages/AppDetail.tsx` + nuevo `AppDetailHeader.tsx`
 
-```sql
-ALTER TABLE beta_feedback ADD COLUMN status TEXT NOT NULL DEFAULT 'open';
--- Valores posibles: 'open', 'in_review', 'resolved', 'closed'
+Cambios en el header:
+- Reemplazar logo de Vibecoders por `app.logo_url`
+- Mostrar titulo de la app junto al logo
+- Tagline debajo en texto pequeno
+- En movil: texto aun mas pequeno, truncado con ellipsis (no wrap)
+- El resto del header (menu usuario) permanece igual
 
-ALTER TABLE beta_feedback ADD COLUMN resolved_by_owner BOOLEAN DEFAULT FALSE;
-ALTER TABLE beta_feedback ADD COLUMN resolved_at TIMESTAMP WITH TIME ZONE;
-ALTER TABLE beta_feedback ADD COLUMN tester_response TEXT; -- 'confirmed' | 'reopened'
-ALTER TABLE beta_feedback ADD COLUMN tester_response_at TIMESTAMP WITH TIME ZONE;
+```
+Desktop:
+[Logo App 40x40] Nombre de la App    [Menu Usuario]
+                  Tagline corta...
+
+Mobile:
+[Logo App 32x32] Nombre App...  [Menu]
+                 Tagline...
 ```
 
-### 1.2 Crear tabla `beta_feedback_attachments`
+### 2. Card Resumen Compacto (Nuevo Componente)
 
-Nueva tabla para imagenes adjuntas a feedback:
+**Archivo nuevo**: `src/components/beta/AppSummaryCard.tsx`
 
-```sql
-CREATE TABLE beta_feedback_attachments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  feedback_id UUID NOT NULL REFERENCES beta_feedback(id) ON DELETE CASCADE,
-  file_url TEXT NOT NULL,
-  file_name TEXT NOT NULL,
-  file_type TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
+Diseño tipo la imagen de referencia:
+- Logo de la app (circular, 56px)
+- Nombre + icono verificado + Badge de status (ej: "Building...")
+- Tagline debajo
+- Iconos de tech stack en fila
+- Icono de corazon (likes) a la derecha
+- Boton "Ver app" (icono ExternalLink) esquina superior derecha
 
--- RLS Policies
-ALTER TABLE beta_feedback_attachments ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Testers can insert own attachments" ON beta_feedback_attachments
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM beta_feedback
-      WHERE beta_feedback.id = beta_feedback_attachments.feedback_id
-      AND beta_feedback.tester_id = auth.uid()
-    )
-  );
-
-CREATE POLICY "Owners and testers can view attachments" ON beta_feedback_attachments
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM beta_feedback bf
-      JOIN apps ON apps.id = bf.app_id
-      WHERE bf.id = beta_feedback_attachments.feedback_id
-      AND (bf.tester_id = auth.uid() OR apps.user_id = auth.uid())
-    )
-  );
+```
++--------------------------------------------------+
+| [Logo]  Nombre App [✓] [• Building...]     [🔗]  |
+|         Tagline completo                         |
+|         [Lovable] [Supabase]                 ♡   |
++--------------------------------------------------+
 ```
 
----
+### 3. Seccion de Autor Mejorada
 
-## 2. Componente Feed: Popup de Confirmacion para Unirse
-
-### 2.1 Modificar `BetaSquadFeedCard.tsx`
+**Archivo**: Integrado en `AppDetail.tsx`
 
 Cambios:
-- Agregar estado `userTesterStatus` al hook `useBetaSquadsPublic`
-- Mostrar AlertDialog de confirmacion antes de enviar solicitud
-- Reemplazar boton "Unirme" por badge de estado si ya hay una solicitud
+- Eliminar texto "por"
+- Mostrar avatar + nombre + tagline truncado
+- Debajo: "X seguidores · Y siguiendo" clickeable
+- Al hacer click abre `FollowListDialog` adaptado
+
+Necesito crear hook para obtener stats del autor: `useOwnerStats.ts`
 
 ```
-Estado del boton segun user_tester_status:
-- null → "Unirme al Squad" (abre popup confirmacion)
-- pending → Badge "Solicitud pendiente" (deshabilitado)
-- accepted → "Acceder a mision" (lleva a /app/:id)
-- rejected → No mostrar boton o "No aceptado"
++----------------------------------------+
+| [Avatar]  Rosmel Ortiz                 |
+|           SaaS Builder & Tech Lead...  |
+|           12 seguidores · 5 siguiendo  |
++----------------------------------------+
 ```
 
-### 2.2 Crear `JoinConfirmDialog.tsx`
+### 4. Panel Bienvenido al Squad (Simplificado)
 
-Nuevo componente Dialog que muestra:
-- Nombre de la app y logo
-- Texto: "¿Confirmas que quieres unirte al Beta Squad?"
-- Instrucciones resumidas (si existen)
-- Botones: "Cancelar" | "Confirmar y enviar solicitud"
+**Archivo modificado**: `src/components/beta/BetaTesterPanel.tsx`
 
----
+Cambios:
+- Mostrar directamente sin necesidad de click en "Acceder a mision"
+- Quitar tabs, integrar todo en una sola vista
+- Instrucciones arriba, boton "Ir a probar la app" + copiar link
+- Lista de reportes debajo (sin tabs)
+- Boton "Reportar hallazgo" que hace flip del card
 
-## 3. Hook Actualizado: Estado del Usuario por App
+### 5. Lista de Reportes con Flip Animation
 
-### 3.1 Modificar `useBetaSquadsPublic.ts`
+**Archivo nuevo**: `src/components/beta/TesterReportCard.tsx`
 
-Agregar campo `user_tester_status` a cada app:
-- Hacer query adicional a `beta_testers` para el usuario actual
-- Agrupar por `app_id` para obtener status de cada app
+Componente con efecto flip:
+- Estado `showForm`: false = lista de reportes, true = formulario
+- Animacion CSS 3D flip (rotate Y)
+- Al enviar, flip back a la lista
 
-```typescript
-interface BetaSquadApp {
-  // ... campos existentes
-  user_tester_status: {
-    id: string;
-    status: 'pending' | 'accepted' | 'rejected';
-  } | null;
-}
+Estructura:
+```
+[Cara frontal - Lista]
++----------------------------------+
+| Mis reportes (3)                 |
+| +------------------------------+ |
+| | Bug · Abierto · 06 feb 14:30 | |
+| | Descripcion del bug...       | |
+| | [img1] [img2]                | |
+| +------------------------------+ |
+| ...mas reportes...               |
+|                                  |
+| [Reportar hallazgo]              |
++----------------------------------+
+
+[Cara trasera - Formulario]
++----------------------------------+
+| Reportar hallazgo                |
+| Tipo: [Select]                   |
+| Descripcion: [Textarea]          |
+| Imagenes: [Upload]               |
+| [Cancelar] [Enviar]              |
++----------------------------------+
 ```
 
----
+### 6. Formulario Sin Puntuacion
 
-## 4. Pagina de Detalle de App Compacta
+**Archivo modificado**: `src/components/beta/BetaFeedbackForm.tsx`
 
-### 4.1 Modificar `AppDetail.tsx`
+- Eliminar seccion de rating (estrellas)
+- Mantener: tipo, descripcion, imagenes
+- Agregar boton "Cancelar" para volver a la lista
 
-Cabecera compacta (todo en una fila):
-```
-[Logo 48x48] [Nombre + Tagline] [Badge Status] [Boton "Ver App"]
-```
+### 7. Visualizador de Imagenes Carousel
 
-Debajo (solo si beta_active y es tester aceptado):
-- Seccion de instrucciones de mision
-- Panel de feedback con historial
+**Archivo nuevo**: `src/components/beta/ImageCarouselDialog.tsx`
 
-### 4.2 Crear `AppDetailCompactHeader.tsx`
+Dialog con carousel para ver imagenes:
+- Click en thumbnail abre dialog
+- Carousel con flechas izq/der
+- Indicadores de posicion
+- Cerrar con X o click fuera
+- Responsive (pantalla completa en movil)
 
-Nuevo componente para la cabecera compacta:
-- Logo pequeno (48x48)
-- Nombre y tagline en linea
-- Badges de categoria/status
-- Boton CTA "Ver App" alineado a la derecha
+### 8. Dialog de Seguidores del Autor
 
----
+**Archivo nuevo**: `src/components/beta/AuthorFollowDialog.tsx`
 
-## 5. Sistema de Feedback con Imagenes
-
-### 5.1 Modificar `BetaFeedbackForm.tsx`
-
-Agregar:
-- Input para subir hasta 10 imagenes
-- Preview de imagenes seleccionadas con opcion de eliminar
-- Subir imagenes a bucket `feedback-attachments` antes de enviar
-- Enviar array de URLs al edge function
-
-### 5.2 Modificar Edge Function `submit-beta-feedback`
-
-Actualizar para:
-- Recibir array de `attachments: { url, name, type }[]`
-- Insertar en tabla `beta_feedback_attachments`
-- Limite maximo de 10 attachments
-
-### 5.3 Crear `BetaFeedbackImageUploader.tsx`
-
-Componente para:
-- Drag and drop de imagenes
-- Preview grid de imagenes
-- Boton para eliminar cada imagen
-- Indicador de progreso de subida
-- Limite visual (X/10 imagenes)
-
----
-
-## 6. Vista de Feedback para Testers (Solo Lectura)
-
-### 6.1 Crear `TesterFeedbackHistory.tsx`
-
-Lista de reportes enviados por el tester:
-- Fecha y hora de envio
-- Tipo (bug/ux/feature/other)
-- Contenido del reporte
-- Imagenes adjuntas (click para ampliar)
-- Estado del reporte (abierto/en revision/resuelto/cerrado)
-- Si esta "en revision": mostrar alerta para re-probar
-
-### 6.2 Crear hook `useTesterFeedback.ts`
-
-```typescript
-function useTesterFeedback(appId: string) {
-  // Query feedback del usuario actual para esta app
-  // Incluir attachments
-  // Ordenar por created_at DESC
-}
-```
-
----
-
-## 7. Vista de Feedback para Owner (Gestion Completa)
-
-### 7.1 Modificar `BetaManagement.tsx`
-
-Mejorar seccion de Feedback Inbox:
-- Filtros por estado: Todos | Abiertos | En revision | Resueltos
-- Cada item muestra: tester, tipo, preview contenido, fecha
-- Imagenes adjuntas en grid
-- Menu de 3 puntos con acciones
-
-### 7.2 Crear `FeedbackActionMenu.tsx`
-
-Menu desplegable (DropdownMenu) con:
-- "Marcar como util" (toggle)
-- "Marcar como resuelto" → pone status='in_review', espera confirmacion tester
-- "Cerrar reporte" → pone status='closed' directamente
-- "Eliminar" (con confirmacion)
-
----
-
-## 8. Workflow de Bugs (Ciclo Completo)
-
-### 8.1 Estados del Feedback
-
-```
-Flujo:
-1. Tester envia → status='open'
-2. Owner marca resuelto → status='in_review', resolved_by_owner=true
-3. Tester ve alerta "Pendiente de verificar"
-4. Tester responde:
-   a) "Confirmo solucionado" → status='closed', tester_response='confirmed'
-   b) "Sigue sin funcionar" → status='open', tester_response='reopened'
-5. Owner puede cerrar directamente → status='closed'
-```
-
-### 8.2 Crear `FeedbackStatusBadge.tsx`
-
-Badge con colores segun estado:
-- open: Azul "Abierto"
-- in_review: Amarillo "Pendiente verificar"
-- closed: Gris "Cerrado"
-
-### 8.3 Crear `TesterFeedbackResponseDialog.tsx`
-
-Dialog para que el tester responda cuando un bug esta "in_review":
-- Pregunta: "El problema ha sido solucionado?"
-- Botones: "Si, cerrar reporte" | "No, sigue ocurriendo"
-
----
-
-## 9. Filtros de Testers por Estado
-
-### 9.1 Modificar `BetaManagement.tsx`
-
-Agregar tabs o select para filtrar testers:
-- Todos
-- Pendientes (pending)
-- Aceptados (accepted)
-- Rechazados (rejected)
-
-Ordenamiento:
-1. Aceptados primero
-2. Luego pendientes
-3. Luego rechazados
-
----
-
-## 10. Responsividad Completa (Mobile-First)
-
-### 10.1 Principios de Diseno
-
-- Cards con flex-col en mobile, flex-row en desktop
-- Menu de 3 puntos en lugar de botones multiples
-- Dialogs a pantalla completa en mobile (Sheet)
-- Imagenes en grid responsive (2 cols mobile, 5 cols desktop)
-- Touch targets minimo 44x44px
-
-### 10.2 Componentes Afectados
-
-- `BetaSquadFeedCard.tsx`: Stack vertical en mobile
-- `AppDetail.tsx`: Sidebar debajo en mobile
-- `BetaManagement.tsx`: Tabs scrollables en mobile
-- `TesterFeedbackHistory.tsx`: Grid de imagenes responsive
+Similar a `FollowListDialog` pero adaptado:
+- Recibe `userId` del owner
+- Tabs: Seguidores | Siguiendo
+- Cada item con boton follow/unfollow
+- Reutiliza `FollowerCard`
 
 ---
 
@@ -282,122 +156,97 @@ Ordenamiento:
 
 | Archivo | Descripcion |
 |---------|-------------|
-| `src/components/beta/JoinConfirmDialog.tsx` | Popup confirmacion para unirse |
-| `src/components/beta/BetaFeedbackImageUploader.tsx` | Upload de imagenes |
-| `src/components/beta/TesterFeedbackHistory.tsx` | Historial de feedback del tester |
-| `src/components/beta/FeedbackActionMenu.tsx` | Menu 3 puntos para acciones |
-| `src/components/beta/FeedbackStatusBadge.tsx` | Badge de estado del feedback |
-| `src/components/beta/TesterFeedbackResponseDialog.tsx` | Dialog respuesta del tester |
-| `src/components/beta/AppDetailCompactHeader.tsx` | Cabecera compacta de app |
-| `src/hooks/useTesterFeedback.ts` | Hook para feedback del tester |
-
----
+| `src/components/beta/AppDetailHeader.tsx` | Header personalizado con logo de app |
+| `src/components/beta/AppSummaryCard.tsx` | Card resumen compacto de la app |
+| `src/components/beta/TesterReportCard.tsx` | Card con flip animation para reportes |
+| `src/components/beta/ImageCarouselDialog.tsx` | Dialog carousel para imagenes |
+| `src/components/beta/AuthorFollowDialog.tsx` | Dialog seguidores del autor |
 
 ## Archivos a Modificar
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/hooks/useBetaSquadsPublic.ts` | Agregar user_tester_status |
-| `src/hooks/useBetaSquad.ts` | Agregar updateFeedbackStatus, respondToResolution |
-| `src/components/beta/BetaSquadFeedCard.tsx` | Estado dinamico del boton, popup confirmacion |
-| `src/components/beta/BetaFeedbackForm.tsx` | Soporte para imagenes |
-| `src/components/beta/BetaTesterPanel.tsx` | Agregar historial de feedback |
-| `src/components/beta/BetaManagement.tsx` | Filtros, workflow completo, imagenes |
-| `src/pages/AppDetail.tsx` | Cabecera compacta, layout mejorado |
-| `supabase/functions/submit-beta-feedback/index.ts` | Soporte attachments |
+| `src/pages/AppDetail.tsx` | Layout completamente rediseñado, usar nuevos componentes |
+| `src/components/beta/BetaTesterPanel.tsx` | Simplificar, quitar tabs, integrar flip card |
+| `src/components/beta/BetaFeedbackForm.tsx` | Quitar rating, agregar boton cancelar |
+| `src/components/beta/TesterFeedbackHistory.tsx` | Adaptar para mostrar en flip card |
 | `src/i18n/es/beta.json` | Nuevas traducciones |
 | `src/i18n/en/beta.json` | Nuevas traducciones |
 
 ---
 
-## Migraciones SQL
+## CSS para Flip Animation
 
-### Migration 1: Ampliar beta_feedback
+```css
+.flip-card {
+  perspective: 1000px;
+}
 
-```sql
--- Agregar columnas de workflow
-ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open';
-ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS resolved_by_owner BOOLEAN DEFAULT FALSE;
-ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ;
-ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS tester_response TEXT;
-ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS tester_response_at TIMESTAMPTZ;
+.flip-card-inner {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
 
--- Constraint para valores validos
-ALTER TABLE beta_feedback ADD CONSTRAINT beta_feedback_status_check 
-  CHECK (status IN ('open', 'in_review', 'closed'));
-ALTER TABLE beta_feedback ADD CONSTRAINT beta_feedback_tester_response_check 
-  CHECK (tester_response IS NULL OR tester_response IN ('confirmed', 'reopened'));
-```
+.flip-card-inner.flipped {
+  transform: rotateY(180deg);
+}
 
-### Migration 2: Tabla de attachments
+.flip-card-front, .flip-card-back {
+  backface-visibility: hidden;
+}
 
-```sql
-CREATE TABLE IF NOT EXISTS beta_feedback_attachments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  feedback_id UUID NOT NULL REFERENCES beta_feedback(id) ON DELETE CASCADE,
-  file_url TEXT NOT NULL,
-  file_name TEXT NOT NULL,
-  file_type TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
-ALTER TABLE beta_feedback_attachments ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Testers can insert own attachments"
-  ON beta_feedback_attachments FOR INSERT
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM beta_feedback
-    WHERE beta_feedback.id = beta_feedback_attachments.feedback_id
-    AND beta_feedback.tester_id = auth.uid()
-  ));
-
-CREATE POLICY "View own or owned app attachments"
-  ON beta_feedback_attachments FOR SELECT
-  USING (EXISTS (
-    SELECT 1 FROM beta_feedback bf
-    JOIN apps ON apps.id = bf.app_id
-    WHERE bf.id = beta_feedback_attachments.feedback_id
-    AND (bf.tester_id = auth.uid() OR apps.user_id = auth.uid())
-  ));
+.flip-card-back {
+  transform: rotateY(180deg);
+}
 ```
 
 ---
 
-## Nuevas Traducciones (ES)
+## Estructura de Layout Propuesta
+
+```
++----------------------------------------------------------+
+| [Logo App] Nombre App · Tagline...        [Menu Usuario] |  <- Header
++----------------------------------------------------------+
+|                                                          |
+|  +------------------+   +----------------------------+   |
+|  | AppSummaryCard   |   | Autor                      |   |
+|  | Logo+Nombre+Tag  |   | Avatar+Nombre              |   |
+|  | [Stack icons]    |   | 12 seguidores · 5 siguiendo|   |
+|  +------------------+   +----------------------------+   |
+|                                                          |
+|  +---------------------------------------------------+   |
+|  | Bienvenido al Squad (si es tester aceptado)       |   |
+|  | Instrucciones...                                  |   |
+|  | [Ir a probar la app] [Copiar]                     |   |
+|  +---------------------------------------------------+   |
+|                                                          |
+|  +---------------------------------------------------+   |
+|  | TesterReportCard (flip)                           |   |
+|  | [Lista de reportes] o [Formulario]                |   |
+|  +---------------------------------------------------+   |
+|                                                          |
+|  [Abandonar squad]                                       |
+|                                                          |
++----------------------------------------------------------+
+| Footer                                                   |
++----------------------------------------------------------+
+```
+
+En mobile: Todo en una columna, autor encima del summary card.
+
+---
+
+## Nuevas Traducciones
 
 ```json
 {
-  "confirmJoinTitle": "Unirte al Beta Squad",
-  "confirmJoinMessage": "¿Confirmas que quieres unirte como tester de {appName}?",
-  "confirmJoinButton": "Confirmar y enviar solicitud",
-  "statusPending": "Solicitud pendiente",
-  "statusAccepted": "Tester aceptado",
-  "statusRejected": "Solicitud rechazada",
-  
-  "feedbackOpen": "Abierto",
-  "feedbackInReview": "Pendiente verificar",
-  "feedbackClosed": "Cerrado",
-  
-  "markResolved": "Marcar como resuelto",
-  "closeReport": "Cerrar reporte",
-  "deleteReport": "Eliminar reporte",
-  
-  "verifyResolution": "¿Se solucionó el problema?",
-  "confirmFixed": "Sí, está solucionado",
-  "stillBroken": "No, sigue ocurriendo",
-  
-  "attachImages": "Adjuntar imágenes",
-  "maxImages": "Máximo 10 imágenes",
-  "uploadingImages": "Subiendo imágenes...",
-  
-  "myReports": "Mis reportes",
-  "sentAt": "Enviado",
-  "noReportsYet": "Aún no has enviado reportes",
-  
-  "filterAll": "Todos",
-  "filterOpen": "Abiertos",
-  "filterInReview": "En revisión",
-  "filterClosed": "Cerrados"
+  "authorFollowers": "seguidores",
+  "authorFollowing": "siguiendo",
+  "reportNewFinding": "Reportar hallazgo",
+  "backToList": "Volver a la lista",
+  "noFollowers": "Sin seguidores",
+  "noFollowing": "Sin seguidos"
 }
 ```
 
@@ -405,39 +254,43 @@ CREATE POLICY "View own or owned app attachments"
 
 ## Orden de Implementacion
 
-1. **Base de datos**: Migrations para nuevas columnas y tabla de attachments
-2. **Edge Function**: Actualizar submit-beta-feedback para attachments
-3. **Hook useBetaSquadsPublic**: Agregar user_tester_status
-4. **JoinConfirmDialog**: Popup de confirmacion
-5. **BetaSquadFeedCard**: Integracion estado dinamico
-6. **BetaFeedbackImageUploader**: Componente upload imagenes
-7. **BetaFeedbackForm**: Integrar uploader de imagenes
-8. **TesterFeedbackHistory**: Vista de reportes del tester
-9. **FeedbackActionMenu**: Menu 3 puntos owner
-10. **FeedbackStatusBadge**: Badge estados
-11. **TesterFeedbackResponseDialog**: Dialog verificacion tester
-12. **BetaManagement**: Filtros y workflow completo
-13. **AppDetail**: Cabecera compacta + layout
-14. **Traducciones**: ES y EN
-15. **Testing E2E**: Flujo completo mobile y desktop
+1. **AppSummaryCard**: Card compacto de la app
+2. **AppDetailHeader**: Header con logo de app
+3. **ImageCarouselDialog**: Carousel para ver imagenes
+4. **AuthorFollowDialog**: Dialog seguidores del autor  
+5. **TesterReportCard**: Card con flip animation
+6. **BetaFeedbackForm**: Quitar rating, agregar cancelar
+7. **AppDetail.tsx**: Integrar todo con nuevo layout
+8. **Traducciones**: ES y EN
+9. **Estilos responsive**: Verificar en mobile
 
 ---
 
 ## Notas Tecnicas
 
-### Upload de Imagenes
-- Usar bucket existente `feedback-attachments`
-- Generar UUID para nombre unico
-- Validar tipo MIME (solo imagenes)
-- Comprimir si es necesario (max 2MB recomendado)
+### Truncado con Ellipsis
+```tsx
+<p className="text-xs md:text-sm truncate max-w-[200px] md:max-w-none">
+  {app.tagline}
+</p>
+```
 
-### Performance
-- Lazy load de imagenes en historial
-- Paginacion en lista de feedback
-- Optimistic updates para cambios de estado
+### Flip Animation con Tailwind
+Usar clases de animacion custom en `index.css` o usar `framer-motion` si ya esta instalado (no esta, usar CSS puro).
 
-### UX Mobile
-- Sheet en lugar de Dialog para mobile
-- Swipe actions en listas si es posible
-- Feedback tactil (haptic) en confirmaciones
+### Obtener Stats del Autor
+Necesito crear una edge function o query directa para obtener followers/following count del owner:
+```typescript
+const { data } = await supabase
+  .from('follows')
+  .select('id', { count: 'exact' })
+  .eq('following_id', ownerId);
+```
+
+### Colores de la Paleta
+Usar solo colores de la paleta definida:
+- Primary: #000519
+- Accent: #0F206C
+- Background: #FFFFFF
+- Evitar colores externos (amarillo, rojo, etc.) - usar variantes del primary
 
