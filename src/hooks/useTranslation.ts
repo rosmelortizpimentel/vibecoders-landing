@@ -91,8 +91,27 @@ type Section = keyof typeof translations['es'];
 
 export function useTranslation<T extends Section>(section: T) {
   const { language } = useLanguage();
-  // Using any to avoid complex type inference issues with dynamic imports
-  return translations[language][section] as any;
+  const sectionTranslations = translations[language][section];
+  
+  // Return a t function that gets nested keys
+  const tFunction = (key: string): string => {
+    const keys = key.split('.');
+    let result: unknown = sectionTranslations;
+    for (const k of keys) {
+      if (result && typeof result === 'object' && k in result) {
+        result = (result as Record<string, unknown>)[k];
+      } else {
+        return key; // Return key if not found
+      }
+    }
+    return typeof result === 'string' ? result : key;
+  };
+  
+  // Return object with both t function and spread translations for backward compatibility
+  return { 
+    t: tFunction, 
+    ...(sectionTranslations as object)
+  } as { t: (key: string) => string } & typeof translations['es'][T];
 }
 
 // Static function for use outside React components (with explicit language)
