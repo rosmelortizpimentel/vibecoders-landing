@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { ProfileSocials } from './ProfileSocials';
 import { UsernameEditor } from './UsernameEditor';
@@ -11,6 +11,7 @@ import { Camera, MapPin, Globe, ImagePlus, AlignLeft, AlignCenter, AlignRight, T
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
+import { BannerCropDialog } from './BannerCropDialog';
 
 interface ProfileTabProps {
   profile: ProfileData | null;
@@ -25,6 +26,7 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
   const t = useTranslation('profile');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
 
   if (!profile) return null;
 
@@ -50,14 +52,23 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
     }
   };
 
-  const handleBannerChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      try {
-        await onUploadBanner(file);
-      } catch (error) {
-        console.error('Error uploading banner:', error);
-      }
+      const objectUrl = URL.createObjectURL(file);
+      setCropImageSrc(objectUrl);
+    }
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+  };
+
+  const handleCropConfirm = async (blob: Blob) => {
+    setCropImageSrc(null);
+    try {
+      const file = new File([blob], `banner_cropped.webp`, { type: 'image/webp' });
+      await onUploadBanner(file);
+    } catch (error) {
+      console.error('Error uploading cropped banner:', error);
     }
   };
 
@@ -330,6 +341,16 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
         <h3 className="text-sm font-medium mb-4 text-foreground">{t.fields.socialNetworks}</h3>
         <ProfileSocials profile={profile} onUpdate={onUpdate} />
       </section>
+
+      {/* Banner Crop Dialog */}
+      {cropImageSrc && (
+        <BannerCropDialog
+          open={!!cropImageSrc}
+          imageSrc={cropImageSrc}
+          onClose={() => setCropImageSrc(null)}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </div>
   );
 }
