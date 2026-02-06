@@ -71,7 +71,13 @@ export function AuthenticatedHeader({
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => {
+    // For /me, match any /me/* route
+    if (path === '/me') {
+      return location.pathname === '/me' || location.pathname.startsWith('/me/');
+    }
+    return location.pathname === path;
+  };
 
   // Build navigation links dynamically based on waitlist status
   const navLinks: { path: string; label: string; icon: typeof User; premium: boolean; isNew?: boolean }[] = [
