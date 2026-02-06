@@ -2,6 +2,7 @@ import { ExternalLink, BadgeCheck } from 'lucide-react';
 import { AppData } from '@/hooks/useApps';
 import { Status } from '@/hooks/useStatuses';
 import { TechStack } from '@/hooks/useTechStacks';
+import { getStatusColors } from '@/lib/appStatusColors';
 import {
   Tooltip,
   TooltipContent,
@@ -21,6 +22,9 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
   const status = app.status_id 
     ? statuses.find(s => s.id === app.status_id) 
     : null;
+
+  // Get premium status colors
+  const statusColors = getStatusColors(status?.slug);
 
   // Find the tech stacks for this app (max 4, sorted alphabetically)
   const appStacks = (app.stacks || [])
@@ -83,18 +87,12 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
               </Tooltip>
             )}
 
-            {/* Status Badge - Soft Brand Blue theme */}
+            {/* Status Badge - Premium colors */}
             {status && (
               <span 
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700"
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors.bg} ${statusColors.text}`}
               >
-                <span 
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    status.slug === 'active' || status.slug === 'live' 
-                      ? 'bg-cyan-500' 
-                      : 'bg-blue-500'
-                  }`}
-                />
+                <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
                 {status.name}
               </span>
             )}

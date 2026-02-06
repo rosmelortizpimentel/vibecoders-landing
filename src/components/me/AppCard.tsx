@@ -3,8 +3,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { useStatuses } from '@/hooks/useStatuses';
 import { Switch } from '@/components/ui/switch';
 import { ExternalLink, GripVertical } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
- import { VerificationBadge } from './VerificationBadge';
+import { VerificationBadge } from './VerificationBadge';
+import { getStatusColors } from '@/lib/appStatusColors';
 
 interface AppCardProps {
   app: AppData;
@@ -20,19 +20,11 @@ interface AppCardProps {
   const category = categories.find(c => c.id === app.category_id);
   const status = statuses.find(s => s.id === app.status_id);
 
-  // Get icon component dynamically
-  const getIcon = (iconName: string) => {
-    const pascalCase = iconName
-      .split('-')
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1))
-      .join('');
-    return (LucideIcons as unknown as Record<string, React.ComponentType<{ className?: string }>>)[pascalCase];
-  };
-
-  const StatusIcon = status ? getIcon(status.icon) : null;
+  // Get premium status colors
+  const statusColors = getStatusColors(status?.slug);
 
   return (
-    <div 
+    <div
       className="group flex items-center gap-4 p-4 border border-gray-200 rounded-lg bg-white hover:border-[#3D5AFE]/50 transition-colors cursor-pointer shadow-sm"
       onClick={onExpand}
     >
@@ -96,12 +88,11 @@ interface AppCardProps {
                if (!app.is_verified) onVerify();
              }}
            />
-          {status && StatusIcon && (
+          {status && (
             <span 
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
-              style={{ backgroundColor: `${status.color}20`, color: status.color }}
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusColors.bg} ${statusColors.text}`}
             >
-              <StatusIcon className="h-3 w-3" />
+              <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
               {status.name}
             </span>
           )}

@@ -14,6 +14,7 @@ import { useProfileStats } from '@/hooks/useProfileStats';
 import { useProfileTracking, trackAppClick } from '@/hooks/useProfileTracking';
 import { Eye } from 'lucide-react';
 import { AppLikeButton } from '@/components/profile/AppLikeButton';
+import { getStatusColors } from '@/lib/appStatusColors';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import {
@@ -153,21 +154,18 @@ function PublicAppCard({
               </Tooltip>
             )}
 
-            {/* Status Badge */}
-            {app.status && (
-              <span 
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-700"
-              >
+            {/* Status Badge - Premium colors */}
+            {app.status && (() => {
+              const statusColors = getStatusColors(app.status.slug);
+              return (
                 <span 
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    app.status.slug === 'active' || app.status.slug === 'live' 
-                      ? 'bg-cyan-500' 
-                      : 'bg-blue-500'
-                  }`}
-                />
-                {app.status.name}
-              </span>
-            )}
+                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors.bg} ${statusColors.text}`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
+                  {app.status.name}
+                </span>
+              );
+            })()}
           </div>
 
           {/* Tagline */}
