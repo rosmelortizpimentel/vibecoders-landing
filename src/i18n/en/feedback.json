@@ -8,6 +8,8 @@
   "you": "You",
   "admin": "Admin",
   "empty": "No messages yet. Be the first to write!",
+  "emptyTitle": "Got an idea or found a bug?",
+  "emptySubtitle": "I'm all ears. Tell me what you think.",
   "sending": "Sending...",
   "sent": "Sent",
   "adminTitle": "User Feedback",

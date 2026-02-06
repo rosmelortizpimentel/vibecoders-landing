@@ -72,7 +72,7 @@ export function ChatInput({ onSend, isSending, disabled }: ChatInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-border bg-background p-4">
+    <form onSubmit={handleSubmit} className="border-t border-border bg-muted/30 p-4">
       {/* Image previews */}
       {previews.length > 0 && (
         <div className="flex gap-2 mb-3 flex-wrap">
