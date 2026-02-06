@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 
 export interface BetaTester {
   id: string;
@@ -7,6 +8,11 @@ export interface BetaTester {
   name: string | null;
   avatar_url: string | null;
   tagline: string | null;
+}
+
+export interface UserTesterStatus {
+  id: string;
+  status: 'pending' | 'accepted' | 'rejected';
 }
 
 export interface BetaSquadApp {
@@ -26,6 +32,7 @@ export interface BetaSquadApp {
     avatar_url: string | null;
   };
   testers: BetaTester[];
+  user_tester_status: UserTesterStatus | null;
 }
 
 interface BetaSquadsPage {
@@ -36,8 +43,10 @@ interface BetaSquadsPage {
 const PAGE_SIZE = 10;
 
 export function useBetaSquadsPublic() {
+  const { user } = useAuth();
+  
   return useInfiniteQuery({
-    queryKey: ['beta-squads-public'],
+    queryKey: ['beta-squads-public', user?.id],
     queryFn: async ({ pageParam = 0 }): Promise<BetaSquadsPage> => {
       const from = pageParam * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
@@ -72,7 +81,24 @@ export function useBetaSquadsPublic() {
 
       if (testersError) throw testersError;
 
-      // 3. Group testers by app_id
+      // 3. Get user's tester status for these apps (if logged in)
+      let userTesterStatusMap: Record<string, UserTesterStatus> = {};
+      if (user) {
+        const { data: userTesterData } = await supabase
+          .from('beta_testers')
+          .select('id, app_id, status')
+          .eq('user_id', user.id)
+          .in('app_id', appIds);
+        
+        (userTesterData || []).forEach(t => {
+          userTesterStatusMap[t.app_id] = {
+            id: t.id,
+            status: t.status as 'pending' | 'accepted' | 'rejected',
+          };
+        });
+      }
+
+      // 4. Group testers by app_id
       const testersByApp: Record<string, BetaTester[]> = {};
       const countsByApp: Record<string, number> = {};
 
@@ -93,7 +119,7 @@ export function useBetaSquadsPublic() {
         countsByApp[t.app_id] = (countsByApp[t.app_id] || 0) + 1;
       });
 
-      // 4. Map apps with all data
+      // 5. Map apps with all data
       const appsWithData: BetaSquadApp[] = apps.map(app => {
         const testersCount = countsByApp[app.id] || 0;
         const profile = app.profiles as { id: string; username: string | null; name: string | null; avatar_url: string | null } | null;
@@ -115,6 +141,7 @@ export function useBetaSquadsPublic() {
             avatar_url: profile?.avatar_url || null,
           },
           testers: testersByApp[app.id] || [],
+          user_tester_status: userTesterStatusMap[app.id] || null,
         };
       });
 

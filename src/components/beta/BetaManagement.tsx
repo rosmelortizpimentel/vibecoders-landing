@@ -12,6 +12,9 @@ import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FeedbackStatusBadge } from './FeedbackStatusBadge';
+import { FeedbackActionMenu } from './FeedbackActionMenu';
 import {
   Select,
   SelectContent,
@@ -24,7 +27,6 @@ import {
   Check, 
   X, 
   UserMinus,
-  ThumbsUp,
   MessageSquare,
   Clock,
   Bug,
@@ -32,8 +34,13 @@ import {
   Palette,
   HelpCircle,
   ExternalLink,
+  Star,
+  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { es, enUS } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface BetaConfig {
   beta_active: boolean;
@@ -57,12 +64,20 @@ interface Tester {
   };
 }
 
+interface FeedbackAttachment {
+  id: string;
+  file_url: string;
+  file_name: string;
+  file_type: string;
+}
+
 interface Feedback {
   id: string;
   type: string;
   content: string;
   rating: number | null;
   is_useful: boolean;
+  status: 'open' | 'in_review' | 'closed';
   created_at: string;
   tester: {
     id: string;
@@ -70,6 +85,7 @@ interface Feedback {
     name: string | null;
     avatar_url: string | null;
   };
+  attachments: FeedbackAttachment[];
 }
 
 interface BetaManagementProps {
@@ -80,12 +96,15 @@ interface BetaManagementProps {
 
 export function BetaManagement({ appId, config, onConfigChange }: BetaManagementProps) {
   const { t } = useTranslation('beta');
+  const { language } = useLanguage();
   const { updateTesterStatus, removeTester, markFeedbackUseful } = useBetaSquad(appId);
   
   const [testers, setTesters] = useState<Tester[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loadingTesters, setLoadingTesters] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [testerFilter, setTesterFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
+  const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'open' | 'in_review' | 'closed'>('all');
 
   useEffect(() => {
     if (config.beta_active) {
@@ -122,7 +141,7 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
   const fetchFeedback = async () => {
     setLoadingFeedback(true);
     try {
-      const { data, error } = await supabase
+      const { data: feedbackData, error } = await supabase
         .from('beta_feedback')
         .select(`
           id,
@@ -130,6 +149,7 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
           content,
           rating,
           is_useful,
+          status,
           created_at,
           tester:profiles!beta_feedback_tester_id_fkey(id, username, name, avatar_url)
         `)
@@ -137,7 +157,38 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setFeedback((data || []) as unknown as Feedback[]);
+
+      // Fetch attachments
+      const feedbackIds = (feedbackData || []).map(f => f.id);
+      let attachmentsByFeedback: Record<string, FeedbackAttachment[]> = {};
+      
+      if (feedbackIds.length > 0) {
+        const { data: attachments } = await supabase
+          .from('beta_feedback_attachments')
+          .select('id, feedback_id, file_url, file_name, file_type')
+          .in('feedback_id', feedbackIds);
+
+        (attachments || []).forEach(att => {
+          const feedbackId = (att as unknown as { feedback_id: string }).feedback_id;
+          if (!attachmentsByFeedback[feedbackId]) {
+            attachmentsByFeedback[feedbackId] = [];
+          }
+          attachmentsByFeedback[feedbackId].push({
+            id: att.id,
+            file_url: att.file_url,
+            file_name: att.file_name,
+            file_type: att.file_type,
+          });
+        });
+      }
+
+      const feedbackWithAttachments = (feedbackData || []).map(f => ({
+        ...f,
+        status: (f.status || 'open') as 'open' | 'in_review' | 'closed',
+        attachments: attachmentsByFeedback[f.id] || [],
+      }));
+
+      setFeedback(feedbackWithAttachments as unknown as Feedback[]);
     } catch (err) {
       console.error('Error fetching feedback:', err);
     } finally {
@@ -178,6 +229,50 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
     }
   };
 
+  const handleMarkResolved = async (feedbackId: string) => {
+    const { error } = await supabase
+      .from('beta_feedback')
+      .update({ 
+        status: 'in_review',
+        resolved_by_owner: true,
+        resolved_at: new Date().toISOString(),
+      })
+      .eq('id', feedbackId);
+
+    if (!error) {
+      setFeedback(prev => prev.map(f => 
+        f.id === feedbackId ? { ...f, status: 'in_review' as const } : f
+      ));
+      toast.success(t('markResolved'));
+    }
+  };
+
+  const handleCloseFeedback = async (feedbackId: string) => {
+    const { error } = await supabase
+      .from('beta_feedback')
+      .update({ status: 'closed' })
+      .eq('id', feedbackId);
+
+    if (!error) {
+      setFeedback(prev => prev.map(f => 
+        f.id === feedbackId ? { ...f, status: 'closed' as const } : f
+      ));
+      toast.success(t('feedbackClosed'));
+    }
+  };
+
+  const handleDeleteFeedback = async (feedbackId: string) => {
+    const { error } = await supabase
+      .from('beta_feedback')
+      .delete()
+      .eq('id', feedbackId);
+
+    if (!error) {
+      setFeedback(prev => prev.filter(f => f.id !== feedbackId));
+      toast.success(t('deleteReport'));
+    }
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'bug': return <Bug className="w-4 h-4 text-destructive" />;
@@ -195,6 +290,18 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
       default: return t('reportOther');
     }
   };
+
+  // Filter and sort testers
+  const filteredTesters = testers
+    .filter(t => testerFilter === 'all' || t.status === testerFilter)
+    .sort((a, b) => {
+      const order = { accepted: 0, pending: 1, rejected: 2 };
+      return (order[a.status as keyof typeof order] ?? 3) - (order[b.status as keyof typeof order] ?? 3);
+    });
+
+  const filteredFeedback = feedback.filter(f => 
+    feedbackFilter === 'all' || f.status === feedbackFilter
+  );
 
   const pendingTesters = testers.filter(t => t.status === 'pending');
   const acceptedTesters = testers.filter(t => t.status === 'accepted');
@@ -297,6 +404,9 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                 rows={6}
                 className="min-h-[160px]"
               />
+              <p className="text-xs text-muted-foreground">
+                Soporta Markdown: **negrita**, *cursiva*, ~~subrayado~~, - listas, 1. numeradas
+              </p>
             </div>
           </>
         )}
@@ -306,99 +416,94 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
         <>
           <Separator />
 
-          {/* Pending Requests */}
-          {config.beta_mode === 'closed' && (
-            <div className="space-y-3">
-              <h4 className="font-medium flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                {t('pendingRequests')} ({pendingTesters.length})
-              </h4>
-              {pendingTesters.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('noPending')}</p>
-              ) : (
-                <div className="space-y-2">
-                  {pendingTesters.map((tester) => (
-                    <div 
-                      key={tester.id} 
-                      className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-8 h-8">
-                          <AvatarImage src={tester.profile?.avatar_url || undefined} />
-                          <AvatarFallback>
-                            {(tester.profile?.name || 'U').charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">
-                          {tester.profile?.name || tester.profile?.username || 'User'}
-                        </span>
-                      </div>
-                      <div className="flex gap-1">
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                          onClick={() => handleAccept(tester.id)}
-                        >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                          onClick={() => handleReject(tester.id)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Accepted Testers */}
+          {/* Testers Section */}
           <div className="space-y-3">
-            <h4 className="font-medium flex items-center gap-2">
-              <Check className="w-4 h-4" />
-              {t('acceptedTesters')} ({acceptedTesters.length})
-            </h4>
-            {acceptedTesters.length === 0 ? (
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Testers ({testers.length})
+              </h4>
+              <Select value={testerFilter} onValueChange={(v) => setTesterFilter(v as typeof testerFilter)}>
+                <SelectTrigger className="w-32 h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filterAll')}</SelectItem>
+                  <SelectItem value="pending">{t('pendingRequests')}</SelectItem>
+                  <SelectItem value="accepted">{t('acceptedTesters')}</SelectItem>
+                  <SelectItem value="rejected">Rechazados</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {filteredTesters.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t('noTesters')}</p>
             ) : (
-              <div className="space-y-2">
-                {acceptedTesters.map((tester) => (
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {filteredTesters.map((tester) => (
                   <div 
                     key={tester.id} 
                     className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
                   >
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-8 h-8">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <Avatar className="w-8 h-8 flex-shrink-0">
                         <AvatarImage src={tester.profile?.avatar_url || undefined} />
                         <AvatarFallback>
                           {(tester.profile?.name || 'U').charAt(0)}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <span className="text-sm font-medium">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium truncate block">
                           {tester.profile?.name || tester.profile?.username || 'User'}
                         </span>
-                        {tester.feedback_count > 0 && (
-                          <span className="text-xs text-muted-foreground ml-2">
-                            ({tester.feedback_count} {t('feedbackCount').replace('{count}', '')})
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant={tester.status === 'accepted' ? 'default' : tester.status === 'pending' ? 'secondary' : 'outline'}
+                            className="text-xs h-5"
+                          >
+                            {tester.status === 'accepted' ? t('statusAccepted') : 
+                             tester.status === 'pending' ? t('statusPending') : t('statusRejected')}
+                          </Badge>
+                          {tester.feedback_count > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              {tester.feedback_count} {t('feedbackCount').replace('{count}', '')}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <Button 
-                      size="icon" 
-                      variant="ghost" 
-                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                      onClick={() => handleRemove(tester.id)}
-                    >
-                      <UserMinus className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1 flex-shrink-0">
+                      {tester.status === 'pending' && (
+                        <>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            onClick={() => handleAccept(tester.id)}
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                            onClick={() => handleReject(tester.id)}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
+                      {tester.status !== 'pending' && (
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleRemove(tester.id)}
+                        >
+                          <UserMinus className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -409,49 +514,92 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
 
           {/* Feedback Inbox */}
           <div className="space-y-3">
-            <h4 className="font-medium flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              {t('feedbackInbox')} ({feedback.length})
-            </h4>
-            {feedback.length === 0 ? (
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium flex items-center gap-2">
+                <MessageSquare className="w-4 h-4" />
+                {t('feedbackInbox')} ({feedback.length})
+              </h4>
+              <Select value={feedbackFilter} onValueChange={(v) => setFeedbackFilter(v as typeof feedbackFilter)}>
+                <SelectTrigger className="w-32 h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('filterAll')}</SelectItem>
+                  <SelectItem value="open">{t('filterOpen')}</SelectItem>
+                  <SelectItem value="in_review">{t('filterInReview')}</SelectItem>
+                  <SelectItem value="closed">{t('filterClosed')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {filteredFeedback.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t('noFeedback')}</p>
             ) : (
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {feedback.map((item) => (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {filteredFeedback.map((item) => (
                   <div 
                     key={item.id} 
                     className="p-3 rounded-lg border bg-card space-y-2"
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {getTypeIcon(item.type)}
                         <Badge variant="outline" className="text-xs">
                           {getTypeLabel(item.type)}
                         </Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <FeedbackStatusBadge status={item.status} />
+                        <Link 
+                          to={item.tester?.username ? `/@${item.tester.username}` : '#'}
+                          className="text-xs text-muted-foreground hover:underline"
+                        >
                           {item.tester?.name || item.tester?.username}
-                        </span>
+                        </Link>
                       </div>
-                      <Button
-                        size="sm"
-                        variant={item.is_useful ? 'default' : 'outline'}
-                        className="h-7 gap-1"
-                        onClick={() => handleMarkUseful(item.id, item.is_useful)}
-                      >
-                        <ThumbsUp className="w-3 h-3" />
-                        {item.is_useful ? t('marked') : t('markUseful')}
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(item.created_at), 'dd MMM, HH:mm', {
+                            locale: language === 'es' ? es : enUS
+                          })}
+                        </span>
+                        <FeedbackActionMenu
+                          feedbackId={item.id}
+                          isUseful={item.is_useful}
+                          status={item.status}
+                          onMarkUseful={() => handleMarkUseful(item.id, item.is_useful)}
+                          onMarkResolved={() => handleMarkResolved(item.id)}
+                          onClose={() => handleCloseFeedback(item.id)}
+                          onDelete={() => handleDeleteFeedback(item.id)}
+                        />
+                      </div>
                     </div>
                     <p className="text-sm">{item.content}</p>
-                    {item.rating && (
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <span 
-                            key={star}
-                            className={star <= item.rating! ? 'text-yellow-400' : 'text-muted'}
+                    
+                    {/* Attachments */}
+                    {item.attachments.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {item.attachments.map((att) => (
+                          <button
+                            key={att.id}
+                            onClick={() => window.open(att.file_url, '_blank')}
+                            className="block rounded-lg overflow-hidden hover:opacity-90 transition-opacity"
                           >
-                            ★
-                          </span>
+                            <img
+                              src={att.file_url}
+                              alt={att.file_name}
+                              className="h-16 w-16 object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {item.rating && (
+                      <div className="flex gap-0.5 pt-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star 
+                            key={star}
+                            className={`w-4 h-4 ${star <= item.rating! ? 'fill-yellow-400 text-yellow-400' : 'text-muted'}`}
+                          />
                         ))}
                       </div>
                     )}

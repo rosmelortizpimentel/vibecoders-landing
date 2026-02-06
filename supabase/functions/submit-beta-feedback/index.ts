@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    const { app_id, type, content, rating } = await req.json()
+    const { app_id, type, content, rating, attachments } = await req.json()
 
     // Validate required fields
     if (!app_id || !type || !content) {
@@ -58,6 +58,16 @@ Deno.serve(async (req) => {
       if (typeof rating !== 'number' || rating < 1 || rating > 5) {
         return new Response(
           JSON.stringify({ error: 'Rating must be between 1 and 5' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+
+    // Validate attachments if provided
+    if (attachments && Array.isArray(attachments)) {
+      if (attachments.length > 10) {
+        return new Response(
+          JSON.stringify({ error: 'Maximum 10 attachments allowed' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
@@ -94,6 +104,7 @@ Deno.serve(async (req) => {
         type,
         content,
         rating: rating || null,
+        status: 'open',
       })
       .select()
       .single()
@@ -106,9 +117,28 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Insert attachments if provided
+    if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+      const attachmentRecords = attachments.map((att: { url: string; name: string; type: string }) => ({
+        feedback_id: feedback.id,
+        file_url: att.url,
+        file_name: att.name,
+        file_type: att.type,
+      }))
+
+      const { error: attachError } = await supabase
+        .from('beta_feedback_attachments')
+        .insert(attachmentRecords)
+
+      if (attachError) {
+        console.error('Error inserting attachments:', attachError)
+        // Don't fail the whole request, just log
+      }
+    }
+
     // Note: feedback_count is updated by database trigger
 
-    console.log('Feedback submitted:', { app_id, tester_id: user.id, type })
+    console.log('Feedback submitted:', { app_id, tester_id: user.id, type, attachments_count: attachments?.length || 0 })
 
     return new Response(
       JSON.stringify({ success: true, feedback }),

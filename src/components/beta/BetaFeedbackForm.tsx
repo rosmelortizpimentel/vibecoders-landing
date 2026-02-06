@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useBetaSquad } from '@/hooks/useBetaSquad';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { BetaFeedbackImageUploader } from './BetaFeedbackImageUploader';
 import { Star, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+
+interface UploadedImage {
+  url: string;
+  name: string;
+  type: string;
+}
 
 interface BetaFeedbackFormProps {
   appId: string;
@@ -16,12 +24,14 @@ interface BetaFeedbackFormProps {
 
 export function BetaFeedbackForm({ appId, onSuccess }: BetaFeedbackFormProps) {
   const { t } = useTranslation('beta');
-  const { submitFeedback, submitting } = useBetaSquad(appId);
+  const { user } = useAuth();
   
   const [type, setType] = useState<'bug' | 'ux' | 'feature' | 'other'>('bug');
   const [content, setContent] = useState('');
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
+  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,15 +41,55 @@ export function BetaFeedbackForm({ appId, onSuccess }: BetaFeedbackFormProps) {
       return;
     }
 
-    const result = await submitFeedback(type, content.trim(), rating || undefined);
-    
-    if (result.success) {
+    if (!user) {
+      toast.error('Not authenticated');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        toast.error('Not authenticated');
+        return;
+      }
+
+      const response = await fetch(
+        `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/submit-beta-feedback`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            app_id: appId,
+            type,
+            content: content.trim(),
+            rating: rating || null,
+            attachments: images.length > 0 ? images : undefined,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || t('reportError'));
+        return;
+      }
+
       toast.success(t('reportSuccess'));
       setContent('');
       setRating(0);
+      setImages([]);
       onSuccess?.();
-    } else {
-      toast.error(result.error || t('reportError'));
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      toast.error(t('reportError'));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -78,6 +128,13 @@ export function BetaFeedbackForm({ appId, onSuccess }: BetaFeedbackFormProps) {
           className="resize-none"
         />
       </div>
+
+      <BetaFeedbackImageUploader
+        images={images}
+        onImagesChange={setImages}
+        maxImages={10}
+        disabled={submitting}
+      />
 
       <div className="space-y-2">
         <Label>{t('ratingLabel')}</Label>
