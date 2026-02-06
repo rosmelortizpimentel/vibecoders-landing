@@ -29,6 +29,20 @@ export function ChatMessage({ message, isOwn }: ChatMessageProps) {
       </Avatar>
 
       <div className={cn('flex flex-col gap-1', isOwn ? 'items-end' : 'items-start')}>
+        {/* Sender info */}
+        <div className={cn('flex flex-col', isOwn ? 'items-end' : 'items-start')}>
+          {message.sender?.username && (
+            <span className="text-xs font-medium text-foreground/80">
+              @{message.sender.username}
+            </span>
+          )}
+          {message.sender?.name && (
+            <span className="text-xs text-muted-foreground">
+              {message.sender.name}
+            </span>
+          )}
+        </div>
+
         <div
           className={cn(
             'rounded-2xl px-4 py-2 text-sm',

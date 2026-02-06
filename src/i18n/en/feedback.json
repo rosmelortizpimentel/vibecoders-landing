@@ -21,5 +21,10 @@
   "imageLimit": "You can only attach up to 5 images",
   "errorSending": "Error sending message",
   "errorUploading": "Error uploading images",
-  "loginRequired": "You must be logged in to send messages"
+  "loginRequired": "You must be logged in to send messages",
+  "deleteThread": "Delete conversation",
+  "deleteConfirm": "Delete conversation?",
+  "deleteDescription": "This will delete all messages and images in this conversation. This cannot be undone.",
+  "deleted": "Conversation deleted",
+  "deleteError": "Error deleting"
 }

@@ -169,22 +169,40 @@ export function useFeedback() {
 
       console.log('[useFeedback] sendMessage - threadId:', threadId, 'isAdmin:', isAdmin, 'userId:', user.id);
 
-      // Create thread if it doesn't exist
-      // Anyone can start a new conversation from /hablemos
+      // If no threadId, check if user already has a thread (reuse existing)
       if (!finalThreadId) {
-        console.log('[useFeedback] Creating new feedback thread for user:', user.id);
-        const { data: newThread, error: threadError } = await supabase
+        console.log('[useFeedback] Looking for existing thread for user:', user.id);
+        const { data: existingThread, error: lookupError } = await supabase
           .from('feedback_threads')
-          .insert({ user_id: user.id })
-          .select()
-          .single();
+          .select('id')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
         
-        if (threadError) {
-          console.error('[useFeedback] Error creating thread:', threadError);
-          throw threadError;
+        if (lookupError) {
+          console.error('[useFeedback] Error looking up thread:', lookupError);
         }
-        console.log('[useFeedback] Created new thread:', newThread.id);
-        finalThreadId = newThread.id;
+
+        if (existingThread) {
+          console.log('[useFeedback] Found existing thread:', existingThread.id);
+          finalThreadId = existingThread.id;
+        } else {
+          // Create new thread only if none exists
+          console.log('[useFeedback] Creating new feedback thread for user:', user.id);
+          const { data: newThread, error: threadError } = await supabase
+            .from('feedback_threads')
+            .insert({ user_id: user.id })
+            .select()
+            .single();
+          
+          if (threadError) {
+            console.error('[useFeedback] Error creating thread:', threadError);
+            throw threadError;
+          }
+          console.log('[useFeedback] Created new thread:', newThread.id);
+          finalThreadId = newThread.id;
+        }
       }
 
       if (!finalThreadId) {
@@ -231,6 +249,70 @@ export function useFeedback() {
     },
   });
 
+  // Delete thread mutation (admin only)
+  const deleteThreadMutation = useMutation({
+    mutationFn: async (threadId: string) => {
+      if (!isAdmin) throw new Error('Not authorized');
+
+      // First delete attachments for all messages in this thread
+      const { data: messages } = await supabase
+        .from('feedback_messages')
+        .select('id')
+        .eq('thread_id', threadId);
+
+      if (messages && messages.length > 0) {
+        const messageIds = messages.map(m => m.id);
+        
+        // Get attachment file paths to delete from storage
+        const { data: attachments } = await supabase
+          .from('feedback_attachments')
+          .select('file_url')
+          .in('message_id', messageIds);
+
+        // Delete files from storage
+        if (attachments && attachments.length > 0) {
+          const filePaths = attachments
+            .map(a => {
+              const url = new URL(a.file_url);
+              const pathParts = url.pathname.split('/feedback-attachments/');
+              return pathParts[1] || null;
+            })
+            .filter(Boolean) as string[];
+
+          if (filePaths.length > 0) {
+            await supabase.storage
+              .from('feedback-attachments')
+              .remove(filePaths);
+          }
+        }
+
+        // Delete attachments
+        await supabase
+          .from('feedback_attachments')
+          .delete()
+          .in('message_id', messageIds);
+      }
+
+      // Delete messages
+      await supabase
+        .from('feedback_messages')
+        .delete()
+        .eq('thread_id', threadId);
+
+      // Delete thread
+      const { error } = await supabase
+        .from('feedback_threads')
+        .delete()
+        .eq('id', threadId);
+
+      if (error) throw error;
+      return threadId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['feedbackThreads'] });
+    },
+  });
+
   // Upload files to storage
   const uploadFiles = async (files: File[]): Promise<{ url: string; name: string; type: string }[]> => {
     if (!user?.id) throw new Error('Not authenticated');
@@ -271,5 +353,7 @@ export function useFeedback() {
     sendMessageAsync: sendMessageMutation.mutateAsync,
     isSending: sendMessageMutation.isPending,
     uploadFiles,
+    deleteThread: deleteThreadMutation.mutateAsync,
+    isDeleting: deleteThreadMutation.isPending,
   };
 }
