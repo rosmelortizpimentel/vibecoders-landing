@@ -169,12 +169,10 @@ function PublicAppCard({
             })()}
           </div>
 
-          {/* Tagline */}
-          {app.tagline && (
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-              {app.tagline}
-            </p>
-          )}
+          {/* Tagline - Fixed height for 2 lines to ensure uniformity */}
+          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2 h-8">
+            {app.tagline}
+          </p>
         </div>
 
         {/* Visit Button */}
@@ -195,7 +193,7 @@ function PublicAppCard({
                     <img 
                       src={stack.logo_url} 
                       alt={stack.name}
-                      className="w-5 h-5 object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-200"
+                      className="w-5 h-5 object-contain grayscale hover:grayscale-0 transition-all duration-200"
                     />
                   </div>
                 </TooltipTrigger>
@@ -439,7 +437,7 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
         {viewMode === 'apps' ? (
           profile.apps.length > 0 && (
             <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3 mt-10">
                 Apps
               </p>
               {/* Mobile: single column, Desktop: grid of 2 */}
