@@ -7,13 +7,11 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Get auth token from header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "No authorization header" }), {
@@ -22,101 +20,132 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create Supabase clients
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // Client to verify user auth and role
     const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Service client to access auth.users
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify user is authenticated
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     if (authError || !user) {
-      console.error("Auth error:", authError);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Check if user is admin
     const { data: hasRole } = await supabaseAdmin.rpc("has_role", {
       _user_id: user.id,
       _role: "admin",
     });
 
     if (!hasRole) {
-      console.log("User is not admin:", user.id);
       return new Response(JSON.stringify({ error: "Forbidden: Admin role required" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log("Admin access granted for user:", user.id);
-
-    // Fetch all profiles with username (registered users)
+    // Fetch profiles
     const { data: profiles, error: profilesError } = await supabaseAdmin
       .from("profiles")
       .select("id, name, username, avatar_url, created_at")
       .not("username", "is", null)
       .order("created_at", { ascending: false });
 
-    if (profilesError) {
-      console.error("Error fetching profiles:", profilesError);
-      throw profilesError;
-    }
+    if (profilesError) throw profilesError;
 
-    // Fetch all auth users to get emails
+    // Fetch auth users for emails and last_sign_in_at
     const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers({
       perPage: 1000,
     });
+    if (authUsersError) throw authUsersError;
 
-    if (authUsersError) {
-      console.error("Error fetching auth users:", authUsersError);
-      throw authUsersError;
-    }
-
-    // Create a map of user id to email
-    const userEmailMap = new Map<string, string>();
+    const userAuthMap = new Map<string, { email: string; lastSignIn: string | null }>();
     for (const u of authUsers.users) {
-      userEmailMap.set(u.id, u.email || "");
+      userAuthMap.set(u.id, {
+        email: u.email || "",
+        lastSignIn: u.last_sign_in_at || null,
+      });
     }
 
     // Fetch waitlist emails
     const { data: waitlistEntries, error: waitlistError } = await supabaseAdmin
       .from("waitlist")
       .select("email");
+    if (waitlistError) throw waitlistError;
 
-    if (waitlistError) {
-      console.error("Error fetching waitlist:", waitlistError);
-      throw waitlistError;
-    }
-
-    // Create a set of waitlist emails (lowercase for comparison)
     const waitlistEmails = new Set(
       (waitlistEntries || []).map((w) => w.email.toLowerCase())
     );
 
-    // Fetch follows for counts
+    // Fetch follows
     const { data: follows, error: followsError } = await supabaseAdmin
       .from("follows")
       .select("follower_id, following_id");
+    if (followsError) throw followsError;
 
-    if (followsError) {
-      console.error("Error fetching follows:", followsError);
-      throw followsError;
+    // Fetch latest activity per user from user_activity_log
+    const { data: activityData, error: activityError } = await supabaseAdmin
+      .from("user_activity_log")
+      .select("user_id, active_date")
+      .order("active_date", { ascending: false });
+
+    if (activityError) {
+      console.error("Error fetching activity log:", activityError);
     }
 
-    // Build enriched user data
+    // Build map: user_id -> latest active_date
+    const latestActivityMap = new Map<string, string>();
+    if (activityData) {
+      for (const row of activityData) {
+        if (!latestActivityMap.has(row.user_id)) {
+          latestActivityMap.set(row.user_id, row.active_date);
+        }
+      }
+    }
+
+    // Build daily activity counts (last 30 days)
+    const dailyActivityMap = new Map<string, Set<string>>();
+    if (activityData) {
+      for (const row of activityData) {
+        if (!dailyActivityMap.has(row.active_date)) {
+          dailyActivityMap.set(row.active_date, new Set());
+        }
+        dailyActivityMap.get(row.active_date)!.add(row.user_id);
+      }
+    }
+
+    const dailyActivity: Array<{ date: string; count: number }> = [];
+    const now = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateKey = d.toISOString().split("T")[0];
+      const usersSet = dailyActivityMap.get(dateKey);
+      dailyActivity.push({ date: dateKey, count: usersSet ? usersSet.size : 0 });
+    }
+
+    // Build enriched users
     const enrichedUsers = (profiles || []).map((profile) => {
-      const email = userEmailMap.get(profile.id) || "";
+      const authInfo = userAuthMap.get(profile.id);
+      const email = authInfo?.email || "";
+      const lastSignIn = authInfo?.lastSignIn || null;
+      const lastActivityDate = latestActivityMap.get(profile.id) || null;
+
+      // Determine most recent activity: compare lastSignIn and lastActivityDate
+      let lastActivity: string | null = lastSignIn;
+      if (lastActivityDate) {
+        const activityTs = new Date(lastActivityDate + "T23:59:59Z").toISOString();
+        if (!lastActivity || activityTs > lastActivity) {
+          lastActivity = activityTs;
+        }
+      }
+
       const isOnWaitlist = waitlistEmails.has(email.toLowerCase());
       const followersCount = follows?.filter((f) => f.following_id === profile.id).length || 0;
       const followingCount = follows?.filter((f) => f.follower_id === profile.id).length || 0;
@@ -131,12 +160,13 @@ Deno.serve(async (req) => {
         isOnWaitlist,
         followersCount,
         followingCount,
+        lastActivity,
       };
     });
 
-    console.log(`Returning ${enrichedUsers.length} enriched users`);
+    console.log(`Returning ${enrichedUsers.length} enriched users + daily activity`);
 
-    return new Response(JSON.stringify(enrichedUsers), {
+    return new Response(JSON.stringify({ users: enrichedUsers, dailyActivity }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
