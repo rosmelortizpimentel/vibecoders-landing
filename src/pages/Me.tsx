@@ -8,6 +8,7 @@ import { ProfileTab } from '@/components/me/ProfileTab';
 import { AppsTab } from '@/components/me/AppsTab';
 import { BrandingTab } from '@/components/me/BrandingTab';
 import { BetaTab } from '@/components/me/BetaTab';
+import { IdeasTab } from '@/components/me/IdeasTab';
 import { ProfilePreview } from '@/components/me/ProfilePreview';
 import { Loader2, Eye, X, Smartphone } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -35,6 +36,7 @@ const Me = () => {
     if (location.pathname === '/me/apps') return 'apps';
     if (location.pathname === '/me/branding') return 'branding';
     if (location.pathname === '/me/beta') return 'beta';
+    if (location.pathname === '/me/ideas') return 'ideas';
     return 'profile';
   };
   
@@ -48,9 +50,9 @@ const Me = () => {
     );
   }
 
-  // Beta tab has full-width layout (no preview)
-  const showPreview = !isMobile && activeTab !== 'beta';
-  const showMobilePreview = isMobile && activeTab !== 'beta';
+  // Beta and Ideas tabs have full-width layout (no preview)
+  const showPreview = !isMobile && activeTab !== 'beta' && activeTab !== 'ideas';
+  const showMobilePreview = isMobile && activeTab !== 'beta' && activeTab !== 'ideas';
 
   return (
     <>
@@ -83,6 +85,9 @@ const Me = () => {
               )}
               {activeTab === 'beta' && (
                 <BetaTab appsHook={appsHook} />
+              )}
+              {activeTab === 'ideas' && (
+                <IdeasTab />
               )}
             </div>
           </div>

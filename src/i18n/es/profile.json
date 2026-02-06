@@ -3,7 +3,8 @@
     "profile": "Mi Perfil",
     "apps": "Mis Apps",
     "branding": "Mi Branding",
-    "beta": "Beta Squad"
+    "beta": "Beta Squad",
+    "ideas": "Mis Ideas"
   },
   "fields": {
     "name": "Nombre",
@@ -42,5 +43,28 @@
   "saved": "Guardado",
   "error": "Error",
   "preview": "Vista Previa",
-  "required": "requerido"
+  "required": "requerido",
+  "ideas": {
+    "title": "Mis Ideas",
+    "description": "Un espacio privado para guardar tus ideas.",
+    "noIdeasTitle": "Sin ideas, aún",
+    "noIdeasMessage": "No tienes ideas guardadas. ¡Empieza a crear algo increíble!",
+    "createNew": "Crear nueva idea",
+    "backToList": "Volver a la lista",
+    "selectIdea": "Selecciona una idea para ver los detalles",
+    "newIdeaTitle": "Nueva Idea",
+    "titleLabel": "Título",
+    "titlePlaceholder": "Nombre de tu idea",
+    "descriptionLabel": "Descripción",
+    "descriptionPlaceholder": "Describe tu idea...",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "confirmDeleteTitle": "¿Estás seguro?",
+    "confirmDeleteMessage": "Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
+    "unsavedChangesTitle": "Cambios sin guardar",
+    "unsavedChangesMessage": "Tienes cambios sin guardar. ¿Quieres descartarlos o volver para guardar?",
+    "discard": "Descartar cambios",
+    "keepEditing": "Seguir editando"
+  }
 }

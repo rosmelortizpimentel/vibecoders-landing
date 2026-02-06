@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 export default function Feedback() {
   const t = useTranslation('feedback');
@@ -92,7 +93,7 @@ export default function Feedback() {
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground px-6">
             <img 
-              src="/images/vibecoders-logo.png" 
+              src={vibecodersLogo} 
               alt="Vibecoders" 
               className="h-20 w-20 mb-6 opacity-40 grayscale"
             />

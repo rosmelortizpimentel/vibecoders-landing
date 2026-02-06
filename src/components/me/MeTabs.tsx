@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Layers, Palette, FlaskConical } from 'lucide-react';
+import { User, Layers, Palette, FlaskConical, Lightbulb } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +13,7 @@ export function MeTabs() {
     { id: 'apps', label: t.tabs.apps, icon: Layers, path: '/me/apps' },
     { id: 'branding', label: t.tabs.branding, icon: Palette, path: '/me/branding' },
     { id: 'beta', label: t.tabs.beta, icon: FlaskConical, path: '/me/beta' },
+    { id: 'ideas', label: t.tabs.ideas, icon: Lightbulb, path: '/me/ideas' },
   ];
   
   const activeTab = tabs.find(tab => location.pathname === tab.path)?.id || 'profile';

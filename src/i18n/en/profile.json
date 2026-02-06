@@ -3,7 +3,8 @@
     "profile": "My Profile",
     "apps": "My Apps",
     "branding": "My Branding",
-    "beta": "Beta Squad"
+    "beta": "Beta Squad",
+    "ideas": "My Ideas"
   },
   "fields": {
     "name": "Name",
@@ -42,5 +43,28 @@
   "saved": "Saved",
   "error": "Error",
   "preview": "Preview",
-  "required": "required"
+  "required": "required",
+  "ideas": {
+    "title": "My Ideas",
+    "description": "A private space to store your ideas.",
+    "noIdeasTitle": "No ideas yet",
+    "noIdeasMessage": "You have no saved ideas. Start creating something amazing!",
+    "createNew": "Create new idea",
+    "backToList": "Back to list",
+    "selectIdea": "Select an idea to view details",
+    "newIdeaTitle": "New Idea",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Name of your idea",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "Describe your idea...",
+    "save": "Save",
+    "delete": "Delete",
+    "confirmDeleteTitle": "Are you sure?",
+    "confirmDeleteMessage": "This action cannot be undone.",
+    "cancel": "Cancel",
+    "unsavedChangesTitle": "Unsaved changes",
+    "unsavedChangesMessage": "You have unsaved changes. Do you want to discard them or go back to save?",
+    "discard": "Discard changes",
+    "keepEditing": "Keep editing"
+  }
 }
