@@ -20,6 +20,7 @@ import onboardingEs from '@/i18n/es/onboarding.json';
 import errorsEs from '@/i18n/es/errors.json';
 import adminEs from '@/i18n/es/admin.json';
 import feedbackEs from '@/i18n/es/feedback.json';
+import betaEs from '@/i18n/es/beta.json';
 
 // English imports
 import commonEn from '@/i18n/en/common.json';
@@ -41,6 +42,7 @@ import onboardingEn from '@/i18n/en/onboarding.json';
 import errorsEn from '@/i18n/en/errors.json';
 import adminEn from '@/i18n/en/admin.json';
 import feedbackEn from '@/i18n/en/feedback.json';
+import betaEn from '@/i18n/en/beta.json';
 
 const translations = {
   es: {
@@ -63,6 +65,7 @@ const translations = {
     errors: errorsEs,
     admin: adminEs,
     feedback: feedbackEs,
+    beta: betaEs,
   },
   en: {
     common: commonEn,
@@ -84,6 +87,7 @@ const translations = {
     errors: errorsEn,
     admin: adminEn,
     feedback: feedbackEn,
+    beta: betaEn,
   },
 } as const;
 

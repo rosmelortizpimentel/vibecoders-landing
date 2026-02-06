@@ -19,10 +19,16 @@ export interface AppData {
   created_at: string;
   updated_at: string;
   stacks?: string[];
-   is_verified: boolean;
-   verification_token: string;
-   verified_at: string | null;
-   verified_url: string | null;
+  is_verified: boolean;
+  verification_token: string;
+  verified_at: string | null;
+  verified_url: string | null;
+  // Beta fields
+  beta_active: boolean;
+  beta_mode: string;
+  beta_limit: number;
+  beta_link: string | null;
+  beta_instructions: string | null;
 }
 
 export function useApps() {

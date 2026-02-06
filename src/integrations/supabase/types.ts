@@ -191,6 +191,11 @@ export type Database = {
       }
       apps: {
         Row: {
+          beta_active: boolean
+          beta_instructions: string | null
+          beta_limit: number
+          beta_link: string | null
+          beta_mode: string
           category_id: string | null
           created_at: string
           description: string | null
@@ -212,6 +217,11 @@ export type Database = {
           verified_url: string | null
         }
         Insert: {
+          beta_active?: boolean
+          beta_instructions?: string | null
+          beta_limit?: number
+          beta_link?: string | null
+          beta_mode?: string
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -233,6 +243,11 @@ export type Database = {
           verified_url?: string | null
         }
         Update: {
+          beta_active?: boolean
+          beta_instructions?: string | null
+          beta_limit?: number
+          beta_link?: string | null
+          beta_mode?: string
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -270,6 +285,96 @@ export type Database = {
           },
           {
             foreignKeyName: "apps_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beta_feedback: {
+        Row: {
+          app_id: string
+          content: string
+          created_at: string
+          id: string
+          is_useful: boolean | null
+          rating: number | null
+          tester_id: string
+          type: string
+        }
+        Insert: {
+          app_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_useful?: boolean | null
+          rating?: number | null
+          tester_id: string
+          type: string
+        }
+        Update: {
+          app_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_useful?: boolean | null
+          rating?: number | null
+          tester_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_feedback_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beta_feedback_tester_id_fkey"
+            columns: ["tester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beta_testers: {
+        Row: {
+          app_id: string
+          feedback_count: number
+          id: string
+          joined_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          feedback_count?: number
+          id?: string
+          joined_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          feedback_count?: number
+          id?: string
+          joined_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_testers_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "beta_testers_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
