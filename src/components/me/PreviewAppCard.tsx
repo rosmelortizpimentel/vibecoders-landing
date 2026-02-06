@@ -58,7 +58,17 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
           {/* Title Row with Status Badge */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <h4 className="text-sm font-semibold text-gray-900 truncate">
-              {app.name || (() => { try { return new URL(app.url).hostname; } catch { return 'App'; } })()}
+              {app.name || (() => { 
+                try { 
+                  const normalized = app.url.trim();
+                  const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
+                    ? normalized 
+                    : `https://${normalized}`;
+                  return new URL(urlWithProtocol).hostname; 
+                } catch { 
+                  return 'App'; 
+                } 
+              })()}
             </h4>
             
             {/* Verified Badge */}

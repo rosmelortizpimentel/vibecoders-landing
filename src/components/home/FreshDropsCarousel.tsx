@@ -27,9 +27,14 @@ import {
      Autoplay({ delay: 4000, stopOnInteraction: true })
    );
  
-   const handleOpenApp = useCallback((url: string) => {
-     window.open(url, '_blank', 'noopener,noreferrer');
-   }, []);
+  const handleOpenApp = useCallback((url: string) => {
+    // Normalize URL - prepend https:// if missing
+    const normalized = url.trim();
+    const finalUrl = normalized.startsWith('http://') || normalized.startsWith('https://') 
+      ? normalized 
+      : `https://${normalized}`;
+    window.open(finalUrl, '_blank', 'noopener,noreferrer');
+  }, []);
  
    if (!apps.length) {
      return (

@@ -56,10 +56,25 @@ interface AppCardProps {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <h3 className="font-medium text-[#1c1c1c] truncate">
-            {app.name || (() => { try { return new URL(app.url).hostname; } catch { return 'App'; } })()}
+            {app.name || (() => { 
+              try { 
+                const normalized = app.url.trim();
+                const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
+                  ? normalized 
+                  : `https://${normalized}`;
+                return new URL(urlWithProtocol).hostname; 
+              } catch { 
+                return 'App'; 
+              } 
+            })()}
           </h3>
           <a
-            href={app.url}
+            href={(() => {
+              const normalized = app.url.trim();
+              return normalized.startsWith('http://') || normalized.startsWith('https://') 
+                ? normalized 
+                : `https://${normalized}`;
+            })()}
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
