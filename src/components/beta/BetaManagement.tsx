@@ -260,8 +260,26 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                     type="number"
                     min={1}
                     max={100}
-                    value={config.beta_limit}
-                    onChange={(e) => onConfigChange({ beta_limit: parseInt(e.target.value) || 10 })}
+                    value={config.beta_limit === 0 ? '' : config.beta_limit}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '') {
+                        // Allow empty while typing
+                        onConfigChange({ beta_limit: 0 });
+                      } else {
+                        const num = parseInt(value);
+                        if (!isNaN(num) && num >= 1 && num <= 100) {
+                          onConfigChange({ beta_limit: num });
+                        }
+                      }
+                    }}
+                    onBlur={(e) => {
+                      // On blur, ensure minimum value of 1
+                      const num = parseInt(e.target.value);
+                      if (isNaN(num) || num < 1) {
+                        onConfigChange({ beta_limit: 1 });
+                      }
+                    }}
                   />
                 </div>
               </div>
