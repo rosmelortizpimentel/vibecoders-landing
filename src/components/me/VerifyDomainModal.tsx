@@ -1,4 +1,5 @@
- import { useState } from 'react';
+import { useState } from 'react';
+import { normalizeUrl } from '@/lib/utils';
  import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
  import { Button } from '@/components/ui/button';
  import { Code, Copy, Check, Loader2, AlertCircle } from 'lucide-react';
@@ -78,7 +79,7 @@
  
    const hostname = (() => {
      try {
-       return new URL(appUrl).hostname;
+      return new URL(normalizeUrl(appUrl)).hostname;
      } catch {
        return appUrl;
      }
