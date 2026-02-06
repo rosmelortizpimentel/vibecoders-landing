@@ -53,9 +53,13 @@ export function useProfile() {
         }
       }
 
-      // Si no existe el perfil, lo creamos con username derivado del email
+      // Si no existe el perfil, lo creamos con username derivado del email y datos de Google
       if (!data) {
         let usernameToInsert: string | null = null;
+        
+        // Extraer datos de Google OAuth
+        const googleName = user.user_metadata?.full_name || user.user_metadata?.name || null;
+        const googleAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
         
         // Extraer username candidato del email
         if (user.email) {
@@ -78,9 +82,15 @@ export function useProfile() {
           }
         }
         
+        // Insertar perfil con nombre y avatar de Google
         const { data: newProfile, error: insertError } = await supabase
           .from('profiles')
-          .insert({ id: user.id, username: usernameToInsert })
+          .insert({ 
+            id: user.id, 
+            username: usernameToInsert,
+            name: googleName,
+            avatar_url: googleAvatar,
+          })
           .select()
           .maybeSingle();
 
@@ -94,9 +104,6 @@ export function useProfile() {
               .maybeSingle();
             
             if (existingProfile) {
-              // Apply Google fallback
-              const googleName = user.user_metadata?.full_name;
-              const googleAvatar = user.user_metadata?.avatar_url;
               setProfile({
                 ...existingProfile,
                 name: existingProfile.name || googleName || null,
@@ -107,14 +114,8 @@ export function useProfile() {
           }
           throw insertError;
         }
-        // Apply Google fallback for new profile
-        const googleName = user.user_metadata?.full_name;
-        const googleAvatar = user.user_metadata?.avatar_url;
-        setProfile(newProfile ? {
-          ...newProfile,
-          name: newProfile.name || googleName || null,
-          avatar_url: newProfile.avatar_url || googleAvatar || null,
-        } : null);
+        
+        setProfile(newProfile);
       } else {
         // Apply Google fallback for existing profile
         const googleName = user.user_metadata?.full_name;
