@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useBetaSquad } from '@/hooks/useBetaSquad';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DebouncedInput, DebouncedTextarea } from '@/components/ui/debounced-input';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,14 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { 
   FlaskConical, 
-  ChevronDown, 
   Check, 
   X, 
   UserMinus,
@@ -36,6 +31,7 @@ import {
   Lightbulb,
   Palette,
   HelpCircle,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -86,18 +82,17 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
   const { t } = useTranslation('beta');
   const { updateTesterStatus, removeTester, markFeedbackUseful } = useBetaSquad(appId);
   
-  const [isOpen, setIsOpen] = useState(config.beta_active);
   const [testers, setTesters] = useState<Tester[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loadingTesters, setLoadingTesters] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
 
   useEffect(() => {
-    if (isOpen && config.beta_active) {
+    if (config.beta_active) {
       fetchTesters();
       fetchFeedback();
     }
-  }, [isOpen, config.beta_active, appId]);
+  }, [config.beta_active, appId]);
 
   const fetchTesters = async () => {
     setLoadingTesters(true);
@@ -205,174 +200,124 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
   const acceptedTesters = testers.filter(t => t.status === 'accepted');
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger asChild>
-        <Button 
-          variant="ghost" 
-          className="w-full justify-between p-4 h-auto"
-        >
-          <div className="flex items-center gap-2">
-            <FlaskConical className="w-5 h-5 text-primary" />
-            <span className="font-medium">{t('manageBeta')}</span>
-            {config.beta_active && (
-              <Badge variant="secondary" className="ml-2">
-                {acceptedTesters.length}/{config.beta_limit}
-              </Badge>
-            )}
-          </div>
-          <ChevronDown className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </Button>
-      </CollapsibleTrigger>
-      
-      <CollapsibleContent className="px-4 pb-4 space-y-6">
-        {/* Config Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="beta-active">{t('activateBeta')}</Label>
-            <Switch
-              id="beta-active"
-              checked={config.beta_active}
-              onCheckedChange={(checked) => onConfigChange({ beta_active: checked })}
-            />
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <FlaskConical className="w-5 h-5 text-primary" />
+        <span className="font-medium">{t('manageBeta')}</span>
+        {config.beta_active && (
+          <Badge variant="secondary" className="ml-2">
+            {acceptedTesters.length}/{config.beta_limit}
+          </Badge>
+        )}
+      </div>
 
-          {config.beta_active && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>{t('betaMode')}</Label>
-                  <Select
-                    value={config.beta_mode}
-                    onValueChange={(value) => onConfigChange({ beta_mode: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="open">{t('modeOpen')}</SelectItem>
-                      <SelectItem value="closed">{t('modeClosed')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>{t('limit')}</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={config.beta_limit === 0 ? '' : config.beta_limit}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === '') {
-                        // Allow empty while typing
-                        onConfigChange({ beta_limit: 0 });
-                      } else {
-                        const num = parseInt(value);
-                        if (!isNaN(num) && num >= 1 && num <= 100) {
-                          onConfigChange({ beta_limit: num });
-                        }
-                      }
-                    }}
-                    onBlur={(e) => {
-                      // On blur, ensure minimum value of 1
-                      const num = parseInt(e.target.value);
-                      if (isNaN(num) || num < 1) {
-                        onConfigChange({ beta_limit: 1 });
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('secretLink')}</Label>
-                <Input
-                  value={config.beta_link || ''}
-                  onChange={(e) => onConfigChange({ beta_link: e.target.value || null })}
-                  placeholder={t('secretLinkPlaceholder')}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('instructionsLabel')}</Label>
-                <Textarea
-                  value={config.beta_instructions || ''}
-                  onChange={(e) => onConfigChange({ beta_instructions: e.target.value || null })}
-                  placeholder={t('instructionsPlaceholder')}
-                  rows={3}
-                />
-              </div>
-            </>
-          )}
+      {/* Config Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="beta-active">{t('activateBeta')}</Label>
+          <Switch
+            id="beta-active"
+            checked={config.beta_active}
+            onCheckedChange={(checked) => onConfigChange({ beta_active: checked })}
+          />
         </div>
 
         {config.beta_active && (
           <>
-            <Separator />
-
-            {/* Pending Requests */}
-            {config.beta_mode === 'closed' && (
-              <div className="space-y-3">
-                <h4 className="font-medium flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  {t('pendingRequests')} ({pendingTesters.length})
-                </h4>
-                {pendingTesters.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t('noPending')}</p>
-                ) : (
-                  <div className="space-y-2">
-                    {pendingTesters.map((tester) => (
-                      <div 
-                        key={tester.id} 
-                        className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage src={tester.profile?.avatar_url || undefined} />
-                            <AvatarFallback>
-                              {(tester.profile?.name || 'U').charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm font-medium">
-                            {tester.profile?.name || tester.profile?.username || 'User'}
-                          </span>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
-                            onClick={() => handleAccept(tester.id)}
-                          >
-                            <Check className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            size="icon" 
-                            variant="ghost" 
-                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                            onClick={() => handleReject(tester.id)}
-                          >
-                            <X className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('betaMode')}</Label>
+                <Select
+                  value={config.beta_mode}
+                  onValueChange={(value) => onConfigChange({ beta_mode: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">{t('modeOpen')}</SelectItem>
+                    <SelectItem value="closed">{t('modeClosed')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
+              <div className="space-y-2">
+                <Label>{t('limit')}</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={config.beta_limit === 0 ? '' : config.beta_limit}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      onConfigChange({ beta_limit: 0 });
+                    } else {
+                      const num = parseInt(value);
+                      if (!isNaN(num) && num >= 1 && num <= 100) {
+                        onConfigChange({ beta_limit: num });
+                      }
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseInt(e.target.value);
+                    if (isNaN(num) || num < 1) {
+                      onConfigChange({ beta_limit: 1 });
+                    }
+                  }}
+                />
+              </div>
+            </div>
 
-            {/* Accepted Testers */}
+            <div className="space-y-2">
+              <Label>{t('secretLink')}</Label>
+              <DebouncedInput
+                value={config.beta_link || ''}
+                onValueChange={(value) => onConfigChange({ beta_link: value || null })}
+                placeholder={t('secretLinkPlaceholder')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>{t('instructionsLabel')}</Label>
+                <Link 
+                  to="/post/end-user-beta-testing-guide" 
+                  target="_blank"
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  {t('viewGuide') || 'Ver guía'}
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
+              </div>
+              <DebouncedTextarea
+                value={config.beta_instructions || ''}
+                onValueChange={(value) => onConfigChange({ beta_instructions: value || null })}
+                placeholder={t('instructionsPlaceholder')}
+                rows={6}
+                className="min-h-[160px]"
+              />
+            </div>
+          </>
+        )}
+      </div>
+
+      {config.beta_active && (
+        <>
+          <Separator />
+
+          {/* Pending Requests */}
+          {config.beta_mode === 'closed' && (
             <div className="space-y-3">
               <h4 className="font-medium flex items-center gap-2">
-                <Check className="w-4 h-4" />
-                {t('acceptedTesters')} ({acceptedTesters.length})
+                <Clock className="w-4 h-4" />
+                {t('pendingRequests')} ({pendingTesters.length})
               </h4>
-              {acceptedTesters.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('noTesters')}</p>
+              {pendingTesters.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{t('noPending')}</p>
               ) : (
                 <div className="space-y-2">
-                  {acceptedTesters.map((tester) => (
+                  {pendingTesters.map((tester) => (
                     <div 
                       key={tester.id} 
                       className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
@@ -384,89 +329,139 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                             {(tester.profile?.name || 'U').charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <span className="text-sm font-medium">
-                            {tester.profile?.name || tester.profile?.username || 'User'}
-                          </span>
-                          {tester.feedback_count > 0 && (
-                            <span className="text-xs text-muted-foreground ml-2">
-                              ({tester.feedback_count} {t('feedbackCount').replace('{count}', '')})
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-sm font-medium">
+                          {tester.profile?.name || tester.profile?.username || 'User'}
+                        </span>
                       </div>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                        onClick={() => handleRemove(tester.id)}
-                      >
-                        <UserMinus className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <Separator />
-
-            {/* Feedback Inbox */}
-            <div className="space-y-3">
-              <h4 className="font-medium flex items-center gap-2">
-                <MessageSquare className="w-4 h-4" />
-                {t('feedbackInbox')} ({feedback.length})
-              </h4>
-              {feedback.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('noFeedback')}</p>
-              ) : (
-                <div className="space-y-3 max-h-64 overflow-y-auto">
-                  {feedback.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="p-3 rounded-lg border bg-card space-y-2"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {getTypeIcon(item.type)}
-                          <Badge variant="outline" className="text-xs">
-                            {getTypeLabel(item.type)}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            {item.tester?.name || item.tester?.username}
-                          </span>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant={item.is_useful ? 'default' : 'outline'}
-                          className="h-7 gap-1"
-                          onClick={() => handleMarkUseful(item.id, item.is_useful)}
+                      <div className="flex gap-1">
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                          onClick={() => handleAccept(tester.id)}
                         >
-                          <ThumbsUp className="w-3 h-3" />
-                          {item.is_useful ? t('marked') : t('markUseful')}
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleReject(tester.id)}
+                        >
+                          <X className="w-4 h-4" />
                         </Button>
                       </div>
-                      <p className="text-sm">{item.content}</p>
-                      {item.rating && (
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <span 
-                              key={star}
-                              className={star <= item.rating! ? 'text-yellow-400' : 'text-muted'}
-                            >
-                              ★
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
               )}
             </div>
-          </>
-        )}
-      </CollapsibleContent>
-    </Collapsible>
+          )}
+
+          {/* Accepted Testers */}
+          <div className="space-y-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <Check className="w-4 h-4" />
+              {t('acceptedTesters')} ({acceptedTesters.length})
+            </h4>
+            {acceptedTesters.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('noTesters')}</p>
+            ) : (
+              <div className="space-y-2">
+                {acceptedTesters.map((tester) => (
+                  <div 
+                    key={tester.id} 
+                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={tester.profile?.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {(tester.profile?.name || 'U').charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <span className="text-sm font-medium">
+                          {tester.profile?.name || tester.profile?.username || 'User'}
+                        </span>
+                        {tester.feedback_count > 0 && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            ({tester.feedback_count} {t('feedbackCount').replace('{count}', '')})
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                      onClick={() => handleRemove(tester.id)}
+                    >
+                      <UserMinus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* Feedback Inbox */}
+          <div className="space-y-3">
+            <h4 className="font-medium flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" />
+              {t('feedbackInbox')} ({feedback.length})
+            </h4>
+            {feedback.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('noFeedback')}</p>
+            ) : (
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {feedback.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="p-3 rounded-lg border bg-card space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {getTypeIcon(item.type)}
+                        <Badge variant="outline" className="text-xs">
+                          {getTypeLabel(item.type)}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {item.tester?.name || item.tester?.username}
+                        </span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant={item.is_useful ? 'default' : 'outline'}
+                        className="h-7 gap-1"
+                        onClick={() => handleMarkUseful(item.id, item.is_useful)}
+                      >
+                        <ThumbsUp className="w-3 h-3" />
+                        {item.is_useful ? t('marked') : t('markUseful')}
+                      </Button>
+                    </div>
+                    <p className="text-sm">{item.content}</p>
+                    {item.rating && (
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <span 
+                            key={star}
+                            className={star <= item.rating! ? 'text-yellow-400' : 'text-muted'}
+                          >
+                            ★
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 }

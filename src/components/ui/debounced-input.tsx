@@ -17,17 +17,17 @@ interface DebouncedTextareaProps extends Omit<React.ComponentProps<"textarea">, 
 
 /**
  * Input component with local state and debounced updates.
- * Prevents cursor jumping issues caused by immediate parent state updates.
+ * Uses focus-gating to prevent cursor jumping: only syncs from props when NOT focused.
  */
 export const DebouncedInput = React.forwardRef<HTMLInputElement, DebouncedInputProps>(
   ({ value, onValueChange, debounceMs = 300, className, ...props }, ref) => {
     const [localValue, setLocalValue] = React.useState(value);
-    const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-    const isTypingRef = React.useRef(false);
+    const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isFocusedRef = React.useRef(false);
 
-    // Sync local state with prop value only when not actively typing
+    // Sync local state with prop value ONLY when not focused
     React.useEffect(() => {
-      if (!isTypingRef.current) {
+      if (!isFocusedRef.current) {
         setLocalValue(value);
       }
     }, [value]);
@@ -43,7 +43,6 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement, DebouncedInputP
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = e.target.value;
-      isTypingRef.current = true;
       setLocalValue(newValue);
 
       // Clear previous timeout
@@ -54,11 +53,16 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement, DebouncedInputP
       // Set new debounced update
       timeoutRef.current = setTimeout(() => {
         onValueChange(newValue);
-        isTypingRef.current = false;
       }, debounceMs);
     };
 
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      isFocusedRef.current = true;
+      props.onFocus?.(e);
+    };
+
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      isFocusedRef.current = false;
       // Immediately sync on blur
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -66,7 +70,6 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement, DebouncedInputP
       if (localValue !== value) {
         onValueChange(localValue);
       }
-      isTypingRef.current = false;
       props.onBlur?.(e);
     };
 
@@ -75,6 +78,7 @@ export const DebouncedInput = React.forwardRef<HTMLInputElement, DebouncedInputP
         ref={ref}
         value={localValue}
         onChange={handleChange}
+        onFocus={handleFocus}
         onBlur={handleBlur}
         className={cn(className)}
         {...props}
@@ -86,17 +90,17 @@ DebouncedInput.displayName = "DebouncedInput";
 
 /**
  * Textarea component with local state and debounced updates.
- * Prevents cursor jumping issues caused by immediate parent state updates.
+ * Uses focus-gating to prevent cursor jumping: only syncs from props when NOT focused.
  */
 export const DebouncedTextarea = React.forwardRef<HTMLTextAreaElement, DebouncedTextareaProps>(
   ({ value, onValueChange, debounceMs = 300, className, ...props }, ref) => {
     const [localValue, setLocalValue] = React.useState(value);
-    const timeoutRef = React.useRef<NodeJS.Timeout | null>(null);
-    const isTypingRef = React.useRef(false);
+    const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const isFocusedRef = React.useRef(false);
 
-    // Sync local state with prop value only when not actively typing
+    // Sync local state with prop value ONLY when not focused
     React.useEffect(() => {
-      if (!isTypingRef.current) {
+      if (!isFocusedRef.current) {
         setLocalValue(value);
       }
     }, [value]);
@@ -112,7 +116,6 @@ export const DebouncedTextarea = React.forwardRef<HTMLTextAreaElement, Debounced
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value;
-      isTypingRef.current = true;
       setLocalValue(newValue);
 
       // Clear previous timeout
@@ -123,11 +126,16 @@ export const DebouncedTextarea = React.forwardRef<HTMLTextAreaElement, Debounced
       // Set new debounced update
       timeoutRef.current = setTimeout(() => {
         onValueChange(newValue);
-        isTypingRef.current = false;
       }, debounceMs);
     };
 
+    const handleFocus = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      isFocusedRef.current = true;
+      props.onFocus?.(e);
+    };
+
     const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+      isFocusedRef.current = false;
       // Immediately sync on blur
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -135,7 +143,6 @@ export const DebouncedTextarea = React.forwardRef<HTMLTextAreaElement, Debounced
       if (localValue !== value) {
         onValueChange(localValue);
       }
-      isTypingRef.current = false;
       props.onBlur?.(e);
     };
 
@@ -144,6 +151,7 @@ export const DebouncedTextarea = React.forwardRef<HTMLTextAreaElement, Debounced
         ref={ref}
         value={localValue}
         onChange={handleChange}
+        onFocus={handleFocus}
         onBlur={handleBlur}
         className={cn(className)}
         {...props}

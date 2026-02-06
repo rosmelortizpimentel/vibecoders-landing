@@ -18,6 +18,7 @@ import Projects from "./pages/Projects";
 import Tools from "./pages/Tools";
 import Feedback from "./pages/Feedback";
 import AppDetail from "./pages/AppDetail";
+import Post from "./pages/Post";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { AuthenticatedLayout } from "./layouts/AuthenticatedLayout";
 
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/profile" element={<Profile />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/post/:slug" element={<Post />} />
           <Route path="/app/:appId" element={<AppDetail />} />
           
           {/* Admin routes - protected by Admin component */}
