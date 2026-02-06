@@ -6,12 +6,13 @@ import { PioneerBadge } from '@/components/PioneerBadge';
 
 import { FollowButton } from '@/components/FollowButton';
 import { FollowersList } from '@/components/profile/FollowersList';
+import { BetaContributionsBadges } from '@/components/beta/BetaContributionsBadges';
 import { useFollow } from '@/hooks/useFollow';
 import { useFavicon } from '@/hooks/useFavicon';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfileStats } from '@/hooks/useProfileStats';
 import { useProfileTracking, trackAppClick } from '@/hooks/useProfileTracking';
- import { Eye } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { AppLikeButton } from '@/components/profile/AppLikeButton';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
@@ -443,7 +444,10 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
           />
         )}
 
-        {/* Footer */}
+        {/* Beta Contributions Badges */}
+        {viewMode === 'apps' && (
+          <BetaContributionsBadges userId={profile.id} />
+        )}
         <div className="py-4 border-t border-gray-100 bg-white">
           <button
             onClick={() => {

@@ -29,3 +29,12 @@ verify_jwt = false
 
 [functions.admin-users-list]
 verify_jwt = false
+
+[functions.get-app-detail]
+verify_jwt = false
+
+[functions.join-beta]
+verify_jwt = false
+
+[functions.submit-beta-feedback]
+verify_jwt = false

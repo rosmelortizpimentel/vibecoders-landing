@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { 
   Select,
   SelectContent,
@@ -16,10 +17,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TechStackSelector } from './TechStackSelector';
- import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield } from 'lucide-react';
+import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
- import { VerificationBadge } from './VerificationBadge';
- import { VerifyDomainModal } from './VerifyDomainModal';
+import { VerificationBadge } from './VerificationBadge';
+import { VerifyDomainModal } from './VerifyDomainModal';
+import { BetaManagement } from '@/components/beta/BetaManagement';
 
 interface AppEditorProps {
   app: AppData;
@@ -298,35 +300,55 @@ interface AppEditorProps {
           onToggle={handleStackToggle}
         />
 
+        <Separator />
+
+        {/* Beta Management */}
+        <BetaManagement
+          appId={app.id}
+          config={{
+            beta_active: localApp.beta_active ?? false,
+            beta_mode: localApp.beta_mode ?? 'open',
+            beta_limit: localApp.beta_limit ?? 10,
+            beta_link: localApp.beta_link ?? null,
+            beta_instructions: localApp.beta_instructions ?? null,
+          }}
+          onConfigChange={(updates) => {
+            setLocalApp(prev => ({ ...prev, ...updates }));
+            autoSave(updates);
+          }}
+        />
+
+        <Separator />
+
         {/* Delete */}
-         <div className="pt-4 border-t border-gray-200 space-y-4">
-           {/* Verification Section */}
-           <div className="flex items-center justify-between">
-             <div className="flex items-center gap-2">
-               <VerificationBadge isVerified={localApp.is_verified} />
-               <span className="text-sm text-gray-600">
-                 {localApp.is_verified 
-                   ? `Verificado el ${formatVerifiedDate(localApp.verified_at)}`
-                   : 'Verifica la propiedad de este dominio'
-                 }
-               </span>
-             </div>
-             {!localApp.is_verified && (
-               <Button 
-                 variant="outline" 
-                 size="sm"
-                 onClick={() => setShowVerifyModal(true)}
-                 className="border-[#3D5AFE] text-[#3D5AFE] hover:bg-[#3D5AFE]/10"
-               >
-                 <Shield className="h-4 w-4 mr-2" />
-                 Verificar
-               </Button>
-             )}
-           </div>
- 
+        <div className="pt-4 space-y-4">
+          {/* Verification Section */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <VerificationBadge isVerified={localApp.is_verified} />
+              <span className="text-sm text-muted-foreground">
+                {localApp.is_verified 
+                  ? `Verificado el ${formatVerifiedDate(localApp.verified_at)}`
+                  : 'Verifica la propiedad de este dominio'
+                }
+              </span>
+            </div>
+            {!localApp.is_verified && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setShowVerifyModal(true)}
+                className="border-primary text-primary hover:bg-primary/10"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Verificar
+              </Button>
+            )}
+          </div>
+
           <Button
             variant="ghost"
-            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+            className="text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={onDelete}
           >
             <Trash2 className="h-4 w-4 mr-2" />
