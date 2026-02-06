@@ -91,15 +91,21 @@
        );
      }
  
-     // Fetch the website with timeout
-     console.log(`[verify-app-domain] Fetching ${app.url}`);
-     
-     let html: string;
-     try {
-       const controller = new AbortController();
-       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-       
-       const response = await fetch(app.url, {
+    // Normalize URL - add https:// if missing
+    let fetchUrl = app.url.trim();
+    if (!fetchUrl.startsWith('http://') && !fetchUrl.startsWith('https://')) {
+      fetchUrl = `https://${fetchUrl}`;
+    }
+
+    // Fetch the website with timeout
+    console.log(`[verify-app-domain] Fetching ${fetchUrl}`);
+    
+    let html: string;
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+      
+      const response = await fetch(fetchUrl, {
          signal: controller.signal,
          headers: {
            'User-Agent': 'VibeCoders-Verification-Bot/1.0',
@@ -111,13 +117,13 @@
        
        if (!response.ok) {
          console.error('Fetch failed with status:', response.status);
-         return new Response(
-           JSON.stringify({ 
-             success: false, 
-             error: 'fetch_failed', 
-             message: `No pudimos acceder a ${app.url} (status: ${response.status})` 
-           }),
-           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              error: 'fetch_failed', 
+              message: `No pudimos acceder a ${fetchUrl} (status: ${response.status})` 
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
          );
        }
        
@@ -125,14 +131,14 @@
      } catch (fetchError) {
        console.error('Fetch error:', fetchError);
        const isTimeout = fetchError instanceof Error && fetchError.name === 'AbortError';
-       return new Response(
-         JSON.stringify({ 
-           success: false, 
-           error: isTimeout ? 'timeout' : 'fetch_error', 
-           message: isTimeout 
-             ? `El sitio ${app.url} no responde (timeout)` 
-             : `No pudimos acceder a ${app.url}` 
-         }),
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            error: isTimeout ? 'timeout' : 'fetch_error', 
+            message: isTimeout 
+              ? `El sitio ${fetchUrl} no responde (timeout)` 
+              : `No pudimos acceder a ${fetchUrl}` 
+          }),
          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
        );
      }
@@ -150,7 +156,7 @@
          JSON.stringify({ 
            success: false, 
            error: 'meta_not_found', 
-           message: `No encontramos la etiqueta meta en ${new URL(app.url).hostname}. Asegúrate de haber desplegado los cambios.` 
+            message: `No encontramos la etiqueta meta en ${new URL(fetchUrl).hostname}. Asegúrate de haber desplegado los cambios.` 
          }),
          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
        );
@@ -180,7 +186,7 @@
        .update({
          is_verified: true,
          verified_at: new Date().toISOString(),
-         verified_url: app.url,
+          verified_url: fetchUrl,
        })
        .eq('id', app_id);
  
