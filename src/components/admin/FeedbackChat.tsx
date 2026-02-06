@@ -76,14 +76,19 @@ export function FeedbackChat({ thread }: FeedbackChatProps) {
           />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
-        <div>
-          <p className="font-medium">
-            {thread.profile?.username 
-              ? `@${thread.profile.username}` 
-              : thread.profile?.name || 'Usuario'}
-          </p>
-          {thread.profile?.name && thread.profile?.username && (
-            <p className="text-sm text-muted-foreground">{thread.profile.name}</p>
+        <div className="min-w-0">
+          {thread.profile?.username && (
+            <p className="font-medium truncate">
+              @{thread.profile.username}
+            </p>
+          )}
+          {thread.profile?.name && (
+            <p className="text-sm text-muted-foreground truncate">
+              {thread.profile.name}
+            </p>
+          )}
+          {!thread.profile?.username && !thread.profile?.name && (
+            <p className="font-medium">Usuario</p>
           )}
         </div>
       </div>

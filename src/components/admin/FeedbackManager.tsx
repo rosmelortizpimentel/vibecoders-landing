@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MessageCircle, Loader2 } from 'lucide-react';
 import { useFeedback } from '@/hooks/useFeedback';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -9,6 +9,13 @@ export function FeedbackManager() {
   const t = useTranslation('feedback');
   const { allThreads, threadsLoading } = useFeedback();
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+
+  // Reset selection if thread was deleted
+  useEffect(() => {
+    if (selectedThreadId && allThreads && !allThreads.find(t => t.id === selectedThreadId)) {
+      setSelectedThreadId(null);
+    }
+  }, [allThreads, selectedThreadId]);
 
   const selectedThread = allThreads?.find(t => t.id === selectedThreadId) || null;
 

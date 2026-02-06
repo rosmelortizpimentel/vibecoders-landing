@@ -21,5 +21,10 @@
   "imageLimit": "Solo puedes adjuntar hasta 5 imágenes",
   "errorSending": "Error al enviar el mensaje",
   "errorUploading": "Error al subir las imágenes",
-  "loginRequired": "Debes iniciar sesión para enviar mensajes"
+  "loginRequired": "Debes iniciar sesión para enviar mensajes",
+  "deleteThread": "Eliminar conversación",
+  "deleteConfirm": "¿Eliminar conversación?",
+  "deleteDescription": "Esta acción eliminará todos los mensajes e imágenes de esta conversación. No se puede deshacer.",
+  "deleted": "Conversación eliminada",
+  "deleteError": "Error al eliminar"
 }
