@@ -63,5 +63,6 @@
   "viewApp": "Ver app",
   "appBy": "por",
   "appNotFound": "App no encontrada",
-  "loading": "Cargando..."
+  "loading": "Cargando...",
+  "viewGuide": "Ver guía"
 }
