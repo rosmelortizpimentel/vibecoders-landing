@@ -26,5 +26,14 @@
   "deleteConfirm": "¿Eliminar conversación?",
   "deleteDescription": "Esta acción eliminará todos los mensajes e imágenes de esta conversación. No se puede deshacer.",
   "deleted": "Conversación eliminada",
-  "deleteError": "Error al eliminar"
+  "deleteError": "Error al eliminar",
+  "editMessage": "Editar mensaje",
+  "deleteMessage": "Eliminar mensaje",
+  "sendEmail": "Enviar por correo",
+  "deleteMessageConfirm": "¿Eliminar este mensaje?",
+  "deleteMessageDescription": "Se eliminará el mensaje y sus adjuntos. No se puede deshacer.",
+  "messageDeleted": "Mensaje eliminado",
+  "messageUpdated": "Mensaje actualizado",
+  "saveEdit": "Guardar",
+  "cancelEdit": "Cancelar"
 }

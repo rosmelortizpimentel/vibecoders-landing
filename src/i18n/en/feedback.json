@@ -26,5 +26,14 @@
   "deleteConfirm": "Delete conversation?",
   "deleteDescription": "This will delete all messages and images in this conversation. This cannot be undone.",
   "deleted": "Conversation deleted",
-  "deleteError": "Error deleting"
+  "deleteError": "Error deleting",
+  "editMessage": "Edit message",
+  "deleteMessage": "Delete message",
+  "sendEmail": "Send by email",
+  "deleteMessageConfirm": "Delete this message?",
+  "deleteMessageDescription": "This will delete the message and its attachments. This cannot be undone.",
+  "messageDeleted": "Message deleted",
+  "messageUpdated": "Message updated",
+  "saveEdit": "Save",
+  "cancelEdit": "Cancel"
 }
