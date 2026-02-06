@@ -169,14 +169,9 @@ export function useFeedback() {
 
       console.log('[useFeedback] sendMessage - threadId:', threadId, 'isAdmin:', isAdmin, 'userId:', user.id);
 
-      // Create thread if it doesn't exist (for regular users only)
-      // Admin users should always provide a threadId when replying
+      // Create thread if it doesn't exist
+      // Anyone can start a new conversation from /hablemos
       if (!finalThreadId) {
-        if (isAdmin) {
-          console.error('[useFeedback] Admin must provide a threadId to reply');
-          throw new Error('No thread ID - Admin must select a conversation first');
-        }
-        
         console.log('[useFeedback] Creating new feedback thread for user:', user.id);
         const { data: newThread, error: threadError } = await supabase
           .from('feedback_threads')
