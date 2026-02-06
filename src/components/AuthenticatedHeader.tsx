@@ -16,7 +16,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
@@ -78,6 +78,7 @@ export function AuthenticatedHeader({
     { path: '/me', label: t.navigation.myProfile, icon: User, premium: false },
     { path: '/startups', label: t.navigation.startups, icon: Rocket, premium: false },
     { path: '/tools', label: t.navigation.tools, icon: Wrench, premium: false },
+    { path: '/hablemos', label: t.navigation.feedback, icon: MessageCircle, premium: false },
     ...(isInWaitlist ? [{ path: '/buildlog', label: t.navigation.buildLog, icon: Crown, premium: true }] : []),
   ];
 

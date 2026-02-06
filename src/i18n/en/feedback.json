@@ -1,0 +1,23 @@
+{
+  "title": "Let's Talk",
+  "subtitle": "Send us your feedback, suggestions, or report issues",
+  "placeholder": "Write your message...",
+  "send": "Send",
+  "attachImages": "Attach images",
+  "maxImages": "Maximum 5 images",
+  "you": "You",
+  "admin": "Admin",
+  "empty": "No messages yet. Be the first to write!",
+  "sending": "Sending...",
+  "sent": "Sent",
+  "adminTitle": "User Feedback",
+  "adminSubtitle": "Conversations with users",
+  "noConversations": "No conversations yet",
+  "messages": "messages",
+  "selectConversation": "Select a conversation",
+  "removeImage": "Remove image",
+  "imageLimit": "You can only attach up to 5 images",
+  "errorSending": "Error sending message",
+  "errorUploading": "Error uploading images",
+  "loginRequired": "You must be logged in to send messages"
+}
