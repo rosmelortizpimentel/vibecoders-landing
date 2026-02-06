@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Check, X } from 'lucide-react';
@@ -17,6 +17,7 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isFocusedRef = useRef(false);
 
   const checkUsernameAvailable = useCallback(async (usernameToCheck: string): Promise<boolean> => {
     if (!userId || !usernameToCheck) return false;
@@ -38,10 +39,12 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
     }
   }, [userId]);
 
-  // Sync with prop changes
+  // Sync with prop changes ONLY when not focused (prevents cursor jumping)
   useEffect(() => {
-    setUsername(currentUsername || '');
-    setIsAvailable(currentUsername ? true : null);
+    if (!isFocusedRef.current) {
+      setUsername(currentUsername || '');
+      setIsAvailable(currentUsername ? true : null);
+    }
   }, [currentUsername]);
 
   // Debounce de 1 segundo para validar disponibilidad
@@ -110,6 +113,8 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
           type="text"
           value={username}
           onChange={handleUsernameChange}
+          onFocus={() => { isFocusedRef.current = true; }}
+          onBlur={() => { isFocusedRef.current = false; }}
           placeholder={t.username.placeholder}
           className="pl-7 pr-10 border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
         />

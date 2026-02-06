@@ -48,15 +48,19 @@ const Me = () => {
     );
   }
 
+  // Beta tab has full-width layout (no preview)
+  const showPreview = !isMobile && activeTab !== 'beta';
+  const showMobilePreview = isMobile && activeTab !== 'beta';
+
   return (
     <>
       <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1">
         <div className="flex gap-4 sm:gap-6">
           {/* Main content */}
-          <div className={isMobile ? 'w-full' : 'w-[60%]'}>
+          <div className={showPreview ? 'w-[60%]' : 'w-full'}>
             <MeTabs />
             
-            <div className={`mt-4 sm:mt-6 ${isMobile ? 'pb-20' : ''}`}>
+            <div className={`mt-4 sm:mt-6 ${showMobilePreview ? 'pb-20' : ''}`}>
               {activeTab === 'profile' && (
                 <ProfileTab 
                   profile={profile} 
@@ -83,8 +87,8 @@ const Me = () => {
             </div>
           </div>
 
-          {/* Preview sidebar - only on desktop */}
-          {!isMobile && (
+          {/* Preview sidebar - only on desktop and NOT on beta tab */}
+          {showPreview && (
             <div className="w-[40%]">
               <div className="sticky top-20">
                 <ProfilePreview profile={profile} apps={appsHook.apps} />
@@ -94,8 +98,8 @@ const Me = () => {
         </div>
       </div>
 
-      {/* Mobile: Fixed footer preview button + Sheet */}
-      {isMobile && (
+      {/* Mobile: Fixed footer preview button + Sheet (hidden on beta tab) */}
+      {showMobilePreview && (
         <Sheet open={previewOpen} onOpenChange={setPreviewOpen}>
           <SheetTrigger asChild>
             <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border px-4 py-3">
