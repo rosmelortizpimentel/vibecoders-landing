@@ -164,7 +164,16 @@ export default function AppDetail() {
                       {/* Visit Button */}
                       <div className="mt-4">
                         <Button asChild>
-                          <a href={app.url} target="_blank" rel="noopener noreferrer">
+                          <a 
+                            href={(() => {
+                              const normalized = app.url.trim();
+                              return normalized.startsWith('http://') || normalized.startsWith('https://') 
+                                ? normalized 
+                                : `https://${normalized}`;
+                            })()} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                          >
                             <ExternalLink className="w-4 h-4 mr-2" />
                             {t('viewApp')}
                           </a>

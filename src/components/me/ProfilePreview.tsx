@@ -225,14 +225,22 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
           </p>
           <div className="space-y-2">
             {visibleApps.slice(0, 3).map(app => {
-              // Generate app URL with ref
+              // Generate app URL with ref - normalize first to handle URLs without protocol
               const appUrl = (() => {
                 try {
-                  const url = new URL(app.url);
+                  const normalized = app.url.trim();
+                  const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
+                    ? normalized 
+                    : `https://${normalized}`;
+                  const url = new URL(urlWithProtocol);
                   url.searchParams.set('ref', 'vibecoders.la');
                   return url.toString();
                 } catch {
-                  return app.url;
+                  // Fallback: just prepend https:// if missing
+                  const normalized = app.url.trim();
+                  return normalized.startsWith('http://') || normalized.startsWith('https://') 
+                    ? normalized 
+                    : `https://${normalized}`;
                 }
               })();
               
