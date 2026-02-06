@@ -282,11 +282,11 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
               <div className="flex items-center justify-between">
                 <Label>{t('instructionsLabel')}</Label>
                 <Link 
-                  to="/post/end-user-beta-testing-guide" 
+                  to="/post/writing-tester-instructions" 
                   target="_blank"
                   className="text-xs text-primary hover:underline flex items-center gap-1"
                 >
-                  {t('viewGuide') || 'Ver guía'}
+                  {t('viewGuide')}
                   <ExternalLink className="w-3 h-3" />
                 </Link>
               </div>

@@ -63,5 +63,6 @@
   "viewApp": "View app",
   "appBy": "by",
   "appNotFound": "App not found",
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "viewGuide": "View guide"
 }
