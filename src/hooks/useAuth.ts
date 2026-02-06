@@ -35,6 +35,17 @@ export function useAuth() {
       setSession(existingSession);
       setUser(existingSession?.user ?? null);
       setLoading(false);
+
+      // Silent daily activity log (transparent, no impact on UX)
+      if (existingSession?.user) {
+        supabase
+          .from('user_activity_log')
+          .upsert(
+            { user_id: existingSession.user.id, active_date: new Date().toISOString().split('T')[0] },
+            { onConflict: 'user_id,active_date' }
+          )
+          .then(() => {});
+      }
     });
 
     return () => subscription.unsubscribe();

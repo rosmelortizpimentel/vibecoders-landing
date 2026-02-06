@@ -15,6 +15,7 @@ import {
 import { ExternalLink, Users, Loader2, Search, Mail, ListChecks } from 'lucide-react';
 import { FollowListDialog } from './FollowListDialog';
 import { RegistrationTrendChart } from './RegistrationTrendChart';
+import { ActivityTrendChart } from './ActivityTrendChart';
 import { useSortableData } from '@/hooks/useSortableData';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -28,6 +29,12 @@ interface EnrichedUser {
   isOnWaitlist: boolean;
   followersCount: number;
   followingCount: number;
+  lastActivity: string | null;
+}
+
+interface DailyActivity {
+  date: string;
+  count: number;
 }
 
 function formatTorontoDate(dateString: string | null): string {
@@ -46,6 +53,7 @@ function formatTorontoDate(dateString: string | null): string {
 export function UsersManager() {
   const { t } = useTranslation('admin');
   const [users, setUsers] = useState<EnrichedUser[]>([]);
+  const [dailyActivity, setDailyActivity] = useState<DailyActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -70,7 +78,9 @@ export function UsersManager() {
       });
 
       if (response.error) throw response.error;
-      setUsers(response.data || []);
+      const responseData = response.data || {};
+      setUsers(responseData.users || []);
+      setDailyActivity(responseData.dailyActivity || []);
     } catch (err) {
       console.error('Error fetching users:', err);
       setError(err instanceof Error ? err.message : 'Error al cargar usuarios');
@@ -190,6 +200,7 @@ export function UsersManager() {
               <SortableHeader column="followersCount" className="text-center">Seguidores</SortableHeader>
               <SortableHeader column="followingCount" className="text-center">Siguiendo</SortableHeader>
               <SortableHeader column="created_at">Registro (Toronto)</SortableHeader>
+              <SortableHeader column="lastActivity">{t('lastActivity')}</SortableHeader>
               <TableHead className="text-center">Perfil</TableHead>
             </TableRow>
           </TableHeader>
@@ -246,6 +257,9 @@ export function UsersManager() {
                 <TableCell className="text-sm text-muted-foreground">
                   {formatTorontoDate(user.created_at)}
                 </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {user.lastActivity ? formatTorontoDate(user.lastActivity) : <span className="text-muted-foreground/50">{t('never')}</span>}
+                </TableCell>
                 <TableCell className="text-center">
                   <Button variant="ghost" size="sm" asChild>
                     <a
@@ -263,8 +277,11 @@ export function UsersManager() {
         </Table>
       </div>
 
-      {/* Registration Trend Chart */}
-      <RegistrationTrendChart data={users} />
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <RegistrationTrendChart data={users} />
+        <ActivityTrendChart data={dailyActivity} />
+      </div>
 
       <FollowListDialog
         open={dialogOpen}

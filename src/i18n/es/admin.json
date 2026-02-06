@@ -25,5 +25,10 @@
   "registrations": "Registros",
   "usersWithAccounts": "usuarios con cuenta activa",
   "emailsInWaitlist": "emails en la lista de espera",
-  "alreadyRegistered": "ya registrados"
+  "alreadyRegistered": "ya registrados",
+  "lastActivity": "Última Actividad",
+  "dailyActiveUsers": "Usuarios Activos por Día",
+  "avgPerDay": "prom/día",
+  "activeUsers": "Usuarios Activos",
+  "never": "Nunca"
 }

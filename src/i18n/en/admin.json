@@ -25,5 +25,10 @@
   "registrations": "Registrations",
   "usersWithAccounts": "users with active accounts",
   "emailsInWaitlist": "emails in waitlist",
-  "alreadyRegistered": "already registered"
+  "alreadyRegistered": "already registered",
+  "lastActivity": "Last Activity",
+  "dailyActiveUsers": "Daily Active Users",
+  "avgPerDay": "avg/day",
+  "activeUsers": "Active Users",
+  "never": "Never"
 }

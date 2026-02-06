@@ -77,13 +77,6 @@ export function ChatInput({ onSend, isSending, disabled }: ChatInputProps) {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
-    }
-  };
-
   return (
     <form onSubmit={handleSubmit} className="border-t border-border bg-muted/30 p-4">
       {/* Image previews */}
@@ -135,7 +128,7 @@ export function ChatInput({ onSend, isSending, disabled }: ChatInputProps) {
           ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          onKeyDown={handleKeyDown}
+          
           placeholder={t.placeholder}
           disabled={disabled}
           className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 min-h-[40px] max-h-[120px] resize-none overflow-y-auto"
