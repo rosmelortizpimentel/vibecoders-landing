@@ -45,13 +45,13 @@ export function FeedbackThreadList({
     
     try {
       await deleteThread(threadToDelete);
-      toast.success(language === 'es' ? 'Conversación eliminada' : 'Conversation deleted');
+      toast.success(t.deleted);
       if (selectedThreadId === threadToDelete) {
         onSelectThread(null);
       }
     } catch (error) {
       console.error('Error deleting thread:', error);
-      toast.error(language === 'es' ? 'Error al eliminar' : 'Error deleting');
+      toast.error(t.deleteError);
     } finally {
       setThreadToDelete(null);
     }
@@ -81,50 +81,35 @@ export function FeedbackThreadList({
               locale: dateLocale,
             });
 
+            const displayName = thread.profile?.name || 'Usuario';
+            const displayUsername = thread.profile?.username;
+
             return (
               <div
                 key={thread.id}
                 className={cn(
-                  'group relative w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors cursor-pointer',
+                  'group relative w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors cursor-pointer',
                   selectedThreadId === thread.id
                     ? 'bg-primary/10'
                     : 'hover:bg-muted'
                 )}
                 onClick={() => onSelectThread(thread.id)}
               >
-                <Avatar className="h-10 w-10 shrink-0">
+                <Avatar className="h-10 w-10 shrink-0 mt-0.5">
                   <AvatarImage 
                     src={thread.profile?.avatar_url || ''} 
-                    alt={thread.profile?.name || ''} 
+                    alt={displayName} 
                   />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      {thread.profile?.username && (
-                        <span className="font-medium truncate block">
-                          @{thread.profile.username}
-                        </span>
-                      )}
-                      {thread.profile?.name && (
-                        <span className="text-sm text-muted-foreground truncate block">
-                          {thread.profile.name}
-                        </span>
-                      )}
-                      {!thread.profile?.username && !thread.profile?.name && (
-                        <span className="font-medium truncate block">
-                          Usuario
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground shrink-0">
-                      {timeAgo}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {thread.message_count} {t.messages}
+                  <p className="font-semibold text-sm truncate">{displayName}</p>
+                  {displayUsername && (
+                    <p className="text-xs text-muted-foreground truncate">@{displayUsername}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {thread.message_count} {t.messages} · {timeAgo}
                   </p>
                 </div>
 
@@ -132,13 +117,13 @@ export function FeedbackThreadList({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="opacity-0 group-hover:opacity-100 shrink-0 h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="opacity-0 group-hover:opacity-100 shrink-0 h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10 mt-0.5"
                   onClick={(e) => {
                     e.stopPropagation();
                     setThreadToDelete(thread.id);
                   }}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
             );
@@ -149,14 +134,8 @@ export function FeedbackThreadList({
       <AlertDialog open={!!threadToDelete} onOpenChange={() => setThreadToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {language === 'es' ? '¿Eliminar conversación?' : 'Delete conversation?'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {language === 'es' 
-                ? 'Esta acción eliminará todos los mensajes e imágenes de esta conversación. No se puede deshacer.'
-                : 'This will delete all messages and images in this conversation. This cannot be undone.'}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t.deleteConfirm}</AlertDialogTitle>
+            <AlertDialogDescription>{t.deleteDescription}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>

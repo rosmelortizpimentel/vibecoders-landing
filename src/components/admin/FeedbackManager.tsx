@@ -41,7 +41,7 @@ export function FeedbackManager() {
       </div>
 
       {/* Split View */}
-      <div className="grid grid-cols-[320px_1fr] gap-0 h-[calc(100vh-14rem)] border border-border rounded-lg overflow-hidden">
+      <div className="grid grid-cols-[380px_1fr] gap-0 h-[calc(100vh-14rem)] border border-border rounded-lg overflow-hidden">
         {/* Thread List */}
         <div className="border-r border-border bg-muted/30">
           <FeedbackThreadList

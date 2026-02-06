@@ -16,6 +16,7 @@ export interface FeedbackThread {
     name: string | null;
     username: string | null;
     avatar_url: string | null;
+    email_public: string | null;
   };
   message_count?: number;
 }
@@ -125,11 +126,11 @@ export function useFeedback() {
       
       if (threadsError) throw threadsError;
 
-      // Get profiles for all threads
+      // Get profiles for all threads (include email_public)
       const userIds = threads.map(t => t.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, name, username, avatar_url')
+        .select('id, name, username, avatar_url, email_public')
         .in('id', userIds);
       
       if (profilesError) throw profilesError;
@@ -273,9 +274,13 @@ export function useFeedback() {
         if (attachments && attachments.length > 0) {
           const filePaths = attachments
             .map(a => {
-              const url = new URL(a.file_url);
-              const pathParts = url.pathname.split('/feedback-attachments/');
-              return pathParts[1] || null;
+              try {
+                const url = new URL(a.file_url);
+                const pathParts = url.pathname.split('/feedback-attachments/');
+                return pathParts[1] || null;
+              } catch {
+                return null;
+              }
             })
             .filter(Boolean) as string[];
 
@@ -310,6 +315,74 @@ export function useFeedback() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['feedbackThreads'] });
+    },
+  });
+
+  // Delete single message mutation (admin only)
+  const deleteMessageMutation = useMutation({
+    mutationFn: async ({ messageId, threadId }: { messageId: string; threadId: string }) => {
+      if (!isAdmin) throw new Error('Not authorized');
+
+      // Get attachment file paths to delete from storage
+      const { data: attachments } = await supabase
+        .from('feedback_attachments')
+        .select('file_url')
+        .eq('message_id', messageId);
+
+      if (attachments && attachments.length > 0) {
+        const filePaths = attachments
+          .map(a => {
+            try {
+              const url = new URL(a.file_url);
+              const pathParts = url.pathname.split('/feedback-attachments/');
+              return pathParts[1] || null;
+            } catch {
+              return null;
+            }
+          })
+          .filter(Boolean) as string[];
+
+        if (filePaths.length > 0) {
+          await supabase.storage
+            .from('feedback-attachments')
+            .remove(filePaths);
+        }
+
+        await supabase
+          .from('feedback_attachments')
+          .delete()
+          .eq('message_id', messageId);
+      }
+
+      const { error } = await supabase
+        .from('feedback_messages')
+        .delete()
+        .eq('id', messageId);
+
+      if (error) throw error;
+      return { messageId, threadId };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['feedbackMessages', data.threadId] });
+      queryClient.invalidateQueries({ queryKey: ['feedbackThreads'] });
+    },
+  });
+
+  // Update message mutation (admin only)
+  const updateMessageMutation = useMutation({
+    mutationFn: async ({ messageId, content, threadId }: { messageId: string; content: string; threadId: string }) => {
+      if (!isAdmin) throw new Error('Not authorized');
+
+      const { error } = await supabase
+        .from('feedback_messages')
+        .update({ content })
+        .eq('id', messageId);
+
+      if (error) throw error;
+      return { messageId, threadId };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['feedbackMessages', data.threadId] });
     },
   });
 
@@ -355,5 +428,9 @@ export function useFeedback() {
     uploadFiles,
     deleteThread: deleteThreadMutation.mutateAsync,
     isDeleting: deleteThreadMutation.isPending,
+    deleteMessage: deleteMessageMutation.mutateAsync,
+    isDeletingMessage: deleteMessageMutation.isPending,
+    updateMessage: updateMessageMutation.mutateAsync,
+    isUpdatingMessage: updateMessageMutation.isPending,
   };
 }

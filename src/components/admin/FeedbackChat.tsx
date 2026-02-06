@@ -17,7 +17,7 @@ interface FeedbackChatProps {
 export function FeedbackChat({ thread }: FeedbackChatProps) {
   const t = useTranslation('feedback');
   const { user } = useAuth();
-  const { useThreadMessages, sendMessageAsync, isSending, uploadFiles } = useFeedback();
+  const { useThreadMessages, sendMessageAsync, isSending, uploadFiles, deleteMessage, updateMessage } = useFeedback();
   const { data: messages, isLoading } = useThreadMessages(thread?.id || null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -50,6 +50,28 @@ export function FeedbackChat({ thread }: FeedbackChatProps) {
     }
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!thread) return;
+    try {
+      await deleteMessage({ messageId, threadId: thread.id });
+      toast.success(t.messageDeleted);
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error(t.deleteError);
+    }
+  };
+
+  const handleUpdateMessage = async (messageId: string, content: string) => {
+    if (!thread) return;
+    try {
+      await updateMessage({ messageId, content, threadId: thread.id });
+      toast.success(t.messageUpdated);
+    } catch (error) {
+      console.error('Error updating message:', error);
+      toast.error(t.errorSending);
+    }
+  };
+
   if (!thread) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
@@ -65,6 +87,8 @@ export function FeedbackChat({ thread }: FeedbackChatProps) {
     .join('')
     .toUpperCase() || '?';
 
+  const userEmail = thread.profile?.email_public || null;
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -77,14 +101,14 @@ export function FeedbackChat({ thread }: FeedbackChatProps) {
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
         <div className="min-w-0">
-          {thread.profile?.username && (
+          {thread.profile?.name && (
             <p className="font-medium truncate">
-              @{thread.profile.username}
+              {thread.profile.name}
             </p>
           )}
-          {thread.profile?.name && (
+          {thread.profile?.username && (
             <p className="text-sm text-muted-foreground truncate">
-              {thread.profile.name}
+              @{thread.profile.username}
             </p>
           )}
           {!thread.profile?.username && !thread.profile?.name && (
@@ -106,6 +130,10 @@ export function FeedbackChat({ thread }: FeedbackChatProps) {
                 key={message.id}
                 message={message}
                 isOwn={message.is_admin_reply}
+                isAdmin={true}
+                onDelete={handleDeleteMessage}
+                onUpdate={handleUpdateMessage}
+                userEmail={userEmail}
               />
             ))}
           </div>
