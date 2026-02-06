@@ -154,13 +154,13 @@ export function AuthorFollowDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>{authorName || 'Usuario'}</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)}>
-          <TabsList className="grid w-full grid-cols-2">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="flex-1 flex flex-col min-h-0">
+          <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
             <TabsTrigger value="followers" className="text-sm">
               {t('authorFollowers')} ({followersCount})
             </TabsTrigger>
@@ -169,7 +169,7 @@ export function AuthorFollowDialog({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="followers" className="mt-4">
+          <TabsContent value="followers" className="mt-4 flex-1 min-h-0">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -179,7 +179,7 @@ export function AuthorFollowDialog({
                 {t('noFollowers')}
               </p>
             ) : (
-              <ScrollArea className="max-h-[350px]">
+              <ScrollArea className="h-[50vh]">
                 <div className="space-y-2 pr-2">
                   {profiles.map((profile) => (
                     <FollowerCard
@@ -200,7 +200,7 @@ export function AuthorFollowDialog({
             )}
           </TabsContent>
 
-          <TabsContent value="following" className="mt-4">
+          <TabsContent value="following" className="mt-4 flex-1 min-h-0">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -210,7 +210,7 @@ export function AuthorFollowDialog({
                 {t('noFollowing')}
               </p>
             ) : (
-              <ScrollArea className="max-h-[350px]">
+              <ScrollArea className="h-[50vh]">
                 <div className="space-y-2 pr-2">
                   {profiles.map((profile) => (
                     <FollowerCard
