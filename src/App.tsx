@@ -16,6 +16,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import Projects from "./pages/Projects";
 import Tools from "./pages/Tools";
+import Feedback from "./pages/Feedback";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { AuthenticatedLayout } from "./layouts/AuthenticatedLayout";
 
@@ -46,6 +47,7 @@ const App = () => (
             <Route path="/tools" element={<Tools />} />
             <Route path="/buildlog" element={<BuildLog />} />
             <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
+            <Route path="/hablemos" element={<Feedback />} />
             <Route path="/me" element={<Navigate to="/me/profile" replace />} />
             <Route path="/me/profile" element={<Me />} />
             <Route path="/me/apps" element={<Me />} />

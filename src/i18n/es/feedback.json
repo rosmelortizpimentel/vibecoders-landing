@@ -1,0 +1,23 @@
+{
+  "title": "Hablemos",
+  "subtitle": "Envíanos tus comentarios, sugerencias o reporta problemas",
+  "placeholder": "Escribe tu mensaje...",
+  "send": "Enviar",
+  "attachImages": "Adjuntar imágenes",
+  "maxImages": "Máximo 5 imágenes",
+  "you": "Tú",
+  "admin": "Admin",
+  "empty": "Aún no hay mensajes. ¡Sé el primero en escribir!",
+  "sending": "Enviando...",
+  "sent": "Enviado",
+  "adminTitle": "Feedback de Usuarios",
+  "adminSubtitle": "Conversaciones con usuarios",
+  "noConversations": "No hay conversaciones aún",
+  "messages": "mensajes",
+  "selectConversation": "Selecciona una conversación",
+  "removeImage": "Quitar imagen",
+  "imageLimit": "Solo puedes adjuntar hasta 5 imágenes",
+  "errorSending": "Error al enviar el mensaje",
+  "errorUploading": "Error al subir las imágenes",
+  "loginRequired": "Debes iniciar sesión para enviar mensajes"
+}

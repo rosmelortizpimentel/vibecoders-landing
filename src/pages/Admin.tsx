@@ -6,10 +6,11 @@ import { useProfile } from '@/hooks/useProfile';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { ShowcaseManager } from '@/components/admin/ShowcaseManager';
 import { StackManager } from '@/components/admin/StackManager';
- import { TechStackManager } from '@/components/admin/TechStackManager';
+import { TechStackManager } from '@/components/admin/TechStackManager';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { UsersManager } from '@/components/admin/UsersManager';
 import { WaitlistManager } from '@/components/admin/WaitlistManager';
+import { FeedbackManager } from '@/components/admin/FeedbackManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -71,7 +72,8 @@ const Admin = () => {
         <Route index element={<Navigate to="/admin/showcase" replace />} />
         <Route path="showcase" element={<ShowcaseManager />} />
         <Route path="stack" element={<StackManager />} />
-         <Route path="tech-stacks" element={<TechStackManager />} />
+        <Route path="tech-stacks" element={<TechStackManager />} />
+        <Route path="feedback" element={<FeedbackManager />} />
         <Route path="users" element={<UsersManager />} />
         <Route path="waitlist" element={<WaitlistManager />} />
         <Route path="settings" element={<SettingsManager />} />
