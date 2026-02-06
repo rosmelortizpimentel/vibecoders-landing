@@ -30,7 +30,7 @@
   "ratingLabel": "Puntuacion general",
   "hallOfFame": "Testers Oficiales",
   "moreTesters": "+{count} mas",
-  "noTesters": "Se el primero en unirte",
+  "noTesters": "Sé el primero en unirte",
   "contributions": "Contribuciones Beta",
   "testerBadge": "Beta Tester",
   "manageBeta": "Gestionar Beta",
@@ -72,5 +72,8 @@
   "emptyButton": "Ir a Mis Apps",
   "spotsLow": "Últimos cupos",
   "joinSquad": "Unirme al Squad",
-  "missionPreview": "Misión"
+  "missionPreview": "Misión",
+  "lookingFor": "Buscando {count} testers",
+  "enrolledClickable": "{current}/{limit} inscritos",
+  "viewTesters": "Ver testers"
 }

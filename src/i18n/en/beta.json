@@ -72,5 +72,8 @@
   "emptyButton": "Go to My Apps",
   "spotsLow": "Last spots",
   "joinSquad": "Join the Squad",
-  "missionPreview": "Mission"
+  "missionPreview": "Mission",
+  "lookingFor": "Looking for {count} testers",
+  "enrolledClickable": "{current}/{limit} enrolled",
+  "viewTesters": "View testers"
 }

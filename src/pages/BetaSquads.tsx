@@ -1,17 +1,50 @@
+import { useEffect, useRef, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { FlaskConical } from 'lucide-react';
+import { FlaskConical, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useBetaSquadsPublic } from '@/hooks/useBetaSquadsPublic';
-import { BetaSquadPublicCard } from '@/components/beta/BetaSquadPublicCard';
+import { BetaSquadFeedCard } from '@/components/beta/BetaSquadFeedCard';
 import { BetaSquadCardSkeleton } from '@/components/beta/BetaSquadCardSkeleton';
 
 export default function BetaSquads() {
   const t = useTranslation('beta');
-  const { data: apps, isLoading } = useBetaSquadsPublic();
+  const { 
+    data, 
+    isLoading, 
+    isFetchingNextPage, 
+    hasNextPage, 
+    fetchNextPage 
+  } = useBetaSquadsPublic();
+
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll with IntersectionObserver
+  const handleObserver = useCallback((entries: IntersectionObserverEntry[]) => {
+    const [entry] = entries;
+    if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(handleObserver, {
+      threshold: 0.1,
+      rootMargin: '100px',
+    });
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [handleObserver]);
+
+  // Flatten all pages into a single array
+  const allApps = data?.pages.flatMap(page => page.apps) || [];
 
   return (
-    <div className="container max-w-6xl py-8 px-4">
+    <div className="container max-w-2xl py-8 px-4">
       {/* Hero Section */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
@@ -27,16 +60,26 @@ export default function BetaSquads() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[...Array(6)].map((_, i) => (
+        <div className="space-y-6">
+          {[...Array(3)].map((_, i) => (
             <BetaSquadCardSkeleton key={i} />
           ))}
         </div>
-      ) : apps && apps.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {apps.map((app) => (
-            <BetaSquadPublicCard key={app.id} app={app} />
+      ) : allApps.length > 0 ? (
+        <div className="space-y-6">
+          {allApps.map((app) => (
+            <BetaSquadFeedCard key={app.id} app={app} />
           ))}
+
+          {/* Infinite scroll trigger */}
+          <div ref={loadMoreRef} className="py-4 flex justify-center">
+            {isFetchingNextPage && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>{t.loading}</span>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         /* Empty State */

@@ -1,6 +1,6 @@
 /**
- * Simple markdown parser for basic formatting
- * Supports: bold, italic, and unordered lists
+ * Enhanced markdown parser for beta instructions
+ * Supports: bold, italic, underline, unordered lists, numbered lists
  */
 
 // Escape HTML to prevent XSS
@@ -28,36 +28,69 @@ export function parseMarkdown(text: string): string {
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
   html = html.replace(/_(.+?)_/g, '<em>$1</em>');
 
-  // Unordered lists: - item
+  // Underline: ~~text~~
+  html = html.replace(/~~(.+?)~~/g, '<u>$1</u>');
+
+  // Process lines for lists
   const lines = html.split('\n');
-  let inList = false;
+  let inUnorderedList = false;
+  let inOrderedList = false;
   const processedLines: string[] = [];
 
   lines.forEach(line => {
-    const listMatch = line.match(/^-\s+(.+)$/);
-    if (listMatch) {
-      if (!inList) {
-        processedLines.push('<ul class="list-disc pl-4 my-2">');
-        inList = true;
+    const unorderedMatch = line.match(/^-\s+(.+)$/);
+    const orderedMatch = line.match(/^(\d+)\.\s+(.+)$/);
+
+    if (unorderedMatch) {
+      // Close ordered list if open
+      if (inOrderedList) {
+        processedLines.push('</ol>');
+        inOrderedList = false;
       }
-      processedLines.push(`<li>${listMatch[1]}</li>`);
-    } else {
-      if (inList) {
+      // Open unordered list if not open
+      if (!inUnorderedList) {
+        processedLines.push('<ul class="list-disc pl-4 my-2 space-y-1">');
+        inUnorderedList = true;
+      }
+      processedLines.push(`<li>${unorderedMatch[1]}</li>`);
+    } else if (orderedMatch) {
+      // Close unordered list if open
+      if (inUnorderedList) {
         processedLines.push('</ul>');
-        inList = false;
+        inUnorderedList = false;
+      }
+      // Open ordered list if not open
+      if (!inOrderedList) {
+        processedLines.push('<ol class="list-decimal pl-4 my-2 space-y-1">');
+        inOrderedList = true;
+      }
+      processedLines.push(`<li>${orderedMatch[2]}</li>`);
+    } else {
+      // Close any open lists
+      if (inUnorderedList) {
+        processedLines.push('</ul>');
+        inUnorderedList = false;
+      }
+      if (inOrderedList) {
+        processedLines.push('</ol>');
+        inOrderedList = false;
       }
       processedLines.push(line);
     }
   });
 
-  if (inList) {
+  // Close any remaining open lists
+  if (inUnorderedList) {
     processedLines.push('</ul>');
+  }
+  if (inOrderedList) {
+    processedLines.push('</ol>');
   }
 
   html = processedLines.join('\n');
 
   // Convert line breaks to <br> (except inside lists)
-  html = html.replace(/\n(?!<\/?(ul|li))/g, '<br>');
+  html = html.replace(/\n(?!<\/?(ul|ol|li))/g, '<br>');
 
   return html;
 }
@@ -70,9 +103,11 @@ export function previewMarkdownText(text: string, maxLength: number = 100): stri
   let preview = text
     .replace(/\*\*/g, '')
     .replace(/__/g, '')
+    .replace(/~~/g, '')
     .replace(/\*/g, '')
     .replace(/_/g, '')
-    .replace(/^-\s+/gm, '• ');
+    .replace(/^-\s+/gm, '• ')
+    .replace(/^\d+\.\s+/gm, '• ');
 
   if (preview.length > maxLength) {
     preview = preview.substring(0, maxLength) + '...';
