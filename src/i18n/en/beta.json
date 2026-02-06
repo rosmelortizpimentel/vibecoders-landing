@@ -1,5 +1,9 @@
 {
   "title": "Beta Squad",
+  "noAppsTitle": "No apps registered",
+  "noAppsMessage": "Register an App first to recruit testers",
+  "goToApps": "Go to My Apps",
+  "selectApp": "Select an app",
   "subtitle": "Tester program",
   "joinButton": "Join the Squad",
   "loginToJoin": "Login to join",

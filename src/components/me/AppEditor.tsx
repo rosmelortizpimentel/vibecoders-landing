@@ -21,7 +21,6 @@ import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield } from 'luc
 import * as LucideIcons from 'lucide-react';
 import { VerificationBadge } from './VerificationBadge';
 import { VerifyDomainModal } from './VerifyDomainModal';
-import { BetaManagement } from '@/components/beta/BetaManagement';
 
 interface AppEditorProps {
   app: AppData;
@@ -298,24 +297,6 @@ interface AppEditorProps {
           groupedStacks={groupedStacks}
           selectedIds={localApp.stacks || []}
           onToggle={handleStackToggle}
-        />
-
-        <Separator />
-
-        {/* Beta Management */}
-        <BetaManagement
-          appId={app.id}
-          config={{
-            beta_active: localApp.beta_active ?? false,
-            beta_mode: localApp.beta_mode ?? 'open',
-            beta_limit: localApp.beta_limit ?? 10,
-            beta_link: localApp.beta_link ?? null,
-            beta_instructions: localApp.beta_instructions ?? null,
-          }}
-          onConfigChange={(updates) => {
-            setLocalApp(prev => ({ ...prev, ...updates }));
-            autoSave(updates);
-          }}
         />
 
         <Separator />

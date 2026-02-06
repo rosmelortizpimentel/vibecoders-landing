@@ -7,6 +7,7 @@ import { MeTabs } from '@/components/me/MeTabs';
 import { ProfileTab } from '@/components/me/ProfileTab';
 import { AppsTab } from '@/components/me/AppsTab';
 import { BrandingTab } from '@/components/me/BrandingTab';
+import { BetaTab } from '@/components/me/BetaTab';
 import { ProfilePreview } from '@/components/me/ProfilePreview';
 import { Loader2, Eye, X, Smartphone } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -33,6 +34,7 @@ const Me = () => {
   const getActiveTab = () => {
     if (location.pathname === '/me/apps') return 'apps';
     if (location.pathname === '/me/branding') return 'branding';
+    if (location.pathname === '/me/beta') return 'beta';
     return 'profile';
   };
   
@@ -74,6 +76,9 @@ const Me = () => {
                   onUploadOgImage={profileEditor.uploadOgImage}
                   onDeleteOgImage={profileEditor.deleteOgImage}
                 />
+              )}
+              {activeTab === 'beta' && (
+                <BetaTab appsHook={appsHook} />
               )}
             </div>
           </div>
