@@ -44,7 +44,7 @@ export default function BetaSquads() {
   const allApps = data?.pages.flatMap(page => page.apps) || [];
 
   return (
-    <div className="container max-w-2xl py-8 px-4">
+    <div className="container max-w-2xl py-8 px-4 min-h-[calc(100vh-200px)]">
       {/* Hero Section */}
       <div className="text-center mb-10">
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">

@@ -60,10 +60,10 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Neon accent colors for direct usage
-        neon: {
-          violet: "hsl(263 70% 58%)",
-          cyan: "hsl(187 80% 55%)",
+        // Brand accent colors for direct usage
+        brand: {
+          primary: "hsl(223 100% 5%)",
+          accent: "hsl(227 76% 24%)",
         },
       },
       borderRadius: {
@@ -89,8 +89,8 @@ export default {
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "glow-pulse": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(263 70% 58% / 0.4)" },
-          "50%": { boxShadow: "0 0 30px hsl(263 70% 58% / 0.6)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(227 76% 24% / 0.4)" },
+          "50%": { boxShadow: "0 0 30px hsl(227 76% 24% / 0.6)" },
         },
         float: {
           "0%, 100%": { transform: "translateY(0px) rotate(0deg)" },
