@@ -2,8 +2,7 @@ import { useRef } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
 import { ProfileSocials } from './ProfileSocials';
 import { UsernameEditor } from './UsernameEditor';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { DebouncedInput } from '@/components/ui/debounced-input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
@@ -236,10 +235,10 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
           <div className="flex-1 w-full space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="text-foreground">{t.fields.name} *</Label>
-              <Input
+              <DebouncedInput
                 id="name"
                 value={profile.name || ''}
-                onChange={e => onUpdate({ name: e.target.value })}
+                onValueChange={value => onUpdate({ name: value })}
                 placeholder={t.placeholders.name}
                 className="text-base sm:text-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
               />
@@ -275,10 +274,10 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
         {/* Tagline */}
         <div className="space-y-2">
           <Label htmlFor="tagline" className="text-foreground">{t.fields.tagline}</Label>
-          <Input
+          <DebouncedInput
             id="tagline"
             value={profile.tagline || ''}
-            onChange={e => onUpdate({ tagline: e.target.value.slice(0, 160) })}
+            onValueChange={value => onUpdate({ tagline: value.slice(0, 160) })}
             placeholder={t.placeholders.tagline}
             maxLength={160}
             className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
@@ -298,10 +297,10 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
             <MapPin className="h-4 w-4 text-muted-foreground" />
             {t.fields.location}
           </Label>
-          <Input
+          <DebouncedInput
             id="location"
             value={profile.location || ''}
-            onChange={e => onUpdate({ location: e.target.value })}
+            onValueChange={value => onUpdate({ location: value })}
             placeholder={t.placeholders.location}
             className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
           />
@@ -312,10 +311,10 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
             <Globe className="h-4 w-4 text-muted-foreground" />
             {t.fields.website}
           </Label>
-          <Input
+          <DebouncedInput
             id="website"
             value={profile.website || ''}
-            onChange={e => onUpdate({ website: e.target.value })}
+            onValueChange={value => onUpdate({ website: value })}
             placeholder={t.placeholders.website}
             type="url"
             className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
