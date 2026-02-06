@@ -48,9 +48,10 @@ export interface FeedbackAttachment {
 
 export function useFeedback() {
   const { user } = useAuth();
-  const { isAdmin } = useUserRole();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const queryClient = useQueryClient();
 
+  console.log('[useFeedback] isAdmin:', isAdmin, 'roleLoading:', roleLoading, 'userId:', user?.id);
   // Get or create user's thread
   const { data: userThread, isLoading: threadLoading } = useQuery({
     queryKey: ['feedbackThread', user?.id],
@@ -159,26 +160,42 @@ export function useFeedback() {
       attachmentUrls 
     }: { 
       content: string; 
-      threadId?: string; 
+      threadId?: string | null; 
       attachmentUrls?: { url: string; name: string; type: string }[] 
     }) => {
       if (!user?.id) throw new Error('Not authenticated');
 
-      let finalThreadId = threadId;
+      let finalThreadId = threadId || null;
 
-      // Create thread if it doesn't exist (for regular users)
-      if (!finalThreadId && !isAdmin) {
+      console.log('[useFeedback] sendMessage - threadId:', threadId, 'isAdmin:', isAdmin, 'userId:', user.id);
+
+      // Create thread if it doesn't exist (for regular users only)
+      // Admin users should always provide a threadId when replying
+      if (!finalThreadId) {
+        if (isAdmin) {
+          console.error('[useFeedback] Admin must provide a threadId to reply');
+          throw new Error('No thread ID - Admin must select a conversation first');
+        }
+        
+        console.log('[useFeedback] Creating new feedback thread for user:', user.id);
         const { data: newThread, error: threadError } = await supabase
           .from('feedback_threads')
           .insert({ user_id: user.id })
           .select()
           .single();
         
-        if (threadError) throw threadError;
+        if (threadError) {
+          console.error('[useFeedback] Error creating thread:', threadError);
+          throw threadError;
+        }
+        console.log('[useFeedback] Created new thread:', newThread.id);
         finalThreadId = newThread.id;
       }
 
-      if (!finalThreadId) throw new Error('No thread ID');
+      if (!finalThreadId) {
+        console.error('[useFeedback] No thread ID available after creation attempt');
+        throw new Error('No thread ID');
+      }
 
       // Insert message
       const { data: message, error: messageError } = await supabase
