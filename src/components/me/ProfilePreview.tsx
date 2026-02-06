@@ -3,13 +3,13 @@ import { ProfileData } from '@/hooks/useProfileEditor';
 import { AppData } from '@/hooks/useApps';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useTechStacks } from '@/hooks/useTechStacks';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { PreviewAppCard } from './PreviewAppCard';
 import { PioneerBadge } from '@/components/PioneerBadge';
-
 // X icon (current logo)
 const XIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -49,8 +49,8 @@ const socialConfig = [
 export function ProfilePreview({ profile, apps, isMobileSheet = false }: ProfilePreviewProps) {
   const { statuses } = useStatuses();
   const { stacks } = useTechStacks();
+  const t = useTranslation('profile');
   const visibleApps = apps.filter(app => app.is_visible);
-
   // Load font dynamically
   useEffect(() => {
     if (!profile?.font_family) return;
@@ -107,7 +107,7 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
       {/* Preview Header - hide in mobile sheet */}
       {!isMobileSheet && (
         <div className="flex items-center gap-2 px-1">
-          <span className="text-sm font-medium text-slate-500">Vista Previa</span>
+          <span className="text-sm font-medium text-slate-500">{t.preview}</span>
         </div>
       )}
       
