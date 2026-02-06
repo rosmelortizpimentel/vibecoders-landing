@@ -4,8 +4,8 @@ import { useCategories } from '@/hooks/useCategories';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useTechStacks } from '@/hooks/useTechStacks';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { DebouncedInput, DebouncedTextarea } from '@/components/ui/debounced-input';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -158,18 +158,18 @@ interface AppEditorProps {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-[#1c1c1c]">Nombre</Label>
-            <Input
+            <DebouncedInput
               value={localApp.name || ''}
-              onChange={e => handleChange('name', e.target.value)}
+              onValueChange={value => handleChange('name', value)}
               placeholder="Nombre de la app"
               className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             />
           </div>
           <div className="space-y-2">
             <Label className="text-[#1c1c1c]">URL *</Label>
-            <Input
+            <DebouncedInput
               value={localApp.url}
-              onChange={e => handleChange('url', e.target.value)}
+              onValueChange={value => handleChange('url', value)}
               placeholder="https://tu-app.com"
               type="url"
               className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
@@ -180,9 +180,9 @@ interface AppEditorProps {
         {/* Tagline */}
         <div className="space-y-2">
           <Label className="text-[#1c1c1c]">Tagline</Label>
-          <Input
+          <DebouncedInput
             value={localApp.tagline || ''}
-            onChange={e => handleChange('tagline', e.target.value.slice(0, 100))}
+            onValueChange={value => handleChange('tagline', value.slice(0, 100))}
             placeholder="Una frase corta que describa tu app"
             maxLength={100}
             className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
@@ -196,9 +196,9 @@ interface AppEditorProps {
             <Label className="text-[#1c1c1c]">Descripción</Label>
             <span className="text-xs text-gray-500">Soporta markdown básico</span>
           </div>
-          <Textarea
+          <DebouncedTextarea
             value={localApp.description || ''}
-            onChange={e => handleChange('description', e.target.value.slice(0, 500))}
+            onValueChange={value => handleChange('description', value.slice(0, 500))}
             placeholder="Describe qué hace tu app, para quién es, qué problema resuelve..."
             className="min-h-[100px] resize-none border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             maxLength={500}

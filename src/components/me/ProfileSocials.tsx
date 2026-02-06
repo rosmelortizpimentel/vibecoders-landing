@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ProfileData } from '@/hooks/useProfileEditor';
-import { Input } from '@/components/ui/input';
+import { DebouncedInput } from '@/components/ui/debounced-input';
 import { Button } from '@/components/ui/button';
 import { 
   Github, 
@@ -107,9 +107,9 @@ export function ProfileSocials({ profile, onUpdate }: ProfileSocialsProps) {
             {selectedField.label}
           </label>
           <div className="flex gap-2">
-            <Input
+            <DebouncedInput
               value={(profile[selectedField.key] as string) || ''}
-              onChange={e => onUpdate({ [selectedField.key]: e.target.value })}
+              onValueChange={value => onUpdate({ [selectedField.key]: value })}
               placeholder={selectedField.placeholder}
               className="flex-1 bg-white border border-gray-200 text-[#1c1c1c] focus:border-[#3D5AFE] focus:outline-none focus:ring-0"
               autoFocus
