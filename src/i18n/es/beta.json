@@ -64,5 +64,13 @@
   "appBy": "por",
   "appNotFound": "App no encontrada",
   "loading": "Cargando...",
-  "viewGuide": "Ver guía"
+  "viewGuide": "Ver guía",
+  "directoryTitle": "Únete a un Beta Squad",
+  "directorySubtitle": "Prueba productos antes que nadie, envía feedback directo a los fundadores y gana insignias exclusivas.",
+  "emptyTitle": "No hay betas activas",
+  "emptyMessage": "¿Tienes una App? Sé el primero en abrir tu Beta Squad.",
+  "emptyButton": "Ir a Mis Apps",
+  "spotsLow": "Últimos cupos",
+  "joinSquad": "Unirme al Squad",
+  "missionPreview": "Misión"
 }
