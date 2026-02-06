@@ -155,6 +155,42 @@
     transform: rotateY(180deg);
   }
 
+  /* Flip Card Component */
+  .flip-card {
+    perspective: 1000px;
+  }
+
+  .flip-card-inner {
+    transition: transform 0.6s ease-in-out;
+    transform-style: preserve-3d;
+    position: relative;
+  }
+
+  .flip-card-inner.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .flip-card-front,
+  .flip-card-back {
+    backface-visibility: hidden;
+  }
+
+  .flip-card-back {
+    transform: rotateY(180deg);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .flip-card-inner:not(.flipped) .flip-card-back {
+    pointer-events: none;
+  }
+
+  .flip-card-inner.flipped .flip-card-front {
+    pointer-events: none;
+  }
+
   /* Marquee animation for tech stack carousel */
   .animate-marquee {
     animation: marquee 20s linear infinite;
