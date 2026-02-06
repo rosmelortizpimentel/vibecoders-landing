@@ -76,11 +76,20 @@ function PublicAppCard({
 }) {
   const appUrl = (() => {
     try {
-      const url = new URL(app.url);
+      // Normalize URL first - prepend https:// if missing
+      const normalized = app.url.trim();
+      const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
+        ? normalized 
+        : `https://${normalized}`;
+      const url = new URL(urlWithProtocol);
       url.searchParams.set('ref', 'vibecoders.la');
       return url.toString();
     } catch {
-      return app.url;
+      // Fallback: just prepend https:// if missing
+      const normalized = app.url.trim();
+      return normalized.startsWith('http://') || normalized.startsWith('https://') 
+        ? normalized 
+        : `https://${normalized}`;
     }
   })();
 
@@ -119,7 +128,17 @@ function PublicAppCard({
           {/* Title Row with Status Badge */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <h4 className="text-sm font-semibold text-gray-900 truncate">
-              {app.name || (() => { try { return new URL(app.url).hostname; } catch { return 'App'; } })()}
+              {app.name || (() => { 
+                try { 
+                  const normalized = app.url.trim();
+                  const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
+                    ? normalized 
+                    : `https://${normalized}`;
+                  return new URL(urlWithProtocol).hostname; 
+                } catch { 
+                  return 'App'; 
+                } 
+              })()}
             </h4>
             
             {/* Verified Badge */}
