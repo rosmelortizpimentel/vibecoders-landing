@@ -131,12 +131,14 @@ export function BetaFeedbackForm({ appId, onSuccess, onCancel, showCancel }: Bet
         />
       </div>
 
+      {/* Temporarily hidden as per user request
       <BetaFeedbackImageUploader
         images={images}
         onImagesChange={setImages}
         maxImages={10}
         disabled={submitting}
       />
+      */}
 
       <div className="flex gap-2">
         {showCancel && (

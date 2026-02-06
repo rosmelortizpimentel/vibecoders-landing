@@ -1,5 +1,6 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { useBetaSquad } from '@/hooks/useBetaSquad';
+import { parseMarkdown } from '@/lib/markdown';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,7 +76,10 @@ export function JoinConfirmDialog({
             {betaInstructions && (
               <div className="mt-3 p-3 bg-muted rounded-lg text-sm text-left">
                 <p className="font-medium mb-1 text-foreground">{t('instructions')}:</p>
-                <p className="text-muted-foreground line-clamp-4">{betaInstructions}</p>
+                <div 
+                  className="text-muted-foreground prose prose-sm dark:prose-invert max-w-none [&>p]:mb-1 [&>ul]:my-1 [&>ol]:my-1"
+                  dangerouslySetInnerHTML={{ __html: parseMarkdown(betaInstructions) }} 
+                />
               </div>
             )}
           </AlertDialogDescription>

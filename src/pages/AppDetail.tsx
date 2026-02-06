@@ -12,6 +12,9 @@ import { TesterReportCard } from '@/components/beta/TesterReportCard';
 import { AuthorFollowDialog } from '@/components/beta/AuthorFollowDialog';
 import { BetaSquadCard } from '@/components/beta/BetaSquadCard';
 import { BetaHallOfFame } from '@/components/beta/BetaHallOfFame';
+import { BetaMissionCard } from '@/components/beta/BetaMissionCard';
+import { BetaActionCard } from '@/components/beta/BetaActionCard';
+import { BetaCommunityCard } from '@/components/beta/BetaCommunityCard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -133,7 +136,7 @@ export default function AppDetail() {
       />
       
       <main className="flex-1 container mx-auto px-4 py-4 md:py-6">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           {/* Back Button */}
           <Button 
             variant="ghost" 
@@ -145,164 +148,33 @@ export default function AppDetail() {
             {tCommon('back')}
           </Button>
 
-          <div className="space-y-4">
-            {/* Top Row: Author (mobile) + App Summary */}
-            <div className="grid gap-4 md:grid-cols-3">
-              {/* Author Card - Full width on mobile, right side on desktop */}
-              <div className="md:order-2 md:col-span-1">
-                <Card>
-                  <CardContent className="p-4">
-                    <Link 
-                      to={app.owner?.username ? `/@${app.owner.username}` : '#'}
-                      className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                    >
-                      <Avatar className="w-11 h-11 flex-shrink-0">
-                        <AvatarImage src={app.owner?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {(app.owner?.name || 'U').charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium truncate text-sm">
-                          {app.owner?.name || app.owner?.username || 'Unknown'}
-                        </p>
-                        {app.owner?.tagline && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {app.owner.tagline}
-                          </p>
-                        )}
-                      </div>
-                    </Link>
-                    {/* Social stats */}
-                    <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                      <button
-                        onClick={openFollowersDialog}
-                        className="hover:text-primary transition-colors"
-                      >
-                        <span className="font-medium text-foreground">
-                          {statsLoading ? '...' : ownerStats.followersCount}
-                        </span>{' '}
-                        {t('authorFollowers')}
-                      </button>
-                      <span>·</span>
-                      <button
-                        onClick={openFollowingDialog}
-                        className="hover:text-primary transition-colors"
-                      >
-                        <span className="font-medium text-foreground">
-                          {statsLoading ? '...' : ownerStats.followingCount}
-                        </span>{' '}
-                        {t('authorFollowing')}
-                      </button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* App Summary Card - Full width on mobile, left side on desktop */}
-              <div className="md:order-1 md:col-span-2">
-                <AppSummaryCard
-                  appId={app.id}
-                  name={app.name}
-                  tagline={app.tagline}
-                  logoUrl={app.logo_url}
-                  url={app.url}
-                  isVerified={app.is_verified}
-                  status={app.status}
-                  stacks={app.stacks}
-                  appName={app.name || undefined}
+          {isAcceptedTester ? (
+            /* TESTER VIEW (Beta Dashboard) */
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Left Column (2/3) - Mission */}
+              <div className="md:col-span-2 space-y-6">
+                <BetaMissionCard 
+                  instructions={app.beta_instructions} 
+                  betaLink={app.beta_link} 
                 />
               </div>
-            </div>
 
-            {/* Beta Squad Card for non-testers */}
-            {app.beta_active && !app.is_owner && !isAcceptedTester && (
-              <BetaSquadCard
-                appId={app.id}
-                betaLimit={app.beta_limit}
-                testersCount={app.testers_count}
-                userTesterStatus={app.user_tester_status}
-                isOwner={app.is_owner}
-                onJoined={() => refetch()}
-                onAccessMission={() => refetch()}
-              />
-            )}
-
-            {/* Welcome to Squad - Only for accepted testers */}
-            {isAcceptedTester && (
-              <Card className="border-primary/20">
-                <CardContent className="p-4 space-y-4">
-                  {/* Header */}
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold">{t('welcome')}</h3>
-                  </div>
-
-                  {/* Instructions */}
-                  {app.beta_instructions && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm font-medium">
-                        <FileText className="w-4 h-4" />
-                        {t('instructions')}
-                      </div>
-                      <div 
-                        className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg prose prose-sm max-w-none dark:prose-invert"
-                        dangerouslySetInnerHTML={{ __html: parseMarkdown(app.beta_instructions) }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Access Link */}
-                  {app.beta_link ? (
-                    <div className="flex gap-2">
-                      <Button 
-                        className="flex-1"
-                        onClick={() => window.open(app.beta_link!, '_blank')}
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        {t('accessLink')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleCopyLink}
-                      >
-                        {copied ? (
-                          <Check className="w-4 h-4 text-primary" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic text-center py-2">
-                      {t('noLink')}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Tester Report Card - Flip animation between list and form */}
-            {isAcceptedTester && (
-              <TesterReportCard appId={app.id} />
-            )}
-
-            {/* Hall of Fame */}
-            {app.beta_active && app.testers && app.testers.length > 0 && (
-              <Card>
-                <CardContent className="p-4">
-                  <BetaHallOfFame 
+              {/* Right Column (1/3) - Command Center */}
+              <div className="md:col-span-1 space-y-6">
+                {/* Actions */}
+                <div className="h-auto">
+                   <BetaActionCard appId={app.id} />
+                </div>
+                
+                {/* Community */}
+                <div className="h-auto">
+                  <BetaCommunityCard 
                     testers={app.testers} 
                     totalCount={app.testers_count} 
                   />
-                </CardContent>
-              </Card>
-            )}
+                </div>
 
-            {/* Leave Squad button - Only for accepted testers */}
-            {isAcceptedTester && (
-              <div className="pt-2">
+                {/* Leave Squad */}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="ghost" className="w-full text-destructive hover:text-destructive">
@@ -326,8 +198,104 @@ export default function AppDetail() {
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            /* PUBLIC/OWNER VIEW */
+            <div className="space-y-4 max-w-2xl mx-auto">
+              <div className="grid gap-4 md:grid-cols-3">
+                {/* Author Card - Full width on mobile, right side on desktop */}
+                <div className="md:order-2 md:col-span-1">
+                  <Card>
+                    <CardContent className="p-4">
+                      <Link 
+                        to={app.owner?.username ? `/@${app.owner.username}` : '#'}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                      >
+                        <Avatar className="w-11 h-11 flex-shrink-0">
+                          <AvatarImage src={app.owner?.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {(app.owner?.name || 'U').charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate text-sm">
+                            {app.owner?.name || app.owner?.username || 'Unknown'}
+                          </p>
+                          {app.owner?.tagline && (
+                            <p className="text-xs text-muted-foreground truncate">
+                              {app.owner.tagline}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                      {/* Social stats */}
+                      <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                        <button
+                          onClick={openFollowersDialog}
+                          className="hover:text-primary transition-colors"
+                        >
+                          <span className="font-medium text-foreground">
+                            {statsLoading ? '...' : ownerStats.followersCount}
+                          </span>{' '}
+                          {t('authorFollowers')}
+                        </button>
+                        <span>·</span>
+                        <button
+                          onClick={openFollowingDialog}
+                          className="hover:text-primary transition-colors"
+                        >
+                          <span className="font-medium text-foreground">
+                            {statsLoading ? '...' : ownerStats.followingCount}
+                          </span>{' '}
+                          {t('authorFollowing')}
+                        </button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* App Summary Card - Full width on mobile, left side on desktop */}
+                <div className="md:order-1 md:col-span-2">
+                  <AppSummaryCard
+                    appId={app.id}
+                    name={app.name}
+                    tagline={app.tagline}
+                    logoUrl={app.logo_url}
+                    url={app.url}
+                    isVerified={app.is_verified}
+                    status={app.status}
+                    stacks={app.stacks}
+                    appName={app.name || undefined}
+                  />
+                </div>
+              </div>
+
+              {/* Beta Squad Card for non-testers */}
+              {app.beta_active && !app.is_owner && !isAcceptedTester && (
+                <BetaSquadCard
+                  appId={app.id}
+                  betaLimit={app.beta_limit}
+                  testersCount={app.testers_count}
+                  userTesterStatus={app.user_tester_status}
+                  isOwner={app.is_owner}
+                  onJoined={() => refetch()}
+                  onAccessMission={() => refetch()}
+                />
+              )}
+
+              {/* Hall of Fame */}
+              {app.beta_active && app.testers && app.testers.length > 0 && (
+                <Card>
+                  <CardContent className="p-4">
+                    <BetaHallOfFame 
+                      testers={app.testers} 
+                      totalCount={app.testers_count} 
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
         </div>
       </main>
 

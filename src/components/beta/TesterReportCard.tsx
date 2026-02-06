@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -106,7 +107,7 @@ export function TesterReportCard({ appId }: TesterReportCardProps) {
   return (
     <>
       <Card className="overflow-hidden">
-        <div className="flip-card-inner" data-flipped={showForm ? "true" : undefined}>
+        <div className={cn("flip-card-inner", showForm && "flipped")}>
           {/* Front - Report List */}
           {!showForm && (
             <div className="flip-card-front">

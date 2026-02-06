@@ -17,64 +17,84 @@ interface AppListItemProps {
   app: AppData;
   isSelected: boolean;
   onSelect: () => void;
-  onToggleBeta: (checked: boolean) => void;
 }
 
-function AppListItem({ app, isSelected, onSelect, onToggleBeta }: AppListItemProps) {
+function AppListItem({ app, isSelected, onSelect }: AppListItemProps) {
   return (
     <div
       className={cn(
-        "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all",
+        "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all relative group",
         isSelected 
-          ? "bg-primary/10 border border-primary/30" 
-          : "bg-background border border-border hover:border-primary/30"
+          ? "bg-primary text-primary-foreground shadow-md" 
+          : "bg-background border border-border hover:bg-accent/50"
       )}
       onClick={onSelect}
     >
       {/* Logo */}
-      <div className="flex-shrink-0">
+      <div className="flex-shrink-0 relative">
         {app.logo_url ? (
           <img 
             src={app.logo_url} 
             alt={app.name || ''} 
-            className="w-10 h-10 rounded-lg object-cover"
+            className="w-10 h-10 rounded-lg object-cover bg-background"
           />
         ) : (
-          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-            <Globe className="w-5 h-5 text-muted-foreground" />
+          <div className={cn(
+            "w-10 h-10 rounded-lg flex items-center justify-center",
+            isSelected ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
+          )}>
+            <Globe className="w-5 h-5" />
           </div>
+        )}
+        
+        {/* Mobile Beta Indicator (overlay on logo) */}
+        {app.beta_active && (
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background md:hidden" />
         )}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-medium truncate">
-          {app.name || (() => { 
-            try { 
-              const normalized = app.url.trim();
-              const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
-                ? normalized 
-                : `https://${normalized}`;
-              return new URL(urlWithProtocol).hostname; 
-            } catch { 
-              return 'App'; 
-            } 
-          })()}
-        </h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium truncate">
+            {app.name || (() => { 
+              try { 
+                const normalized = app.url.trim();
+                const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
+                  ? normalized 
+                  : `https://${normalized}`;
+                return new URL(urlWithProtocol).hostname; 
+              } catch { 
+                return 'App'; 
+              } 
+            })()}
+          </h4>
+          
+          {/* Desktop Beta Indicator (label) */}
+          {app.beta_active && (
+            <div className={cn(
+              "hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-full border",
+              isSelected 
+                ? "bg-white/20 border-white/30 text-white" 
+                : "bg-green-500/10 border-green-500/20"
+            )}>
+              <span className={cn(
+                "w-1.5 h-1.5 rounded-full animate-pulse",
+                isSelected ? "bg-white" : "bg-green-500"
+              )} />
+              <span className={cn(
+                "text-[10px] font-medium",
+                isSelected ? "text-white" : "text-green-700 dark:text-green-400"
+              )}>Beta</span>
+            </div>
+          )}
+        </div>
         {app.tagline && (
-          <p className="text-xs text-muted-foreground truncate">{app.tagline}</p>
+          <p className={cn(
+            "text-xs line-clamp-2",
+            isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+          )}>{app.tagline}</p>
         )}
-      </div>
-
-      {/* Beta Toggle */}
-      <div 
-        className="flex-shrink-0"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <Switch
-          checked={app.beta_active ?? false}
-          onCheckedChange={onToggleBeta}
-        />
       </div>
     </div>
   );
@@ -99,6 +119,12 @@ export function BetaTab({ appsHook }: BetaTabProps) {
 
   const handleConfigChange = async (updates: Partial<AppData>) => {
     if (selectedAppId) {
+      if (updates.beta_active) {
+         // Default logic when turning ON via main panel
+         const app = apps.find(a => a.id === selectedAppId);
+         if (app && !app.beta_mode) updates.beta_mode = 'closed';
+         if (app && !app.beta_limit) updates.beta_limit = 1;
+      }
       await updateApp(selectedAppId, updates);
     }
   };
@@ -106,10 +132,6 @@ export function BetaTab({ appsHook }: BetaTabProps) {
   const handleSelectApp = (appId: string) => {
     setSelectedAppId(appId);
     setShowDetail(true);
-  };
-
-  const handleToggleBeta = async (appId: string, checked: boolean) => {
-    await updateApp(appId, { beta_active: checked });
   };
 
   // Empty state: no apps
@@ -144,7 +166,6 @@ export function BetaTab({ appsHook }: BetaTabProps) {
                 app={app}
                 isSelected={selectedAppId === app.id}
                 onSelect={() => handleSelectApp(app.id)}
-                onToggleBeta={(checked) => handleToggleBeta(app.id, checked)}
               />
             ))}
           </div>
@@ -167,8 +188,8 @@ export function BetaTab({ appsHook }: BetaTabProps) {
                 appId={selectedApp.id}
                 config={{
                   beta_active: selectedApp.beta_active ?? false,
-                  beta_mode: selectedApp.beta_mode ?? 'open',
-                  beta_limit: selectedApp.beta_limit ?? 10,
+                  beta_mode: selectedApp.beta_mode ?? 'closed',
+                  beta_limit: selectedApp.beta_limit ?? 1,
                   beta_link: selectedApp.beta_link ?? null,
                   beta_instructions: selectedApp.beta_instructions ?? null,
                 }}
@@ -191,7 +212,6 @@ export function BetaTab({ appsHook }: BetaTabProps) {
                   app={app}
                   isSelected={selectedAppId === app.id}
                   onSelect={() => setSelectedAppId(app.id)}
-                  onToggleBeta={(checked) => handleToggleBeta(app.id, checked)}
                 />
               ))}
             </div>
@@ -201,23 +221,25 @@ export function BetaTab({ appsHook }: BetaTabProps) {
         {/* Right Column: Config Panel */}
         <div className="col-span-8 lg:col-span-9">
           <ScrollArea className="h-[calc(100vh-300px)]">
-            {selectedApp ? (
-              <BetaManagement
-                appId={selectedApp.id}
-                config={{
-                  beta_active: selectedApp.beta_active ?? false,
-                  beta_mode: selectedApp.beta_mode ?? 'open',
-                  beta_limit: selectedApp.beta_limit ?? 10,
-                  beta_link: selectedApp.beta_link ?? null,
-                  beta_instructions: selectedApp.beta_instructions ?? null,
-                }}
-                onConfigChange={handleConfigChange}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-64 text-muted-foreground">
-                {t.selectApp || 'Selecciona una app'}
-              </div>
-            )}
+            <div className="pr-6 pl-1 py-1">
+              {selectedApp ? (
+                <BetaManagement
+                  appId={selectedApp.id}
+                  config={{
+                    beta_active: selectedApp.beta_active ?? false,
+                    beta_mode: selectedApp.beta_mode ?? 'closed',
+                    beta_limit: selectedApp.beta_limit ?? 1,
+                    beta_link: selectedApp.beta_link ?? null,
+                    beta_instructions: selectedApp.beta_instructions ?? null,
+                  }}
+                  onConfigChange={handleConfigChange}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-64 text-muted-foreground">
+                  {t.selectApp || 'Selecciona una app'}
+                </div>
+              )}
+            </div>
           </ScrollArea>
         </div>
       </div>
