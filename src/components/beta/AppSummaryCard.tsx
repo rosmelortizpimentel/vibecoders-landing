@@ -85,16 +85,12 @@ export function AppSummaryCard({
                     {name || 'Untitled App'}
                   </h2>
                   {isVerified && (
-                    <CheckCircle2 className="w-[18px] h-[18px] text-primary flex-shrink-0" />
+                    <CheckCircle2 className="w-[18px] h-[18px] text-primary-foreground bg-primary rounded-full flex-shrink-0" />
                   )}
                   {status && (
                     <Badge 
-                      variant="secondary"
-                      className="gap-1 text-xs"
-                      style={{ 
-                        backgroundColor: `${status.color}20`,
-                        color: status.color 
-                      }}
+                      variant="outline"
+                      className="gap-1 text-xs border-border text-muted-foreground"
                     >
                       {status.name}
                     </Badge>
