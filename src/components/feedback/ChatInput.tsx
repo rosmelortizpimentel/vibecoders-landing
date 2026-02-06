@@ -1,7 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Paperclip, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from 'sonner';
 
@@ -17,6 +16,16 @@ export function ChatInput({ onSend, isSending, disabled }: ChatInputProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }
+  }, [content]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -59,6 +68,10 @@ export function ChatInput({ onSend, isSending, disabled }: ChatInputProps) {
       setContent('');
       setFiles([]);
       setPreviews([]);
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
     } catch (error) {
       // Error handled in parent
     }
@@ -118,13 +131,14 @@ export function ChatInput({ onSend, isSending, disabled }: ChatInputProps) {
           <Paperclip className="h-5 w-5" />
         </Button>
 
-        <Textarea
+        <textarea
+          ref={textareaRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t.placeholder}
           disabled={disabled}
-          className="min-h-[40px] max-h-[120px] resize-none"
+          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 min-h-[40px] max-h-[120px] resize-none overflow-y-auto"
           rows={1}
         />
 

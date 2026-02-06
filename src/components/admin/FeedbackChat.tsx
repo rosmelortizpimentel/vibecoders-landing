@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ExternalLink } from 'lucide-react';
 import { ChatMessage } from '@/components/feedback/ChatMessage';
 import { ChatInput } from '@/components/feedback/ChatInput';
 import { useFeedback } from '@/hooks/useFeedback';
@@ -100,25 +100,41 @@ export function FeedbackChat({ thread }: FeedbackChatProps) {
           />
           <AvatarFallback>{initials}</AvatarFallback>
         </Avatar>
-        <div className="min-w-0">
-          {thread.profile?.name && (
-            <p className="font-medium truncate">
-              {thread.profile.name}
-            </p>
-          )}
-          {thread.profile?.username && (
-            <p className="text-sm text-muted-foreground truncate">
+        <div className="min-w-0 flex-1">
+          {thread.profile?.username ? (
+            <a
+              href={`/@${thread.profile.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-1.5"
+            >
+              {thread.profile?.name && (
+                <p className="font-medium truncate group-hover:text-primary transition-colors">
+                  {thread.profile.name}
+                </p>
+              )}
+              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            </a>
+          ) : thread.profile?.name ? (
+            <p className="font-medium truncate">{thread.profile.name}</p>
+          ) : null}
+          {thread.profile?.username ? (
+            <a
+              href={`/@${thread.profile.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground truncate hover:text-primary transition-colors"
+            >
               @{thread.profile.username}
-            </p>
-          )}
-          {!thread.profile?.username && !thread.profile?.name && (
+            </a>
+          ) : !thread.profile?.name ? (
             <p className="font-medium">Usuario</p>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <div className="flex-1 min-h-0 overflow-y-auto p-4" ref={scrollRef}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -142,7 +158,7 @@ export function FeedbackChat({ thread }: FeedbackChatProps) {
             <p>{t.empty}</p>
           </div>
         )}
-      </ScrollArea>
+      </div>
 
       {/* Input */}
       <ChatInput
