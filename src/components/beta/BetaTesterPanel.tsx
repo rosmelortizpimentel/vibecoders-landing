@@ -4,8 +4,11 @@ import { useBetaSquad } from '@/hooks/useBetaSquad';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BetaFeedbackForm } from './BetaFeedbackForm';
-import { Shield, ExternalLink, FileText, LogOut, Copy, Check } from 'lucide-react';
+import { TesterFeedbackHistory } from './TesterFeedbackHistory';
+import { parseMarkdown } from '@/lib/markdown';
+import { Shield, ExternalLink, FileText, LogOut, Copy, Check, MessageSquare, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -35,6 +38,7 @@ export function BetaTesterPanel({
   const { t } = useTranslation('beta');
   const { leaveBeta, leaving } = useBetaSquad(appId);
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<'report' | 'history'>('report');
 
   const handleLeave = async () => {
     const result = await leaveBeta();
@@ -69,9 +73,10 @@ export function BetaTesterPanel({
             {t('instructions')}
           </div>
           {betaInstructions ? (
-            <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/50 p-3 rounded-lg">
-              {betaInstructions}
-            </p>
+            <div 
+              className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg prose prose-sm max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(betaInstructions) }}
+            />
           ) : (
             <p className="text-sm text-muted-foreground italic">
               {t('noInstructions')}
@@ -111,11 +116,27 @@ export function BetaTesterPanel({
 
         <Separator />
 
-        {/* Feedback Form */}
-        <div className="space-y-3">
-          <h4 className="font-medium">{t('reportTitle')}</h4>
-          <BetaFeedbackForm appId={appId} />
-        </div>
+        {/* Feedback Tabs */}
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="report" className="gap-2">
+              <Send className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('reportTitle')}</span>
+              <span className="sm:hidden">Reportar</span>
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-2">
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">{t('myReports')}</span>
+              <span className="sm:hidden">Historial</span>
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="report" className="pt-4">
+            <BetaFeedbackForm appId={appId} />
+          </TabsContent>
+          <TabsContent value="history" className="pt-4">
+            <TesterFeedbackHistory appId={appId} />
+          </TabsContent>
+        </Tabs>
 
         <Separator />
 

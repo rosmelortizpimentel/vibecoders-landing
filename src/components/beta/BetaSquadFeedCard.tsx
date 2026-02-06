@@ -1,27 +1,36 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/hooks/useAuth';
 import { parseMarkdown } from '@/lib/markdown';
 import { cn } from '@/lib/utils';
 import { TesterListDialog } from './TesterListDialog';
+import { JoinConfirmDialog } from './JoinConfirmDialog';
 import type { BetaSquadApp } from '@/hooks/useBetaSquadsPublic';
-import { Users, Clock } from 'lucide-react';
+import { Users, Clock, CheckCircle2, Hourglass, XCircle } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface BetaSquadFeedCardProps {
   app: BetaSquadApp;
 }
 
 export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
-  const t = useTranslation('beta');
+  const { t } = useTranslation('beta');
   const { language } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  
   const [showTesters, setShowTesters] = useState(false);
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
   
   const progressPercent = app.beta_limit > 0 
     ? (app.testers_count / app.beta_limit) * 100 
@@ -29,11 +38,78 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
   
   const isUrgent = app.spots_remaining <= 3 && app.spots_remaining > 0;
   const isFull = app.spots_remaining <= 0;
+  const isOwner = user?.id === app.owner.id;
+  const userStatus = app.user_tester_status?.status;
 
   const timeAgo = formatDistanceToNow(new Date(app.updated_at), { 
     addSuffix: true,
     locale: language === 'es' ? es : enUS 
   });
+
+  const handleJoinClick = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    setShowJoinDialog(true);
+  };
+
+  const handleJoinSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['beta-squads-public'] });
+  };
+
+  // Render CTA button based on user status
+  const renderCTAButton = () => {
+    if (isOwner) {
+      return (
+        <Button asChild variant="outline" className="w-full" size="lg">
+          <Link to={`/app/${app.id}`}>{t('viewApp')}</Link>
+        </Button>
+      );
+    }
+
+    if (userStatus === 'accepted') {
+      return (
+        <Button asChild className="w-full" size="lg">
+          <Link to={`/app/${app.id}`}>
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            {t('accessMission')}
+          </Link>
+        </Button>
+      );
+    }
+
+    if (userStatus === 'pending') {
+      return (
+        <Badge variant="secondary" className="w-full justify-center py-3 text-sm">
+          <Hourglass className="w-4 h-4 mr-2" />
+          {t('statusPending')}
+        </Badge>
+      );
+    }
+
+    if (userStatus === 'rejected') {
+      return (
+        <Badge variant="outline" className="w-full justify-center py-3 text-sm text-muted-foreground">
+          <XCircle className="w-4 h-4 mr-2" />
+          {t('statusRejected')}
+        </Badge>
+      );
+    }
+
+    // No status - show join button
+    return (
+      <Button 
+        onClick={handleJoinClick}
+        className="w-full"
+        variant={isFull ? "secondary" : "default"}
+        size="lg"
+        disabled={isFull}
+      >
+        {!user ? t('loginToJoin') : isFull ? t('squadFull') : t('joinSquad')}
+      </Button>
+    );
+  };
 
   return (
     <>
@@ -72,7 +148,7 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
         {/* Post Intro Text */}
         <div className="px-4 pb-3">
           <p className="text-foreground">
-            {t.lookingFor?.replace('{count}', String(app.beta_limit)) || `Buscando ${app.beta_limit} testers`}
+            {t('lookingFor').replace('{count}', String(app.beta_limit))}
           </p>
         </div>
 
@@ -107,7 +183,7 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
               {app.beta_instructions && (
                 <div className="mb-4">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    {t.instructions}
+                    {t('instructions')}
                   </p>
                   <div 
                     className="text-sm text-foreground prose prose-sm max-w-none dark:prose-invert prose-strong:text-foreground prose-em:text-foreground"
@@ -136,12 +212,11 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
                     disabled={app.testers.length === 0}
                   >
                     <Users className="h-4 w-4" />
-                    {t.enrolledClickable?.replace('{current}', String(app.testers_count)).replace('{limit}', String(app.beta_limit)) 
-                      || `${app.testers_count}/${app.beta_limit} inscritos`}
+                    {t('enrolledClickable').replace('{current}', String(app.testers_count)).replace('{limit}', String(app.beta_limit))}
                   </button>
                   {isUrgent && !isFull && (
                     <span className="text-xs font-medium text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">
-                      {t.spotsLow}
+                      {t('spotsLow')}
                     </span>
                   )}
                 </div>
@@ -152,16 +227,7 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
 
         {/* CTA Footer */}
         <div className="px-4 pb-4">
-          <Button 
-            asChild 
-            className="w-full"
-            variant={isFull ? "secondary" : "default"}
-            size="lg"
-          >
-            <Link to={`/app/${app.id}`}>
-              {isFull ? t.squadFull : t.joinSquad}
-            </Link>
-          </Button>
+          {renderCTAButton()}
         </div>
       </article>
 
@@ -170,6 +236,16 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
         onClose={() => setShowTesters(false)}
         testers={app.testers}
         appName={app.name}
+      />
+
+      <JoinConfirmDialog
+        open={showJoinDialog}
+        onOpenChange={setShowJoinDialog}
+        appId={app.id}
+        appName={app.name}
+        appLogo={app.logo_url}
+        betaInstructions={app.beta_instructions}
+        onSuccess={handleJoinSuccess}
       />
     </>
   );

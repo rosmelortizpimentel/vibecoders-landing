@@ -300,7 +300,12 @@ export type Database = {
           id: string
           is_useful: boolean | null
           rating: number | null
+          resolved_at: string | null
+          resolved_by_owner: boolean | null
+          status: string
           tester_id: string
+          tester_response: string | null
+          tester_response_at: string | null
           type: string
         }
         Insert: {
@@ -310,7 +315,12 @@ export type Database = {
           id?: string
           is_useful?: boolean | null
           rating?: number | null
+          resolved_at?: string | null
+          resolved_by_owner?: boolean | null
+          status?: string
           tester_id: string
+          tester_response?: string | null
+          tester_response_at?: string | null
           type: string
         }
         Update: {
@@ -320,7 +330,12 @@ export type Database = {
           id?: string
           is_useful?: boolean | null
           rating?: number | null
+          resolved_at?: string | null
+          resolved_by_owner?: boolean | null
+          status?: string
           tester_id?: string
+          tester_response?: string | null
+          tester_response_at?: string | null
           type?: string
         }
         Relationships: [
@@ -336,6 +351,41 @@ export type Database = {
             columns: ["tester_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      beta_feedback_attachments: {
+        Row: {
+          created_at: string | null
+          feedback_id: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feedback_id: string
+          file_name: string
+          file_type: string
+          file_url: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          feedback_id?: string
+          file_name?: string
+          file_type?: string
+          file_url?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beta_feedback_attachments_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "beta_feedback"
             referencedColumns: ["id"]
           },
         ]
