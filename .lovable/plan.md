@@ -1,297 +1,443 @@
 
+# Plan: Sistema Completo de Beta Squads - Flujo de Unirse, Feedback con Imagenes y Workflow de Bugs
 
-## Análisis Sincero del Estado Actual
+## Resumen Ejecutivo
 
-### Problemas Identificados
-
-1. **Diseño Grid No Transmite Comunidad**: El diseño actual de 3 columnas se siente como un "catálogo de productos", no como un espacio donde personas reales están buscando colaboradores.
-
-2. **Falta Contexto Humano**: No se ve quién publicó, cuándo lo hizo, ni la urgencia real. Las beta_instructions están truncadas y pierden contexto.
-
-3. **No Hay Prueba Social**: No se pueden ver los testers ya inscritos. Sin saber quién más se unió, hay menos motivación para participar.
-
-4. **Las Instrucciones No Soportan Formato**: El campo `beta_instructions` es texto plano, cuando los founders necesitan negritas, listas, etc. para ser claros.
-
-5. **Carga de Todo de Golpe**: Sin paginación, si crecen las betas, la página se vuelve lenta.
-
----
-
-## Plan: Rediseño Feed LinkedIn-Style para Beta Squads
-
-### Concepto Visual Propuesto
-
-```
-+--------------------------------------------------+
-|                 HERO (mismo actual)               |
-+--------------------------------------------------+
-
-    +----------------------------------------+
-    |  [Avatar Autor] María García           |
-    |                 @maria · hace 2 horas  |
-    +----------------------------------------+
-    |                                        |
-    |  "Estamos buscando 5 personas para     |
-    |  probar la nueva versión del checkout  |
-    |  antes del lanzamiento..."             |
-    |                                        |
-    |  +----------------------------------+  |
-    |  |  [Logo]  Nombre de la App       |  |
-    |  |          tagline de la app      |  |
-    |  |                                 |  |
-    |  |  **Instrucciones (formateadas):**|  |
-    |  |  - Probar flujo de pago         |  |
-    |  |  - Verificar en móvil           |  |
-    |  |  - Reportar bugs en el form     |  |
-    |  |                                 |  |
-    |  +----------------------------------+  |
-    |                                        |
-    |  [===-----] 2/5 inscritos (clickeable)|
-    |                                        |
-    |  [ Unirme al Squad ]                  |
-    +----------------------------------------+
-
-    +----------------------------------------+
-    |  ... siguiente post ...                |
-    +----------------------------------------+
-```
+Este plan implementa un sistema completo de gestion de Beta Squads con:
+1. Popup de confirmacion para unirse (en el feed)
+2. Vista de estado del usuario (pendiente/aprobado/rechazado) en lugar del boton "Unirse"
+3. Nuevo sistema de feedback con soporte para hasta 10 imagenes por reporte
+4. Workflow de bugs: Owner marca para revision, Tester puede confirmar solucion o devolver
+5. Vista de feedback para testers (solo lectura de sus propios reportes)
+6. Menu de tres puntos para acciones multiples
+7. Detalle compacto de app con cabecera resumida
+8. Filtros por estado en listas de testers
 
 ---
 
-## Cambios Técnicos Detallados
+## 1. Cambios en Base de Datos
 
-### 1. Actualizar Hook `useBetaSquadsPublic`
+### 1.1 Modificar tabla `beta_feedback`
 
-**Archivo**: `src/hooks/useBetaSquadsPublic.ts`
+Agregar nuevas columnas para soportar el workflow de bugs:
+
+```sql
+ALTER TABLE beta_feedback ADD COLUMN status TEXT NOT NULL DEFAULT 'open';
+-- Valores posibles: 'open', 'in_review', 'resolved', 'closed'
+
+ALTER TABLE beta_feedback ADD COLUMN resolved_by_owner BOOLEAN DEFAULT FALSE;
+ALTER TABLE beta_feedback ADD COLUMN resolved_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE beta_feedback ADD COLUMN tester_response TEXT; -- 'confirmed' | 'reopened'
+ALTER TABLE beta_feedback ADD COLUMN tester_response_at TIMESTAMP WITH TIME ZONE;
+```
+
+### 1.2 Crear tabla `beta_feedback_attachments`
+
+Nueva tabla para imagenes adjuntas a feedback:
+
+```sql
+CREATE TABLE beta_feedback_attachments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  feedback_id UUID NOT NULL REFERENCES beta_feedback(id) ON DELETE CASCADE,
+  file_url TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
+);
+
+-- RLS Policies
+ALTER TABLE beta_feedback_attachments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Testers can insert own attachments" ON beta_feedback_attachments
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM beta_feedback
+      WHERE beta_feedback.id = beta_feedback_attachments.feedback_id
+      AND beta_feedback.tester_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Owners and testers can view attachments" ON beta_feedback_attachments
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM beta_feedback bf
+      JOIN apps ON apps.id = bf.app_id
+      WHERE bf.id = beta_feedback_attachments.feedback_id
+      AND (bf.tester_id = auth.uid() OR apps.user_id = auth.uid())
+    )
+  );
+```
+
+---
+
+## 2. Componente Feed: Popup de Confirmacion para Unirse
+
+### 2.1 Modificar `BetaSquadFeedCard.tsx`
 
 Cambios:
-- Usar `useInfiniteQuery` en lugar de `useQuery` para scroll infinito
-- Añadir paginación (10 items por página)
-- Ordenar por `updated_at DESC` (más reciente primero)
-- Traer `user_id` del owner para el popup de testers
-- Traer lista de testers (id, username, name, avatar_url) por cada app
+- Agregar estado `userTesterStatus` al hook `useBetaSquadsPublic`
+- Mostrar AlertDialog de confirmacion antes de enviar solicitud
+- Reemplazar boton "Unirme" por badge de estado si ya hay una solicitud
+
+```
+Estado del boton segun user_tester_status:
+- null → "Unirme al Squad" (abre popup confirmacion)
+- pending → Badge "Solicitud pendiente" (deshabilitado)
+- accepted → "Acceder a mision" (lleva a /app/:id)
+- rejected → No mostrar boton o "No aceptado"
+```
+
+### 2.2 Crear `JoinConfirmDialog.tsx`
+
+Nuevo componente Dialog que muestra:
+- Nombre de la app y logo
+- Texto: "¿Confirmas que quieres unirte al Beta Squad?"
+- Instrucciones resumidas (si existen)
+- Botones: "Cancelar" | "Confirmar y enviar solicitud"
+
+---
+
+## 3. Hook Actualizado: Estado del Usuario por App
+
+### 3.1 Modificar `useBetaSquadsPublic.ts`
+
+Agregar campo `user_tester_status` a cada app:
+- Hacer query adicional a `beta_testers` para el usuario actual
+- Agrupar por `app_id` para obtener status de cada app
 
 ```typescript
-// Nuevo interface con más datos
-export interface BetaSquadApp {
-  id: string;
-  name: string | null;
-  logo_url: string | null;
-  tagline: string | null;
-  beta_instructions: string | null;
-  beta_limit: number;
-  testers_count: number;
-  spots_remaining: number;
-  updated_at: string; // Para mostrar fecha
-  owner: {
-    id: string;        // Nuevo: para follow
-    username: string | null;
-    name: string | null;
-    avatar_url: string | null;
-  };
-  testers: Array<{     // Nuevo: lista de testers
+interface BetaSquadApp {
+  // ... campos existentes
+  user_tester_status: {
     id: string;
-    username: string | null;
-    name: string | null;
-    avatar_url: string | null;
-  }>;
-}
-```
-
-### 2. Mejorar Markdown Parser
-
-**Archivo**: `src/lib/markdown.ts`
-
-Añadir soporte para:
-- Listas numeradas (1. item, 2. item)
-- Subrayado (~~texto~~ → `<u>`)
-
-```typescript
-// Añadir a parseMarkdown:
-
-// Underline: ~~text~~
-html = html.replace(/~~(.+?)~~/g, '<u>$1</u>');
-
-// Numbered lists: 1. item
-const numberedMatch = line.match(/^(\d+)\.\s+(.+)$/);
-if (numberedMatch) {
-  // Similar a unordered pero con <ol>
-}
-```
-
-### 3. Nuevo Componente `BetaSquadFeedCard`
-
-**Archivo**: `src/components/beta/BetaSquadFeedCard.tsx`
-
-Estructura:
-- Header tipo post (avatar autor, nombre, @username, fecha relativa)
-- Texto introductorio (descripción corta)
-- Card interna con logo de app + instrucciones formateadas
-- Indicador de cupos clickeable
-- Botón CTA
-
-```typescript
-interface BetaSquadFeedCardProps {
-  app: BetaSquadApp;
-  onShowTesters: (testers: Tester[]) => void;
-}
-```
-
-### 4. Nuevo Dialog `TesterListDialog`
-
-**Archivo**: `src/components/beta/TesterListDialog.tsx`
-
-Reutilizar lógica de `FollowerCard`:
-- Mostrar lista de testers inscritos
-- Cada tester tiene botón follow/unfollow
-- Click en el tester navega a su perfil
-
-### 5. Actualizar Página `BetaSquads`
-
-**Archivo**: `src/pages/BetaSquads.tsx`
-
-Cambios:
-- Layout single-column centrado (`max-w-2xl mx-auto`)
-- Implementar infinite scroll con `IntersectionObserver`
-- Mostrar "Load more" trigger al final
-- Estado loading para nuevas páginas
-
-### 6. Actualizar Traducciones
-
-**Archivos**: `src/i18n/es/beta.json`, `src/i18n/en/beta.json`
-
-Nuevas claves:
-```json
-{
-  "lookingFor": "Buscando {count} testers",
-  "enrolled": "{current} inscritos",
-  "enrolledClickable": "{current}/{limit} inscritos",
-  "viewTesters": "Ver testers",
-  "timeAgo": "hace {time}",
-  "justNow": "ahora mismo"
+    status: 'pending' | 'accepted' | 'rejected';
+  } | null;
 }
 ```
 
 ---
 
-## Resumen de Archivos
+## 4. Pagina de Detalle de App Compacta
 
-### Archivos a Modificar
+### 4.1 Modificar `AppDetail.tsx`
+
+Cabecera compacta (todo en una fila):
+```
+[Logo 48x48] [Nombre + Tagline] [Badge Status] [Boton "Ver App"]
+```
+
+Debajo (solo si beta_active y es tester aceptado):
+- Seccion de instrucciones de mision
+- Panel de feedback con historial
+
+### 4.2 Crear `AppDetailCompactHeader.tsx`
+
+Nuevo componente para la cabecera compacta:
+- Logo pequeno (48x48)
+- Nombre y tagline en linea
+- Badges de categoria/status
+- Boton CTA "Ver App" alineado a la derecha
+
+---
+
+## 5. Sistema de Feedback con Imagenes
+
+### 5.1 Modificar `BetaFeedbackForm.tsx`
+
+Agregar:
+- Input para subir hasta 10 imagenes
+- Preview de imagenes seleccionadas con opcion de eliminar
+- Subir imagenes a bucket `feedback-attachments` antes de enviar
+- Enviar array de URLs al edge function
+
+### 5.2 Modificar Edge Function `submit-beta-feedback`
+
+Actualizar para:
+- Recibir array de `attachments: { url, name, type }[]`
+- Insertar en tabla `beta_feedback_attachments`
+- Limite maximo de 10 attachments
+
+### 5.3 Crear `BetaFeedbackImageUploader.tsx`
+
+Componente para:
+- Drag and drop de imagenes
+- Preview grid de imagenes
+- Boton para eliminar cada imagen
+- Indicador de progreso de subida
+- Limite visual (X/10 imagenes)
+
+---
+
+## 6. Vista de Feedback para Testers (Solo Lectura)
+
+### 6.1 Crear `TesterFeedbackHistory.tsx`
+
+Lista de reportes enviados por el tester:
+- Fecha y hora de envio
+- Tipo (bug/ux/feature/other)
+- Contenido del reporte
+- Imagenes adjuntas (click para ampliar)
+- Estado del reporte (abierto/en revision/resuelto/cerrado)
+- Si esta "en revision": mostrar alerta para re-probar
+
+### 6.2 Crear hook `useTesterFeedback.ts`
+
+```typescript
+function useTesterFeedback(appId: string) {
+  // Query feedback del usuario actual para esta app
+  // Incluir attachments
+  // Ordenar por created_at DESC
+}
+```
+
+---
+
+## 7. Vista de Feedback para Owner (Gestion Completa)
+
+### 7.1 Modificar `BetaManagement.tsx`
+
+Mejorar seccion de Feedback Inbox:
+- Filtros por estado: Todos | Abiertos | En revision | Resueltos
+- Cada item muestra: tester, tipo, preview contenido, fecha
+- Imagenes adjuntas en grid
+- Menu de 3 puntos con acciones
+
+### 7.2 Crear `FeedbackActionMenu.tsx`
+
+Menu desplegable (DropdownMenu) con:
+- "Marcar como util" (toggle)
+- "Marcar como resuelto" → pone status='in_review', espera confirmacion tester
+- "Cerrar reporte" → pone status='closed' directamente
+- "Eliminar" (con confirmacion)
+
+---
+
+## 8. Workflow de Bugs (Ciclo Completo)
+
+### 8.1 Estados del Feedback
+
+```
+Flujo:
+1. Tester envia → status='open'
+2. Owner marca resuelto → status='in_review', resolved_by_owner=true
+3. Tester ve alerta "Pendiente de verificar"
+4. Tester responde:
+   a) "Confirmo solucionado" → status='closed', tester_response='confirmed'
+   b) "Sigue sin funcionar" → status='open', tester_response='reopened'
+5. Owner puede cerrar directamente → status='closed'
+```
+
+### 8.2 Crear `FeedbackStatusBadge.tsx`
+
+Badge con colores segun estado:
+- open: Azul "Abierto"
+- in_review: Amarillo "Pendiente verificar"
+- closed: Gris "Cerrado"
+
+### 8.3 Crear `TesterFeedbackResponseDialog.tsx`
+
+Dialog para que el tester responda cuando un bug esta "in_review":
+- Pregunta: "El problema ha sido solucionado?"
+- Botones: "Si, cerrar reporte" | "No, sigue ocurriendo"
+
+---
+
+## 9. Filtros de Testers por Estado
+
+### 9.1 Modificar `BetaManagement.tsx`
+
+Agregar tabs o select para filtrar testers:
+- Todos
+- Pendientes (pending)
+- Aceptados (accepted)
+- Rechazados (rejected)
+
+Ordenamiento:
+1. Aceptados primero
+2. Luego pendientes
+3. Luego rechazados
+
+---
+
+## 10. Responsividad Completa (Mobile-First)
+
+### 10.1 Principios de Diseno
+
+- Cards con flex-col en mobile, flex-row en desktop
+- Menu de 3 puntos en lugar de botones multiples
+- Dialogs a pantalla completa en mobile (Sheet)
+- Imagenes en grid responsive (2 cols mobile, 5 cols desktop)
+- Touch targets minimo 44x44px
+
+### 10.2 Componentes Afectados
+
+- `BetaSquadFeedCard.tsx`: Stack vertical en mobile
+- `AppDetail.tsx`: Sidebar debajo en mobile
+- `BetaManagement.tsx`: Tabs scrollables en mobile
+- `TesterFeedbackHistory.tsx`: Grid de imagenes responsive
+
+---
+
+## Archivos a Crear
+
+| Archivo | Descripcion |
+|---------|-------------|
+| `src/components/beta/JoinConfirmDialog.tsx` | Popup confirmacion para unirse |
+| `src/components/beta/BetaFeedbackImageUploader.tsx` | Upload de imagenes |
+| `src/components/beta/TesterFeedbackHistory.tsx` | Historial de feedback del tester |
+| `src/components/beta/FeedbackActionMenu.tsx` | Menu 3 puntos para acciones |
+| `src/components/beta/FeedbackStatusBadge.tsx` | Badge de estado del feedback |
+| `src/components/beta/TesterFeedbackResponseDialog.tsx` | Dialog respuesta del tester |
+| `src/components/beta/AppDetailCompactHeader.tsx` | Cabecera compacta de app |
+| `src/hooks/useTesterFeedback.ts` | Hook para feedback del tester |
+
+---
+
+## Archivos a Modificar
+
 | Archivo | Cambios |
 |---------|---------|
-| `src/hooks/useBetaSquadsPublic.ts` | Cambiar a `useInfiniteQuery`, añadir testers array, ordenar por `updated_at` |
-| `src/lib/markdown.ts` | Añadir listas numeradas y subrayado |
-| `src/pages/BetaSquads.tsx` | Layout single-column, infinite scroll |
+| `src/hooks/useBetaSquadsPublic.ts` | Agregar user_tester_status |
+| `src/hooks/useBetaSquad.ts` | Agregar updateFeedbackStatus, respondToResolution |
+| `src/components/beta/BetaSquadFeedCard.tsx` | Estado dinamico del boton, popup confirmacion |
+| `src/components/beta/BetaFeedbackForm.tsx` | Soporte para imagenes |
+| `src/components/beta/BetaTesterPanel.tsx` | Agregar historial de feedback |
+| `src/components/beta/BetaManagement.tsx` | Filtros, workflow completo, imagenes |
+| `src/pages/AppDetail.tsx` | Cabecera compacta, layout mejorado |
+| `supabase/functions/submit-beta-feedback/index.ts` | Soporte attachments |
 | `src/i18n/es/beta.json` | Nuevas traducciones |
 | `src/i18n/en/beta.json` | Nuevas traducciones |
 
-### Archivos a Crear
-| Archivo | Descripción |
-|---------|-------------|
-| `src/components/beta/BetaSquadFeedCard.tsx` | Card estilo post con autor y app embebida |
-| `src/components/beta/TesterListDialog.tsx` | Dialog para ver testers con opción follow |
+---
+
+## Migraciones SQL
+
+### Migration 1: Ampliar beta_feedback
+
+```sql
+-- Agregar columnas de workflow
+ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'open';
+ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS resolved_by_owner BOOLEAN DEFAULT FALSE;
+ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ;
+ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS tester_response TEXT;
+ALTER TABLE beta_feedback ADD COLUMN IF NOT EXISTS tester_response_at TIMESTAMPTZ;
+
+-- Constraint para valores validos
+ALTER TABLE beta_feedback ADD CONSTRAINT beta_feedback_status_check 
+  CHECK (status IN ('open', 'in_review', 'closed'));
+ALTER TABLE beta_feedback ADD CONSTRAINT beta_feedback_tester_response_check 
+  CHECK (tester_response IS NULL OR tester_response IN ('confirmed', 'reopened'));
+```
+
+### Migration 2: Tabla de attachments
+
+```sql
+CREATE TABLE IF NOT EXISTS beta_feedback_attachments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  feedback_id UUID NOT NULL REFERENCES beta_feedback(id) ON DELETE CASCADE,
+  file_url TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE beta_feedback_attachments ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Testers can insert own attachments"
+  ON beta_feedback_attachments FOR INSERT
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM beta_feedback
+    WHERE beta_feedback.id = beta_feedback_attachments.feedback_id
+    AND beta_feedback.tester_id = auth.uid()
+  ));
+
+CREATE POLICY "View own or owned app attachments"
+  ON beta_feedback_attachments FOR SELECT
+  USING (EXISTS (
+    SELECT 1 FROM beta_feedback bf
+    JOIN apps ON apps.id = bf.app_id
+    WHERE bf.id = beta_feedback_attachments.feedback_id
+    AND (bf.tester_id = auth.uid() OR apps.user_id = auth.uid())
+  ));
+```
 
 ---
 
-## Detalles Técnicos
+## Nuevas Traducciones (ES)
 
-### Infinite Scroll con `useInfiniteQuery`
-
-```typescript
-export function useBetaSquadsPublic() {
-  return useInfiniteQuery({
-    queryKey: ['beta-squads-public'],
-    queryFn: async ({ pageParam = 0 }) => {
-      const pageSize = 10;
-      const from = pageParam * pageSize;
-      const to = from + pageSize - 1;
-      
-      const { data: apps } = await supabase
-        .from('apps')
-        .select(`...`)
-        .eq('beta_active', true)
-        .eq('is_visible', true)
-        .order('updated_at', { ascending: false })
-        .range(from, to);
-      
-      // ... procesar testers
-      
-      return {
-        apps: processedApps,
-        nextPage: apps.length === pageSize ? pageParam + 1 : undefined
-      };
-    },
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-    initialPageParam: 0,
-  });
+```json
+{
+  "confirmJoinTitle": "Unirte al Beta Squad",
+  "confirmJoinMessage": "¿Confirmas que quieres unirte como tester de {appName}?",
+  "confirmJoinButton": "Confirmar y enviar solicitud",
+  "statusPending": "Solicitud pendiente",
+  "statusAccepted": "Tester aceptado",
+  "statusRejected": "Solicitud rechazada",
+  
+  "feedbackOpen": "Abierto",
+  "feedbackInReview": "Pendiente verificar",
+  "feedbackClosed": "Cerrado",
+  
+  "markResolved": "Marcar como resuelto",
+  "closeReport": "Cerrar reporte",
+  "deleteReport": "Eliminar reporte",
+  
+  "verifyResolution": "¿Se solucionó el problema?",
+  "confirmFixed": "Sí, está solucionado",
+  "stillBroken": "No, sigue ocurriendo",
+  
+  "attachImages": "Adjuntar imágenes",
+  "maxImages": "Máximo 10 imágenes",
+  "uploadingImages": "Subiendo imágenes...",
+  
+  "myReports": "Mis reportes",
+  "sentAt": "Enviado",
+  "noReportsYet": "Aún no has enviado reportes",
+  
+  "filterAll": "Todos",
+  "filterOpen": "Abiertos",
+  "filterInReview": "En revisión",
+  "filterClosed": "Cerrados"
 }
 ```
 
-### Intersection Observer para Trigger
+---
 
-```typescript
-// En BetaSquads.tsx
-const loadMoreRef = useRef<HTMLDivElement>(null);
+## Orden de Implementacion
 
-useEffect(() => {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    },
-    { threshold: 0.1 }
-  );
-  
-  if (loadMoreRef.current) {
-    observer.observe(loadMoreRef.current);
-  }
-  
-  return () => observer.disconnect();
-}, [hasNextPage, isFetchingNextPage]);
-```
-
-### Fecha Relativa
-
-```typescript
-import { formatDistanceToNow } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
-
-const timeAgo = formatDistanceToNow(new Date(app.updated_at), { 
-  addSuffix: true,
-  locale: language === 'es' ? es : enUS 
-});
-```
-
-### Query para Testers por App
-
-```typescript
-// Obtener testers aceptados con perfil
-const { data: testersData } = await supabase
-  .from('beta_testers')
-  .select('app_id, user_id, profiles:user_id(id, username, name, avatar_url)')
-  .eq('status', 'accepted')
-  .in('app_id', appIds);
-```
+1. **Base de datos**: Migrations para nuevas columnas y tabla de attachments
+2. **Edge Function**: Actualizar submit-beta-feedback para attachments
+3. **Hook useBetaSquadsPublic**: Agregar user_tester_status
+4. **JoinConfirmDialog**: Popup de confirmacion
+5. **BetaSquadFeedCard**: Integracion estado dinamico
+6. **BetaFeedbackImageUploader**: Componente upload imagenes
+7. **BetaFeedbackForm**: Integrar uploader de imagenes
+8. **TesterFeedbackHistory**: Vista de reportes del tester
+9. **FeedbackActionMenu**: Menu 3 puntos owner
+10. **FeedbackStatusBadge**: Badge estados
+11. **TesterFeedbackResponseDialog**: Dialog verificacion tester
+12. **BetaManagement**: Filtros y workflow completo
+13. **AppDetail**: Cabecera compacta + layout
+14. **Traducciones**: ES y EN
+15. **Testing E2E**: Flujo completo mobile y desktop
 
 ---
 
-## Orden de Implementación
+## Notas Tecnicas
 
-1. **Markdown**: Extender parser con listas numeradas y subrayado
-2. **Hook**: Refactorizar a infinite query + traer testers
-3. **TesterListDialog**: Dialog reutilizando FollowerCard
-4. **BetaSquadFeedCard**: Componente principal tipo post
-5. **BetaSquads Page**: Layout single-column + infinite scroll
-6. **Traducciones**: Nuevas claves ES/EN
-7. **Testing**: Verificar scroll, formato, popup de testers
+### Upload de Imagenes
+- Usar bucket existente `feedback-attachments`
+- Generar UUID para nombre unico
+- Validar tipo MIME (solo imagenes)
+- Comprimir si es necesario (max 2MB recomendado)
 
----
+### Performance
+- Lazy load de imagenes en historial
+- Paginacion en lista de feedback
+- Optimistic updates para cambios de estado
 
-## Notas sobre Lógica de Cupos
-
-Aclaración importante que mencionaste:
-- `beta_limit = 5` significa "busco 5 testers"
-- Si el modo es "requiere aprobación", puede haber más de 5 registrados pero solo contabilizamos los `status = 'accepted'`
-- El owner puede aceptar hasta 5, pero no es restrictivo (podría aceptar más si quiere)
-- En el UI mostramos: `2/5 inscritos` donde 2 = accepted, 5 = limit
+### UX Mobile
+- Sheet en lugar de Dialog para mobile
+- Swipe actions en listas si es posible
+- Feedback tactil (haptic) en confirmaciones
 
