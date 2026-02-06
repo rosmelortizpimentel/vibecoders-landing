@@ -22,7 +22,6 @@ import {
   Plus,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface TesterReportCardProps {
   appId: string;
@@ -107,12 +106,9 @@ export function TesterReportCard({ appId }: TesterReportCardProps) {
   return (
     <>
       <Card className="overflow-hidden">
-        <div className="flip-card">
-          <div className={cn(
-            "flip-card-inner",
-            showForm && "flipped"
-          )}>
-            {/* Front - Report List */}
+        <div className="flip-card-inner" data-flipped={showForm ? "true" : undefined}>
+          {/* Front - Report List */}
+          {!showForm && (
             <div className="flip-card-front">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -200,8 +196,10 @@ export function TesterReportCard({ appId }: TesterReportCardProps) {
                 )}
               </CardContent>
             </div>
+          )}
 
-            {/* Back - Report Form */}
+          {/* Back - Report Form */}
+          {showForm && (
             <div className="flip-card-back">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-base">
@@ -218,7 +216,7 @@ export function TesterReportCard({ appId }: TesterReportCardProps) {
                 />
               </CardContent>
             </div>
-          </div>
+          )}
         </div>
       </Card>
 
