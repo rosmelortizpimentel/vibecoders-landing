@@ -19,5 +19,26 @@
     "urgency": "Short usernames are running out.",
     "claimButton": "Claim my @username",
     "microcopy": "No waitlists. Join and publish your first project today."
+  },
+  "profileCard": {
+    "myApps": "My Apps"
+  },
+  "bento": {
+    "url": {
+      "title": "Your URL is your personal brand",
+      "body": "Forget generic links. Your username becomes your digital business card. A unique web address that gives you identity and immediate professionalism, ready to share."
+    },
+    "stack": {
+      "title": "Your Stack is your superpower",
+      "body": "Don't hide the magic. Proudly show the tools you master (Lovable, v0, Replit). Transparency shows you're at the forefront."
+    },
+    "ecosystem": {
+      "title": "Connect your digital ecosystem",
+      "body": "Your code lives on GitHub. Your network on LinkedIn. Your voice on X. Vibecoders is the meeting point where all your creative chaos makes sense."
+    },
+    "reputation": {
+      "title": "Validate yourself as a \"Shipper\"",
+      "body": "Separate yourself from those who only have ideas. A verified profile with functional projects tells the world: \"I don't just promise, I build\"."
+    }
   }
 }

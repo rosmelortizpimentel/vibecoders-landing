@@ -1,36 +1,39 @@
+import { useTranslation } from '@/hooks/useTranslation';
 import BrowserUrlMock from './bento/BrowserUrlMock';
 import TechStackCarousel from './bento/TechStackCarousel';
 import EcosystemHub from './bento/EcosystemHub';
 import VerifiedBadge from './bento/VerifiedBadge';
 
-const features = [
-  {
-    id: 'url',
-    visual: <BrowserUrlMock />,
-    title: 'Tu URL es tu marca personal',
-    body: 'Olvídate de los links genéricos. Tu nombre de usuario se convierte en tu carta de presentación digital. Una dirección web propia que te otorga identidad y profesionalismo inmediato, lista para compartir.',
-  },
-  {
-    id: 'stack',
-    visual: <TechStackCarousel />,
-    title: 'Tu Stack es tu superpoder',
-    body: 'No escondas la magia. Muestra con orgullo las herramientas que dominas (Lovable, v0, Replit). La transparencia demuestra que estás a la vanguardia.',
-  },
-  {
-    id: 'ecosystem',
-    visual: <EcosystemHub />,
-    title: 'Conecta tu ecosistema digital',
-    body: 'Tu código vive en GitHub. Tu red en LinkedIn. Tu voz en X. Vibecoders es el punto de encuentro donde todo tu caos creativo cobra sentido.',
-  },
-  {
-    id: 'reputation',
-    visual: <VerifiedBadge />,
-    title: 'Valídate como "Shipper"',
-    body: 'Sepárate de los que solo tienen ideas. Un perfil verificado con proyectos funcionales le dice al mundo: "Yo no solo prometo, yo construyo".',
-  },
-];
-
 const BentoGrid = () => {
+  const t = useTranslation('hero');
+
+  const features = [
+    {
+      id: 'url',
+      visual: <BrowserUrlMock />,
+      title: t.bento?.url?.title || 'Your URL is your personal brand',
+      body: t.bento?.url?.body || '',
+    },
+    {
+      id: 'stack',
+      visual: <TechStackCarousel />,
+      title: t.bento?.stack?.title || 'Your Stack is your superpower',
+      body: t.bento?.stack?.body || '',
+    },
+    {
+      id: 'ecosystem',
+      visual: <EcosystemHub />,
+      title: t.bento?.ecosystem?.title || 'Connect your digital ecosystem',
+      body: t.bento?.ecosystem?.body || '',
+    },
+    {
+      id: 'reputation',
+      visual: <VerifiedBadge />,
+      title: t.bento?.reputation?.title || 'Validate yourself as a "Shipper"',
+      body: t.bento?.reputation?.body || '',
+    },
+  ];
+
   return (
     <section className="bg-[#F6F5F4] py-20 px-4 md:py-28">
       <div className="mx-auto max-w-5xl">

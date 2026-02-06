@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { Folder, Eye, Heart } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import profileAvatar from '@/assets/profile-avatar.png';
 
 type CardState = 'file' | 'transforming' | 'verified' | 'counting' | 'exploding';
@@ -35,6 +36,7 @@ const ProfileFileCard = ({
   onExplosion,
   onCountingComplete
 }: ProfileFileCardProps) => {
+  const t = useTranslation('hero');
   const [cardState, setCardState] = useState<CardState>('file');
   const [isPulsing, setIsPulsing] = useState(false);
   const [showExplosion, setShowExplosion] = useState(false);
@@ -237,7 +239,7 @@ const ProfileFileCard = ({
           <>
             <Folder className="w-12 h-12 md:w-16 md:h-16 text-blue-500" />
             <span className="mt-2 text-xs md:text-sm font-medium text-gray-700">
-              Mis Apps
+              {t.profileCard?.myApps || 'My Apps'}
             </span>
             {/* Progress indicator */}
             <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
