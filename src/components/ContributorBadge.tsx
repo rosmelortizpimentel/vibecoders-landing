@@ -24,7 +24,7 @@ export function ContributorBadge({ className = '' }: ContributorBadgeProps) {
           <img 
             src={contributorBadgeUrl}
             alt="Contributor Badge"
-            className={`w-[30px] h-[30px] rounded-full object-cover cursor-default ${className}`}
+            className={`w-4 h-4 rounded-full object-cover cursor-default ${className}`}
           />
         </TooltipTrigger>
         <TooltipContent>
