@@ -9,18 +9,18 @@
  
  export function VerificationBadge({ isVerified, onClick, className }: VerificationBadgeProps) {
    if (isVerified) {
-     return (
-       <span 
-         className={cn(
-           "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-           "bg-blue-50 text-blue-700",
-           className
-         )}
-       >
-         <ShieldCheck className="h-3 w-3" />
-         Verificado
-       </span>
-     );
+      return (
+        <span 
+          className={cn(
+            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+            "bg-primary text-primary-foreground",
+            className
+          )}
+        >
+          <ShieldCheck className="h-3 w-3" />
+          Verificado
+        </span>
+      );
    }
  
    return (
