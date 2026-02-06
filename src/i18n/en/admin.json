@@ -16,5 +16,14 @@
   },
   "confirmDelete": "Are you sure you want to delete this item?",
   "noData": "No data",
-  "loading": "Loading..."
+  "loading": "Loading...",
+  "searchPlaceholder": "Search...",
+  "emailAll": "Send email to all",
+  "onWaitlist": "On Waitlist",
+  "registrationTrend": "Registration Trend",
+  "last30Days": "Last 30 days",
+  "registrations": "Registrations",
+  "usersWithAccounts": "users with active accounts",
+  "emailsInWaitlist": "emails in waitlist",
+  "alreadyRegistered": "already registered"
 }
