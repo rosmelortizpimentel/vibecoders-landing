@@ -54,6 +54,7 @@ const App = () => (
             <Route path="/me/profile" element={<Me />} />
             <Route path="/me/apps" element={<Me />} />
             <Route path="/me/branding" element={<Me />} />
+            <Route path="/me/beta" element={<Me />} />
           </Route>
           
           {/* Legacy redirects */}

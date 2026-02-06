@@ -2,7 +2,8 @@
   "tabs": {
     "profile": "Profile",
     "apps": "Apps",
-    "branding": "Branding"
+    "branding": "Branding",
+    "beta": "Beta Squad"
   },
   "fields": {
     "name": "Name",
