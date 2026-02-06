@@ -20,9 +20,11 @@ interface UploadedImage {
 interface BetaFeedbackFormProps {
   appId: string;
   onSuccess?: () => void;
+  onCancel?: () => void;
+  showCancel?: boolean;
 }
 
-export function BetaFeedbackForm({ appId, onSuccess }: BetaFeedbackFormProps) {
+export function BetaFeedbackForm({ appId, onSuccess, onCancel, showCancel }: BetaFeedbackFormProps) {
   const { t } = useTranslation('beta');
   const { user } = useAuth();
   
@@ -136,35 +138,23 @@ export function BetaFeedbackForm({ appId, onSuccess }: BetaFeedbackFormProps) {
         disabled={submitting}
       />
 
-      <div className="space-y-2">
-        <Label>{t('ratingLabel')}</Label>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              className="p-1 transition-transform hover:scale-110"
-              onMouseEnter={() => setHoveredRating(star)}
-              onMouseLeave={() => setHoveredRating(0)}
-              onClick={() => setRating(star === rating ? 0 : star)}
-            >
-              <Star
-                className={cn(
-                  'w-6 h-6 transition-colors',
-                  (hoveredRating || rating) >= star
-                    ? 'fill-yellow-400 text-yellow-400'
-                    : 'text-muted-foreground'
-                )}
-              />
-            </button>
-          ))}
-        </div>
+      <div className="flex gap-2">
+        {showCancel && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="flex-1"
+            onClick={onCancel}
+            disabled={submitting}
+          >
+            {t('cancel')}
+          </Button>
+        )}
+        <Button type="submit" className={showCancel ? "flex-1" : "w-full"} disabled={submitting || !content.trim()}>
+          <Send className="w-4 h-4 mr-2" />
+          {submitting ? '...' : t('reportSubmit')}
+        </Button>
       </div>
-
-      <Button type="submit" className="w-full" disabled={submitting || !content.trim()}>
-        <Send className="w-4 h-4 mr-2" />
-        {submitting ? '...' : t('reportSubmit')}
-      </Button>
     </form>
   );
 }

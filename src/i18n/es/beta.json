@@ -116,5 +116,11 @@
   "filterAll": "Todos",
   "filterOpen": "Abiertos",
   "filterInReview": "En revisión",
-  "filterClosed": "Cerrados"
+  "filterClosed": "Cerrados",
+  "authorFollowers": "seguidores",
+  "authorFollowing": "siguiendo",
+  "reportNewFinding": "Reportar hallazgo",
+  "backToList": "Volver a la lista",
+  "noFollowers": "Sin seguidores",
+  "noFollowing": "Sin seguidos"
 }
