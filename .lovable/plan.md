@@ -1,67 +1,72 @@
 
 
-## Mejoras en el Chat de Feedback (Admin + /hablemos)
+## Tracking de actividad de usuarios + Enter como salto de linea
 
-### Problema
-1. El encabezado del chat no tiene un enlace para ver el perfil publico del usuario en una nueva pestana
-2. Cuando hay muchos mensajes, el scroll no funciona correctamente y el input queda oculto fuera de la vista
-3. El textarea del input tiene altura fija y no crece al hacer saltos de linea
+### Parte 1: Ultima actividad y metricas de interaccion diaria
 
-### Solucion
+**Enfoque**: Usar `auth.sessions` (campo `updated_at`) accesible desde la Edge Function con service role para obtener la ultima actividad de cada usuario. Esto es 100% transparente, no requiere ningun cambio en la experiencia del usuario.
 
-### 1. Link al perfil publico en el header del chat
+Adicionalmente, crear una nueva tabla `user_activity_log` para registrar interacciones diarias de forma transparente (un registro por usuario por dia), lo que permite saber cuantos usuarios interactuan por dia.
 
-**Archivos:** `src/components/admin/FeedbackChat.tsx`, `src/pages/Feedback.tsx`
+#### Tabla nueva: `user_activity_log`
 
-- En el header del admin chat, hacer que el nombre/username sea un enlace clickeable que abra `/@username` en una nueva pestana (`target="_blank"`)
-- En `/hablemos`, agregar un link similar en el header para que el usuario pueda ver su propio perfil publico
+```text
+id          uuid PK default gen_random_uuid()
+user_id     uuid NOT NULL (references auth.users on delete cascade)
+active_date date NOT NULL default CURRENT_DATE
+created_at  timestamptz default now()
+UNIQUE(user_id, active_date)
+```
 
-### 2. Corregir el scroll y visibilidad del input
+- RLS: solo INSERT para el propio usuario, SELECT para admins
+- Se registra automaticamente desde el frontend al iniciar sesion (un upsert por dia, sin afectar rendimiento)
 
-**Archivos:** `src/components/admin/FeedbackChat.tsx`, `src/pages/Feedback.tsx`
+#### Cambios en la Edge Function `admin-users-list`
 
-El problema es que `ScrollArea` con `flex-1` no esta conteniendo correctamente los mensajes. La solucion:
-- Cambiar la estructura del contenedor de mensajes para usar `overflow-y-auto` con `min-h-0` en el flex container, asegurando que el area de mensajes sea scrollable y el input siempre quede visible en la parte inferior
-- Reemplazar `ScrollArea` por un `div` con `overflow-y-auto` y `flex-1 min-h-0` para que el layout flex funcione correctamente
+- Obtener `last_sign_in_at` de los auth users (ya disponible en `authUsers.users`)
+- Consultar `auth.sessions` para obtener la sesion mas reciente (`updated_at`) por usuario
+- Agregar campo `lastActivity` al response (el mas reciente entre `last_sign_in_at` y session `updated_at`)
 
-### 3. Textarea auto-expandible
+#### Cambios en el frontend `UsersManager.tsx`
 
-**Archivo:** `src/components/feedback/ChatInput.tsx`
+- Agregar columna "Ultima actividad" a la tabla con la fecha formateada
+- Hacerla sortable como las demas columnas
 
-- Cambiar el comportamiento del textarea para que crezca dinamicamente con el contenido
-- Default: 1 linea (~40px)
-- Crece automaticamente con cada salto de linea
-- Maximo: 5 lineas (~120px), despues muestra scroll interno
-- Implementar con un `useEffect` que ajuste `scrollHeight` del textarea en cada cambio de contenido
-- Reset a 1 linea despues de enviar el mensaje
+#### Grafico de actividad diaria
+
+- Agregar un segundo grafico (similar al de registros) que muestre "Usuarios activos por dia" basado en `user_activity_log`
+- La Edge Function devolvera tambien los datos de actividad diaria de los ultimos 30 dias
+
+#### Registro transparente de actividad
+
+- En `src/hooks/useAuth.ts` o en el `App.tsx`, al detectar sesion activa, hacer un upsert silencioso a `user_activity_log` con la fecha actual
+- Usar `ON CONFLICT (user_id, active_date) DO NOTHING` para que sea una operacion de 1 vez por dia sin impacto
+
+### Parte 2: Enter como salto de linea en el chat
+
+**Archivo**: `src/components/feedback/ChatInput.tsx`
+
+Actualmente la linea 81 tiene:
+```text
+if (e.key === 'Enter' && !e.shiftKey) {
+  e.preventDefault();
+  handleSubmit(e);
+}
+```
+
+Cambio: eliminar completamente el handler `handleKeyDown` y quitar la prop `onKeyDown` del textarea. Enter sera salto de linea naturalmente. El mensaje solo se enviara con el boton de enviar.
 
 ---
 
-### Detalle tecnico
+### Detalle tecnico - Archivos a modificar
 
-**Auto-resize del textarea:**
-```text
-- Usar ref al textarea
-- En cada onChange, resetear height a 'auto', luego asignar scrollHeight
-- Limitar con max-h-[120px] y overflow-y-auto
-- Al enviar mensaje, resetear height manualmente
-```
-
-**Fix del scroll:**
-```text
-- Contenedor principal: flex flex-col h-full
-- Area de mensajes: flex-1 min-h-0 overflow-y-auto p-4
-- Input: shrink-0 (nunca se comprime)
-```
-
-**Link al perfil:**
-```text
-- Admin: <a href="/@{username}" target="_blank"> en nombre y username
-- /hablemos: agregar boton/link "Ver mi perfil" en el header
-```
-
-### Archivos a modificar
-- `src/components/feedback/ChatInput.tsx` - textarea auto-expandible
-- `src/components/admin/FeedbackChat.tsx` - link al perfil + fix scroll
-- `src/pages/Feedback.tsx` - link al perfil + fix scroll
+| Archivo | Cambio |
+|---------|--------|
+| Nueva migration SQL | Crear tabla `user_activity_log` con RLS |
+| `supabase/functions/admin-users-list/index.ts` | Agregar `lastActivity` desde auth users + sessions, agregar query de actividad diaria |
+| `src/components/admin/UsersManager.tsx` | Nueva columna "Ultima actividad", nuevo tipo con `lastActivity` |
+| `src/components/admin/RegistrationTrendChart.tsx` | Hacerlo reutilizable o crear `ActivityTrendChart` |
+| `src/hooks/useAuth.ts` | Agregar upsert silencioso a `user_activity_log` |
+| `src/components/feedback/ChatInput.tsx` | Eliminar `handleKeyDown`, enter = salto de linea |
+| `src/i18n/en/admin.json` y `src/i18n/es/admin.json` | Nuevas claves de traduccion |
 
