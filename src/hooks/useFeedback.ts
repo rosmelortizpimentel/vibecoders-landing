@@ -67,7 +67,7 @@ export function useFeedback() {
       if (error) throw error;
       return data as FeedbackThread | null;
     },
-    enabled: !!user?.id && !isAdmin,
+    enabled: !!user?.id,
   });
 
   // Get messages for a thread

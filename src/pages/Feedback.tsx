@@ -90,9 +90,14 @@ export default function Feedback() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-            <MessageCircle className="h-12 w-12 mb-4 opacity-50" />
-            <p>{t.empty}</p>
+          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground px-6">
+            <img 
+              src="/images/vibecoders-logo.png" 
+              alt="Vibecoders" 
+              className="h-20 w-20 mb-6 opacity-40 grayscale"
+            />
+            <p className="text-lg font-medium text-foreground/70">{t.emptyTitle}</p>
+            <p className="text-sm mt-1">{t.emptySubtitle}</p>
           </div>
         )}
       </ScrollArea>

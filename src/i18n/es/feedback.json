@@ -8,6 +8,8 @@
   "you": "Tú",
   "admin": "Admin",
   "empty": "Aún no hay mensajes. ¡Sé el primero en escribir!",
+  "emptyTitle": "¿Tienes una idea o encontraste un bug?",
+  "emptySubtitle": "Soy todo oídos. Cuéntame qué piensas.",
   "sending": "Enviando...",
   "sent": "Enviado",
   "adminTitle": "Feedback de Usuarios",
