@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -11,7 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ExternalLink, Loader2, CheckCircle, Clock, Mail } from 'lucide-react';
+import { ExternalLink, Loader2, CheckCircle, Clock, Mail, Search } from 'lucide-react';
+import { useSortableData } from '@/hooks/useSortableData';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface WaitlistEntry {
   id: string;
@@ -40,9 +43,11 @@ function formatTorontoDate(dateString: string): string {
 }
 
 export function WaitlistManager() {
+  const { t } = useTranslation('admin');
   const [entries, setEntries] = useState<WaitlistEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchWaitlist();
@@ -71,6 +76,25 @@ export function WaitlistManager() {
     }
   };
 
+  // Filter entries based on search query
+  const filteredEntries = useMemo(() => {
+    if (!searchQuery.trim()) return entries;
+    const query = searchQuery.toLowerCase();
+    return entries.filter(
+      (entry) =>
+        entry.email.toLowerCase().includes(query) ||
+        entry.profile?.name?.toLowerCase().includes(query) ||
+        entry.profile?.username?.toLowerCase().includes(query) ||
+        entry.timezone?.toLowerCase().includes(query)
+    );
+  }, [entries, searchQuery]);
+
+  // Sortable data
+  const { sortedData, requestSort, getSortIndicator } = useSortableData<WaitlistEntry, keyof WaitlistEntry>(filteredEntries, {
+    key: 'created_at',
+    direction: 'desc',
+  });
+
   const getInitials = (name: string | null) => {
     if (!name) return '?';
     return name
@@ -84,15 +108,23 @@ export function WaitlistManager() {
   const registeredCount = entries.filter((e) => e.registered).length;
 
   const handleOpenGmail = () => {
-    // Get all emails and join them for BCC
     const allEmails = entries.map((e) => e.email);
     const bccEmails = allEmails.join(',');
-    
-    // Gmail compose URL with BCC
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${encodeURIComponent(bccEmails)}`;
-    
     window.open(gmailUrl, '_blank');
   };
+
+  const SortableHeader = ({ column, children, className }: { column: keyof WaitlistEntry; children: React.ReactNode; className?: string }) => (
+    <TableHead
+      className={`cursor-pointer select-none hover:bg-muted/50 transition-colors ${className || ''}`}
+      onClick={() => requestSort(column)}
+    >
+      <div className="flex items-center gap-1">
+        {children}
+        <span className="text-xs opacity-70">{getSortIndicator(column) || ''}</span>
+      </div>
+    </TableHead>
+  );
 
   if (loading) {
     return (
@@ -113,36 +145,49 @@ export function WaitlistManager() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Waitlist</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('waitlist')}</h1>
         <p className="text-muted-foreground">
-          {entries.length} emails en la lista de espera · {registeredCount} ya registrados
+          {entries.length} {t('emailsInWaitlist')} · {registeredCount} {t('alreadyRegistered')}
         </p>
       </div>
 
-      <div className="flex gap-2">
-        <Button
-          onClick={handleOpenGmail}
-          disabled={entries.length === 0}
-          className="gap-2"
-        >
+      {/* Toolbar */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={t('searchPlaceholder')}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Button onClick={handleOpenGmail} disabled={entries.length === 0} className="gap-2">
           <Mail className="h-4 w-4" />
-          Enviar correo a todos ({entries.length})
+          {t('emailAll')} ({entries.length})
         </Button>
       </div>
+
+      {/* Records count when filtering */}
+      {searchQuery && (
+        <p className="text-sm text-muted-foreground">
+          {sortedData.length} de {entries.length} registros
+        </p>
+      )}
 
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[280px]">Email</TableHead>
-              <TableHead>Timezone</TableHead>
-              <TableHead>Estado</TableHead>
+              <SortableHeader column="email" className="w-[280px]">Email</SortableHeader>
+              <SortableHeader column="timezone">Timezone</SortableHeader>
+              <SortableHeader column="registered">Estado</SortableHeader>
               <TableHead>Usuario Registrado</TableHead>
-              <TableHead className="text-right">Fecha (Toronto)</TableHead>
+              <SortableHeader column="created_at" className="text-right">Fecha (Toronto)</SortableHeader>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {entries.map((entry) => (
+            {sortedData.map((entry) => (
               <TableRow key={entry.id}>
                 <TableCell>
                   <span className="font-mono text-sm">{entry.email}</span>
