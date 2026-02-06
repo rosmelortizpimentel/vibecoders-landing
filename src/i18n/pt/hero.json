@@ -1,0 +1,44 @@
+{
+  "badge": "A Casa Oficial dos Vibe Coders",
+  "headline": "Sua identidade não cabe em um currículo. Ela é provada com produtos.",
+  "subheadline": "O LinkedIn lista seus empregos anteriores. Aqui você valida seu talento mostrando o software real que é capaz de lançar hoje.",
+  "form": {
+    "placeholder": "Digite seu e-mail para começar",
+    "button": "Reivindicar meu @username",
+    "success": "Você entrou!",
+    "error": {
+      "empty": "Digite seu endereço de e-mail",
+      "invalid": "Hmm, esse e-mail não parece válido"
+    }
+  },
+  "loggedIn": {
+    "greeting": "Olá",
+    "viewProfile": "Ver meu perfil"
+  },
+  "notLoggedIn": {
+    "urgency": "Os nomes de usuário curtos estão acabando.",
+    "claimButton": "Reivindicar meu @username",
+    "microcopy": "Sem listas de espera. Junte-se e publique seu primeiro projeto hoje."
+  },
+  "profileCard": {
+    "myApps": "Meus Apps"
+  },
+  "bento": {
+    "url": {
+      "title": "Sua URL é sua marca pessoal",
+      "body": "Esqueça links genéricos. Seu nome de usuário se torna seu cartão de visitas digital. Um endereço web único que lhe dá identidade e profissionalismo imediato, pronto para compartilhar."
+    },
+    "stack": {
+      "title": "Sua Stack é sua superpotência",
+      "body": "Não esconda a mágica. Mostre com orgulho as ferramentas que você domina (Lovable, v0, Replit). A transparência mostra que você está na vanguarda."
+    },
+    "ecosystem": {
+      "title": "Conecte seu ecossistema digital",
+      "body": "Seu código vive no GitHub. Sua rede no LinkedIn. Sua voz no X. Vibecoders é o ponto de encontro onde todo o seu caos criativo faz sentido."
+    },
+    "reputation": {
+      "title": "Valide-se como um \"Shipper\"",
+      "body": "Separe-se daqueles que têm apenas ideias. Um perfil verificado com projetos funcionais diz ao mundo: \"Eu não apenas prometo, eu construo\"."
+    }
+  }
+}

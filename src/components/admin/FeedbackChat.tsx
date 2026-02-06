@@ -90,7 +90,7 @@ export function FeedbackChat({ thread }: FeedbackChatProps) {
   const userEmail = thread.profile?.email_public || null;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full min-h-0 overflow-hidden">
       {/* Header */}
       <div className="border-b border-border p-4 flex items-center gap-3">
         <Avatar className="h-10 w-10">

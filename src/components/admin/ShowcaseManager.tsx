@@ -107,7 +107,7 @@ function SortableShowcaseRow({
       <img 
         src={showcase.project_thumbnail} 
         alt={showcase.project_title}
-        className="h-12 w-20 object-cover rounded border border-gray-200 flex-shrink-0"
+        className="h-10 w-16 md:h-12 md:w-20 object-cover rounded border border-gray-200 flex-shrink-0"
       />
 
       {/* Info */}
@@ -118,34 +118,38 @@ function SortableShowcaseRow({
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 flex-shrink-0">
-        <Switch
-          checked={showcase.is_active ?? true}
-          onCheckedChange={(checked) => onToggleActive(showcase.id, checked)}
-        />
+      <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+        <div className="scale-75 md:scale-100">
+          <Switch
+            checked={showcase.is_active ?? true}
+            onCheckedChange={(checked) => onToggleActive(showcase.id, checked)}
+          />
+        </div>
         
-        <a
-          href={showcase.project_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-        >
-          <ExternalLink className="h-4 w-4 text-gray-500" />
-        </a>
+        <div className="flex items-center">
+          <a
+            href={showcase.project_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-2 md:p-1.5 hover:bg-gray-200 rounded transition-colors"
+          >
+            <ExternalLink className="h-4 w-4 text-gray-500" />
+          </a>
 
-        <button
-          onClick={() => onEdit(showcase)}
-          className="p-1.5 hover:bg-gray-200 rounded transition-colors"
-        >
-          <Pencil className="h-4 w-4 text-gray-500" />
-        </button>
+          <button
+            onClick={() => onEdit(showcase)}
+            className="p-2 md:p-1.5 hover:bg-gray-200 rounded transition-colors"
+          >
+            <Pencil className="h-4 w-4 text-gray-500" />
+          </button>
 
-        <button
-          onClick={() => onDelete(showcase.id)}
-          className="p-1.5 hover:bg-red-100 rounded transition-colors"
-        >
-          <Trash2 className="h-4 w-4 text-red-500" />
-        </button>
+          <button
+            onClick={() => onDelete(showcase.id)}
+            className="p-2 md:p-1.5 hover:bg-red-100 rounded transition-colors"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -329,7 +333,7 @@ export function ShowcaseManager() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="h-full overflow-y-auto space-y-4 pr-2">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

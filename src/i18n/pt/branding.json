@@ -1,0 +1,18 @@
+{
+  "typography": {
+    "title": "Typography",
+    "description": "This font will be applied to your public profile"
+  },
+  "colors": {
+    "title": "Colors",
+    "description": "Customize your profile colors",
+    "photoBorder": "Photo Border"
+  },
+  "ogImage": {
+    "title": "Social Image (OG Image)",
+    "description": "This image will appear when you share your profile on social media",
+    "upload": "Upload image",
+    "delete": "Delete image",
+    "recommended": "Recommended size: 1200×630px"
+  }
+}

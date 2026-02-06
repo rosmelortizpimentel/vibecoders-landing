@@ -143,7 +143,7 @@ export function WaitlistManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full overflow-y-auto space-y-6 pr-2">
       <div>
         <h1 className="text-2xl font-bold text-foreground">{t('waitlist')}</h1>
         <p className="text-muted-foreground">

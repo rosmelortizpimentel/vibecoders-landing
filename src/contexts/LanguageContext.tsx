@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
-export type Language = 'es' | 'en';
+export type Language = 'es' | 'en' | 'fr' | 'pt';
 
 interface LanguageContextType {
   language: Language;
@@ -15,8 +15,11 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const STORAGE_KEY = 'vibecoders_language';
 
 function detectBrowserLanguage(): Language {
-  const browserLang = navigator.language || (navigator as any).userLanguage || 'en';
-  return browserLang.toLowerCase().startsWith('es') ? 'es' : 'en';
+  const browserLang = (navigator.language || (navigator as any).userLanguage || 'en').toLowerCase();
+  if (browserLang.startsWith('es')) return 'es';
+  if (browserLang.startsWith('fr')) return 'fr';
+  if (browserLang.startsWith('pt')) return 'pt';
+  return 'en';
 }
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
@@ -24,8 +27,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     // Initial: check localStorage first
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === 'es' || stored === 'en') return stored;
-    return detectBrowserLanguage();
+    if (['es', 'en', 'fr', 'pt'].includes(stored || '')) return stored as Language;
+    return 'en'; // Force English as default regardless of browser language if no storage exists, as per user request
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -46,19 +49,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
         if (error) throw error;
 
-        if (data?.language && (data.language === 'es' || data.language === 'en')) {
-          setLanguageState(data.language);
+        if (data?.language && ['es', 'en', 'fr', 'pt'].includes(data.language)) {
+          setLanguageState(data.language as Language);
           localStorage.setItem(STORAGE_KEY, data.language);
         } else {
-          // No language set in DB, save browser detection
-          const browserLang = detectBrowserLanguage();
+          // No language set in DB, save default
+          const defaultLang = 'en';
           await supabase
             .from('profiles')
-            .update({ language: browserLang })
+            .update({ language: defaultLang })
             .eq('id', user.id);
           
-          setLanguageState(browserLang);
-          localStorage.setItem(STORAGE_KEY, browserLang);
+          setLanguageState(defaultLang);
+          localStorage.setItem(STORAGE_KEY, defaultLang);
         }
       } catch (err) {
         console.error('Error syncing language:', err);

@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck } from 'lucide-react';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
 import { PioneerBadge } from '@/components/PioneerBadge';
+import { ContributorBadge } from '@/components/ContributorBadge';
 
 import { FollowButton } from '@/components/FollowButton';
 import { FollowersList } from '@/components/profile/FollowersList';
@@ -291,11 +292,11 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
 
   return (
     <div 
-      className="w-full bg-white"
+      className="w-full bg-white flex flex-col flex-1"
       style={{ fontFamily }}
     >
       {/* Content container - centered on desktop */}
-      <div className="w-full max-w-4xl mx-auto">
+      <div className="w-full max-w-4xl mx-auto flex flex-col flex-1">
         {/* Banner + Avatar */}
         <div className="relative">
           {profile.banner_url ? (
@@ -333,6 +334,9 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
             </h1>
             {profile.is_pioneer && profile.show_pioneer_badge && (
               <PioneerBadge />
+            )}
+            {profile.is_contributor && profile.show_contributor_badge && (
+              <ContributorBadge />
             )}
           </div>
 
@@ -379,6 +383,8 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
                 onToggleFollow={toggleFollow}
                 profileUsername={profile.username}
                 profileId={profile.id}
+                profileName={profile.name}
+                profileAvatarUrl={profile.avatar_url}
               />
             </div>
           )}
@@ -465,7 +471,7 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
         {viewMode === 'apps' && (
           <BetaContributionsBadges userId={profile.id} />
         )}
-        <div className="py-4 border-t border-gray-100 bg-white">
+        <div className="mt-auto py-8 border-t border-gray-100 bg-white">
           <button
             onClick={() => {
               // Save return URL for post-login redirect to /me/profile

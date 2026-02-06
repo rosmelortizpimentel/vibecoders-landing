@@ -1,0 +1,44 @@
+{
+  "badge": "La Maison Officielle des Vibe Coders",
+  "headline": "Votre identité ne tient pas dans un CV. Elle se prouve par le produit.",
+  "subheadline": "LinkedIn liste vos anciens emplois. Ici, vous validez votre talent en montrant le vrai logiciel que vous êtes capable de lancer aujourd'hui.",
+  "form": {
+    "placeholder": "Entrez votre email pour commencer",
+    "button": "Réclamer mon @username",
+    "success": "Vous y êtes !",
+    "error": {
+      "empty": "Entrez votre adresse email",
+      "invalid": "Hmm, cet email ne semble pas valide"
+    }
+  },
+  "loggedIn": {
+    "greeting": "Bonjour",
+    "viewProfile": "Voir mon profil"
+  },
+  "notLoggedIn": {
+    "urgency": "Les noms d'utilisateur courts s'épuisent.",
+    "claimButton": "Réclamer mon @username",
+    "microcopy": "Pas de file d'attente. Rejoignez et publiez votre premier projet aujourd'hui."
+  },
+  "profileCard": {
+    "myApps": "Mes Applis"
+  },
+  "bento": {
+    "url": {
+      "title": "Votre URL est votre marque personnelle",
+      "body": "Oubliez les liens génériques. Votre nom d'utilisateur devient votre carte de visite numérique. Une adresse web unique qui vous donne une identité et un professionnalisme immédiat, prêt à être partagé."
+    },
+    "stack": {
+      "title": "Votre Stack est votre super-pouvoir",
+      "body": "Ne cachez pas la magie. Montrez fièrement les outils que vous maîtrisez (Lovable, v0, Replit). La transparence prouve que vous êtes à l'avant-garde."
+    },
+    "ecosystem": {
+      "title": "Connectez votre écosystème numérique",
+      "body": "Votre code vit sur GitHub. Votre réseau sur LinkedIn. Votre voix sur X. Vibecoders est le point de rencontre où tout votre chaos créatif prend son sens."
+    },
+    "reputation": {
+      "title": "Validez-vous en tant que \"Shipper\"",
+      "body": "Distinguez-vous de ceux qui n'ont que des idées. Un profil vérifié avec des projets fonctionnels dit au monde : \"Je ne fais pas que promettre, je construis\"."
+    }
+  }
+}

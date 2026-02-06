@@ -36,5 +36,6 @@
   "messageDeleted": "Mensaje eliminado",
   "messageUpdated": "Mensaje actualizado",
   "saveEdit": "Guardar",
-  "cancelEdit": "Cancelar"
+  "cancelEdit": "Cancelar",
+  "backToList": "Volver a la lista"
 }

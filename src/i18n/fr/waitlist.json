@@ -1,0 +1,16 @@
+{
+  "success": {
+    "title": "Great! We'll notify you when it's ready.",
+    "subtitle": "Want to reserve your username?",
+    "googleButton": "Reserve my username"
+  },
+  "alreadyRegistered": {
+    "title": "You're already on the list!",
+    "subtitle": "Ready to reserve your username?",
+    "googleButton": "Reserve my username"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "subtitle": "Please try again later."
+  }
+}

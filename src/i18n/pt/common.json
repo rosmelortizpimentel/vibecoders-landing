@@ -1,0 +1,24 @@
+{
+  "navbar": {
+    "logo": "Vibecoders.la"
+  },
+  "footer": {
+    "copyright": "© 2026 vibecoders.la",
+    "builtWith": "Construído com",
+    "in": "em",
+    "by": "por",
+    "authorName": "Rosmel Ortiz",
+    "linkedIn": "https://www.linkedin.com/in/rosmelortiz/",
+    "privacy": "Privacidade",
+    "terms": "Termos"
+  },
+  "navigation": {
+    "myProfile": "Meu Perfil",
+    "startups": "Startups",
+    "betaSquads": "Betas",
+    "tools": "Ferramentas",
+    "feedback": "Vamos Conversar",
+    "buildLog": "Log de Construção",
+    "admin": "Admin"
+  }
+}

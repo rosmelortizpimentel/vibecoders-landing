@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Layers, Settings, Users, Mail, Cpu, MessageCircle } from 'lucide-react';
+import { LayoutGrid, Layers, Settings, Users, Mail, Cpu, MessageCircle, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const menuItems = [
   {
@@ -40,25 +42,63 @@ const menuItems = [
   },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+  onCloseMobile?: () => void;
+}
+
+export function AdminSidebar({ isCollapsed, onToggle, onCloseMobile }: AdminSidebarProps) {
+  const isMobile = useIsMobile();
+
   return (
-    <aside className="w-64 border-r border-gray-200 bg-gray-50 min-h-[calc(100vh-4.5rem)]">
-      <nav className="p-4 space-y-1">
+    <aside 
+      className={cn(
+        "border-r border-gray-200 bg-gray-50 h-full transition-all duration-300 relative flex flex-col",
+        isMobile ? "w-64" : isCollapsed ? "w-20" : "w-64"
+      )}
+    >
+      {/* Desktop Toggle Button */}
+      {!isMobile && (
+        <button
+          onClick={onToggle}
+          className="absolute -right-3 top-6 bg-white border border-border rounded-full p-1.5 shadow-sm hover:bg-gray-50 transition-colors z-10"
+        >
+          {isCollapsed ? (
+            <ChevronRight className="h-3 w-3 text-muted-foreground" />
+          ) : (
+            <ChevronLeft className="h-3 w-3 text-muted-foreground" />
+          )}
+        </button>
+      )}
+
+      <nav className={cn("flex-1 p-4 space-y-1", isCollapsed && !isMobile && "px-3")}>
         {menuItems.map((item) => (
           <NavLink
             key={item.href}
             to={item.href}
+            onClick={() => isMobile && onCloseMobile?.()}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group',
+                isCollapsed && !isMobile ? "justify-center" : "",
                 isActive
-                  ? 'bg-[#3D5AFE] text-white'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-gray-700 hover:bg-gray-100'
               )
             }
           >
-            <item.icon className="h-5 w-5" />
-            {item.title}
+            <item.icon className={cn("h-5 w-5 shrink-0", isCollapsed && !isMobile ? "" : "mr-1")} />
+            {(!isCollapsed || isMobile) && (
+              <span className="truncate">{item.title}</span>
+            )}
+            
+            {/* Tooltip for collapsed state */}
+            {isCollapsed && !isMobile && (
+              <div className="absolute left-16 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                {item.title}
+              </div>
+            )}
           </NavLink>
         ))}
       </nav>

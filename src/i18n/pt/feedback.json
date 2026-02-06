@@ -1,0 +1,14 @@
+{
+  "title": "Vamos conversar",
+  "subtitle": "Dê sua opinião ou peça ajuda",
+  "loginRequired": "Você precisa estar logado para enviar uma mensagem",
+  "errorSending": "Erro ao enviar a mensagem",
+  "emptyTitle": "Nenhuma mensagem aqui",
+  "emptySubtitle": "Diga olá! Estamos aqui para ajudar.",
+  "viewProfile": "Ver perfil",
+  "typePlaceholder": "Escreva uma mensagem...",
+  "send": "Enviar",
+  "attachments": "Anexos",
+  "onWaitlist": "Na lista de espera",
+  "never": "Nunca"
+}

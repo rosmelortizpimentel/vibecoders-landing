@@ -31,6 +31,8 @@ export interface ProfileData {
   card_style: string | null;
   avatar_position: 'left' | 'center' | 'right' | null;
   banner_position: 'left' | 'center' | 'right' | null;
+  is_contributor: boolean;
+  show_contributor_badge: boolean;
 }
 
 const DEFAULT_PROFILE: Partial<ProfileData> = {
@@ -40,6 +42,8 @@ const DEFAULT_PROFILE: Partial<ProfileData> = {
   card_style: 'minimal',
   avatar_position: 'center',
   banner_position: 'center',
+  is_contributor: false,
+  show_contributor_badge: false,
 };
 
 export function useProfileEditor() {
@@ -56,6 +60,7 @@ export function useProfileEditor() {
       .update({
         username: data.username,
         show_pioneer_badge: data.show_pioneer_badge,
+        show_contributor_badge: data.show_contributor_badge,
         name: data.name,
         tagline: data.tagline,
         bio: data.bio,

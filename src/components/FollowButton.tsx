@@ -10,14 +10,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { UnfollowConfirmDialog } from './profile/UnfollowConfirmDialog';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
+import { cn } from '@/lib/utils';
 
 interface FollowButtonProps {
   isFollowing: boolean;
   isLoading: boolean;
   onToggleFollow: () => Promise<void>;
-  profileUsername?: string;
-  profileId?: string;
+  profileUsername: string | null;
+  profileId: string | null;
+  profileName?: string | null;
+  profileAvatarUrl?: string | null;
 }
 
 export function FollowButton({ 
@@ -25,25 +29,40 @@ export function FollowButton({
   isLoading, 
   onToggleFollow,
   profileUsername,
-  profileId
+  profileId,
+  profileName,
+  profileAvatarUrl
 }: FollowButtonProps) {
   const { user, signInWithGoogle } = useAuth();
   const t = useTranslation('publicProfile');
   const tAuth = useTranslation('auth');
   const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [showUnfollowDialog, setShowUnfollowDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
-  const handleClick = async () => {
+  const handleClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!user) {
       setShowAuthDialog(true);
       return;
     }
     
+    if (isFollowing) {
+      setShowUnfollowDialog(true);
+      return;
+    }
+    
+    await performToggleFollow();
+  };
+
+  const performToggleFollow = async () => {
     setIsSubmitting(true);
     try {
       await onToggleFollow();
     } finally {
       setIsSubmitting(false);
+      setShowUnfollowDialog(false);
     }
   };
 
@@ -70,21 +89,22 @@ export function FollowButton({
         variant={isFollowing ? "outline" : "default"}
         size="sm"
         onClick={handleClick}
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
         disabled={buttonLoading}
-        className={`
-          rounded-full px-4 h-9 font-medium transition-all
-          ${isFollowing 
-            ? 'bg-background border-border text-foreground hover:bg-muted hover:border-muted-foreground' 
-            : 'bg-foreground text-background hover:bg-foreground/90'
-          }
-        `}
+        className={cn(
+          "rounded-full px-4 h-9 font-medium transition-all min-w-[120px]",
+          isFollowing && !isHovering && "bg-white border-gray-200 text-[#1c1c1c] hover:bg-gray-50",
+          isFollowing && isHovering && "border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 hover:border-red-300",
+          !isFollowing && "bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/90"
+        )}
       >
         {buttonLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : isFollowing ? (
           <>
             <UserCheck className="h-4 w-4 mr-1.5" />
-            {t.following}
+            {isHovering ? t.unfollow : t.following}
           </>
         ) : (
           <>
@@ -94,6 +114,7 @@ export function FollowButton({
         )}
       </Button>
 
+      {/* Auth Dialog */}
       <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
         <DialogContent className="sm:max-w-md bg-primary border-none text-primary-foreground">
           <DialogHeader className="text-center">
@@ -151,6 +172,19 @@ export function FollowButton({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Unfollow Confirmation */}
+      <UnfollowConfirmDialog
+        isOpen={showUnfollowDialog}
+        onClose={() => setShowUnfollowDialog(false)}
+        onConfirm={performToggleFollow}
+        user={{
+          name: profileName || null,
+          username: profileUsername,
+          avatar_url: profileAvatarUrl || null
+        }}
+        isLoading={isSubmitting}
+      />
     </>
   );
 }

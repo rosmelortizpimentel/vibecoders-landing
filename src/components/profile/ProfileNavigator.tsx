@@ -57,7 +57,7 @@ export function ProfileNavigator({ initialUsername }: ProfileNavigatorProps) {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <PublicProfileHeader profileUsername={profile.username} />
       <PublicProfileCard 
         profile={profile} 

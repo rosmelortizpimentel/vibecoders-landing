@@ -304,7 +304,7 @@
    };
  
    return (
-     <div className="space-y-4">
+    <div className="h-full overflow-y-auto space-y-4 pr-2">
        <div className="flex items-center justify-between">
          <div>
            <h1 className="text-xl font-bold text-[#1c1c1c]">Tech Stacks</h1>

@@ -44,6 +44,50 @@ import adminEn from '@/i18n/en/admin.json';
 import feedbackEn from '@/i18n/en/feedback.json';
 import betaEn from '@/i18n/en/beta.json';
 
+// French imports
+import commonFr from '@/i18n/fr/common.json';
+import heroFr from '@/i18n/fr/hero.json';
+import featuresFr from '@/i18n/fr/features.json';
+import waitlistFr from '@/i18n/fr/waitlist.json';
+import legalFr from '@/i18n/fr/legal.json';
+import authFr from '@/i18n/fr/auth.json';
+import profileFr from '@/i18n/fr/profile.json';
+import appsFr from '@/i18n/fr/apps.json';
+import brandingFr from '@/i18n/fr/branding.json';
+import homeFr from '@/i18n/fr/home.json';
+import projectsFr from '@/i18n/fr/projects.json';
+import toolsFr from '@/i18n/fr/tools.json';
+import buildlogFr from '@/i18n/fr/buildlog.json';
+import publicProfileFr from '@/i18n/fr/publicProfile.json';
+import followersFr from '@/i18n/fr/followers.json';
+import onboardingFr from '@/i18n/fr/onboarding.json';
+import errorsFr from '@/i18n/fr/errors.json';
+import adminFr from '@/i18n/fr/admin.json';
+import feedbackFr from '@/i18n/fr/feedback.json';
+import betaFr from '@/i18n/fr/beta.json';
+
+// Portuguese imports
+import commonPt from '@/i18n/pt/common.json';
+import heroPt from '@/i18n/pt/hero.json';
+import featuresPt from '@/i18n/pt/features.json';
+import waitlistPt from '@/i18n/pt/waitlist.json';
+import legalPt from '@/i18n/pt/legal.json';
+import authPt from '@/i18n/pt/auth.json';
+import profilePt from '@/i18n/pt/profile.json';
+import appsPt from '@/i18n/pt/apps.json';
+import brandingPt from '@/i18n/pt/branding.json';
+import homePt from '@/i18n/pt/home.json';
+import projectsPt from '@/i18n/pt/projects.json';
+import toolsPt from '@/i18n/pt/tools.json';
+import buildlogPt from '@/i18n/pt/buildlog.json';
+import publicProfilePt from '@/i18n/pt/publicProfile.json';
+import followersPt from '@/i18n/pt/followers.json';
+import onboardingPt from '@/i18n/pt/onboarding.json';
+import errorsPt from '@/i18n/pt/errors.json';
+import adminPt from '@/i18n/pt/admin.json';
+import feedbackPt from '@/i18n/pt/feedback.json';
+import betaPt from '@/i18n/pt/beta.json';
+
 const translations = {
   es: {
     common: commonEs,
@@ -88,6 +132,50 @@ const translations = {
     admin: adminEn,
     feedback: feedbackEn,
     beta: betaEn,
+  },
+  fr: {
+    common: commonFr,
+    hero: heroFr,
+    features: featuresFr,
+    waitlist: waitlistFr,
+    legal: legalFr,
+    auth: authFr,
+    profile: profileFr,
+    apps: appsFr,
+    branding: brandingFr,
+    home: homeFr,
+    projects: projectsFr,
+    tools: toolsFr,
+    buildlog: buildlogFr,
+    publicProfile: publicProfileFr,
+    followers: followersFr,
+    onboarding: onboardingFr,
+    errors: errorsFr,
+    admin: adminFr,
+    feedback: feedbackFr,
+    beta: betaFr,
+  },
+  pt: {
+    common: commonPt,
+    hero: heroPt,
+    features: featuresPt,
+    waitlist: waitlistPt,
+    legal: legalPt,
+    auth: authPt,
+    profile: profilePt,
+    apps: appsPt,
+    branding: brandingPt,
+    home: homePt,
+    projects: projectsPt,
+    tools: toolsPt,
+    buildlog: buildlogPt,
+    publicProfile: publicProfilePt,
+    followers: followersPt,
+    onboarding: onboardingPt,
+    errors: errorsPt,
+    admin: adminPt,
+    feedback: feedbackPt,
+    beta: betaPt,
   },
 } as const;
 

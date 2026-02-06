@@ -32,3 +32,11 @@ export function usePioneerBadgeUrl() {
   
   return { pioneerBadgeUrl, isLoading, error };
 }
+
+export function useContributorBadgeUrl() {
+  const { data: settings, isLoading, error } = useGeneralSettings();
+  
+  const contributorBadgeUrl = settings?.find(s => s.key === 'contributor_badge_url')?.value || null;
+  
+  return { contributorBadgeUrl, isLoading, error };
+}

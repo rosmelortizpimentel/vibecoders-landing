@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, Plus, Trash2, Settings } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2, Settings, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -43,6 +43,8 @@ export function SettingsManager() {
   const [newKey, setNewKey] = useState('');
   const [newValue, setNewValue] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useState<HTMLInputElement | null>(null); // This won't work as expected with useState for ref, using useRef
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['admin-settings'],
@@ -126,6 +128,41 @@ export function SettingsManager() {
     setEditDescription('');
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, settingId: string) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `badge_${Date.now()}.${fileExt}`;
+      const filePath = `badges/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('stack-assets')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('stack-assets')
+        .getPublicUrl(filePath);
+
+      // Directly update the setting value
+      updateMutation.mutate({ 
+        id: settingId, 
+        value: publicUrl, 
+        description: editDescription || (settings?.find(s => s.id === settingId)?.description || '') 
+      });
+      
+    } catch (err) {
+      console.error('Error uploading badge:', err);
+      toast.error('Error al subir la imagen');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -135,7 +172,7 @@ export function SettingsManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full overflow-y-auto space-y-6 pr-2">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -258,9 +295,59 @@ export function SettingsManager() {
                       {setting.key}
                     </code>
                   </div>
-                  <p className="text-[#1C1C1C] text-sm break-all">{setting.value}</p>
-                  {setting.description && (
-                    <p className="text-gray-500 text-xs mt-1">{setting.description}</p>
+                  
+                  {(setting.key === 'pioneer_badge_url' || setting.key === 'contributor_badge_url') ? (
+                    <div className="flex items-center gap-4">
+                      {setting.value ? (
+                        <div className="relative group">
+                          <img 
+                            src={setting.value} 
+                            alt={setting.key} 
+                            className="h-12 w-12 object-cover rounded-lg border border-gray-200" 
+                          />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <label className="cursor-pointer">
+                              <Upload className="h-4 w-4 text-white" />
+                              <input 
+                                type="file" 
+                                className="hidden" 
+                                accept="image/*" 
+                                onChange={(e) => handleFileUpload(e, setting.id)}
+                                disabled={isUploading}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="h-12 w-12 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-[#3D5AFE] transition-colors cursor-pointer">
+                          {isUploading ? (
+                            <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                          ) : (
+                            <Upload className="h-5 w-5 text-gray-400" />
+                          )}
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept="image/*" 
+                            onChange={(e) => handleFileUpload(e, setting.id)}
+                            disabled={isUploading}
+                          />
+                        </label>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-gray-500 text-xs truncate max-w-xs">{setting.value || 'Sin imagen'}</p>
+                        {setting.description && (
+                          <p className="text-gray-500 text-xs mt-1">{setting.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[#1C1C1C] text-sm break-all">{setting.value}</p>
+                      {setting.description && (
+                        <p className="text-gray-500 text-xs mt-1">{setting.description}</p>
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">

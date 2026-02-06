@@ -150,16 +150,6 @@ export function AuthenticatedHeader({
           
           {/* Right Zone: Admin + Save Status + Avatar */}
           <div className="flex items-center gap-3 sm:gap-4">
-            {/* Admin Link - Only visible for admins */}
-            {isAdmin && (
-              <Button variant="ghost" size="sm" asChild className="gap-1.5">
-                <Link to="/admin">
-                  <Shield className="h-4 w-4" />
-                  <span>{t.navigation.admin}</span>
-                </Link>
-              </Button>
-            )}
-
             {/* Save status indicator - only shown when props are provided */}
             {(isSaving !== undefined || lastSaved !== undefined || error !== undefined) && (
               <div className="flex items-center gap-2 text-sm">
@@ -320,6 +310,11 @@ export function AuthenticatedHeader({
                     {t.navigation.admin}
                   </Link>
                 )}
+
+                {/* Mobile Language Switcher */}
+                <div className="mt-4 pt-4 border-t border-border/50">
+                  <LanguageSwitcher variant="header" className="w-fit" />
+                </div>
               </nav>
 
               {/* User Section - Anchored to bottom */}

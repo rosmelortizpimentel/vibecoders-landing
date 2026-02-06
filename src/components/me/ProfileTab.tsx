@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { PioneerBadge } from '@/components/PioneerBadge';
+import { ContributorBadge } from '@/components/ContributorBadge';
 import { Camera, MapPin, Globe, ImagePlus, AlignLeft, AlignCenter, AlignRight, Trash2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -273,6 +274,21 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                       <Switch
                         checked={profile.show_pioneer_badge}
                         onCheckedChange={(checked) => onUpdate({ show_pioneer_badge: checked })}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Contributor Badge Toggle - only show for contributors */}
+                {profile.is_contributor && (
+                  <div className="flex items-center gap-2 flex-wrap pb-2 border-b border-border/50">
+                    <ContributorBadge className="w-5 h-5" />
+                    <span className="text-sm text-muted-foreground whitespace-nowrap">Contributor</span>
+                    <div className="flex items-center gap-2 ml-auto sm:ml-2">
+                      <span className="text-sm text-muted-foreground">{t.labels.showBadge}</span>
+                      <Switch
+                        checked={profile.show_contributor_badge}
+                        onCheckedChange={(checked) => onUpdate({ show_contributor_badge: checked })}
                       />
                     </div>
                   </div>

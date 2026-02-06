@@ -66,5 +66,10 @@
     "unsavedChangesMessage": "Tienes cambios sin guardar. ¿Quieres descartarlos o volver para guardar?",
     "discard": "Descartar cambios",
     "keepEditing": "Seguir editando"
+  },
+  "bannerCrop": {
+    "title": "Ajustar Banner",
+    "confirm": "Confirmar Recorte",
+    "cancel": "Cancelar"
   }
 }

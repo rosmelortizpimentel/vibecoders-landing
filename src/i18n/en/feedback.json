@@ -36,5 +36,6 @@
   "messageDeleted": "Message deleted",
   "messageUpdated": "Message updated",
   "saveEdit": "Save",
-  "cancelEdit": "Cancel"
+  "cancelEdit": "Cancel",
+  "backToList": "Back to list"
 }

@@ -158,7 +158,7 @@ export function UsersManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="h-full overflow-y-auto space-y-6 pr-2">
       <div>
         <h1 className="text-2xl font-bold text-foreground">{t('users')}</h1>
         <p className="text-muted-foreground">
@@ -191,8 +191,10 @@ export function UsersManager() {
       )}
 
       {/* Table */}
-      <div className="rounded-lg border bg-card">
-        <Table>
+      <div className="rounded-lg border bg-card overflow-hidden">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-border">
+          <div className="min-w-[1000px]">
+            <Table>
           <TableHeader>
             <TableRow>
               <SortableHeader column="name" className="w-[300px]">Usuario</SortableHeader>
@@ -275,6 +277,8 @@ export function UsersManager() {
             ))}
           </TableBody>
         </Table>
+          </div>
+        </div>
       </div>
 
       {/* Charts */}

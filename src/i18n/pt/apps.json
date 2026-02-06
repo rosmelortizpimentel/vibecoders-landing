@@ -1,0 +1,15 @@
+{
+  "addApp": "Add App",
+  "add": "Add",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "noApps": "You don't have any apps yet",
+  "noAppsHint": "Add your first project to show it on your profile",
+  "urlPlaceholder": "https://your-app.com",
+  "deleteConfirmTitle": "Delete this app?",
+  "deleteConfirmDescription": "This action cannot be undone. The app will be permanently deleted from your profile.",
+  "verifyDomain": "Verify domain",
+  "verified": "Verified",
+  "visible": "Visible",
+  "hidden": "Hidden"
+}

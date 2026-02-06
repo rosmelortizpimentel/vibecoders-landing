@@ -1,0 +1,14 @@
+{
+  "title": "Parlons-nous",
+  "subtitle": "Donnez-nous votre avis ou demandez de l'aide",
+  "loginRequired": "Vous devez être connecté pour envoyer un message",
+  "errorSending": "Erreur lors de l'envoi du message",
+  "emptyTitle": "Aucun message ici",
+  "emptySubtitle": "Dites bonjour ! Nous sommes là pour vous aider.",
+  "viewProfile": "Voir le profil",
+  "typePlaceholder": "Écrivez un message...",
+  "send": "Envoyer",
+  "attachments": "Pièces jointes",
+  "onWaitlist": "Sur liste d'attente",
+  "never": "Jamais"
+}

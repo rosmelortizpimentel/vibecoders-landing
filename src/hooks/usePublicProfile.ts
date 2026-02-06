@@ -34,6 +34,8 @@ export interface PublicProfile {
   member_number: number;
   is_pioneer: boolean;
   show_pioneer_badge: boolean;
+  is_contributor: boolean;
+  show_contributor_badge: boolean;
   // Socials
   lovable: string | null;
   twitter: string | null;

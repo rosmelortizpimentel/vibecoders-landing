@@ -1,0 +1,13 @@
+{
+  "generic": "Something went wrong",
+  "tryAgain": "Please try again",
+  "notFound": "Page not found",
+  "notFoundDescription": "The page you're looking for doesn't exist",
+  "returnHome": "Return to home",
+  "unauthorized": "Unauthorized",
+  "forbidden": "Access denied",
+  "serverError": "Server error",
+  "networkError": "Connection error",
+  "loadingError": "Loading error",
+  "saveError": "Error saving"
+}
