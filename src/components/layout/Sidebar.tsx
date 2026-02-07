@@ -90,7 +90,7 @@ export function Sidebar() {
 
     // Utilities
     { path: '/tools', label: t('navigation.tools'), icon: Wrench },
-    { path: '/hablemos', label: t('navigation.feedback'), icon: MessageSquare },
+    { path: '/feedback', label: t('navigation.feedback'), icon: MessageSquare },
     ...(isInWaitlist ? [{ path: '/buildlog', label: t('navigation.buildLog'), icon: Crown, className: "text-amber-500" }] : []),
   ];
 

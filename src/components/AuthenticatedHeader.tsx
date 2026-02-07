@@ -90,7 +90,7 @@ export function AuthenticatedHeader({
     { path: '/public-beta-testing', label: t.navigation.publicBetaTesting, icon: Rocket, premium: false },
     { path: '/explore', label: t.navigation.startups, icon: Rocket, premium: false },
     { path: '/tools', label: t.navigation.tools, icon: Wrench, premium: false },
-    { path: '/hablemos', label: t.navigation.feedback, icon: MessageCircle, premium: false },
+    { path: '/feedback', label: t.navigation.feedback, icon: MessageCircle, premium: false },
     ...(isInWaitlist ? [{ path: '/buildlog', label: t.navigation.buildLog, icon: Crown, premium: true }] : []),
   ];
 

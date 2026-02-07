@@ -58,7 +58,7 @@ const App = () => (
             <Route path="/tools" element={<Tools />} />
             <Route path="/buildlog" element={<BuildLog />} />
             <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
-            <Route path="/hablemos" element={<Feedback />} />
+            <Route path="/feedback" element={<Feedback />} />
             <Route path="/me" element={<Navigate to="/me/profile" replace />} />
             <Route path="/me/profile" element={<Me />} />
             <Route path="/me/apps" element={<Me />} />
