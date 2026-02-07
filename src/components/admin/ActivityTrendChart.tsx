@@ -10,13 +10,19 @@ export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
   const { t } = useTranslation('admin');
 
   const chartData = useMemo(() => {
-    return data.map((item) => ({
-      ...item,
-      displayDate: new Date(item.date).toLocaleDateString('es-ES', {
-        month: 'short',
-        day: 'numeric',
-      }),
-    }));
+    return data.map((item) => {
+      // item.date is 'YYYY-MM-DD' from the Edge Function (Toronto relative)
+      // We use midday UTC to ensure the date doesn't shift when converting to Toronto time
+      const date = new Date(`${item.date}T12:00:00Z`);
+      return {
+        ...item,
+        displayDate: date.toLocaleDateString('es-ES', {
+          month: 'short',
+          day: 'numeric',
+          timeZone: 'America/Toronto'
+        }),
+      };
+    });
   }, [data]);
 
   const totalInPeriod = chartData.reduce((sum, d) => sum + d.count, 0);

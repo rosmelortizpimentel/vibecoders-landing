@@ -109,10 +109,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build daily activity counts (last 30 days)
+    // Build daily activity counts (last 30 days) in Toronto time
     const dailyActivityMap = new Map<string, Set<string>>();
     if (activityData) {
       for (const row of activityData) {
+        // active_date is already a string 'YYYY-MM-DD' from the DB
         if (!dailyActivityMap.has(row.active_date)) {
           dailyActivityMap.set(row.active_date, new Set());
         }
@@ -122,9 +123,25 @@ Deno.serve(async (req) => {
 
     const dailyActivity: Array<{ date: string; count: number }> = [];
     const now = new Date();
+    
+    // Helper to get YYYY-MM-DD in Toronto time
+    const getTorontoDate = (date: Date) => {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Toronto',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(date);
+    };
+
+    const torontoTodayStr = getTorontoDate(now);
+    const [year, month, day] = torontoTodayStr.split('-').map(Number);
+    // Create a date object representing the start of today in Toronto to iterate backwards correctly
+    const torontoTodayMid = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+
     for (let i = 29; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
+      const d = new Date(torontoTodayMid);
+      d.setUTCDate(d.getUTCDate() - i);
       const dateKey = d.toISOString().split("T")[0];
       const usersSet = dailyActivityMap.get(dateKey);
       dailyActivity.push({ date: dateKey, count: usersSet ? usersSet.size : 0 });

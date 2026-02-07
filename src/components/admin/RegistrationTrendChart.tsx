@@ -17,24 +17,38 @@ export function RegistrationTrendChart({ data, days = 30 }: RegistrationTrendCha
   const { t } = useTranslation('admin');
 
   const chartData = useMemo(() => {
-    // Get date range
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setDate(endDate.getDate() - days + 1);
+    // Helper to get YYYY-MM-DD in Toronto time
+    const getTorontoDate = (date: Date) => {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Toronto',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(date);
+    };
+
+    const now = new Date();
+    const torontoTodayStr = getTorontoDate(now);
+    const [year, month, day] = torontoTodayStr.split('-').map(Number);
+    // Use midday in Toronto to avoid day shifts when iterating
+    const endDateMid = new Date(year, month - 1, day, 12, 0, 0);
+    
+    const startDateMid = new Date(endDateMid);
+    startDateMid.setDate(endDateMid.getDate() - days + 1);
 
     // Create a map of date -> count
     const countByDate = new Map<string, number>();
     
     // Initialize all days with 0
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      const dateKey = d.toISOString().split('T')[0];
+    for (let d = new Date(startDateMid); d <= endDateMid; d.setDate(d.getDate() + 1)) {
+      const dateKey = getTorontoDate(d);
       countByDate.set(dateKey, 0);
     }
 
     // Count registrations per day
     data.forEach((item) => {
       if (!item.created_at) return;
-      const dateKey = new Date(item.created_at).toISOString().split('T')[0];
+      const dateKey = getTorontoDate(new Date(item.created_at));
       if (countByDate.has(dateKey)) {
         countByDate.set(dateKey, (countByDate.get(dateKey) || 0) + 1);
       }
@@ -42,14 +56,15 @@ export function RegistrationTrendChart({ data, days = 30 }: RegistrationTrendCha
 
     // Convert to array for chart
     const result: DailyCount[] = [];
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      const dateKey = d.toISOString().split('T')[0];
+    for (let d = new Date(startDateMid); d <= endDateMid; d.setDate(d.getDate() + 1)) {
+      const dateKey = getTorontoDate(d);
       result.push({
         date: dateKey,
         count: countByDate.get(dateKey) || 0,
-        displayDate: new Date(dateKey).toLocaleDateString('es-ES', { 
+        displayDate: d.toLocaleDateString('es-ES', { 
           month: 'short', 
-          day: 'numeric' 
+          day: 'numeric',
+          timeZone: 'America/Toronto'
         }),
       });
     }
