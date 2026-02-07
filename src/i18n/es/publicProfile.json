@@ -15,5 +15,9 @@
   "apps": "Apps",
   "poweredBy": "Potenciado por",
   "joinVibecoders": "Únete a Vibecoders",
-  "createProfile": "Crea tu perfil de vibecoder"
+  "createProfile": "Crea tu perfil de vibecoder",
+  "ideation": "Ideación",
+  "construction": "Construcción",
+  "projectDNA": "ADN del Proyecto",
+  "totalHours": "Total horas"
 }

@@ -80,39 +80,6 @@ export function IdeaDetail({
 
   return (
     <div className="h-full flex flex-col bg-card rounded-lg border border-border overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
-        <h3 className="font-semibold text-lg flex items-center gap-2">
-          {isNew ? t('ideas.newIdeaTitle') : t('ideas.title')}
-        </h3>
-        
-        {!isNew && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>{t('ideas.confirmDeleteTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('ideas.confirmDeleteMessage')}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>{t('ideas.cancel')}</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={() => idea && onDelete(idea.id)}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {t('ideas.delete')}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-        )}
-      </div>
 
       {/* Form Content */}
       <div className="flex-1 p-6 space-y-6 overflow-y-auto">
@@ -146,25 +113,56 @@ export function IdeaDetail({
       </div>
 
       {/* Footer Actions */}
-      <div className="p-4 border-t border-border bg-muted/30 flex justify-end gap-2">
-         {/* Cancel button mainly for mobile or resetting state */}
-        <Button variant="ghost" onClick={onCancel} disabled={isSaving}>
-           {t('ideas.cancel')}
-        </Button>
-        
-        <Button onClick={handleSave} disabled={isSaving || !title.trim()}>
-          {isSaving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t('saving')}
-            </>
-          ) : (
-            <>
-              <Save className="mr-2 h-4 w-4" />
-              {t('ideas.save')}
-            </>
+      <div className="p-4 border-t border-border bg-muted/30 flex justify-between items-center gap-2">
+        <div>
+          {!isNew && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t('ideas.confirmDeleteTitle')}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t('ideas.confirmDeleteMessage')}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t('ideas.cancel')}</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={() => idea && onDelete(idea.id)}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {t('ideas.delete')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
-        </Button>
+        </div>
+
+        <div className="flex gap-2">
+          {/* Cancel button mainly for mobile or resetting state */}
+          <Button variant="ghost" onClick={onCancel} disabled={isSaving}>
+             {t('ideas.cancel')}
+          </Button>
+          
+          <Button onClick={handleSave} disabled={isSaving || !title.trim()}>
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t('saving')}
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                {t('ideas.save')}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -188,6 +188,51 @@ export function useBetaSquad(appId: string | undefined) {
     }
   }, [user]);
 
+  const addTester = useCallback(async (userId: string) => {
+    if (!appId || !user) return { success: false, error: 'Not authenticated' };
+
+    try {
+      // Check if already exists
+      const { data: existing } = await supabase
+        .from('beta_testers')
+        .select('id, status')
+        .eq('app_id', appId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existing) {
+        if (existing.status === 'accepted') {
+          return { success: true, alreadyExists: true };
+        }
+        
+        // Update to accepted if it was pending or rejected
+        const { error } = await supabase
+          .from('beta_testers')
+          .update({ status: 'accepted', joined_at: new Date().toISOString() })
+          .eq('id', existing.id);
+          
+        if (error) throw error;
+        return { success: true };
+      }
+
+      // Create new accepted tester
+      const { error } = await supabase
+        .from('beta_testers')
+        .insert({
+          app_id: appId,
+          user_id: userId,
+          status: 'accepted',
+          joined_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (err) {
+      console.error('Error adding tester:', err);
+      return { success: false, error: 'Failed to add tester' };
+    }
+  }, [appId, user]);
+
   return {
     joinBeta,
     leaveBeta,
@@ -195,6 +240,7 @@ export function useBetaSquad(appId: string | undefined) {
     updateTesterStatus,
     removeTester,
     markFeedbackUseful,
+    addTester,
     joining,
     leaving,
     submitting,

@@ -13,9 +13,12 @@
     "terms": "Terms"
   },
   "navigation": {
+    "home": "Home",
     "myProfile": "My Profile",
-    "startups": "Startups",
-    "betaSquads": "Betas",
+    "myIdeas": "My Ideas",
+    "betaTesting": "My Beta Testing",
+    "startups": "Explore",
+    "publicBetaTesting": "App for Testing",
     "tools": "Tools",
     "feedback": "Let's Talk",
     "buildLog": "Build Log",

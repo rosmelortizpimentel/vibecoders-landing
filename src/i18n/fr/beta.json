@@ -1,5 +1,5 @@
 {
-  "title": "Beta Squad",
+  "title": "Beta Testing",
   "noAppsTitle": "No apps registered",
   "noAppsMessage": "Register an App first to recruit testers",
   "goToApps": "Go to My Apps",
@@ -70,7 +70,7 @@
   "appNotFound": "App not found",
   "loading": "Loading...",
   "viewGuide": "View guide",
-  "directoryTitle": "Join a Beta Squad",
+  "directoryTitle": "Défis Beta",
   "directorySubtitle": "Test products before anyone else, send feedback directly to founders and earn exclusive badges.",
   "emptyTitle": "No active betas",
   "emptyMessage": "Got an App? Be the first to open your Beta Squad.",
@@ -124,5 +124,9 @@
   "reportNewFinding": "Report finding",
   "backToList": "Back to list",
   "noFollowers": "No followers",
-  "noFollowing": "Not following anyone"
+  "noFollowing": "Not following anyone",
+  "confirmRemoveTitle": "Remove Tester",
+  "confirmRemoveDescription": "Are you sure you want to remove",
+  "confirmRemoveFromSquad": "from your beta squad? This action cannot be undone.",
+  "confirmRemove": "Remove"
 }

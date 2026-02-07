@@ -1,132 +1,141 @@
- import { useRef, useCallback } from 'react';
- import { Link } from 'react-router-dom';
- import Autoplay from 'embla-carousel-autoplay';
-import { ArrowRight, BadgeCheck } from 'lucide-react';
- import {
-   Carousel,
-   CarouselContent,
-   CarouselItem,
-   CarouselPrevious,
-   CarouselNext,
- } from '@/components/ui/carousel';
- import { Button } from '@/components/ui/button';
+import { useState, useCallback } from 'react';
+import { BadgeCheck, ExternalLink } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
- import type { FreshDropApp } from '@/hooks/useFreshDrops';
- 
- interface FreshDropsCarouselProps {
-   apps: FreshDropApp[];
- }
- 
- export function FreshDropsCarousel({ apps }: FreshDropsCarouselProps) {
-   const autoplayRef = useRef(
-     Autoplay({ delay: 4000, stopOnInteraction: true })
-   );
- 
+import type { FreshDropApp } from '@/hooks/useFreshDrops';
+
+interface FreshDropsCarouselProps {
+  apps: FreshDropApp[];
+}
+
+export function FreshDropsCarousel({ apps }: FreshDropsCarouselProps) {
+  const [brokenLogos, setBrokenLogos] = useState<Record<string, boolean>>({});
+
+  const handleLogoError = (appId: string) => {
+    setBrokenLogos(prev => ({ ...prev, [appId]: true }));
+  };
+
   const handleOpenApp = useCallback((url: string) => {
-    // Normalize URL - prepend https:// if missing
     const normalized = url.trim();
     const finalUrl = normalized.startsWith('http://') || normalized.startsWith('https://') 
       ? normalized 
       : `https://${normalized}`;
     window.open(finalUrl, '_blank', 'noopener,noreferrer');
   }, []);
- 
-   if (!apps.length) {
-     return (
-       <div className="text-center py-12 text-muted-foreground">
-         No hay apps recientes para mostrar.
-       </div>
-     );
-   }
- 
-   return (
-     <Carousel
-       opts={{
-         align: 'start',
-         loop: true,
-       }}
-       plugins={[autoplayRef.current]}
-       className="w-full"
-     >
-       <CarouselContent className="-ml-2 md:-ml-4">
-         {apps.map((app) => (
-           <CarouselItem
-             key={app.id}
-             className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
-           >
-             <div className="bg-card border border-border rounded-lg p-4 md:p-6 h-full flex flex-col sm:flex-row items-center gap-4">
-               {/* Logo */}
-               <div className="flex-shrink-0">
-                 {app.logo_url ? (
-                   <img
-                     src={app.logo_url}
-                     alt={app.name || 'App'}
-                     className="w-20 h-20 md:w-24 md:h-24 rounded-xl object-cover bg-muted"
-                   />
-                 ) : (
-                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-muted flex items-center justify-center">
-                     <span className="text-2xl font-bold text-muted-foreground">
-                       {app.name?.charAt(0) || '?'}
-                     </span>
-                   </div>
-                 )}
-               </div>
- 
-               {/* Content */}
-               <div className="flex-1 text-center sm:text-left min-w-0">
-                  <div className="flex items-center justify-center sm:justify-start gap-1.5">
-                    <h3 className="font-semibold text-foreground text-lg truncate">
-                      {app.name || 'Sin nombre'}
-                    </h3>
-                    {app.is_verified && (
-                      <TooltipProvider delayDuration={200}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <BadgeCheck className="h-[18px] w-[18px] text-primary flex-shrink-0" />
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="text-xs">
-                            Propietario Verificado
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
-                 {app.tagline && (
-                   <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                     {app.tagline}
-                   </p>
-                 )}
-                 {app.profiles?.username && (
-                   <Link
-                     to={`/${app.profiles.username}`}
-                     className="text-xs text-muted-foreground hover:text-primary transition-colors mt-1 inline-block"
-                   >
-                     por @{app.profiles.username}
-                   </Link>
-                 )}
-                 <div className="mt-2">
-                   <Button
-                     variant="link"
-                     size="sm"
-                     className="p-0 h-auto text-primary"
-                     onClick={() => handleOpenApp(app.url)}
-                   >
-                     Ver Proyecto
-                     <ArrowRight className="ml-1 h-4 w-4" />
-                   </Button>
-                 </div>
-               </div>
-             </div>
-           </CarouselItem>
-         ))}
-       </CarouselContent>
-       <CarouselPrevious className="hidden md:flex -left-4" />
-       <CarouselNext className="hidden md:flex -right-4" />
-     </Carousel>
-   );
- }
+
+  if (!apps.length) {
+    return (
+      <div className="text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg">
+        No new apps yet.
+      </div>
+    );
+  }
+
+  // Triple the apps for a long seamless loop
+  const marqueeItems = [...apps, ...apps, ...apps];
+
+  // Component for the card so we can reuse it for the sizer
+  const Card = ({ app, isSizer = false }: { app: FreshDropApp; isSizer?: boolean }) => (
+    <div className={`flex-shrink-0 w-[calc(100vw-32px)] max-w-[468px] sm:w-[420px] sm:max-w-none ${isSizer ? 'opacity-0 pointer-events-none' : ''}`}>
+      <div className="bg-card border border-border rounded-xl p-3 flex flex-row items-center gap-3 relative hover:border-primary/20 transition-all h-full shadow-sm">
+        <div className="flex-shrink-0">
+          {app.logo_url && !brokenLogos[app.id] ? (
+            <img
+              src={app.logo_url}
+              alt={app.name || 'App'}
+              className="w-12 h-12 rounded-lg object-cover bg-muted border border-border/50"
+              onError={() => handleLogoError(app.id)}
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center border border-border/50">
+              <span className="text-lg font-bold text-muted-foreground uppercase">
+                {app.name?.charAt(0) || '?'}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
+          <div className="flex items-center gap-1.5">
+            <h3 className="font-semibold text-foreground text-sm truncate leading-tight">
+              {app.name || 'Unnamed App'}
+            </h3>
+            {app.is_verified && !isSizer && (
+              <BadgeCheck className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+            )}
+          </div>
+          {app.tagline && (
+            <p className="text-[11px] text-muted-foreground truncate leading-tight">
+              {app.tagline}
+            </p>
+          )}
+          <div className="flex items-center gap-3 mt-1.5">
+            {app.profiles && (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Avatar className="w-4 h-4 border border-border shrink-0">
+                  <AvatarImage src={app.profiles.avatar_url || undefined} />
+                  <AvatarFallback className="text-[6px]">
+                    {app.profiles.username?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-[10px] text-muted-foreground truncate">
+                  @{app.profiles.username}
+                </span>
+              </div>
+            )}
+            <div className="ml-auto text-[10px] font-medium text-primary flex items-center gap-0.5 shrink-0 bg-primary/5 px-2 py-0.5 rounded-full">
+              Visit <ExternalLink className="w-2.5 h-2.5" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="w-full relative py-4 select-none overflow-hidden pb-8">
+      {/* 
+        THE GHOST SIZER: 
+        This transparent card defines the container height.
+        Because it is just ONE card, it does NOT expand the width.
+      */}
+      <div className="w-full flex justify-start opacity-0 pointer-events-none py-2">
+        <Card app={apps[0]} isSizer />
+      </div>
+
+      {/* 
+        THE ACTUAL MARQUEE: 
+        Positioned ABSOLUTE so its width is ZERO to the layout engine.
+        It will fill the space defined by the Sizer above.
+      */}
+      <div className="absolute inset-0 w-full overflow-hidden flex items-center py-2">
+        <div 
+          className="flex gap-4 animate-marquee py-2 hover:[animation-play-state:paused] w-max"
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          {marqueeItems.map((app, idx) => (
+            <Card key={`${app.id}-${idx}`} app={app} />
+          ))}
+        </div>
+
+        {/* Faders for smooth edges */}
+        <div className="absolute inset-y-0 left-0 w-8 sm:w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute inset-y-0 right-0 w-8 sm:w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes marquee-loop {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(calc(-33.33% - 5.33px)); } /* 1/3 since we have 3x items */
+        }
+        .animate-marquee {
+          animation: marquee-loop 80s linear infinite;
+        }
+      ` }} />
+    </div>
+  );
+}

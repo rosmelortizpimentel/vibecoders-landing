@@ -2,8 +2,12 @@
   "welcome": "Welcome",
   "explore": "Explore",
   "freshDrops": {
-    "title": "Fresh out of the oven",
-    "subtitle": "The latest projects from the community"
+    "title": "Novos Apps",
+    "subtitle": "The latest projects from the community",
+    "traffic": "Visualizações Totais",
+    "profileViews": "Visualizações de Perfil",
+    "appClicks": "Cliques de Apps",
+    "engagement": "Likes de Apps"
   },
   "onboarding": {
     "title": "Complete your profile",

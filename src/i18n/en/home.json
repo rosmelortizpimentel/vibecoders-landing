@@ -2,13 +2,35 @@
   "welcome": "Welcome",
   "explore": "Explore",
   "freshDrops": {
-    "title": "Fresh out of the oven",
+    "title": "New Apps",
     "subtitle": "The latest projects from the community"
   },
   "onboarding": {
-    "title": "Complete your profile",
-    "description": "Add information to stand out in the community",
-    "viewProfile": "View my profile",
-    "complete": "Complete"
+    "titleWithPercent": "Your identity is at {percent}%",
+    "persuasiveText": "Complete profiles get 3x more views.",
+    "ctaButton": "Complete my Profile",
+    "close": "Close"
+  },
+  "stats": {
+    "traffic": "Total Views",
+    "profileViews": "Profile Views",
+    "appClicks": "App Clicks",
+    "engagement": "App Likes",
+    "community": "Community",
+    "identity": "Profile Strength",
+    "last30Days": "Last 30 days",
+    "followers": "followers",
+    "following": "following",
+    "completeProfile": "Complete Profile"
+  },
+  "actionCenter": {
+    "pendingTesters": "Pending Testers",
+    "appHealth": "App Status",
+    "wantsToJoin": "wants to join",
+    "bugs": "bugs",
+    "features": "features",
+    "noApps": "Everything looks good",
+    "noPending": "No pending requests"
   }
 }
+

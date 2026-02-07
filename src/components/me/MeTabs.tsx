@@ -12,14 +12,12 @@ export function MeTabs() {
     { id: 'profile', label: t.tabs.profile, icon: User, path: '/me/profile' },
     { id: 'apps', label: t.tabs.apps, icon: Layers, path: '/me/apps' },
     { id: 'branding', label: t.tabs.branding, icon: Palette, path: '/me/branding' },
-    { id: 'beta', label: t.tabs.beta, icon: FlaskConical, path: '/me/beta' },
-    { id: 'ideas', label: t.tabs.ideas, icon: Lightbulb, path: '/me/ideas' },
   ];
   
   const activeTab = tabs.find(tab => location.pathname === tab.path)?.id || 'profile';
 
   return (
-    <div className="flex overflow-x-auto gap-1 p-1.5 bg-slate-100/80 rounded-full scrollbar-hide">
+    <div className="flex w-full overflow-x-auto gap-1 p-1.5 bg-slate-100/80 rounded-full scrollbar-hide">
       {tabs.map(tab => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -29,7 +27,7 @@ export function MeTabs() {
             key={tab.id}
             onClick={() => navigate(tab.path)}
             className={cn(
-              'flex items-center justify-center gap-2 px-5 py-2 rounded-full text-sm transition-all duration-200 flex-shrink-0 whitespace-nowrap',
+              'flex items-center justify-center gap-2 px-3 sm:px-5 py-2 rounded-full text-sm transition-all duration-200 flex-1 sm:flex-none whitespace-nowrap',
               isActive
                 ? 'bg-white text-slate-900 shadow-sm font-medium'
                 : 'text-slate-500 hover:text-slate-700'
@@ -39,7 +37,7 @@ export function MeTabs() {
               "h-4 w-4 transition-colors",
               isActive ? "text-[#3D5AFE]" : "text-slate-400"
             )} />
-            <span>{tab.label}</span>
+            <span className="hidden min-[420px]:inline">{tab.label}</span>
           </button>
         );
       })}

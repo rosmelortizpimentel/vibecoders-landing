@@ -42,6 +42,10 @@ export function IdeasTab() {
   const [pendingID, setPendingID] = useState<string | null>(null); // ID we want to switch TO
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Deletion state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [idToDelete, setIdToDelete] = useState<string | null>(null);
 
   // Fetch ideas
   useEffect(() => {
@@ -189,11 +193,19 @@ export function IdeasTab() {
       if (selectedID === id) {
         setSelectedID(null);
       }
-      toast.success(t('ideas.delete')); // Or custom "Deleted" message
+      toast.success(t('ideas.delete')); 
     } catch (error) {
       console.error('Error deleting idea:', error);
       toast.error(t('error'));
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setIdToDelete(null);
     }
+  };
+
+  const openDeleteDialog = (id: string) => {
+    setIdToDelete(id);
+    setIsDeleteDialogOpen(true);
   };
   
   const selectedIdea = selectedID === 'new' 
@@ -229,27 +241,47 @@ export function IdeasTab() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="max-w-[400px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">{t('ideas.confirmDeleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              {t('ideas.confirmDeleteMessage')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-4">
+            <AlertDialogCancel className="h-9 px-4 rounded-lg bg-muted/50 border-none hover:bg-muted transition-colors">
+              {t('ideas.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => idToDelete && handleDelete(idToDelete)}
+              className="h-9 px-4 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all font-semibold"
+            >
+              {t('ideas.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="grid md:grid-cols-12 gap-6 h-full">
         {/* LEFT COLUMN: List */}
         <div className={cn(
           "md:col-span-4 lg:col-span-3 flex flex-col gap-4 h-full",
           isMobile && selectedID ? "hidden" : "flex"
         )}>
-           <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">{t('ideas.title')}</h2>
-              <Button size="sm" onClick={handleCreateNew} className="h-8 w-8 p-0 rounded-full">
-                 <Plus className="h-4 w-4" />
-              </Button>
-           </div>
-           
-           <div className="relative">
-             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-             <Input
-               placeholder={t('search') || "Search..."} 
-               className="pl-9"
-               value={searchQuery}
-               onChange={(e) => setSearchQuery(e.target.value)}
-             />
+           <div className="flex items-center gap-2">
+             <div className="relative flex-1">
+               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+               <Input
+                 placeholder={t('search') || "Search..."} 
+                 className="pl-9"
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+               />
+             </div>
+             <Button size="icon" onClick={handleCreateNew} className="h-10 w-10 shrink-0 rounded-full">
+                <Plus className="h-5 w-5" />
+             </Button>
            </div>
 
            <ScrollArea className="flex-1 -mx-2 px-2">
@@ -259,7 +291,6 @@ export function IdeasTab() {
                     "p-3 rounded-lg border cursor-pointer bg-primary/5 border-primary"
                   )}>
                      <div className="font-medium text-primary">{t('ideas.newIdeaTitle')}</div>
-                     <div className="text-xs text-muted-foreground">{t('ideas.descriptionPlaceholder')}</div>
                   </div>
                 )}
                 
@@ -274,24 +305,27 @@ export function IdeasTab() {
                     key={idea.id}
                     onClick={() => handleSelectIdea(idea.id)}
                     className={cn(
-                      "p-3 rounded-lg border cursor-pointer transition-all hover:bg-accent",
+                      "group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all",
                       selectedID === idea.id 
-                        ? "bg-primary border-primary text-primary-foreground shadow-md" 
-                        : "bg-card border-border"
+                        ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90" 
+                        : "bg-background border border-border hover:bg-accent/50"
                     )}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                       <h4 className="font-medium line-clamp-1 text-sm">{idea.title}</h4>
-                       {/* Maybe a date? */}
-                    </div>
-                    {idea.description && (
-                        <p className={cn(
-                          "text-xs line-clamp-2 mt-1 whitespace-pre-wrap",
-                          selectedID === idea.id ? "text-primary-foreground/80" : "text-muted-foreground"
-                        )}>
-                          {idea.description}
-                        </p>
-                    )}
+                    <h4 className="font-medium line-clamp-1 text-sm flex-1">{idea.title}</h4>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn(
+                        "h-6 w-6 ml-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity",
+                        selectedID === idea.id ? "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/20" : ""
+                      )}
+                      onClick={(e) => {
+                         e.stopPropagation();
+                         openDeleteDialog(idea.id);
+                      }}
+                    >
+                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                    </Button>
                   </div>
                 ))}
 

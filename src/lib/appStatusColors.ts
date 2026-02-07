@@ -7,6 +7,7 @@ export interface StatusColors {
   bg: string;
   text: string;
   dot: string;
+  border: string;
 }
 
 /**
@@ -20,23 +21,26 @@ export function getStatusColors(slug: string | undefined): StatusColors {
     case 'live':
     case 'active':
       return {
-        bg: 'bg-emerald-50',
-        text: 'text-emerald-700',
-        dot: 'bg-emerald-500',
+        bg: 'bg-emerald-100/80',
+        text: 'text-emerald-800',
+        dot: 'bg-emerald-600',
+        border: 'border-emerald-200',
       };
     case 'building':
     case 'development':
     case 'in-progress':
       return {
-        bg: 'bg-teal-50',
-        text: 'text-teal-700',
-        dot: 'bg-teal-500',
+        bg: 'bg-blue-100/80',
+        text: 'text-blue-800',
+        dot: 'bg-blue-600',
+        border: 'border-blue-200',
       };
     default:
       return {
         bg: 'bg-gray-100',
-        text: 'text-gray-600',
-        dot: 'bg-gray-400',
+        text: 'text-gray-700',
+        dot: 'bg-gray-500',
+        border: 'border-gray-200',
       };
   }
 }

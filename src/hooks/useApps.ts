@@ -23,6 +23,7 @@ export interface AppData {
   verification_token: string;
   verified_at: string | null;
   verified_url: string | null;
+  screenshots: string[];
   // Beta fields
   beta_active: boolean;
   beta_mode: string;
@@ -58,6 +59,7 @@ export function useApps() {
       const appsWithStacks = data?.map(app => ({
         ...app,
         stacks: app.app_stacks?.map((s: { stack_id: string }) => s.stack_id) || [],
+         screenshots: app.screenshots || [],
       })) || [];
 
       setApps(appsWithStacks);
@@ -90,7 +92,7 @@ export function useApps() {
 
     if (error) throw error;
 
-    setApps(prev => [...prev, { ...data, stacks: [] }]);
+    setApps(prev => [...prev, { ...data, stacks: [], screenshots: [] }]);
     return data;
   }, [user, apps]);
 
@@ -163,6 +165,26 @@ export function useApps() {
     return publicUrl;
   }, [user, updateApp]);
 
+  const uploadAppScreenshot = useCallback(async (appId: string, file: File) => {
+    if (!user) throw new Error('No user');
+
+    const fileExt = file.name.split('.').pop();
+    const timestamp = Date.now();
+    const filePath = `${user.id}/apps/${appId}/screenshots/${timestamp}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-assets')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('profile-assets')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  }, [user]);
+
   const reorderApps = useCallback(async (reorderedApps: AppData[]) => {
     const updates = reorderedApps.map((app, index) => ({
       id: app.id,
@@ -205,6 +227,7 @@ export function useApps() {
     updateApp,
     deleteApp,
     uploadAppLogo,
+    uploadAppScreenshot,
     reorderApps,
     refetch: fetchApps,
      verifyApp,

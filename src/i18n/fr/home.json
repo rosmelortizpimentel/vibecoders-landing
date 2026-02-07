@@ -1,8 +1,12 @@
 {
+  "traffic": "Vues Totales",
+  "profileViews": "Vues de Profil",
+  "appClicks": "Clics d'App",
+  "engagement": "Likes d'App",
   "welcome": "Welcome",
   "explore": "Explore",
   "freshDrops": {
-    "title": "Fresh out of the oven",
+    "title": "Nouvelles Apps",
     "subtitle": "The latest projects from the community"
   },
   "onboarding": {

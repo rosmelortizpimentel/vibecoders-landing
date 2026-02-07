@@ -13,6 +13,7 @@
     "description": "This image will appear when you share your profile on social media",
     "upload": "Upload image",
     "delete": "Delete image",
-    "recommended": "Recommended size: 1200×630px"
+    "recommended": "Recommended size: 1200×630px",
+    "cacheWarning": "As alterações podem demorar a ser refletidas nessas plataformas devido ao sistema de cache. Use as ferramentas acima para forçar uma atualização."
   }
 }

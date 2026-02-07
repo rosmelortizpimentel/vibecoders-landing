@@ -22,9 +22,7 @@ import { MoreHorizontal, ThumbsUp, Check, X, Trash2 } from 'lucide-react';
 
 interface FeedbackActionMenuProps {
   feedbackId: string;
-  isUseful: boolean;
   status: 'open' | 'in_review' | 'closed';
-  onMarkUseful: (isUseful: boolean) => Promise<void>;
   onMarkResolved: () => Promise<void>;
   onClose: () => Promise<void>;
   onDelete: () => Promise<void>;
@@ -32,9 +30,7 @@ interface FeedbackActionMenuProps {
 
 export function FeedbackActionMenu({
   feedbackId,
-  isUseful,
   status,
-  onMarkUseful,
   onMarkResolved,
   onClose,
   onDelete,
@@ -61,11 +57,6 @@ export function FeedbackActionMenu({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => handleAction(() => onMarkUseful(!isUseful))}>
-            <ThumbsUp className={`w-4 h-4 mr-2 ${isUseful ? 'fill-current' : ''}`} />
-            {isUseful ? t('markedUseful') : t('markUseful')}
-          </DropdownMenuItem>
-          
           {status === 'open' && (
             <DropdownMenuItem onClick={() => handleAction(onMarkResolved)}>
               <Check className="w-4 h-4 mr-2" />

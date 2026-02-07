@@ -135,7 +135,7 @@ export default function AppDetail() {
         logoUrl={app.logo_url}
       />
       
-      <main className="flex-1 container mx-auto px-4 py-4 md:py-6">
+      <main className="flex-1 container mx-auto px-4 py-4 md:py-6 overflow-x-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Back Button */}
           <Button 

@@ -14,6 +14,17 @@ import { FeedbackStatusBadge } from './FeedbackStatusBadge';
 import { FeedbackActionMenu } from './FeedbackActionMenu';
 import { MarkdownEditor } from './MarkdownEditor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TesterSearchDialog } from './TesterSearchDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import {
   Select,
   SelectContent,
@@ -26,6 +37,7 @@ import {
   Check, 
   X, 
   UserMinus,
+  UserPlus,
   MessageSquare,
   Bug,
   Lightbulb,
@@ -35,6 +47,7 @@ import {
   Star,
   Users,
   Settings,
+  Heart,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -97,7 +110,7 @@ interface BetaManagementProps {
 export function BetaManagement({ appId, config, onConfigChange }: BetaManagementProps) {
   const { t } = useTranslation('beta');
   const { language } = useLanguage();
-  const { updateTesterStatus, removeTester, markFeedbackUseful } = useBetaSquad(appId);
+  const { updateTesterStatus, removeTester, markFeedbackUseful, addTester } = useBetaSquad(appId);
   
   const [testers, setTesters] = useState<Tester[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
@@ -105,6 +118,8 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
   const [loadingFeedback, setLoadingFeedback] = useState(false);
   const [testerFilter, setTesterFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
   const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'open' | 'in_review' | 'closed'>('all');
+  const [testerToRemove, setTesterToRemove] = useState<Tester | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   useEffect(() => {
     if (config.beta_active) {
@@ -213,12 +228,14 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
     }
   };
 
-  const handleRemove = async (testerId: string) => {
-    const result = await removeTester(testerId);
+  const confirmRemoveTester = async () => {
+    if (!testerToRemove) return;
+    const result = await removeTester(testerToRemove.id);
     if (result.success) {
       toast.success(t('remove'));
       fetchTesters();
     }
+    setTesterToRemove(null);
   };
 
   const handleMarkUseful = async (feedbackId: string, currentValue: boolean) => {
@@ -274,6 +291,14 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
     }
   };
 
+  const handleAddTester = async (userId: string) => {
+    const res = await addTester(userId);
+    if (res.success) {
+      fetchTesters();
+    }
+    return res;
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'bug': return <Bug className="w-4 h-4 text-destructive" />;
@@ -311,7 +336,7 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
   return (
     <div className="space-y-4">
       {/* Activate Beta Switch - Always visible */}
-      <div className="flex items-center justify-between p-4 rounded-lg bg-card border">
+        <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
         <div className="space-y-0.5">
           <Label className="text-base font-medium">{t('activateBeta')}</Label>
           <p className="text-sm text-muted-foreground">
@@ -329,34 +354,31 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
       {config.beta_active && (
         <Tabs defaultValue="inbox" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="inbox" className="gap-2 relative">
+            <TabsTrigger value="inbox" className="gap-1.5 md:gap-2 relative">
               <MessageSquare className="w-4 h-4" />
-              Inbox
+              <span className="hidden md:inline">Feedback</span>
               {openFeedback.length > 0 && (
-                <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center rounded-full ml-1">
+                <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center rounded-full">
                   {openFeedback.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="squad" className="gap-2">
+            <TabsTrigger value="squad" className="gap-1.5 md:gap-2">
               <Users className="w-4 h-4" />
-              Squad
-              {pendingTesters.length > 0 && (
-                <Badge className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full ml-1">
-                  {pendingTesters.length}
-                </Badge>
-              )}
+              <span className="hidden md:inline">Squad</span>
+              <Badge variant="secondary" className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-xs">
+                {acceptedTesters.length}
+              </Badge>
             </TabsTrigger>
-            <TabsTrigger value="config" className="gap-2">
+            <TabsTrigger value="config" className="gap-1.5 md:gap-2">
               <Settings className="w-4 h-4" />
-              Config
+              <span className="hidden md:inline">Config</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Inbox Feedback Content */}
           <TabsContent value="inbox" className="mt-4 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-base font-semibold text-foreground">{t('feedbackInbox')}</h3>
+            <div className="flex justify-end items-center">
               <Select value={feedbackFilter} onValueChange={(v) => setFeedbackFilter(v as typeof feedbackFilter)}>
                 <SelectTrigger className="w-32 h-8">
                   <SelectValue />
@@ -380,47 +402,14 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                 {filteredFeedback.map((item) => (
                   <div 
                     key={item.id} 
-                    className="p-3 rounded-lg border bg-card space-y-2 hover:border-primary/20 transition-colors"
+                    className="p-4 rounded-lg border bg-card hover:border-primary/20 transition-colors group"
                   >
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {getTypeIcon(item.type)}
-                        <Badge variant="outline" className="text-xs">
-                          {getTypeLabel(item.type)}
-                        </Badge>
-                        <FeedbackStatusBadge status={item.status} />
-                        <Link 
-                          to={item.tester?.username ? `/@${item.tester.username}` : '#'}
-                          className="text-xs text-muted-foreground hover:underline flex items-center gap-1"
-                        >
-                          <Avatar className="w-4 h-4">
-                            <AvatarImage src={item.tester?.avatar_url || ''} />
-                            <AvatarFallback className="text-[10px]">{item.tester?.name?.charAt(0) || '?'}</AvatarFallback>
-                          </Avatar>
-                          {item.tester?.name || item.tester?.username}
-                        </Link>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(item.created_at), 'dd MMM, HH:mm', {
-                            locale: language === 'es' ? es : enUS
-                          })}
-                        </span>
-                        <FeedbackActionMenu
-                          feedbackId={item.id}
-                          isUseful={item.is_useful}
-                          status={item.status}
-                          onMarkUseful={() => handleMarkUseful(item.id, item.is_useful)}
-                          onMarkResolved={() => handleMarkResolved(item.id)}
-                          onClose={() => handleCloseFeedback(item.id)}
-                          onDelete={() => handleDeleteFeedback(item.id)}
-                        />
-                      </div>
-                    </div>
-                    <p className="text-sm">{item.content}</p>
+                    {/* Content - Main Focus */}
+                    <p className="text-base text-foreground mb-3">{item.content}</p>
                     
+                    {/* Attachments */}
                     {item.attachments.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-2">
+                      <div className="flex flex-wrap gap-2 mb-3">
                         {item.attachments.map((att) => (
                           <button
                             key={att.id}
@@ -437,19 +426,67 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                       </div>
                     )}
 
-                    {item.rating && (
-                      <div className="flex gap-0.5 pt-1">
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Star 
-                            key={star}
-                            className={cn(
-                              "w-4 h-4",
-                              star <= item.rating! ? 'fill-primary text-primary' : 'text-muted'
-                            )}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    {/* Footer: User Info & Actions */}
+                    <div className="flex items-center justify-between mt-2">
+                       <div className="flex items-center gap-3">
+                          <Link 
+                            to={item.tester?.username ? `/@${item.tester.username}` : '#'}
+                            className="flex items-center gap-2 group/user"
+                          >
+                            <Avatar className="w-6 h-6 border border-border">
+                              <AvatarImage src={item.tester?.avatar_url || ''} />
+                              <AvatarFallback className="text-[10px]">{item.tester?.name?.charAt(0) || '?'}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium text-muted-foreground group-hover/user:text-foreground transition-colors leading-none">
+                                {item.tester?.name || item.tester?.username}
+                              </span>
+                              <span className={cn(
+                                "text-[10px] font-bold uppercase tracking-wider mt-1",
+                                item.status === 'open' ? "text-blue-500" : 
+                                item.status === 'in_review' ? "text-yellow-500" : "text-muted-foreground"
+                              )}>
+                                {item.status === 'open' ? t('feedbackOpen') : 
+                                 item.status === 'in_review' ? t('feedbackInReview') : t('feedbackClosed')}
+                              </span>
+                            </div>
+                          </Link>
+                          
+                          {/* Date separator */}
+                          <span className="text-muted-foreground/40 text-[10px]">•</span>
+                          
+                          <span className="text-xs text-muted-foreground/60">
+                             {format(new Date(item.created_at), 'dd MMM', {
+                                locale: language === 'es' ? es : enUS
+                             })}
+                          </span>
+                       </div>
+
+                       {/* Actions & subtle status indicator if needed, but user wanted clean. 
+                           I'll keep just the menu. */}
+                        <div className="flex items-center gap-1">
+                           <Button
+                             size="sm"
+                             variant="ghost"
+                             className={cn(
+                               "h-8 w-8 rounded-full p-0 transition-all",
+                               item.is_useful ? "text-red-500 hover:text-red-600 bg-red-50" : "text-muted-foreground/40 hover:text-red-500 hover:bg-red-50"
+                             )}
+                             onClick={() => handleMarkUseful(item.id, item.is_useful)}
+                             title={item.is_useful ? t('markedUseful') : t('markUseful')}
+                           >
+                             <Heart className={cn("w-4 h-4", item.is_useful && "fill-current")} />
+                           </Button>
+
+                           <FeedbackActionMenu
+                             feedbackId={item.id}
+                             status={item.status}
+                             onMarkResolved={() => handleMarkResolved(item.id)}
+                             onClose={() => handleCloseFeedback(item.id)}
+                             onDelete={() => handleDeleteFeedback(item.id)}
+                           />
+                        </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -458,37 +495,34 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
 
           {/* Squad & Solicitudes Content */}
           <TabsContent value="squad" className="mt-4 space-y-4">
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2 items-center">
-                <h3 className="text-base font-semibold text-foreground">Squad</h3>
-                <Badge variant="secondary">
-                  {acceptedTesters.length}/{config.beta_limit}
-                </Badge>
+            <div className="flex justify-end items-center py-2 px-1 border-b border-border/50 pb-4">
+              <div className="flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => setIsSearchOpen(true)}
+                  className="gap-2 h-9 px-4 rounded-full shadow-sm hover:shadow-md transition-all"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>{t('addTester') || 'Agregar Tester'}</span>
+                </Button>
+                <Select value={testerFilter} onValueChange={(v) => setTesterFilter(v as typeof testerFilter)}>
+                  <SelectTrigger className="w-32 h-9 rounded-full bg-background border-border/50">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('filterAll')}</SelectItem>
+                    <SelectItem value="pending">{t('pendingRequests')}</SelectItem>
+                    <SelectItem value="accepted">{t('acceptedTesters')}</SelectItem>
+                    <SelectItem value="rejected">Rechazados</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={testerFilter} onValueChange={(v) => setTesterFilter(v as typeof testerFilter)}>
-                <SelectTrigger className="w-32 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('filterAll')}</SelectItem>
-                  <SelectItem value="pending">{t('pendingRequests')}</SelectItem>
-                  <SelectItem value="accepted">{t('acceptedTesters')}</SelectItem>
-                  <SelectItem value="rejected">Rechazados</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
-            {filteredTesters.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-                <Users className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                <p>{t('noTesters')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
                 {filteredTesters.map((tester) => (
                   <div 
                     key={tester.id} 
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:border-primary/20 transition-colors"
+                    className="flex items-center justify-between p-3 rounded-lg bg-card border-none shadow-sm hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <Avatar className="w-9 h-9 flex-shrink-0">
@@ -499,9 +533,13 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium truncate">
+                          <Link 
+                            to={`/@${tester.profile?.username}`}
+                            target="_blank"
+                            className="text-sm font-semibold truncate hover:text-primary transition-colors"
+                          >
                             {tester.profile?.name || tester.profile?.username || 'User'}
-                          </span>
+                          </Link>
                           <Badge 
                             variant={tester.status === 'accepted' ? 'default' : tester.status === 'pending' ? 'secondary' : 'outline'}
                             className="text-[10px] h-5 px-1.5"
@@ -510,8 +548,15 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                              tester.status === 'pending' ? t('statusPending') : t('statusRejected')}
                           </Badge>
                         </div>
+                        <Link 
+                          to={`/@${tester.profile?.username}`}
+                          target="_blank"
+                          className="text-[11px] text-muted-foreground block hover:text-primary transition-colors"
+                        >
+                          @{tester.profile?.username || 'user'}
+                        </Link>
                         {tester.feedback_count > 0 && (
-                          <div className="flex items-center text-xs text-muted-foreground mt-0.5">
+                          <div className="flex items-center text-[10px] text-muted-foreground mt-1">
                             <MessageSquare className="w-3 h-3 mr-1" />
                             {tester.feedback_count} {t('feedbackCount').replace('{count}', '')}
                           </div>
@@ -546,7 +591,7 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                           size="sm" 
                           variant="ghost" 
                           className="h-8 w-8 text-destructive hover:bg-destructive/10 p-0"
-                          onClick={() => handleRemove(tester.id)}
+                          onClick={() => setTesterToRemove(tester)}
                           title={t('remove')}
                         >
                           <UserMinus className="w-4 h-4" />
@@ -555,14 +600,10 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
           </TabsContent>
 
           {/* Configuration Content */}
           <TabsContent value="config" className="mt-4 space-y-4">
-            <h3 className="text-base font-semibold text-foreground">Configuración</h3>
-            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('betaMode')}</Label>
@@ -637,6 +678,40 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
           </TabsContent>
         </Tabs>
       )}
+
+      {/* Remove Tester Confirmation Dialog */}
+      <AlertDialog open={!!testerToRemove} onOpenChange={(open) => !open && setTesterToRemove(null)}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <UserMinus className="w-5 h-5 text-destructive" />
+              {t('confirmRemoveTitle') || 'Remove Tester'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('confirmRemoveDescription') || 'Are you sure you want to remove'}{' '}
+              <span className="font-semibold text-foreground">
+                {testerToRemove?.profile?.name || testerToRemove?.profile?.username || 'this user'}
+              </span>
+              {' '}{t('confirmRemoveFromSquad') || 'from your beta squad? This action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel') || 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemoveTester}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('confirmRemove') || 'Remove'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <TesterSearchDialog
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelect={handleAddTester}
+      />
     </div>
   );
 }

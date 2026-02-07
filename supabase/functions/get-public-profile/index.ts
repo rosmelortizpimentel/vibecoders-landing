@@ -100,7 +100,8 @@ Deno.serve(async (req) => {
     const { data: appsData, error: appsError } = await supabaseAdmin
       .from('apps')
       .select(`
-        id, url, name, tagline, logo_url, status_id, display_order, is_verified,
+        id, url, name, tagline, description, logo_url, category_id, status_id, display_order, is_verified,
+        hours_ideation, hours_building, screenshots,
         app_stacks(stack_id)
       `)
       .eq('user_id', profile.id)
@@ -114,7 +115,8 @@ Deno.serve(async (req) => {
     }
 
     // 3. Get statuses and stacks to resolve IDs
-    const { data: statuses } = await supabaseAdmin.from('app_statuses').select('id, name, slug')
+     const { data: statuses } = await supabaseAdmin.from('app_statuses').select('id, name, slug')
+     const { data: categories } = await supabaseAdmin.from('app_categories').select('id, name, slug')
      const { data: stacks } = await supabaseAdmin.from('tech_stacks').select('id, name, logo_url, website_url, referral_url, referral_param, default_referral_code')
  
      // 5. Get user's custom referral codes
@@ -153,9 +155,14 @@ Deno.serve(async (req) => {
         url: app.url,
         name: app.name,
         tagline: app.tagline,
+        description: app.description,
         logo_url: app.logo_url,
         is_verified: app.is_verified || false,
+        hours_ideation: app.hours_ideation || 0,
+        hours_building: app.hours_building || 0,
+        screenshots: app.screenshots || [],
         status: status ? { name: status.name, slug: status.slug } : null,
+        category: app.category_id && categories ? categories.find(c => c.id === app.category_id) : null,
         stacks: appStacks
       }
     })

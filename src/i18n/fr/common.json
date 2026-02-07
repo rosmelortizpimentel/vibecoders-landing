@@ -13,9 +13,13 @@
     "terms": "Conditions"
   },
   "navigation": {
+    "home": "Accueil",
     "myProfile": "Mon Profil",
-    "startups": "Startups",
-    "betaSquads": "Bêtas",
+    "myIdeas": "Mes Idées",
+    "startups": "Explorer",
+    "betaTesting": "Beta Testing",
+    "publicBetaTesting": "Défis Beta",
+    "betaSquads": "Beta Squad",
     "tools": "Outils",
     "feedback": "Discutons",
     "buildLog": "Journal de Bord",

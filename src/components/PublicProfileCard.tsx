@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { AppDetailView } from './profile/AppDetailView';
 
 interface PublicProfileCardProps {
   profile: PublicProfile;
@@ -68,13 +69,15 @@ function PublicAppCard({
   profileId,
   isOwner,
    ownerLikeCount,
-   ownerClickCount
+   ownerClickCount,
+   onSelect
 }: { 
   app: PublicApp; 
   profileId: string;
   isOwner: boolean;
   ownerLikeCount?: number;
    ownerClickCount?: number;
+   onSelect: () => void;
 }) {
   const appUrl = (() => {
     try {
@@ -95,18 +98,17 @@ function PublicAppCard({
     }
   })();
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onSelect();
     // Track the click asynchronously
     trackAppClick(app.id, profileId);
   };
 
   return (
-    <a 
-      href={appUrl}
-      target="_blank"
-      rel="noopener noreferrer"
+    <div 
       onClick={handleClick}
-      className="block p-3 rounded-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
+      className="block p-3 rounded-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer group"
     >
       {/* Top Row: Logo + Title + Status */}
       <div className="flex items-start gap-3">
@@ -163,7 +165,7 @@ function PublicAppCard({
                   className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors.bg} ${statusColors.text}`}
                 >
                   <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
-                  {app.status.name}
+                  {app.status.name.toUpperCase()}
                 </span>
               );
             })()}
@@ -176,9 +178,15 @@ function PublicAppCard({
         </div>
 
         {/* Visit Button */}
-        <span className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors flex-shrink-0">
+        <a 
+          href={appUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors flex-shrink-0"
+        >
           <ExternalLink className="w-4 h-4" />
-        </span>
+        </a>
       </div>
 
       {/* Bottom Row: Tech Stack Icons */}
@@ -214,7 +222,7 @@ function PublicAppCard({
           appName={app.name || undefined}
         />
       </div>
-    </a>
+    </div>
   );
 }
 
@@ -222,6 +230,8 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
   const { user } = useAuth();
   const { isFollowing, isLoading: followLoading, followersCount, followingCount, toggleFollow, refetch: refetchFollowData } = useFollow(profile.id);
   const [viewMode, setViewMode] = useState<ViewMode>('apps');
+  const [selectedAppIndex, setSelectedAppIndex] = useState<number | null>(null);
+  const [selectedBetaApp, setSelectedBetaApp] = useState<PublicApp | null>(null);
   const { stats, isOwnProfile } = useProfileStats(profile.id);
 
   // Track profile view
@@ -315,7 +325,7 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
               className="h-20 w-20 md:h-28 md:w-28 shadow-md"
               style={{ border: `4px solid ${avatarBorderColor}` }}
             >
-              <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
+              <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} referrerPolicy="no-referrer" />
               <AvatarFallback className="text-xl md:text-3xl font-bold bg-gray-100 text-gray-600">
                 {profile.name?.charAt(0) || '?'}
               </AvatarFallback>
@@ -442,14 +452,15 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
               </p>
               {/* Mobile: single column, Desktop: grid of 2 */}
               <div className="space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
-                {profile.apps.map(app => (
+                {profile.apps.map((app, index) => (
                   <PublicAppCard 
                     key={app.id} 
                     app={app} 
                     profileId={profile.id}
                     isOwner={isOwnProfile}
                     ownerLikeCount={stats?.appLikes[app.id]}
-                   ownerClickCount={stats?.appClicksByApp[app.id]}
+                    ownerClickCount={stats?.appClicksByApp[app.id]}
+                    onSelect={() => setSelectedAppIndex(index)}
                   />
                 ))}
               </div>
@@ -467,7 +478,10 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
 
         {/* Beta Contributions Badges */}
         {viewMode === 'apps' && (
-          <BetaContributionsBadges userId={profile.id} />
+        <BetaContributionsBadges 
+            userId={profile.id} 
+            onAppClick={(app) => setSelectedBetaApp(app)}
+          />
         )}
         <div className="mt-auto py-8 border-t border-gray-100 bg-white">
           <button
@@ -497,6 +511,26 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
           </button>
         </div>
       </div>
+
+      <AppDetailView 
+        apps={selectedBetaApp ? [selectedBetaApp] : profile.apps}
+        selectedIndex={selectedBetaApp ? 0 : selectedAppIndex}
+        onClose={() => {
+          setSelectedAppIndex(null);
+          setSelectedBetaApp(null);
+        }}
+        onNavigate={(index) => {
+          if (selectedBetaApp) return; // No navigation for single beta app
+          setSelectedAppIndex(index);
+        }}
+        defaultOwner={{
+          id: profile.id,
+          username: profile.username,
+          name: profile.name,
+          avatar_url: profile.avatar_url,
+          tagline: profile.tagline
+        }}
+      />
     </div>
   );
 }

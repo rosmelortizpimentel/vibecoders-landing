@@ -11,5 +11,7 @@
   "verifyDomain": "Verificar dominio",
   "verified": "Verificado",
   "visible": "Visible",
-  "hidden": "Oculto"
+  "hidden": "Oculto",
+  "none": "Ninguno",
+  "back": "Volver"
 }

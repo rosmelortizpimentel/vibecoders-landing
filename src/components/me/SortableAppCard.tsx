@@ -15,6 +15,7 @@ interface SortableAppCardProps {
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
@@ -28,12 +29,13 @@ interface SortableAppCardProps {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style} {...attributes}>
       <AppCard
         app={app}
         onExpand={onExpand}
         onToggleVisibility={onToggleVisibility}
-         onVerify={onVerify}
+        onVerify={onVerify}
+        dragHandleProps={{ ...listeners, ref: setActivatorNodeRef }}
       />
     </div>
   );

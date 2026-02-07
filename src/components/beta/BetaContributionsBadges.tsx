@@ -1,14 +1,16 @@
-import { Link } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useBetaContributions, BetaContribution } from '@/hooks/useBetaContributions';
 import { Badge } from '@/components/ui/badge';
 import { FlaskConical, Globe } from 'lucide-react';
 
+import { PublicApp } from '@/hooks/usePublicProfile';
+
 interface BetaContributionsBadgesProps {
   userId: string;
+  onAppClick?: (app: PublicApp) => void;
 }
 
-export function BetaContributionsBadges({ userId }: BetaContributionsBadgesProps) {
+export function BetaContributionsBadges({ userId, onAppClick }: BetaContributionsBadgesProps) {
   const { t } = useTranslation('beta');
   const { contributions, loading } = useBetaContributions(userId);
 
@@ -24,10 +26,15 @@ export function BetaContributionsBadges({ userId }: BetaContributionsBadgesProps
       </p>
       <div className="flex flex-wrap gap-2">
         {contributions.map((contribution) => (
-          <Link 
+          <div 
             key={contribution.id}
-            to={`/app/${contribution.app_id}`}
-            className="group"
+            onClick={(e) => {
+              if (onAppClick) {
+                e.preventDefault();
+                onAppClick(contribution.app);
+              }
+            }}
+            className="group cursor-pointer"
           >
             <Badge 
               variant="secondary" 
@@ -49,7 +56,7 @@ export function BetaContributionsBadges({ userId }: BetaContributionsBadgesProps
                 {t('testerBadge')}
               </span>
             </Badge>
-          </Link>
+          </div>
         ))}
       </div>
     </div>

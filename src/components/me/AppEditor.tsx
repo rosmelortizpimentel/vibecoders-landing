@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { AppData } from '@/hooks/useApps';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useCategories } from '@/hooks/useCategories';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useTechStacks } from '@/hooks/useTechStacks';
@@ -9,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Plus } from 'lucide-react';
 import { 
   Select,
   SelectContent,
@@ -26,16 +28,19 @@ interface AppEditorProps {
   app: AppData;
   onUpdate: (id: string, updates: Partial<AppData>) => Promise<void>;
   onUploadLogo: (appId: string, file: File) => Promise<string>;
+  onUploadScreenshot: (appId: string, file: File) => Promise<string>;
   onDelete: () => void;
   onCollapse: () => void;
    onVerify: () => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
- export function AppEditor({ app, onUpdate, onUploadLogo, onDelete, onCollapse, onVerify }: AppEditorProps) {
+ export function AppEditor({ app, onUpdate, onUploadLogo, onUploadScreenshot, onDelete, onCollapse, onVerify }: AppEditorProps) {
   const { categories } = useCategories();
   const { statuses } = useStatuses();
+  const { t } = useTranslation('apps');
   const { groupedStacks, stacks } = useTechStacks();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const screenshotInputRef = useRef<HTMLInputElement>(null);
   
   const [localApp, setLocalApp] = useState(app);
    const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -78,6 +83,30 @@ interface AppEditorProps {
     }
   };
 
+  const handleScreenshotClick = () => {
+    screenshotInputRef.current?.click();
+  };
+
+  const handleScreenshotFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && (localApp.screenshots?.length || 0) < 5) {
+      try {
+        const url = await onUploadScreenshot(app.id, file);
+        const newScreenshots = [...(localApp.screenshots || []), url];
+        setLocalApp(prev => ({ ...prev, screenshots: newScreenshots }));
+        autoSave({ screenshots: newScreenshots });
+      } catch (error) {
+        console.error('Error uploading screenshot:', error);
+      }
+    }
+  };
+
+  const handleDeleteScreenshot = (url: string) => {
+    const newScreenshots = (localApp.screenshots || []).filter(s => s !== url);
+    setLocalApp(prev => ({ ...prev, screenshots: newScreenshots }));
+    autoSave({ screenshots: newScreenshots });
+  };
+
   const getIcon = (iconName: string) => {
     const pascalCase = iconName
       .split('-')
@@ -110,13 +139,13 @@ interface AppEditorProps {
   const descriptionLength = localApp.description?.length || 0;
 
   return (
-    <div className="border-2 border-[#3D5AFE] rounded-lg bg-white overflow-hidden shadow-sm">
+    <div className="w-full max-w-full border border-[#3D5AFE] rounded-lg bg-white overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-[#3D5AFE]/5 border-b border-[#3D5AFE]/20">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between p-3 sm:p-4 bg-[#3D5AFE]/5 border-b border-[#3D5AFE]/20">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* Logo */}
           <div 
-            className="relative group w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer"
+            className="relative group w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden cursor-pointer"
             onClick={handleLogoClick}
           >
             {localApp.logo_url ? (
@@ -133,9 +162,9 @@ interface AppEditorProps {
             />
           </div>
           
-          <div>
-            <h3 className="font-medium text-[#1c1c1c]">{localApp.name || 'Nueva App'}</h3>
-            <p className="text-xs text-gray-500">{localApp.url}</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-medium text-[#1c1c1c] truncate">{localApp.name || 'Nueva App'}</h3>
+            <p className="text-xs text-gray-500 truncate">{localApp.url}</p>
           </div>
         </div>
 
@@ -153,7 +182,7 @@ interface AppEditorProps {
       </div>
 
       {/* Form */}
-      <div className="p-4 space-y-6">
+      <div className="p-3 sm:p-4 space-y-6">
         {/* Basic Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -162,7 +191,7 @@ interface AppEditorProps {
               value={localApp.name || ''}
               onValueChange={value => handleChange('name', value)}
               placeholder="Nombre de la app"
-              className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-sm border-gray-300 bg-white placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             />
           </div>
           <div className="space-y-2">
@@ -172,7 +201,7 @@ interface AppEditorProps {
               onValueChange={value => handleChange('url', value)}
               placeholder="https://tu-app.com"
               type="url"
-              className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-sm border-gray-300 bg-white placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             />
           </div>
         </div>
@@ -185,7 +214,7 @@ interface AppEditorProps {
             onValueChange={value => handleChange('tagline', value.slice(0, 100))}
             placeholder="Una frase corta que describa tu app"
             maxLength={100}
-            className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+            className="text-sm border-gray-300 bg-white placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE] w-full max-w-full"
           />
           <p className="text-xs text-gray-500 text-right">{localApp.tagline?.length || 0}/100</p>
         </div>
@@ -200,7 +229,7 @@ interface AppEditorProps {
             value={localApp.description || ''}
             onValueChange={value => handleChange('description', value.slice(0, 500))}
             placeholder="Describe qué hace tu app, para quién es, qué problema resuelve..."
-            className="min-h-[100px] resize-none border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+            className="text-sm min-h-[100px] resize-none border-gray-300 bg-white placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             maxLength={500}
           />
           <p className="text-xs text-gray-500 text-right">{descriptionLength}/500</p>
@@ -214,7 +243,7 @@ interface AppEditorProps {
               value={localApp.category_id || ''}
               onValueChange={value => handleChange('category_id', value || null)}
             >
-              <SelectTrigger className="border-gray-300 bg-white text-[#1c1c1c]">
+              <SelectTrigger className="text-sm border-gray-300 bg-white text-[#1c1c1c]">
                 <SelectValue placeholder="Selecciona una categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -236,13 +265,19 @@ interface AppEditorProps {
           <div className="space-y-2">
             <Label className="text-[#1c1c1c]">Estado</Label>
             <Select
-              value={localApp.status_id || ''}
-              onValueChange={value => handleChange('status_id', value || null)}
+              value={localApp.status_id || 'none'}
+              onValueChange={value => handleChange('status_id', value === 'none' ? null : value)}
             >
-              <SelectTrigger className="border-gray-300 bg-white text-[#1c1c1c]">
+              <SelectTrigger className="text-sm border-gray-300 bg-white text-[#1c1c1c]">
                 <SelectValue placeholder="Selecciona un estado" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="none">
+                  <span className="flex items-center gap-2">
+                    <div className="h-4 w-4 rounded-full border border-gray-200 bg-gray-50" />
+                    {t('none')}
+                  </span>
+                </SelectItem>
                 {statuses.map(status => {
                   const Icon = getIcon(status.icon);
                   return (
@@ -272,7 +307,7 @@ interface AppEditorProps {
               value={localApp.hours_ideation || ''}
               onChange={e => handleChange('hours_ideation', parseInt(e.target.value) || 0)}
               placeholder="0"
-              className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-sm border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             />
           </div>
           <div className="space-y-2">
@@ -286,7 +321,7 @@ interface AppEditorProps {
               value={localApp.hours_building || ''}
               onChange={e => handleChange('hours_building', parseInt(e.target.value) || 0)}
               placeholder="0"
-              className="border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-sm border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             />
           </div>
         </div>
@@ -298,6 +333,52 @@ interface AppEditorProps {
           selectedIds={localApp.stacks || []}
           onToggle={handleStackToggle}
         />
+
+        {/* Screenshots */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-[#1c1c1c]">Screenshots ({localApp.screenshots?.length || 0}/5)</Label>
+            {(localApp.screenshots?.length || 0) < 5 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleScreenshotClick}
+                className="text-[#3D5AFE] hover:bg-[#3D5AFE]/5"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Subir captura
+              </Button>
+            )}
+            <input
+              ref={screenshotInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleScreenshotFileChange}
+            />
+          </div>
+          
+          {localApp.screenshots && localApp.screenshots.length > 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              {localApp.screenshots.map((url, idx) => (
+                <div key={idx} className="relative flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group">
+                  <img src={url} alt={`Screenshot ${idx + 1}`} className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => handleDeleteScreenshot(url)}
+                    className="absolute top-1 right-1 p-1 bg-white/80 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="h-3 w-3 text-destructive" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center gap-2 bg-gray-50/50">
+              <Camera className="h-6 w-6 text-gray-300" />
+              <p className="text-xs text-gray-400">Sin capturas opcionales</p>
+            </div>
+          )}
+        </div>
 
         <Separator />
 

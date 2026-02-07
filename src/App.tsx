@@ -20,8 +20,10 @@ import Feedback from "./pages/Feedback";
 import AppDetail from "./pages/AppDetail";
 import Post from "./pages/Post";
 import BetaSquads from "./pages/BetaSquads";
+import Ideas from "./pages/Ideas";
+import Beta from "./pages/Beta";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
-import { AuthenticatedLayout } from "./layouts/AuthenticatedLayout";
+import { DashboardLayout } from "./layouts/DashboardLayout";
 
 const queryClient = new QueryClient();
 
@@ -36,7 +38,7 @@ const App = () => (
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<Index />} />
-          <Route path="/home" element={<Home />} />
+
           <Route path="/profile" element={<Profile />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
@@ -46,10 +48,13 @@ const App = () => (
           {/* Admin routes - protected by Admin component */}
           <Route path="/admin/*" element={<Admin />} />
           
+
+
           {/* Authenticated routes with shared layout (persistent header/footer) */}
-          <Route element={<AuthenticatedLayout />}>
-            <Route path="/startups" element={<Projects />} />
-            <Route path="/beta-squads" element={<BetaSquads />} />
+          <Route element={<DashboardLayout />}>
+            <Route path="/home" element={<Home />} />
+            <Route path="/explore" element={<Projects />} />
+            <Route path="/public-beta-testing" element={<BetaSquads />} />
             <Route path="/tools" element={<Tools />} />
             <Route path="/buildlog" element={<BuildLog />} />
             <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
@@ -58,13 +63,16 @@ const App = () => (
             <Route path="/me/profile" element={<Me />} />
             <Route path="/me/apps" element={<Me />} />
             <Route path="/me/branding" element={<Me />} />
-            <Route path="/me/beta" element={<Me />} />
-            <Route path="/me/ideas" element={<Me />} />
+            {/* Cleaner routes for Ideas and Beta Management */}
+            <Route path="/beta-testing" element={<Beta />} />
+            <Route path="/beta-testing/:appId" element={<Beta />} />
+            <Route path="/ideas" element={<Ideas />} />
           </Route>
           
           {/* Legacy redirects */}
-          <Route path="/inspiration" element={<Navigate to="/startups" replace />} />
-          <Route path="/projects" element={<Navigate to="/startups" replace />} />
+          <Route path="/inspiration" element={<Navigate to="/explore" replace />} />
+          <Route path="/projects" element={<Navigate to="/explore" replace />} />
+          <Route path="/startups" element={<Navigate to="/explore" replace />} />
           <Route path="/stack" element={<Navigate to="/tools" replace />} />
           
           {/* Public profile route - captures /@username, validated in component */}
