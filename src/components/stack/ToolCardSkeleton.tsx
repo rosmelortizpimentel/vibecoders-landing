@@ -4,7 +4,7 @@ export function ToolCardSkeleton() {
   return (
     <div className="bg-white border border-stone-200 rounded-xl p-4">
       <div className="flex items-start gap-3">
-        <Skeleton className="w-10 h-10 rounded-lg flex-shrink-0" />
+        <Skeleton className="w-[50px] h-[50px] rounded-full flex-shrink-0" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-3 w-full" />
