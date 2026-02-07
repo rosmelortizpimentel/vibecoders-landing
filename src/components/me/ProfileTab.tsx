@@ -252,7 +252,8 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
                 value={profile.name || ''}
                 onValueChange={value => onUpdate({ name: value })}
                 placeholder={t.placeholders.name}
-                className="text-base sm:text-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+                placeholder={t.placeholders.name}
+                className="text-sm sm:text-base border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
               />
             </div>
             

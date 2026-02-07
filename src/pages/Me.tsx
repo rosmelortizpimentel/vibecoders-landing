@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useProfileEditor } from '@/hooks/useProfileEditor';
 import { useApps } from '@/hooks/useApps';
@@ -7,8 +7,6 @@ import { MeTabs } from '@/components/me/MeTabs';
 import { ProfileTab } from '@/components/me/ProfileTab';
 import { AppsTab } from '@/components/me/AppsTab';
 import { BrandingTab } from '@/components/me/BrandingTab';
-import { BetaTab } from '@/components/me/BetaTab';
-import { IdeasTab } from '@/components/me/IdeasTab';
 import { ProfilePreview } from '@/components/me/ProfilePreview';
 import { Loader2, Eye, X, Smartphone } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -31,12 +29,21 @@ const Me = () => {
 
   const { profile, loading } = profileEditor;
 
+  // Preview logic (hide on mobile/tablet/small screens < 1280px)
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+  useEffect(() => {
+    const checkScreen = () => setIsLargeScreen(window.innerWidth >= 1280);
+    // Initial check
+    checkScreen();
+    window.addEventListener('resize', checkScreen);
+    return () => window.removeEventListener('resize', checkScreen);
+  }, []);
+
   // Determine active tab from URL
   const getActiveTab = () => {
     if (location.pathname === '/me/apps') return 'apps';
     if (location.pathname === '/me/branding') return 'branding';
-    if (location.pathname === '/me/beta') return 'beta';
-    if (location.pathname === '/me/ideas') return 'ideas';
     return 'profile';
   };
   
@@ -51,15 +58,15 @@ const Me = () => {
   }
 
   // Beta and Ideas tabs have full-width layout (no preview)
-  const showPreview = !isMobile && activeTab !== 'beta' && activeTab !== 'ideas';
-  const showMobilePreview = isMobile && activeTab !== 'beta' && activeTab !== 'ideas';
+  const showPreview = isLargeScreen;
+  const showMobilePreview = !isLargeScreen;
 
   return (
     <>
       <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1">
         <div className="flex gap-4 sm:gap-6">
           {/* Main content */}
-          <div className={showPreview ? 'w-[60%]' : 'w-full'}>
+          <div className={showPreview ? 'w-[60%]' : 'w-full max-w-full overflow-x-hidden'}>
             <MeTabs />
             
             <div className={`mt-4 sm:mt-6 ${showMobilePreview ? 'pb-20' : ''}`}>
@@ -82,12 +89,6 @@ const Me = () => {
                   onUploadOgImage={profileEditor.uploadOgImage}
                   onDeleteOgImage={profileEditor.deleteOgImage}
                 />
-              )}
-              {activeTab === 'beta' && (
-                <BetaTab appsHook={appsHook} />
-              )}
-              {activeTab === 'ideas' && (
-                <IdeasTab />
               )}
             </div>
           </div>
@@ -117,7 +118,7 @@ const Me = () => {
               </Button>
             </div>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-full max-h-[100dvh] overflow-y-auto p-0 [&>button]:hidden rounded-none">
+          <SheetContent side="bottom" className="h-full max-h-[100dvh] overflow-y-auto p-0 [&>button]:hidden !rounded-none !rounded-t-none border-none">
             {/* Header banner */}
             <div className="sticky top-0 z-10 flex items-center justify-between bg-background border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">

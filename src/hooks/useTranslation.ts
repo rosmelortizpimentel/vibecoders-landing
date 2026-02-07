@@ -193,6 +193,19 @@ export function useTranslation<T extends Section>(section: T) {
       if (result && typeof result === 'object' && k in result) {
         result = (result as Record<string, unknown>)[k];
       } else {
+        // Fallback to English if not foundational or current language is not English
+        if (language !== 'en') {
+          const englishTranslations = translations['en'][section];
+          let englishResult: unknown = englishTranslations;
+          for (const ek of keys) {
+            if (englishResult && typeof englishResult === 'object' && ek in englishResult) {
+              englishResult = (englishResult as Record<string, unknown>)[ek];
+            } else {
+              return key;
+            }
+          }
+          return typeof englishResult === 'string' ? englishResult : key;
+        }
         return key; // Return key if not found
       }
     }
@@ -208,5 +221,5 @@ export function useTranslation<T extends Section>(section: T) {
 
 // Static function for use outside React components (with explicit language)
 export function t<T extends Section>(section: T, lang: Language = 'es') {
-  return translations[lang][section] as any;
+  return translations[lang][section] as typeof translations['es'][T];
 }

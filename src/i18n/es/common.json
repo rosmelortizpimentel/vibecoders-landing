@@ -13,9 +13,12 @@
     "terms": "Términos"
   },
   "navigation": {
+    "home": "Inicio",
     "myProfile": "Mi Perfil",
-    "startups": "Startups",
-    "betaSquads": "Betas",
+    "myIdeas": "Mis Ideas",
+    "betaTesting": "Mis Beta Testing",
+    "startups": "Explorar",
+    "publicBetaTesting": "App for Testing",
     "tools": "Herramientas",
     "feedback": "Hablemos",
     "buildLog": "Build Log",

@@ -4,8 +4,8 @@
 
 /* CameraPlainVariable Font */
 @font-face {
-  font-family: 'CameraPlain';
-  src: url('/fonts/CameraPlainVariable.woff2') format('woff2');
+  font-family: "CameraPlain";
+  src: url("/fonts/CameraPlainVariable.woff2") format("woff2");
   font-weight: 100 900;
   font-display: swap;
 }
@@ -14,48 +14,48 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 227 76% 24%;
+    --foreground: 0 0% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 227 76% 24%;
+    --card-foreground: 0 0% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 227 76% 24%;
+    --popover-foreground: 0 0% 11%;
 
-    --primary: 223 100% 5%;
+    --primary: 146 52% 61%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 14% 96%;
-    --secondary-foreground: 227 76% 24%;
+    --secondary: 51 100% 50%;
+    --secondary-foreground: 0 0% 11%;
 
     --muted: 220 14% 96%;
     --muted-foreground: 220 9% 46%;
 
-    --accent: 227 76% 24%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 146 52% 61%;
+    --accent-foreground: 0 0% 11%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 227 76% 24%;
+    --ring: 146 52% 61%;
 
     --radius: 1.375rem;
 
-    /* Blue glow effects */
-    --glow-blue: 0 0 20px hsl(227 76% 24% / 0.4);
-    --glow-cyan: 0 0 20px hsl(227 76% 24% / 0.3);
-    --glow-blue-strong: 0 0 30px hsl(227 76% 24% / 0.6);
+    /* Glow effects - Updated to match primary green */
+    --glow-blue: 0 0 20px hsl(146 52% 61% / 0.4);
+    --glow-cyan: 0 0 20px hsl(146 52% 61% / 0.3);
+    --glow-blue-strong: 0 0 30px hsl(146 52% 61% / 0.6);
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 227 76% 24%;
-    --sidebar-primary: 223 100% 5%;
+    --sidebar-foreground: 0 0% 11%;
+    --sidebar-primary: 146 52% 61%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 14% 96%;
-    --sidebar-accent-foreground: 227 76% 24%;
+    --sidebar-accent-foreground: 0 0% 11%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 227 76% 24%;
+    --sidebar-ring: 146 52% 61%;
   }
 
   .dark {
@@ -104,7 +104,7 @@
   }
 
   html {
-    font-family: 'CameraPlain', system-ui, sans-serif;
+    font-family: "CameraPlain", system-ui, sans-serif;
   }
 
   body {
@@ -135,7 +135,11 @@
   }
 
   .gradient-border {
-    background: linear-gradient(135deg, hsl(263 70% 58% / 0.3), hsl(187 80% 55% / 0.3));
+    background: linear-gradient(
+      135deg,
+      hsl(263 70% 58% / 0.3),
+      hsl(187 80% 55% / 0.3)
+    );
   }
 
   /* 3D Flip Card utilities */
@@ -162,7 +166,9 @@
 
   .flip-card-front,
   .flip-card-back {
-    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    transition:
+      opacity 0.3s ease-in-out,
+      transform 0.3s ease-in-out;
   }
 
   .flip-card-inner:not(.flipped) .flip-card-front {
@@ -223,4 +229,24 @@
       opacity: 0.75;
     }
   }
+}
+
+/* Custom Toast Styles */
+.toast-success {
+  @apply bg-white border-primary/20 text-foreground !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+.toast-error {
+  @apply bg-white border-destructive/20 text-foreground !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Custom Scrollbar Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

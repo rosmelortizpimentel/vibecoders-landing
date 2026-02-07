@@ -1,4 +1,4 @@
-import { ShieldCheck, ShieldQuestion } from 'lucide-react';
+import { BadgeCheck, ShieldQuestion } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -15,13 +15,13 @@ export function VerificationBadge({ isVerified, onClick, className }: Verificati
     return (
       <span 
         className={cn(
-          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-          "bg-primary text-primary-foreground",
+          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight",
+          "bg-black text-white",
           className
         )}
       >
-        <ShieldCheck className="h-3 w-3" />
-        {t('verified')}
+        <BadgeCheck className="h-3.5 w-3.5" />
+        <span className="hidden md:inline">{t('verified')}</span>
       </span>
     );
   }
@@ -34,14 +34,14 @@ export function VerificationBadge({ isVerified, onClick, className }: Verificati
         onClick?.(e);
       }}
       className={cn(
-        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
-        // Matte red premium background for unverified state
-        "bg-rose-100 text-rose-700 hover:bg-rose-200 hover:text-rose-800 transition-colors cursor-pointer",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider border border-yellow-600/50",
+        // Technical/Outline style (High-end)
+        "bg-white text-yellow-700 hover:bg-yellow-50 transition-colors cursor-pointer",
         className
       )}
     >
       <ShieldQuestion className="h-3 w-3" />
-      {t('verifyDomain')}
+      <span className="hidden md:inline">{t('verifyDomain')}</span>
     </button>
   );
 }

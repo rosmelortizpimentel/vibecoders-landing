@@ -109,7 +109,7 @@ export function PublicProfileHeader({ profileUsername }: PublicProfileHeaderProp
               {/* Identity Header - Non-clickable */}
               <div className="px-3 py-3 flex items-center gap-3">
                 <Avatar className="h-10 w-10 border border-gray-200 shrink-0">
-                  <AvatarImage src={avatarUrl} alt={getDisplayName()} />
+                  <AvatarImage src={avatarUrl} alt={getDisplayName()} referrerPolicy="no-referrer" />
                   <AvatarFallback className="text-sm bg-[#3D5AFE]/10 text-[#3D5AFE] font-medium">
                     {(profile?.name || user?.user_metadata?.full_name || '?').charAt(0)}
                   </AvatarFallback>

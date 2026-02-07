@@ -3,6 +3,7 @@
  import { X, Check, Circle } from 'lucide-react';
  import { Button } from '@/components/ui/button';
  import { Progress } from '@/components/ui/progress';
+ import { useTranslation } from '@/hooks/useTranslation';
  import type { ChecklistItem } from '@/hooks/useProfileCompletion';
  
  interface BuilderOnboardingProps {
@@ -15,6 +16,7 @@
  
  export function BuilderOnboarding({ percentage, checklist, onDismiss }: BuilderOnboardingProps) {
    const navigate = useNavigate();
+   const t = useTranslation('home');
    const [visible, setVisible] = useState(true);
  
    useEffect(() => {
@@ -32,35 +34,38 @@
  
    if (!visible) return null;
  
+   const titleText = (t.onboarding?.titleWithPercent || 'Your identity is at {percent}%')
+     .replace('{percent}', String(Math.round(percentage)));
+ 
    return (
-     <div className="bg-card border border-border rounded-lg p-4 md:p-6 relative">
+     <div className="bg-card border border-border rounded-xl p-4 relative w-full">
        {/* Close button */}
        <button
          onClick={handleDismiss}
          className="absolute top-3 right-3 p-1 text-muted-foreground hover:text-foreground transition-colors"
-         aria-label="Cerrar"
+         aria-label={t.onboarding?.close || 'Close'}
        >
          <X className="h-4 w-4" />
        </button>
  
        {/* Header */}
-       <div className="mb-4 pr-6">
-         <h3 className="text-base font-semibold text-foreground">
-           Tu identidad esta al {Math.round(percentage)}%
+       <div className="mb-3 pr-6">
+         <h3 className="text-sm sm:text-base font-semibold text-foreground">
+           {titleText}
          </h3>
        </div>
  
        {/* Progress bar */}
-       <Progress value={percentage} className="h-2 mb-4" />
+       <Progress value={percentage} className="h-2 mb-3" />
  
        {/* Checklist */}
-       <ul className="space-y-2 mb-4">
+       <ul className="space-y-1.5 mb-3">
          {checklist.map((item) => (
-           <li key={item.key} className="flex items-center gap-2 text-sm">
+           <li key={item.key} className="flex items-center gap-2 text-xs sm:text-sm">
              {item.completed ? (
-               <Check className="h-4 w-4 text-primary" />
+               <Check className="h-4 w-4 text-primary flex-shrink-0" />
              ) : (
-               <Circle className="h-4 w-4 text-muted-foreground" />
+               <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
              )}
              <span
                className={
@@ -76,17 +81,17 @@
        </ul>
  
        {/* Persuasive text */}
-       <p className="text-sm text-muted-foreground mb-4">
-         Los perfiles completos reciben 3x mas visitas.
+       <p className="text-xs sm:text-sm text-muted-foreground mb-3">
+         {t.onboarding?.persuasiveText || 'Complete profiles get 3x more views.'}
        </p>
  
        {/* CTA */}
        <Button
          onClick={() => navigate('/me/profile')}
          size="sm"
-         className="w-full sm:w-auto"
+         className="w-full"
        >
-         Completar mi Perfil
+         {t.onboarding?.ctaButton || 'Complete my Profile'}
        </Button>
      </div>
    );

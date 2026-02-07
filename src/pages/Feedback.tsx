@@ -11,7 +11,7 @@ import { Loader2 } from 'lucide-react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { AuthenticatedHeader } from '@/components/AuthenticatedHeader';
+
 import { Link } from 'react-router-dom'; // Assuming Link is needed for the back button
 
 export default function Feedback() {
@@ -66,15 +66,8 @@ export default function Feedback() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden relative">
-      <AuthenticatedHeader 
-        profile={profile ? {
-          name: profile.name,
-          username: profile.username,
-          avatar_url: profile.avatar_url
-        } : null} 
-        onSignOut={() => {}} 
-      />
+    <div className="flex flex-col h-full bg-background overflow-hidden relative">
+
       
       <main className="flex-1 flex flex-col min-h-0 max-w-4xl mx-auto w-full md:p-4">
         {/* Header */}

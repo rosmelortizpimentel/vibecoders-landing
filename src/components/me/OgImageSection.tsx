@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Camera, Trash2, ExternalLink, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ProfileData } from '@/hooks/useProfileEditor';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface OgImageSectionProps {
   profile: ProfileData;
@@ -10,6 +11,7 @@ interface OgImageSectionProps {
 }
 
 export function OgImageSection({ profile, onUpload, onDelete }: OgImageSectionProps) {
+  const t = useTranslation('branding');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,9 +29,9 @@ export function OgImageSection({ profile, onUpload, onDelete }: OgImageSectionPr
   return (
     <section className="space-y-6">
       <div>
-        <h3 className="text-sm font-medium text-[#1c1c1c]">Imagen para Redes Sociales</h3>
+        <h3 className="text-sm font-medium text-[#1c1c1c]">{t.ogImage.title}</h3>
         <p className="text-xs text-gray-500 mt-1">
-          Sube una imagen de 1200x630px para previsualizaciones en LinkedIn, WhatsApp y X
+          {t.ogImage.description}
         </p>
       </div>
 
@@ -61,8 +63,8 @@ export function OgImageSection({ profile, onUpload, onDelete }: OgImageSectionPr
           ) : (
             <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
               <Camera className="w-8 h-8 mb-2" />
-              <span className="text-sm font-medium">Subir imagen</span>
-              <span className="text-xs mt-1">1200 x 630 px recomendado</span>
+              <span className="text-sm font-medium">{t.ogImage.upload}</span>
+              <span className="text-xs mt-1">{t.ogImage.recommended}</span>
             </div>
           )}
         </button>
@@ -101,9 +103,7 @@ export function OgImageSection({ profile, onUpload, onDelete }: OgImageSectionPr
               <p className="text-[10px] text-gray-500 uppercase tracking-wide">vibecoders.la</p>
               <p className="text-sm font-semibold text-[#1c1c1c] line-clamp-1">{displayName}</p>
               <p className="text-xs text-gray-600 line-clamp-1">{tagline}</p>
-              {tagline.length < 100 && tagline.length > 0 && (
-                <p className="text-[10px] text-amber-600 mt-1">⚠ Min. 100 caracteres recomendados</p>
-              )}
+
             </div>
           </div>
         </div>
@@ -182,8 +182,7 @@ export function OgImageSection({ profile, onUpload, onDelete }: OgImageSectionPr
       <div className="flex gap-3 p-4 rounded-lg border border-gray-200 bg-gray-50">
         <Info className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-gray-600 leading-relaxed">
-          Los cambios pueden tardar en reflejarse en estas plataformas debido a su sistema de caché. 
-          Usa las herramientas de arriba para forzar una actualización.
+          {t.ogImage.cacheWarning}
         </p>
       </div>
     </section>

@@ -2,13 +2,35 @@
   "welcome": "Bienvenido",
   "explore": "Explorar",
   "freshDrops": {
-    "title": "Acaba de salir del horno",
+    "title": "Nuevas Apps",
     "subtitle": "Los proyectos más recientes de la comunidad"
   },
   "onboarding": {
-    "title": "Completa tu perfil",
-    "description": "Añade información para destacar en la comunidad",
-    "viewProfile": "Ver mi perfil",
-    "complete": "Completar"
+    "titleWithPercent": "Tu identidad está al {percent}%",
+    "persuasiveText": "Los perfiles completos reciben 3x más visitas.",
+    "ctaButton": "Completar mi Perfil",
+    "close": "Cerrar"
+  },
+  "stats": {
+    "traffic": "Vistas Totales",
+    "profileViews": "Vistas de Perfil",
+    "appClicks": "Clics de Apps",
+    "engagement": "Likes de Apps",
+    "community": "Comunidad",
+    "identity": "Fortaleza del Perfil",
+    "last30Days": "Últimos 30 días",
+    "followers": "seguidores",
+    "following": "siguiendo",
+    "completeProfile": "Completar Perfil"
+  },
+  "actionCenter": {
+    "pendingTesters": "Testers Pendientes",
+    "appHealth": "Estado de Apps",
+    "wantsToJoin": "quiere unirse a",
+    "bugs": "bugs",
+    "features": "features",
+    "noApps": "Todo está en orden",
+    "noPending": "Sin solicitudes pendientes"
   }
 }
+

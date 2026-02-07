@@ -13,6 +13,7 @@
     "description": "Esta imagen aparecerá cuando compartas tu perfil en redes sociales",
     "upload": "Subir imagen",
     "delete": "Eliminar imagen",
-    "recommended": "Tamaño recomendado: 1200×630px"
+    "recommended": "Tamaño recomendado: 1200×630px",
+    "cacheWarning": "Los cambios pueden tardar en reflejarse en estas plataformas debido a su sistema de caché. Usa las herramientas de arriba para forzar una actualización."
   }
 }

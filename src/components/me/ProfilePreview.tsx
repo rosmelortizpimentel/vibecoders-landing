@@ -4,8 +4,9 @@ import { AppData } from '@/hooks/useApps';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useTechStacks } from '@/hooks/useTechStacks';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink } from 'lucide-react';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { PreviewAppCard } from './PreviewAppCard';
@@ -106,14 +107,26 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
     <div className="space-y-3">
       {/* Preview Header - hide in mobile sheet */}
       {!isMobileSheet && (
-        <div className="flex items-center gap-2 px-1">
+        <div className="flex items-center justify-between px-1">
           <span className="text-sm font-medium text-slate-500">{t.preview}</span>
+          <a 
+            href={`${window.location.origin}/@${username}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-400 hover:text-slate-600 transition-colors"
+            title={t.viewLive}
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
         </div>
       )}
       
       {/* Preview Card */}
       <div 
-        className="rounded-2xl overflow-hidden border border-slate-200 shadow-sm w-full bg-white"
+        className={cn(
+          "overflow-hidden w-full bg-white",
+          isMobileSheet ? "rounded-none border-none" : "rounded-2xl border border-slate-200 shadow-sm"
+        )}
         style={{ fontFamily }}
       >
       {/* App-style Header - Logo on the left */}
@@ -263,19 +276,6 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
         </div>
       )}
 
-      {/* Footer with dynamic base path */}
-      <div className="py-3 text-center border-t border-gray-100 bg-white">
-        <p className="text-[10px] md:text-xs text-gray-400">
-          <a 
-            href={`${window.location.origin}/@${username}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-500 hover:text-gray-700 hover:underline"
-          >
-            {baseHost}/@{username}
-          </a>
-        </p>
-      </div>
       </div>
     </div>
   );

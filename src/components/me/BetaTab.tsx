@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FlaskConical, ChevronLeft, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -89,12 +89,10 @@ function AppListItem({ app, isSelected, onSelect }: AppListItemProps) {
             </div>
           )}
         </div>
-        {app.tagline && (
-          <p className={cn(
-            "text-xs line-clamp-2",
-            isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
-          )}>{app.tagline}</p>
-        )}
+        <p className={cn(
+          "text-xs line-clamp-1 break-all",
+          isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+        )}>{app.url}</p>
       </div>
     </div>
   );
@@ -102,25 +100,26 @@ function AppListItem({ app, isSelected, onSelect }: AppListItemProps) {
 
 export function BetaTab({ appsHook }: BetaTabProps) {
   const navigate = useNavigate();
+  const { appId } = useParams();
   const t = useTranslation('beta');
   const { apps, updateApp } = appsHook;
   
-  const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
+  // Use URL param as source of truth, or fall back to first app
+  const selectedAppId = appId || (apps.length > 0 ? apps[0].id : null);
   const [showDetail, setShowDetail] = useState(false);
 
-  // Auto-select first app when apps load
+  // Effect to update URL if no appId is present but we have apps (redirect to first app)
   useEffect(() => {
-    if (apps.length > 0 && !selectedAppId) {
-      setSelectedAppId(apps[0].id);
+    if (apps.length > 0 && !appId) {
+      navigate(`/beta-testing/${apps[0].id}`, { replace: true });
     }
-  }, [apps, selectedAppId]);
+  }, [apps, appId, navigate]);
 
   const selectedApp = apps.find(app => app.id === selectedAppId);
 
   const handleConfigChange = async (updates: Partial<AppData>) => {
     if (selectedAppId) {
       if (updates.beta_active) {
-         // Default logic when turning ON via main panel
          const app = apps.find(a => a.id === selectedAppId);
          if (app && !app.beta_mode) updates.beta_mode = 'closed';
          if (app && !app.beta_limit) updates.beta_limit = 1;
@@ -129,8 +128,8 @@ export function BetaTab({ appsHook }: BetaTabProps) {
     }
   };
 
-  const handleSelectApp = (appId: string) => {
-    setSelectedAppId(appId);
+  const handleSelectApp = (id: string) => {
+    navigate(`/beta-testing/${id}`);
     setShowDetail(true);
   };
 
@@ -211,7 +210,7 @@ export function BetaTab({ appsHook }: BetaTabProps) {
                   key={app.id}
                   app={app}
                   isSelected={selectedAppId === app.id}
-                  onSelect={() => setSelectedAppId(app.id)}
+                  onSelect={() => handleSelectApp(app.id)}
                 />
               ))}
             </div>

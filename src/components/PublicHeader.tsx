@@ -37,7 +37,7 @@ export function PublicHeader() {
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to={user ? "/home" : "/"} className="flex items-center">
           <img 
             src={vibecodersLogo} 
             alt="Vibecoders" 

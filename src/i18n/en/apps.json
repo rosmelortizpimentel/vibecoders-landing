@@ -11,5 +11,7 @@
   "verifyDomain": "Verify domain",
   "verified": "Verified",
   "visible": "Visible",
-  "hidden": "Hidden"
+  "hidden": "Hidden",
+  "none": "None",
+  "back": "Back"
 }

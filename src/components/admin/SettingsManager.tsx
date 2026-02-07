@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, Plus, Trash2, Settings, Upload, X } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2, Settings, Upload, X, ToggleLeft, ToggleRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useFeatureFlags } from '@/hooks/useFeatureFlags';
+import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
@@ -45,6 +47,8 @@ export function SettingsManager() {
   const [newDescription, setNewDescription] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useState<HTMLInputElement | null>(null); // This won't work as expected with useState for ref, using useRef
+  
+  const { flags, toggleFlag, isLoading: isLoadingFlags } = useFeatureFlags();
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['admin-settings'],
@@ -174,10 +178,43 @@ export function SettingsManager() {
   return (
     <div className="h-full overflow-y-auto space-y-6 pr-2">
       {/* Header */}
-      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Settings className="h-6 w-6 text-gray-400" />
           <h2 className="text-xl font-semibold text-[#1C1C1C]">Configuraciones Globales</h2>
+        </div>
+
+      {/* Feature Flags Section */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider">Funcionalidades</h3>
+        <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-100">
+          {flags?.map((flag) => (
+            <div key={flag.key} className="p-4 flex items-center justify-between">
+              <div>
+                <p className="font-medium text-[#1C1C1C]">{flag.description || flag.key}</p>
+                <p className="text-xs text-gray-500 font-mono mt-0.5">{flag.key}</p>
+              </div>
+              <Switch
+                checked={flag.enabled}
+                onCheckedChange={(checked) => {
+                  toggleFlag.mutate({ key: flag.key, enabled: checked }, {
+                    onSuccess: () => toast.success(`Funcionalidad ${checked ? 'activada' : 'desactivada'}`),
+                    onError: () => toast.error('Error al actualizar')
+                  });
+                }}
+              />
+            </div>
+          ))}
+          {(!flags || flags.length === 0) && (
+            <div className="p-4 text-center text-sm text-gray-500">
+              No hay flags configurados via base de datos.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold text-[#1C1C1C]">Variables de Configuración</h2>
         </div>
 
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -234,6 +271,8 @@ export function SettingsManager() {
           </DialogContent>
         </Dialog>
       </div>
+
+
 
       {/* Settings List */}
       <div className="space-y-3">

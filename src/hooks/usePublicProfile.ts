@@ -11,10 +11,22 @@ export interface PublicApp {
   url: string;
   name: string | null;
   tagline: string | null;
+  description: string | null;
   logo_url: string | null;
   is_verified: boolean;
+  hours_ideation: number;
+  hours_building: number;
+  screenshots?: string[];
   status: { name: string; slug: string } | null;
+  category?: { name: string; slug: string } | null;
   stacks: PublicAppStack[];
+  owner?: {
+    id: string;
+    username: string;
+    full_name: string;
+    avatar_url: string | null;
+    tagline: string | null;
+  };
 }
 
 export interface PublicProfile {
