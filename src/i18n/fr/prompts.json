@@ -1,0 +1,64 @@
+{
+  "title": "Prompt Vault",
+  "subtitle": "Stockez, organisez et partagez vos meilleurs prompts IA",
+  "tabs": {
+    "explore": "Explorer",
+    "mine": "Mes Prompts"
+  },
+  "newPrompt": "Nouveau Prompt",
+  "searchPlaceholder": "Rechercher des prompts...",
+  "filterByTool": "Filtrer par outil",
+  "allTools": "Tous",
+  "noResults": "Aucun prompt trouvé",
+  "noResultsDesc": "Essayez d'ajuster votre recherche ou vos filtres",
+  "noPrompts": "Vous n'avez pas encore de prompts",
+  "noPromptsDesc": "Créez votre premier prompt pour commencer",
+  "noPublicPrompts": "Pas encore de prompts publics",
+  "noPublicPromptsDesc": "Soyez le premier à partager un prompt",
+  "form": {
+    "createTitle": "Nouveau Prompt",
+    "editTitle": "Modifier le Prompt",
+    "titleLabel": "Titre",
+    "titlePlaceholder": "ex. Section hero de landing page",
+    "toolLabel": "Outil utilisé",
+    "toolPlaceholder": "Sélectionner un outil",
+    "contentLabel": "Contenu",
+    "contentPlaceholder": "Écrivez votre prompt ici... Markdown supporté",
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "Tapez et appuyez sur Entrée",
+    "attachmentsLabel": "Pièces jointes",
+    "publicLabel": "Rendre public",
+    "publicDesc": "Les prompts publics aident la communauté",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "cancel": "Annuler"
+  },
+  "detail": {
+    "copySuccess": "Copié !",
+    "copyButton": "Copier",
+    "attachments": "Pièces jointes",
+    "by": "par",
+    "download": "Télécharger"
+  },
+  "card": {
+    "private": "Privé",
+    "public": "Public",
+    "copy": "Copier",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "toggleVisibility": "Changer la visibilité"
+  },
+  "upload": {
+    "dragDrop": "Glissez-déposez des fichiers ici",
+    "maxSize": "Max 10 Mo par fichier",
+    "uploading": "Envoi...",
+    "remove": "Retirer"
+  },
+  "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce prompt ?",
+  "deleted": "Prompt supprimé",
+  "saved": "Prompt enregistré",
+  "visibility": {
+    "madePublic": "Le prompt est maintenant public",
+    "madePrivate": "Le prompt est maintenant privé"
+  }
+}

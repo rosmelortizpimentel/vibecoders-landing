@@ -831,6 +831,94 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_files: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+          prompt_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id?: string
+          prompt_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+          prompt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_files_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompts: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_for_sale: boolean | null
+          is_public: boolean | null
+          price: number | null
+          tags: string[] | null
+          title: string
+          tool_used: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_for_sale?: boolean | null
+          is_public?: boolean | null
+          price?: number | null
+          tags?: string[] | null
+          title: string
+          tool_used?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_for_sale?: boolean | null
+          is_public?: boolean | null
+          price?: number | null
+          tags?: string[] | null
+          title?: string
+          tool_used?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrape_logs: {
         Row: {
           created_at: string | null

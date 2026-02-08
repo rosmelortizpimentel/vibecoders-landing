@@ -21,6 +21,7 @@ import AppDetail from "./pages/AppDetail";
 import Post from "./pages/Post";
 import BetaSquads from "./pages/BetaSquads";
 import Ideas from "./pages/Ideas";
+import Prompts from "./pages/Prompts";
 import Beta from "./pages/Beta";
 import Vibers from "./pages/Vibers";
 import { NotificationsPage } from "./pages/Notifications";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/beta-testing" element={<Beta />} />
             <Route path="/beta-testing/:appId" element={<Beta />} />
             <Route path="/ideas" element={<Ideas />} />
+            <Route path="/prompts" element={<Prompts />} />
           </Route>
           
           {/* Legacy redirects */}

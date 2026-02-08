@@ -1,0 +1,64 @@
+{
+  "title": "Bóveda de Prompts",
+  "subtitle": "Almacena, organiza y comparte tus mejores prompts de IA",
+  "tabs": {
+    "explore": "Explorar",
+    "mine": "Mis Prompts"
+  },
+  "newPrompt": "Nuevo Prompt",
+  "searchPlaceholder": "Buscar prompts...",
+  "filterByTool": "Filtrar por herramienta",
+  "allTools": "Todas",
+  "noResults": "No se encontraron prompts",
+  "noResultsDesc": "Intenta ajustar tu búsqueda o filtros",
+  "noPrompts": "Aún no tienes prompts",
+  "noPromptsDesc": "Crea tu primer prompt para empezar",
+  "noPublicPrompts": "Aún no hay prompts públicos",
+  "noPublicPromptsDesc": "Sé el primero en compartir un prompt con la comunidad",
+  "form": {
+    "createTitle": "Nuevo Prompt",
+    "editTitle": "Editar Prompt",
+    "titleLabel": "Título",
+    "titlePlaceholder": "ej. Sección hero de landing page",
+    "toolLabel": "Herramienta",
+    "toolPlaceholder": "Selecciona una herramienta",
+    "contentLabel": "Contenido",
+    "contentPlaceholder": "Escribe tu prompt aquí... Soporta Markdown",
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "Escribe y presiona Enter para agregar",
+    "attachmentsLabel": "Archivos adjuntos",
+    "publicLabel": "Hacer Público",
+    "publicDesc": "Los prompts públicos ayudan a la comunidad",
+    "save": "Guardar Prompt",
+    "saving": "Guardando...",
+    "cancel": "Cancelar"
+  },
+  "detail": {
+    "copySuccess": "¡Copiado al portapapeles!",
+    "copyButton": "Copiar al Portapapeles",
+    "attachments": "Archivos adjuntos",
+    "by": "por",
+    "download": "Descargar"
+  },
+  "card": {
+    "private": "Privado",
+    "public": "Público",
+    "copy": "Copiar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "toggleVisibility": "Cambiar Visibilidad"
+  },
+  "upload": {
+    "dragDrop": "Arrastra archivos aquí, o haz clic para buscar",
+    "maxSize": "Máximo 10MB por archivo",
+    "uploading": "Subiendo...",
+    "remove": "Quitar"
+  },
+  "confirmDelete": "¿Estás seguro de que quieres eliminar este prompt?",
+  "deleted": "Prompt eliminado",
+  "saved": "Prompt guardado",
+  "visibility": {
+    "madePublic": "El prompt ahora es público",
+    "madePrivate": "El prompt ahora es privado"
+  }
+}

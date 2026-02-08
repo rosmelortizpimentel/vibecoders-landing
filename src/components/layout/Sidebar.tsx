@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Lightbulb,
+  BookOpen,
   LucideIcon,
   X,
   ChevronDown,
@@ -85,6 +86,7 @@ export function Sidebar() {
     { path: '/notifications', label: tNotif('title'), icon: Bell, badge: unreadCount },
     { path: '/me', label: t('navigation.myProfile'), icon: User },
     { path: '/ideas', label: t('navigation.myIdeas'), icon: Lightbulb },
+    { path: '/prompts', label: t('navigation.prompts'), icon: BookOpen },
     { path: '/connections', label: t('navigation.vibers'), icon: Users },
     { path: '/beta-testing', label: t('navigation.betaTesting'), icon: FlaskConical, badge: ownedAppsCount },
 

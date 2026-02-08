@@ -23,6 +23,7 @@ import feedbackEs from '@/i18n/es/feedback.json';
 import betaEs from '@/i18n/es/beta.json';
 import notificationsEs from '@/i18n/es/notifications.json';
 import vibersEs from '@/i18n/es/vibers.json';
+import promptsEs from '@/i18n/es/prompts.json';
 
 // English imports
 import commonEn from '@/i18n/en/common.json';
@@ -47,6 +48,7 @@ import feedbackEn from '@/i18n/en/feedback.json';
 import betaEn from '@/i18n/en/beta.json';
 import notificationsEn from '@/i18n/en/notifications.json';
 import vibersEn from '@/i18n/en/vibers.json';
+import promptsEn from '@/i18n/en/prompts.json';
 
 // French imports
 import commonFr from '@/i18n/fr/common.json';
@@ -71,6 +73,7 @@ import feedbackFr from '@/i18n/fr/feedback.json';
 import betaFr from '@/i18n/fr/beta.json';
 import notificationsFr from '@/i18n/fr/notifications.json';
 import vibersFr from '@/i18n/fr/vibers.json';
+import promptsFr from '@/i18n/fr/prompts.json';
 
 // Portuguese imports
 import commonPt from '@/i18n/pt/common.json';
@@ -95,6 +98,7 @@ import feedbackPt from '@/i18n/pt/feedback.json';
 import betaPt from '@/i18n/pt/beta.json';
 import notificationsPt from '@/i18n/pt/notifications.json';
 import vibersPt from '@/i18n/pt/vibers.json';
+import promptsPt from '@/i18n/pt/prompts.json';
 
 const translations = {
   es: {
@@ -120,6 +124,7 @@ const translations = {
     beta: betaEs,
     notifications: notificationsEs,
     vibers: vibersEs,
+    prompts: promptsEs,
   },
   en: {
     common: commonEn,
@@ -144,6 +149,7 @@ const translations = {
     beta: betaEn,
     notifications: notificationsEn,
     vibers: vibersEn,
+    prompts: promptsEn,
   },
   fr: {
     common: commonFr,
@@ -168,6 +174,7 @@ const translations = {
     beta: betaFr,
     notifications: notificationsFr,
     vibers: vibersFr,
+    prompts: promptsFr,
   },
   pt: {
     common: commonPt,
@@ -192,6 +199,7 @@ const translations = {
     beta: betaPt,
     notifications: notificationsPt,
     vibers: vibersPt,
+    prompts: promptsPt,
   },
 } as const;
 
