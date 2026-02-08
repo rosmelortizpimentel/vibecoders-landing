@@ -1,0 +1,64 @@
+{
+  "title": "Prompt Vault",
+  "subtitle": "Armazene, organize e compartilhe seus melhores prompts de IA",
+  "tabs": {
+    "explore": "Explorar",
+    "mine": "Meus Prompts"
+  },
+  "newPrompt": "Novo Prompt",
+  "searchPlaceholder": "Buscar prompts...",
+  "filterByTool": "Filtrar por ferramenta",
+  "allTools": "Todas",
+  "noResults": "Nenhum prompt encontrado",
+  "noResultsDesc": "Tente ajustar sua busca ou filtros",
+  "noPrompts": "Você ainda não tem prompts",
+  "noPromptsDesc": "Crie seu primeiro prompt para começar",
+  "noPublicPrompts": "Ainda não há prompts públicos",
+  "noPublicPromptsDesc": "Seja o primeiro a compartilhar um prompt",
+  "form": {
+    "createTitle": "Novo Prompt",
+    "editTitle": "Editar Prompt",
+    "titleLabel": "Título",
+    "titlePlaceholder": "ex. Seção hero de landing page",
+    "toolLabel": "Ferramenta usada",
+    "toolPlaceholder": "Selecione uma ferramenta",
+    "contentLabel": "Conteúdo",
+    "contentPlaceholder": "Escreva seu prompt aqui... Markdown suportado",
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "Digite e pressione Enter",
+    "attachmentsLabel": "Anexos",
+    "publicLabel": "Tornar público",
+    "publicDesc": "Prompts públicos ajudam a comunidade",
+    "save": "Salvar",
+    "saving": "Salvando...",
+    "cancel": "Cancelar"
+  },
+  "detail": {
+    "copySuccess": "Copiado!",
+    "copyButton": "Copiar",
+    "attachments": "Anexos",
+    "by": "por",
+    "download": "Baixar"
+  },
+  "card": {
+    "private": "Privado",
+    "public": "Público",
+    "copy": "Copiar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "toggleVisibility": "Alterar visibilidade"
+  },
+  "upload": {
+    "dragDrop": "Arraste arquivos aqui ou clique para buscar",
+    "maxSize": "Máximo 10MB por arquivo",
+    "uploading": "Enviando...",
+    "remove": "Remover"
+  },
+  "confirmDelete": "Tem certeza que deseja excluir este prompt?",
+  "deleted": "Prompt excluído",
+  "saved": "Prompt salvo",
+  "visibility": {
+    "madePublic": "O prompt agora é público",
+    "madePrivate": "O prompt agora é privado"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "title": "Prompt Vault",
+  "subtitle": "Store, organize and share your best AI prompts",
+  "tabs": {
+    "explore": "Explore",
+    "mine": "My Prompts"
+  },
+  "newPrompt": "New Prompt",
+  "searchPlaceholder": "Search prompts...",
+  "filterByTool": "Filter by tool",
+  "allTools": "All Tools",
+  "noResults": "No prompts found",
+  "noResultsDesc": "Try adjusting your search or filters",
+  "noPrompts": "You don't have any prompts yet",
+  "noPromptsDesc": "Create your first prompt to get started",
+  "noPublicPrompts": "No public prompts yet",
+  "noPublicPromptsDesc": "Be the first to share a prompt with the community",
+  "form": {
+    "createTitle": "New Prompt",
+    "editTitle": "Edit Prompt",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Landing page hero section",
+    "toolLabel": "Tool Used",
+    "toolPlaceholder": "Select a tool",
+    "contentLabel": "Content",
+    "contentPlaceholder": "Write your prompt here... Markdown supported",
+    "tagsLabel": "Tags",
+    "tagsPlaceholder": "Type and press Enter to add",
+    "attachmentsLabel": "Attachments",
+    "publicLabel": "Make Public",
+    "publicDesc": "Public prompts help the community",
+    "save": "Save Prompt",
+    "saving": "Saving...",
+    "cancel": "Cancel"
+  },
+  "detail": {
+    "copySuccess": "Copied to clipboard!",
+    "copyButton": "Copy to Clipboard",
+    "attachments": "Attachments",
+    "by": "by",
+    "download": "Download"
+  },
+  "card": {
+    "private": "Private",
+    "public": "Public",
+    "copy": "Copy",
+    "edit": "Edit",
+    "delete": "Delete",
+    "toggleVisibility": "Toggle Visibility"
+  },
+  "upload": {
+    "dragDrop": "Drag & drop files here, or click to browse",
+    "maxSize": "Max 10MB per file",
+    "uploading": "Uploading...",
+    "remove": "Remove"
+  },
+  "confirmDelete": "Are you sure you want to delete this prompt?",
+  "deleted": "Prompt deleted",
+  "saved": "Prompt saved",
+  "visibility": {
+    "madePublic": "Prompt is now public",
+    "madePrivate": "Prompt is now private"
+  }
+}
