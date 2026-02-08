@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
+import { es, enUS, fr, pt } from 'date-fns/locale';
 import { Trash2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -36,7 +36,17 @@ export function FeedbackThreadList({
   const t = useTranslation('feedback');
   const { language } = useLanguage();
   const { deleteThread, isDeleting } = useFeedback();
-  const dateLocale = language === 'es' ? es : enUS;
+  
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'fr': return fr;
+      case 'pt': return pt;
+      default: return es;
+    }
+  };
+
+  const dateLocale = getDateLocale();
   
   const [threadToDelete, setThreadToDelete] = useState<string | null>(null);
 
@@ -139,7 +149,7 @@ export function FeedbackThreadList({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>
-              {language === 'es' ? 'Cancelar' : 'Cancel'}
+              {language === 'es' ? 'Cancelar' : language === 'fr' ? 'Annuler' : language === 'pt' ? 'Cancelar' : 'Cancel'}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
@@ -149,7 +159,7 @@ export function FeedbackThreadList({
               {isDeleting ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : null}
-              {language === 'es' ? 'Eliminar' : 'Delete'}
+              {language === 'es' ? 'Eliminar' : language === 'fr' ? 'Supprimer' : language === 'pt' ? 'Excluir' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
+import { es, enUS, fr, pt } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Bug, 
@@ -29,6 +29,15 @@ export function TesterFeedbackHistory({ appId }: TesterFeedbackHistoryProps) {
   const { t } = useTranslation('beta');
   const { language } = useLanguage();
   const { feedback, loading, respondToResolution, responding } = useTesterFeedback(appId);
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'fr': return fr;
+      case 'pt': return pt;
+      default: return es;
+    }
+  };
   const [selectedFeedback, setSelectedFeedback] = useState<TesterFeedback | null>(null);
 
   const getTypeIcon = (type: string) => {
@@ -120,7 +129,7 @@ export function TesterFeedbackHistory({ appId }: TesterFeedbackHistoryProps) {
                       {t('sentAt')}: {format(
                         new Date(item.created_at), 
                         'dd MMM yyyy, HH:mm',
-                        { locale: language === 'es' ? es : enUS }
+                        { locale: getDateLocale() }
                       )}
                     </span>
                   </div>

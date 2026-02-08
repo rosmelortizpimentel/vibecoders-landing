@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
+import { es, enUS, fr, pt } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Bug, 
@@ -32,6 +32,15 @@ export function TesterReportCard({ appId }: TesterReportCardProps) {
   const { t } = useTranslation('beta');
   const { language } = useLanguage();
   const { feedback, loading, refetch, respondToResolution, responding } = useTesterFeedback(appId);
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'fr': return fr;
+      case 'pt': return pt;
+      default: return es;
+    }
+  };
   
   const [showForm, setShowForm] = useState(false);
   const [selectedFeedback, setSelectedFeedback] = useState<TesterFeedback | null>(null);
@@ -153,7 +162,7 @@ export function TesterReportCard({ appId }: TesterReportCardProps) {
                             {format(
                               new Date(item.created_at), 
                               'dd MMM, HH:mm',
-                              { locale: language === 'es' ? es : enUS }
+                              { locale: getDateLocale() }
                             )}
                           </span>
                         </div>

@@ -1,0 +1,34 @@
+{
+  "title": "Notifications",
+  "subtitle": "Restez informé de l'activité de vos projets et de votre communauté.",
+  "markAllAsRead": "Tout marquer comme lu",
+  "viewAll": "Tout voir",
+  "empty": "Aucune notification",
+  "loading": "Chargement des notifications...",
+  "popover": {
+    "emptyTitle": "Tout est à jour !",
+    "emptySubtitle": "Vous n'avez aucune notification en attente."
+  },
+  "tabs": {
+    "all": "Toutes",
+    "unread": "Non lues"
+  },
+  "emptyStates": {
+    "all": "Ici vous verrez les mises à jour sur vos applications, abonnés et demandes.",
+    "unread": "Vous avez lu toutes vos notifications. Bon travail !"
+  },
+  "actions": {
+    "viewProfile": "Voir le profil",
+    "markAsRead": "Marquer comme lu",
+    "delete": "Supprimer"
+  },
+  "messages": {
+    "appLike": "a aimé",
+    "follow": "a commencé à vous suivre",
+    "betaReq": "a demandé à rejoindre le squad de",
+    "systemFallback": "Vous avez une nouvelle notification système",
+    "generic": "Nouvelle notification",
+    "someone": "Quelqu'un",
+    "yourApp": "votre application"
+  }
+}

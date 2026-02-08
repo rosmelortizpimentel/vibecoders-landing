@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
+import { es, enUS, fr, pt } from 'date-fns/locale';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -41,9 +41,18 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
   const isOwner = user?.id === app.owner.id;
   const userStatus = app.user_tester_status?.status;
 
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'fr': return fr;
+      case 'pt': return pt;
+      default: return es;
+    }
+  };
+
   const timeAgo = formatDistanceToNow(new Date(app.updated_at), { 
     addSuffix: true,
-    locale: language === 'es' ? es : enUS 
+    locale: getDateLocale()
   });
 
   const handleJoinClick = () => {

@@ -22,6 +22,7 @@ import Post from "./pages/Post";
 import BetaSquads from "./pages/BetaSquads";
 import Ideas from "./pages/Ideas";
 import Beta from "./pages/Beta";
+import { NotificationsPage } from "./pages/Notifications";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/buildlog" element={<BuildLog />} />
             <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
             <Route path="/feedback" element={<Feedback />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/me" element={<Navigate to="/me/profile" replace />} />
             <Route path="/me/profile" element={<Me />} />
             <Route path="/me/apps" element={<Me />} />

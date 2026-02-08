@@ -21,6 +21,7 @@ import errorsEs from '@/i18n/es/errors.json';
 import adminEs from '@/i18n/es/admin.json';
 import feedbackEs from '@/i18n/es/feedback.json';
 import betaEs from '@/i18n/es/beta.json';
+import notificationsEs from '@/i18n/es/notifications.json';
 
 // English imports
 import commonEn from '@/i18n/en/common.json';
@@ -43,6 +44,7 @@ import errorsEn from '@/i18n/en/errors.json';
 import adminEn from '@/i18n/en/admin.json';
 import feedbackEn from '@/i18n/en/feedback.json';
 import betaEn from '@/i18n/en/beta.json';
+import notificationsEn from '@/i18n/en/notifications.json';
 
 // French imports
 import commonFr from '@/i18n/fr/common.json';
@@ -65,6 +67,7 @@ import errorsFr from '@/i18n/fr/errors.json';
 import adminFr from '@/i18n/fr/admin.json';
 import feedbackFr from '@/i18n/fr/feedback.json';
 import betaFr from '@/i18n/fr/beta.json';
+import notificationsFr from '@/i18n/fr/notifications.json';
 
 // Portuguese imports
 import commonPt from '@/i18n/pt/common.json';
@@ -87,6 +90,7 @@ import errorsPt from '@/i18n/pt/errors.json';
 import adminPt from '@/i18n/pt/admin.json';
 import feedbackPt from '@/i18n/pt/feedback.json';
 import betaPt from '@/i18n/pt/beta.json';
+import notificationsPt from '@/i18n/pt/notifications.json';
 
 const translations = {
   es: {
@@ -110,6 +114,7 @@ const translations = {
     admin: adminEs,
     feedback: feedbackEs,
     beta: betaEs,
+    notifications: notificationsEs,
   },
   en: {
     common: commonEn,
@@ -132,6 +137,7 @@ const translations = {
     admin: adminEn,
     feedback: feedbackEn,
     beta: betaEn,
+    notifications: notificationsEn,
   },
   fr: {
     common: commonFr,
@@ -154,6 +160,7 @@ const translations = {
     admin: adminFr,
     feedback: feedbackFr,
     beta: betaFr,
+    notifications: notificationsFr,
   },
   pt: {
     common: commonPt,
@@ -176,6 +183,7 @@ const translations = {
     admin: adminPt,
     feedback: feedbackPt,
     beta: betaPt,
+    notifications: notificationsPt,
   },
 } as const;
 

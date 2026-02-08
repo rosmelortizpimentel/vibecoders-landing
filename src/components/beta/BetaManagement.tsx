@@ -51,7 +51,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { es, enUS } from 'date-fns/locale';
+import { es, enUS, fr, pt } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 
@@ -111,6 +111,15 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
   const { t } = useTranslation('beta');
   const { language } = useLanguage();
   const { updateTesterStatus, removeTester, markFeedbackUseful, addTester } = useBetaSquad(appId);
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'fr': return fr;
+      case 'pt': return pt;
+      default: return es;
+    }
+  };
   
   const [testers, setTesters] = useState<Tester[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
@@ -455,11 +464,11 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                           {/* Date separator */}
                           <span className="text-muted-foreground/40 text-[10px]">•</span>
                           
-                          <span className="text-xs text-muted-foreground/60">
-                             {format(new Date(item.created_at), 'dd MMM', {
-                                locale: language === 'es' ? es : enUS
-                             })}
-                          </span>
+                           <span className="text-xs text-muted-foreground/60">
+                              {format(new Date(item.created_at), 'dd MMM', {
+                                 locale: getDateLocale()
+                              })}
+                           </span>
                        </div>
 
                        {/* Actions & subtle status indicator if needed, but user wanted clean. 

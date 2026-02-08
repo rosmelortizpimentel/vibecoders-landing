@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface RegistrationTrendChartProps {
   data: Array<{ created_at: string | null }>;
@@ -15,6 +16,7 @@ interface DailyCount {
 
 export function RegistrationTrendChart({ data, days = 30 }: RegistrationTrendChartProps) {
   const { t } = useTranslation('admin');
+  const { language } = useLanguage();
 
   const chartData = useMemo(() => {
     // Helper to get YYYY-MM-DD in Toronto time
@@ -61,7 +63,7 @@ export function RegistrationTrendChart({ data, days = 30 }: RegistrationTrendCha
       result.push({
         date: dateKey,
         count: countByDate.get(dateKey) || 0,
-        displayDate: d.toLocaleDateString('es-ES', { 
+        displayDate: d.toLocaleDateString(language === 'es' ? 'es-ES' : language === 'fr' ? 'fr-FR' : language === 'pt' ? 'pt-BR' : 'en-US', { 
           month: 'short', 
           day: 'numeric',
           timeZone: 'America/Toronto'
@@ -70,7 +72,7 @@ export function RegistrationTrendChart({ data, days = 30 }: RegistrationTrendCha
     }
 
     return result;
-  }, [data, days]);
+  }, [data, days, language]);
 
   const totalInPeriod = chartData.reduce((sum, d) => sum + d.count, 0);
 

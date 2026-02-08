@@ -24,6 +24,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface AuthenticatedHeaderProps {
   profile: {
@@ -130,7 +131,7 @@ export function AuthenticatedHeader({
         </div>
           
 
-          {/* Right Zone: Admin + Save Status + Avatar */}
+          {/* Right Zone: Admin + Save Status + Bell + Avatar */}
           <div className="flex items-center gap-3 sm:gap-4 ml-auto">
             {/* Save status indicator - only shown when props are provided */}
             {(isSaving !== undefined || lastSaved !== undefined || error !== undefined) && (
@@ -154,6 +155,10 @@ export function AuthenticatedHeader({
               </div>
             )}
 
+            {/* Notification Bell */}
+            <div className="flex items-center border-l border-border/50 pl-3 sm:pl-4">
+              <NotificationBell />
+            </div>
 
             {/* User Info - Simplified since main menu is in Sidebar */}
             {/* REMOVED: Profile section is now in the Sidebar footer */}

@@ -19,7 +19,8 @@ import {
   Globe,
   ExternalLink,
   MessageCircle,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Bell
 } from 'lucide-react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useAuth } from '@/hooks/useAuth';
@@ -41,6 +42,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useState, useEffect } from 'react';
 import { useBetaBadges } from '@/hooks/useBetaBadges';
 import { Badge } from '@/components/ui/badge';
+import { useNotifications } from '@/hooks/useNotifications';
 
 export function Sidebar() {
   const location = useLocation();
@@ -52,6 +54,8 @@ export function Sidebar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const tAuth = useTranslation('auth');
   const { ownedAppsCount, publicSquadsCount } = useBetaBadges();
+  const { unreadCount } = useNotifications();
+  const { t: tNotif } = useTranslation('notifications');
   
   // Initialize collapsed state from localStorage if available
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -77,6 +81,7 @@ export function Sidebar() {
   const navLinks: Array<{ path: string; label: string; icon: LucideIcon; className?: string; badge?: number } | { type: 'separator'; path: string }> = [
     // Personal Block
     { path: '/home', label: t('navigation.home'), icon: LayoutDashboard },
+    { path: '/notifications', label: tNotif('title'), icon: Bell, badge: unreadCount },
     { path: '/me', label: t('navigation.myProfile'), icon: User },
     { path: '/ideas', label: t('navigation.myIdeas'), icon: Lightbulb },
     { path: '/beta-testing', label: t('navigation.betaTesting'), icon: FlaskConical, badge: ownedAppsCount },
@@ -165,8 +170,8 @@ export function Sidebar() {
                   item.className
                 )} />
                 {isCollapsed && item.badge && item.badge > 0 ? (
-                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 ring-2 ring-background">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                  <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-secondary ring-2 ring-background">
+                    <span className="h-1.5 w-1.5 rounded-full bg-secondary-foreground" />
                   </span>
                 ) : null}
               </div>
@@ -175,7 +180,7 @@ export function Sidebar() {
                 <>
                   <span className="truncate animate-in fade-in duration-200 flex-1">{item.label}</span>
                   {item.badge && item.badge > 0 ? (
-                    <Badge variant="secondary" className="ml-auto h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-[10px] font-bold">
+                    <Badge variant="secondary" className="ml-auto h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-[10px] font-bold shadow-sm border-none">
                       {item.badge}
                     </Badge>
                   ) : null}

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { es, enUS, fr, pt } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -36,6 +38,16 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, isOwn, isAdmin, onDelete, onUpdate, userEmail }: ChatMessageProps) {
   const t = useTranslation('feedback');
+  const { language } = useLanguage();
+  
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'fr': return fr;
+      case 'pt': return pt;
+      default: return es;
+    }
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(message.content);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -185,7 +197,7 @@ export function ChatMessage({ message, isOwn, isAdmin, onDelete, onUpdate, userE
           )}
 
           <span className="text-xs text-muted-foreground">
-            {format(new Date(message.created_at), 'HH:mm')}
+            {format(new Date(message.created_at), 'HH:mm', { locale: getDateLocale() })}
           </span>
         </div>
       </div>
