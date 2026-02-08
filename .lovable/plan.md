@@ -1,72 +1,107 @@
 
 
-## Tracking de actividad de usuarios + Enter como salto de linea
+## Boveda de Prompts (Prompt Vault)
 
-### Parte 1: Ultima actividad y metricas de interaccion diaria
+Feature completa para que los usuarios gestionen, organicen y compartan prompts de IA con soporte para archivos adjuntos, tags personalizados y preparada para un futuro marketplace.
 
-**Enfoque**: Usar `auth.sessions` (campo `updated_at`) accesible desde la Edge Function con service role para obtener la ultima actividad de cada usuario. Esto es 100% transparente, no requiere ningun cambio en la experiencia del usuario.
+### 1. Base de Datos
 
-Adicionalmente, crear una nueva tabla `user_activity_log` para registrar interacciones diarias de forma transparente (un registro por usuario por dia), lo que permite saber cuantos usuarios interactuan por dia.
+**Tabla `prompts`:**
+- `id` UUID PK
+- `user_id` UUID FK a auth.users
+- `title` text NOT NULL
+- `description` text (Markdown)
+- `tags` text[] default '{}'
+- `tool_used` text (Lovable, Cursor, Windsurf, ChatGPT, etc.)
+- `is_public` boolean default false
+- `price` decimal nullable (futuro, oculto)
+- `is_for_sale` boolean default false (futuro, oculto)
+- `created_at`, `updated_at` timestamps
 
-#### Tabla nueva: `user_activity_log`
+**RLS:**
+- SELECT: publicos para todos OR propios del owner
+- INSERT/UPDATE/DELETE: solo owner
 
-```text
-id          uuid PK default gen_random_uuid()
-user_id     uuid NOT NULL (references auth.users on delete cascade)
-active_date date NOT NULL default CURRENT_DATE
-created_at  timestamptz default now()
-UNIQUE(user_id, active_date)
-```
+**Tabla `prompt_files`:**
+- `id` UUID PK
+- `prompt_id` UUID FK a prompts ON DELETE CASCADE
+- `file_url` text NOT NULL
+- `file_name` text NOT NULL
+- `file_size` integer NOT NULL
+- `file_type` text NOT NULL
+- `created_at` timestamp
 
-- RLS: solo INSERT para el propio usuario, SELECT para admins
-- Se registra automaticamente desde el frontend al iniciar sesion (un upsert por dia, sin afectar rendimiento)
+**RLS:**
+- SELECT: si el prompt es publico o es el owner
+- INSERT: si el prompt es del owner
+- DELETE: si el prompt es del owner
 
-#### Cambios en la Edge Function `admin-users-list`
+**Storage bucket:** `prompt-attachments` (publico, RLS para subida solo por usuarios autenticados en su propia carpeta)
 
-- Obtener `last_sign_in_at` de los auth users (ya disponible en `authUsers.users`)
-- Consultar `auth.sessions` para obtener la sesion mas reciente (`updated_at`) por usuario
-- Agregar campo `lastActivity` al response (el mas reciente entre `last_sign_in_at` y session `updated_at`)
+### 2. Ruta y Navegacion
 
-#### Cambios en el frontend `UsersManager.tsx`
+- Nueva ruta `/prompts` dentro del `DashboardLayout`
+- Nuevo item en el Sidebar con icono `BookOpen` entre "My Ideas" y "My Connections"
+- Traducciones en `common.json` (en/es/fr/pt): `navigation.prompts: "Prompt Vault"`
 
-- Agregar columna "Ultima actividad" a la tabla con la fecha formateada
-- Hacerla sortable como las demas columnas
+### 3. UI - Pagina /prompts
 
-#### Grafico de actividad diaria
+**Layout con Tabs:**
+- **Tab "Explorar"**: Grid de prompts publicos de toda la comunidad
+  - Barra de busqueda + filtros por tag y herramienta
+  - Cards con: titulo, tags, herramienta, avatar del autor, boton "Copy"
+  - Click abre modal de detalle con contenido completo, boton "Copiar al portapapeles" y lista de archivos adjuntos con descarga
+- **Tab "Mis Prompts"**: Lista/grid de prompts propios
+  - Badge de visibilidad (privado/publico)
+  - Acciones: Editar, Eliminar, Toggle visibilidad
+  - Boton "Nuevo Prompt" abre modal de creacion/edicion
 
-- Agregar un segundo grafico (similar al de registros) que muestre "Usuarios activos por dia" basado en `user_activity_log`
-- La Edge Function devolvera tambien los datos de actividad diaria de los ultimos 30 dias
+### 4. Modal Crear/Editar Prompt
 
-#### Registro transparente de actividad
+- **Title**: Input texto
+- **Tool Used**: Select con opciones (Lovable, Cursor, Windsurf, ChatGPT, Claude, Bolt, v0, Replit, Other)
+- **Content/Description**: MarkdownEditor (reutilizando componente existente)
+- **Tags**: Input con Enter para agregar tags como chips, X para eliminar
+- **Attachments**: Zona drag & drop, validacion max 10MB por archivo, multiples archivos, lista con boton X para remover, progress de subida
+- **Privacy Toggle**: Switch "Hacer Publico"
 
-- En `src/hooks/useAuth.ts` o en el `App.tsx`, al detectar sesion activa, hacer un upsert silencioso a `user_activity_log` con la fecha actual
-- Usar `ON CONFLICT (user_id, active_date) DO NOTHING` para que sea una operacion de 1 vez por dia sin impacto
+### 5. Vista de Detalle (Modal)
 
-### Parte 2: Enter como salto de linea en el chat
+- Contenido renderizado como Markdown (reutilizando `parseMarkdown`)
+- Boton "Copiar al portapapeles" para el contenido
+- Lista de archivos adjuntos con iconos de descarga
+- Info del autor (avatar, username) con link al perfil
 
-**Archivo**: `src/components/feedback/ChatInput.tsx`
+### 6. Archivos a crear/modificar
 
-Actualmente la linea 81 tiene:
-```text
-if (e.key === 'Enter' && !e.shiftKey) {
-  e.preventDefault();
-  handleSubmit(e);
-}
-```
-
-Cambio: eliminar completamente el handler `handleKeyDown` y quitar la prop `onKeyDown` del textarea. Enter sera salto de linea naturalmente. El mensaje solo se enviara con el boton de enviar.
-
----
-
-### Detalle tecnico - Archivos a modificar
-
-| Archivo | Cambio |
+| Archivo | Accion |
 |---------|--------|
-| Nueva migration SQL | Crear tabla `user_activity_log` con RLS |
-| `supabase/functions/admin-users-list/index.ts` | Agregar `lastActivity` desde auth users + sessions, agregar query de actividad diaria |
-| `src/components/admin/UsersManager.tsx` | Nueva columna "Ultima actividad", nuevo tipo con `lastActivity` |
-| `src/components/admin/RegistrationTrendChart.tsx` | Hacerlo reutilizable o crear `ActivityTrendChart` |
-| `src/hooks/useAuth.ts` | Agregar upsert silencioso a `user_activity_log` |
-| `src/components/feedback/ChatInput.tsx` | Eliminar `handleKeyDown`, enter = salto de linea |
-| `src/i18n/en/admin.json` y `src/i18n/es/admin.json` | Nuevas claves de traduccion |
+| Nueva migration SQL | Tablas `prompts`, `prompt_files`, bucket `prompt-attachments` |
+| `src/pages/Prompts.tsx` | Pagina principal con tabs |
+| `src/hooks/usePrompts.ts` | Hook para CRUD de prompts |
+| `src/components/prompts/PromptCard.tsx` | Card para grid |
+| `src/components/prompts/PromptDetailModal.tsx` | Modal de detalle |
+| `src/components/prompts/PromptFormModal.tsx` | Modal crear/editar |
+| `src/components/prompts/TagInput.tsx` | Componente de tags con chips |
+| `src/components/prompts/FileUploader.tsx` | Zona de upload con drag & drop |
+| `src/App.tsx` | Agregar ruta `/prompts` |
+| `src/components/layout/Sidebar.tsx` | Agregar link en navegacion |
+| `src/integrations/supabase/types.ts` | Tipos de las nuevas tablas |
+| `src/i18n/en/prompts.json` | Traducciones ingles |
+| `src/i18n/es/prompts.json` | Traducciones espanol |
+| `src/i18n/en/common.json` | Key de navegacion |
+| `src/i18n/es/common.json` | Key de navegacion |
+
+### 7. Patrones a seguir
+
+- Hook con `useQuery`/`useMutation` de TanStack (como `useToolsStack`, `useApps`)
+- Supabase client directo (como en `IdeasTab`)
+- Layout master-detail similar a Ideas pero con tabs
+- Componentes UI existentes: Dialog, Tabs, Input, Button, Badge, Switch, Avatar, ScrollArea
+- Markdown: reutilizar `parseMarkdown` de `src/lib/markdown.ts` y `MarkdownEditor`
+- Storage upload pattern igual que `feedback-attachments`
+
+### 8. Nota sobre build errors existentes
+
+Los errores de build actuales (en `types.ts`, `useApps`, `useDashboardStats`, etc.) son preexistentes y no estan relacionados con esta feature. Se corregiran como parte de la actualizacion de `types.ts` al agregar las nuevas tablas.
 
