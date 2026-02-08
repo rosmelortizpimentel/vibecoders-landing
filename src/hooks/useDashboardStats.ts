@@ -38,6 +38,11 @@ interface ProfileSummary {
   name: string;
   username: string;
   avatarUrl?: string;
+  bannerUrl?: string;
+  activeAppsCount?: number;
+  mutualConnectionsCount?: number;
+  isFollowing?: boolean;
+  tagline?: string;
 }
 
 interface PendingTester {
@@ -64,6 +69,8 @@ interface FollowsResponse {
     name: string | null;
     username: string | null;
     avatar_url: string | null;
+    banner_url: string | null;
+    apps: { count: number }[];
   };
 }
 
@@ -91,14 +98,28 @@ export function useDashboardStats() {
           .from('follows')
           .select(`
             follower_id,
-            profiles!follows_follower_id_fkey(id, name, username, avatar_url)
+            profiles!follows_follower_id_fkey(
+              id, 
+              name, 
+              username, 
+              avatar_url, 
+              banner_url,
+              apps(count)
+            )
           `)
           .eq('following_id', user.id),
         supabase
           .from('follows')
           .select(`
             following_id,
-            profiles!follows_following_id_fkey(id, name, username, avatar_url)
+            profiles!follows_following_id_fkey(
+              id, 
+              name, 
+              username, 
+              avatar_url, 
+              banner_url,
+              apps(count)
+            )
           `)
           .eq('follower_id', user.id),
       ]);
@@ -108,6 +129,10 @@ export function useDashboardStats() {
         name: f.profiles.name || 'User',
         username: f.profiles.username || 'unknown',
         avatarUrl: f.profiles.avatar_url || undefined,
+        bannerUrl: f.profiles.banner_url || undefined,
+        tagline: f.profiles.tagline || undefined,
+        activeAppsCount: f.profiles.apps?.[0]?.count || 0,
+        isFollowing: false, // Will be set below
       }));
 
       const following = (followingRes.data as unknown as FollowsResponse[] || []).map(f => ({
@@ -115,7 +140,16 @@ export function useDashboardStats() {
         name: f.profiles.name || 'User',
         username: f.profiles.username || 'unknown',
         avatarUrl: f.profiles.avatar_url || undefined,
+        bannerUrl: f.profiles.banner_url || undefined,
+        tagline: f.profiles.tagline || undefined,
+        activeAppsCount: f.profiles.apps?.[0]?.count || 0,
+        isFollowing: true,
       }));
+
+      // Set isFollowing for followers (check if they are also in the following list)
+      followers.forEach(f => {
+        f.isFollowing = following.some(fg => fg.id === f.id);
+      });
 
       // Fetch user's apps
       const { data: userApps } = await supabase

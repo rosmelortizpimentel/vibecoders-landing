@@ -1,0 +1,29 @@
+{
+  "title": "My Connections",
+  "subtitle": "Your circle of code and collaboration",
+  "followersTab": "Followers",
+  "followingTab": "Following",
+  "stats": {
+    "followers": "Followers",
+    "following": "Following"
+  },
+  "empty": {
+    "title": "No connections in your list yet",
+    "description": "Explore the community to connect and grow your collaboration network."
+  },
+  "search": "Search connection...",
+  "activeApps": "Active apps",
+  "mutualConnections": "Mutual connections",
+  "mutualConnections_one": "{{count}} mutual connection",
+  "mutualConnections_other": "{{count}} mutual connections",
+  "follow": "Follow",
+  "following": "Following",
+  "viewProfile": "View Profile",
+  "mutualContactsTab": "Mutual contacts",
+  "confirmUnfollow": {
+    "title": "Unfollow",
+    "message": "Are you sure you want to unfollow {{name}}?",
+    "confirm": "Unfollow",
+    "cancel": "Cancel"
+  }
+}

@@ -22,6 +22,7 @@ import adminEs from '@/i18n/es/admin.json';
 import feedbackEs from '@/i18n/es/feedback.json';
 import betaEs from '@/i18n/es/beta.json';
 import notificationsEs from '@/i18n/es/notifications.json';
+import vibersEs from '@/i18n/es/vibers.json';
 
 // English imports
 import commonEn from '@/i18n/en/common.json';
@@ -45,6 +46,7 @@ import adminEn from '@/i18n/en/admin.json';
 import feedbackEn from '@/i18n/en/feedback.json';
 import betaEn from '@/i18n/en/beta.json';
 import notificationsEn from '@/i18n/en/notifications.json';
+import vibersEn from '@/i18n/en/vibers.json';
 
 // French imports
 import commonFr from '@/i18n/fr/common.json';
@@ -68,6 +70,7 @@ import adminFr from '@/i18n/fr/admin.json';
 import feedbackFr from '@/i18n/fr/feedback.json';
 import betaFr from '@/i18n/fr/beta.json';
 import notificationsFr from '@/i18n/fr/notifications.json';
+import vibersFr from '@/i18n/fr/vibers.json';
 
 // Portuguese imports
 import commonPt from '@/i18n/pt/common.json';
@@ -91,6 +94,7 @@ import adminPt from '@/i18n/pt/admin.json';
 import feedbackPt from '@/i18n/pt/feedback.json';
 import betaPt from '@/i18n/pt/beta.json';
 import notificationsPt from '@/i18n/pt/notifications.json';
+import vibersPt from '@/i18n/pt/vibers.json';
 
 const translations = {
   es: {
@@ -115,6 +119,7 @@ const translations = {
     feedback: feedbackEs,
     beta: betaEs,
     notifications: notificationsEs,
+    vibers: vibersEs,
   },
   en: {
     common: commonEn,
@@ -138,6 +143,7 @@ const translations = {
     feedback: feedbackEn,
     beta: betaEn,
     notifications: notificationsEn,
+    vibers: vibersEn,
   },
   fr: {
     common: commonFr,
@@ -161,6 +167,7 @@ const translations = {
     feedback: feedbackFr,
     beta: betaFr,
     notifications: notificationsFr,
+    vibers: vibersFr,
   },
   pt: {
     common: commonPt,
@@ -184,6 +191,7 @@ const translations = {
     feedback: feedbackPt,
     beta: betaPt,
     notifications: notificationsPt,
+    vibers: vibersPt,
   },
 } as const;
 
@@ -193,8 +201,8 @@ export function useTranslation<T extends Section>(section: T) {
   const { language } = useLanguage();
   const sectionTranslations = translations[language][section];
   
-  // Return a t function that gets nested keys
-  const tFunction = (key: string): string => {
+  // Return a t function that gets nested keys and supports interpolation
+  const tFunction = (key: string, data?: Record<string, string | number>): string => {
     const keys = key.split('.');
     let result: unknown = sectionTranslations;
     for (const k of keys) {
@@ -217,14 +225,22 @@ export function useTranslation<T extends Section>(section: T) {
         return key; // Return key if not found
       }
     }
-    return typeof result === 'string' ? result : key;
+    let finalResult = typeof result === 'string' ? result : key;
+    
+    if (data) {
+      Object.entries(data).forEach(([k, v]) => {
+        finalResult = finalResult.replace(`{{${k}}}`, String(v));
+      });
+    }
+    
+    return finalResult;
   };
   
   // Return object with both t function and spread translations for backward compatibility
   return { 
     t: tFunction, 
     ...(sectionTranslations as object)
-  } as { t: (key: string) => string } & typeof translations['es'][T];
+  } as { t: (key: string, data?: Record<string, string | number>) => string } & typeof translations['es'][T];
 }
 
 // Static function for use outside React components (with explicit language)

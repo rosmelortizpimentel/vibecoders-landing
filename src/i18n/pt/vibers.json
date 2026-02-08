@@ -1,0 +1,23 @@
+{
+  "title": "Minhas Conexões",
+  "subtitle": "Seu círculo de código e colaboração",
+  "followersTab": "Seguidores",
+  "followingTab": "Seguindo",
+  "stats": {
+    "followers": "Me seguem",
+    "following": "Seguindo"
+  },
+  "empty": {
+    "title": "Ainda não há conexões na sua lista",
+    "description": "Explore a comunidade para se conectar e aumentar sua rede de colaboração."
+  },
+  "search": "Buscar conexão...",
+  "activeApps": "Apps ativos",
+  "mutualConnections": "Conexões em comum",
+  "mutualConnections_one": "{{count}} conexão em comum",
+  "mutualConnections_other": "{{count}} conexões em comum",
+  "follow": "Seguir",
+  "following": "Seguindo",
+  "viewProfile": "Ver Perfil",
+  "mutualContactsTab": "Contatos comuns"
+}

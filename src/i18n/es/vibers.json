@@ -1,0 +1,29 @@
+{
+  "title": "Mis Conexiones",
+  "subtitle": "Tu círculo de código y colaboración",
+  "followersTab": "Seguidores",
+  "followingTab": "Siguiendo",
+  "stats": {
+    "followers": "Me siguen",
+    "following": "Siguiendo"
+  },
+  "empty": {
+    "title": "Aún no tienes conexiones en tu lista",
+    "description": "Explora la comunidad para conectar y hacer crecer tu red de colaboración."
+  },
+  "search": "Buscar conexión...",
+  "activeApps": "Apps activas",
+  "mutualConnections": "Conexiones en común",
+  "mutualConnections_one": "{{count}} conexión en común",
+  "mutualConnections_other": "{{count}} conexiones en común",
+  "follow": "Seguir",
+  "following": "Siguiendo",
+  "viewProfile": "Ver Perfil",
+  "mutualContactsTab": "Contactos comunes",
+  "confirmUnfollow": {
+    "title": "Dejar de seguir",
+    "message": "¿Estás seguro que deseas dejar de seguir a {{name}}?",
+    "confirm": "Dejar de seguir",
+    "cancel": "Cancelar"
+  }
+}

@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
   User, 
+  Users,
   Rocket, 
   FlaskConical, 
   Wrench, 
@@ -84,6 +85,7 @@ export function Sidebar() {
     { path: '/notifications', label: tNotif('title'), icon: Bell, badge: unreadCount },
     { path: '/me', label: t('navigation.myProfile'), icon: User },
     { path: '/ideas', label: t('navigation.myIdeas'), icon: Lightbulb },
+    { path: '/connections', label: t('navigation.vibers'), icon: Users },
     { path: '/beta-testing', label: t('navigation.betaTesting'), icon: FlaskConical, badge: ownedAppsCount },
 
     // Separator
