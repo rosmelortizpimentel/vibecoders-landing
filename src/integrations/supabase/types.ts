@@ -207,6 +207,7 @@ export type Database = {
           is_visible: boolean
           logo_url: string | null
           name: string | null
+          screenshots: string[] | null
           status_id: string | null
           tagline: string | null
           updated_at: string
@@ -233,6 +234,7 @@ export type Database = {
           is_visible?: boolean
           logo_url?: string | null
           name?: string | null
+          screenshots?: string[] | null
           status_id?: string | null
           tagline?: string | null
           updated_at?: string
@@ -259,6 +261,7 @@ export type Database = {
           is_visible?: boolean
           logo_url?: string | null
           name?: string | null
+          screenshots?: string[] | null
           status_id?: string | null
           tagline?: string | null
           updated_at?: string
@@ -431,6 +434,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      feature_flags: {
+        Row: {
+          description: string | null
+          enabled: boolean | null
+          key: string
+          updated_at: string | null
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean | null
+          key: string
+          updated_at?: string | null
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean | null
+          key?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       feedback_attachments: {
         Row: {
@@ -610,6 +634,50 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          meta: Json
+          read_at: string | null
+          recipient_id: string
+          resource_id: string | null
+          resource_slug: string | null
+          type: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          meta?: Json
+          read_at?: string | null
+          recipient_id: string
+          resource_id?: string | null
+          resource_slug?: string | null
+          type: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          meta?: Json
+          read_at?: string | null
+          recipient_id?: string
+          resource_id?: string | null
+          resource_slug?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_views: {
         Row: {
           created_at: string
@@ -670,6 +738,7 @@ export type Database = {
           github: string | null
           id: string
           instagram: string | null
+          is_contributor: boolean | null
           is_pioneer: boolean
           language: string | null
           linkedin: string | null
@@ -679,9 +748,11 @@ export type Database = {
           name: string | null
           og_image_url: string | null
           primary_color: string | null
+          show_contributor_badge: boolean | null
           show_pioneer_badge: boolean
           tagline: string | null
           tiktok: string | null
+          total_scrapings: number | null
           twitter: string | null
           updated_at: string | null
           username: string | null
@@ -702,6 +773,7 @@ export type Database = {
           github?: string | null
           id: string
           instagram?: string | null
+          is_contributor?: boolean | null
           is_pioneer?: boolean
           language?: string | null
           linkedin?: string | null
@@ -711,9 +783,11 @@ export type Database = {
           name?: string | null
           og_image_url?: string | null
           primary_color?: string | null
+          show_contributor_badge?: boolean | null
           show_pioneer_badge?: boolean
           tagline?: string | null
           tiktok?: string | null
+          total_scrapings?: number | null
           twitter?: string | null
           updated_at?: string | null
           username?: string | null
@@ -734,6 +808,7 @@ export type Database = {
           github?: string | null
           id?: string
           instagram?: string | null
+          is_contributor?: boolean | null
           is_pioneer?: boolean
           language?: string | null
           linkedin?: string | null
@@ -743,14 +818,46 @@ export type Database = {
           name?: string | null
           og_image_url?: string | null
           primary_color?: string | null
+          show_contributor_badge?: boolean | null
           show_pioneer_badge?: boolean
           tagline?: string | null
           tiktok?: string | null
+          total_scrapings?: number | null
           twitter?: string | null
           updated_at?: string | null
           username?: string | null
           website?: string | null
           youtube?: string | null
+        }
+        Relationships: []
+      }
+      scrape_logs: {
+        Row: {
+          created_at: string | null
+          data: Json
+          id: string
+          request_payload: Json | null
+          url: string
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          id?: string
+          request_payload?: Json | null
+          url: string
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          request_payload?: Json | null
+          url?: string
+          user_email?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
