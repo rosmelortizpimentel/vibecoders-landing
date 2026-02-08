@@ -61,34 +61,34 @@ export function FreshDropsCarousel({ apps }: FreshDropsCarouselProps) {
         </div>
         <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5">
           <div className="flex items-center gap-1.5">
-            <h3 className="font-semibold text-foreground text-sm truncate leading-tight">
+            <h3 className="font-semibold text-foreground text-base truncate leading-tight">
               {app.name || 'Unnamed App'}
             </h3>
             {app.is_verified && !isSizer && (
-              <BadgeCheck className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+              <BadgeCheck className="w-4 h-4 text-primary flex-shrink-0" />
             )}
           </div>
           {app.tagline && (
-            <p className="text-[11px] text-muted-foreground truncate leading-tight">
+            <p className="text-sm text-muted-foreground truncate leading-tight">
               {app.tagline}
             </p>
           )}
-          <div className="flex items-center gap-3 mt-1.5">
+          <div className="flex items-center gap-3 mt-2">
             {app.profiles && (
-              <div className="flex items-center gap-1.5 min-w-0">
-                <Avatar className="w-4 h-4 border border-border shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <Avatar className="w-5 h-5 border border-border shrink-0">
                   <AvatarImage src={app.profiles.avatar_url || undefined} />
-                  <AvatarFallback className="text-[6px]">
+                  <AvatarFallback className="text-[10px]">
                     {app.profiles.username?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-[10px] text-muted-foreground truncate">
+                <span className="text-xs text-muted-foreground truncate">
                   @{app.profiles.username}
                 </span>
               </div>
             )}
-            <div className="ml-auto text-[10px] font-medium text-primary flex items-center gap-0.5 shrink-0 bg-primary/5 px-2 py-0.5 rounded-full">
-              Visit <ExternalLink className="w-2.5 h-2.5" />
+            <div className="ml-auto text-xs font-medium text-primary flex items-center gap-1 shrink-0 bg-primary/5 px-2.5 py-1 rounded-full hover:bg-primary/10 transition-colors">
+              Visit <ExternalLink className="w-3 h-3" />
             </div>
           </div>
         </div>

@@ -6,10 +6,15 @@ import { useShowcase } from '@/hooks/useShowcase';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 
+import { FreshDropsCarousel } from '@/components/home/FreshDropsCarousel';
+import { useFreshDrops } from '@/hooks/useFreshDrops';
+
 export default function Projects() {
   const { data: projects, isLoading, error } = useShowcase();
+  const { data: freshDrops = [], isLoading: freshDropsLoading } = useFreshDrops();
   const t = useTranslation('projects');
   const tErrors = useTranslation('errors');
+  const tHome = useTranslation('home');
 
   return (
     <>
@@ -68,6 +73,28 @@ export default function Projects() {
               ))}
             </div>
           )}
+
+          {/* Fresh Drops Carousel Section */}
+          <section className="mt-20 w-full pt-8 border-t border-border/40">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="p-2 bg-muted rounded-lg">
+                <Rocket className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">
+                {tHome.freshDrops?.title || 'Fresh out of the oven'}
+              </h2>
+            </div>
+
+            {freshDropsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                {[...Array(3)].map((_, i) => (
+                  <ShowcaseCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <FreshDropsCarousel apps={freshDrops} />
+            )}
+          </section>
         </div>
       </main>
     </>
