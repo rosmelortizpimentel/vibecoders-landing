@@ -7,6 +7,7 @@ export interface FeedbackAttachment {
   file_url: string;
   file_name: string;
   file_type: string;
+  file_path?: string;
 }
 
 export interface TesterFeedback {
@@ -51,7 +52,7 @@ export function useTesterFeedback(appId: string | undefined) {
       const feedbackIds = feedbackData.map(f => f.id);
       const { data: attachments, error: attachError } = await supabase
         .from('beta_feedback_attachments')
-        .select('id, feedback_id, file_url, file_name, file_type')
+        .select('id, feedback_id, file_url, file_name, file_type, file_path')
         .in('feedback_id', feedbackIds);
 
       if (attachError) {
@@ -70,6 +71,7 @@ export function useTesterFeedback(appId: string | undefined) {
           file_url: att.file_url,
           file_name: att.file_name,
           file_type: att.file_type,
+          file_path: att.file_path,
         });
       });
 
@@ -108,12 +110,55 @@ export function useTesterFeedback(appId: string | undefined) {
     },
   });
 
+  const updateFeedback = useMutation({
+    mutationFn: async ({ feedbackId, type, content, rating }: { 
+      feedbackId: string; 
+      type: string; 
+      content: string; 
+      rating: number | null 
+    }) => {
+      const { error } = await supabase
+        .from('beta_feedback')
+        .update({
+          type,
+          content,
+          rating,
+        })
+        .eq('id', feedbackId)
+        .eq('tester_id', user?.id)
+        .eq('status', 'open'); // Safety check
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tester-feedback', appId] });
+    },
+  });
+
+  const deleteFeedback = useMutation({
+    mutationFn: async (feedbackId: string) => {
+      const { error } = await supabase
+        .from('beta_feedback')
+        .delete()
+        .eq('id', feedbackId)
+        .eq('tester_id', user?.id)
+        .eq('status', 'open'); // Safety check
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tester-feedback', appId] });
+    },
+  });
+
   return {
     feedback: query.data || [],
     loading: query.isLoading,
     error: query.error,
     refetch: query.refetch,
     respondToResolution: respondToResolution.mutateAsync,
-    responding: respondToResolution.isPending,
+    updateFeedback: updateFeedback.mutateAsync,
+    deleteFeedback: deleteFeedback.mutateAsync,
+    responding: respondToResolution.isPending || updateFeedback.isPending || deleteFeedback.isPending,
   };
 }

@@ -1,35 +1,46 @@
 {
-  "title": "Bóveda de Prompts",
-  "subtitle": "Almacena, organiza y comparte tus mejores prompts de IA",
+  "title": "Librería de Recursos",
+  "subtitle": "Explora y comparte recursos y componentes de IA de alta calidad",
   "tabs": {
     "explore": "Explorar",
-    "mine": "Mis Prompts"
+    "mine": "Mis Recursos"
   },
-  "newPrompt": "Nuevo Prompt",
-  "searchPlaceholder": "Buscar prompts...",
+  "newPrompt": "Nuevo Recurso",
+  "searchPlaceholder": "Buscar recursos...",
   "filterByTool": "Filtrar por herramienta",
   "allTools": "Todas",
-  "noResults": "No se encontraron prompts",
+  "noResults": "No se encontraron recursos",
   "noResultsDesc": "Intenta ajustar tu búsqueda o filtros",
-  "noPrompts": "Aún no tienes prompts",
-  "noPromptsDesc": "Crea tu primer prompt para empezar",
-  "noPublicPrompts": "Aún no hay prompts públicos",
-  "noPublicPromptsDesc": "Sé el primero en compartir un prompt con la comunidad",
+  "noPrompts": "Aún no tienes recursos",
+  "noPromptsDesc": "Crea tu primer recurso para empezar",
+  "noPublicPrompts": "Aún no hay recursos públicos",
+  "noPublicPromptsDesc": "Sé el primero en compartir un recurso con la comunidad",
+  "favorites": "Mis Favoritos",
+  "allResources": "Todos los Recursos",
   "form": {
-    "createTitle": "Nuevo Prompt",
-    "editTitle": "Editar Prompt",
+    "createTitle": "Nuevo Recurso",
+    "editTitle": "Editar Recurso",
+    "intentLabel": "¿Qué quieres crear?",
+    "intentPlaceholder": "Selecciona la intención",
+    "resourceTypeLabel": "Tipo de Recurso",
+    "compatibilityLabel": "Compatibilidad",
+    "compatibilityPlaceholder": "Selecciona herramientas compatibles",
+    "tools": "Herramientas",
+    "chatPrompt": "Prompt de Chat",
+    "systemRule": "Regla de Sistema",
+    "template": "Template de Archivo",
+    "filenameLabel": "Nombre del Archivo",
+    "filenamePlaceholder": ".cursorrules",
     "titleLabel": "Título",
-    "titlePlaceholder": "ej. Sección hero de landing page",
-    "toolLabel": "Herramienta",
-    "toolPlaceholder": "Selecciona una herramienta",
+    "titlePlaceholder": "Landing estilo Netflix",
     "contentLabel": "Contenido",
-    "contentPlaceholder": "Escribe tu prompt aquí... Soporta Markdown",
+    "contentPlaceholder": "Escribe tu prompt o contenido aquí... Soporta Markdown",
     "tagsLabel": "Tags",
-    "tagsPlaceholder": "Escribe y presiona Enter para agregar",
+    "tagsPlaceholder": "Escribe y presiona Enter",
     "attachmentsLabel": "Archivos adjuntos",
     "publicLabel": "Hacer Público",
-    "publicDesc": "Los prompts públicos ayudan a la comunidad",
-    "save": "Guardar Prompt",
+    "publicDesc": "Los recursos públicos ayudan a la comunidad",
+    "save": "Guardar Recurso",
     "saving": "Guardando...",
     "cancel": "Cancelar"
   },
@@ -38,7 +49,10 @@
     "copyButton": "Copiar al Portapapeles",
     "attachments": "Archivos adjuntos",
     "by": "por",
-    "download": "Descargar"
+    "download": "Descargar",
+    "results": "Vista Previa de Resultados",
+    "variables": "Variables Requeridas",
+    "viewLive": "Ver Resultado en Vivo"
   },
   "card": {
     "private": "Privado",
@@ -46,7 +60,10 @@
     "copy": "Copiar",
     "edit": "Editar",
     "delete": "Eliminar",
-    "toggleVisibility": "Cambiar Visibilidad"
+    "toggleVisibility": "Cambiar Visibilidad",
+    "makePublic": "Hacer Público",
+    "makePrivate": "Hacer Privado",
+    "viewDemo": "Ver Demo"
   },
   "upload": {
     "dragDrop": "Arrastra archivos aquí, o haz clic para buscar",
@@ -54,11 +71,11 @@
     "uploading": "Subiendo...",
     "remove": "Quitar"
   },
-  "confirmDelete": "¿Estás seguro de que quieres eliminar este prompt?",
-  "deleted": "Prompt eliminado",
-  "saved": "Prompt guardado",
+  "confirmDelete": "¿Estás seguro de que quieres eliminar este recurso?",
+  "deleted": "Recurso eliminado",
+  "saved": "Recurso guardado",
   "visibility": {
-    "madePublic": "El prompt ahora es público",
-    "madePrivate": "El prompt ahora es privado"
+    "madePublic": "El recurso ahora es público",
+    "madePrivate": "El recurso ahora es privado"
   }
 }

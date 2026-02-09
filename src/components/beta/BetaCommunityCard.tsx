@@ -1,7 +1,14 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Users } from 'lucide-react';
+import { Users, Shield } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Link } from 'react-router-dom';
 
 interface Tester {
   id: string;
@@ -31,8 +38,8 @@ export function BetaCommunityCard({ testers, totalCount }: BetaCommunityCardProp
     <Card className="h-full border-primary/20 flex flex-col">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base font-semibold">
-          <Users className="w-4 h-4 text-primary" />
-          Squad 🛡️
+          <Shield className="w-4 h-4 text-primary" />
+          Squad
         </CardTitle>
       </CardHeader>
       <CardContent className="flex-1">
@@ -42,16 +49,33 @@ export function BetaCommunityCard({ testers, totalCount }: BetaCommunityCardProp
           </p>
         ) : (
           <div className="flex items-center gap-2">
-            <div className="flex -space-x-2 overflow-hidden">
-              {validTesters.map((tester) => (
-                <Avatar key={tester.user_id} className="inline-block border-2 border-background w-8 h-8">
-                  <AvatarImage src={tester.profile.avatar_url || undefined} />
-                  <AvatarFallback>
-                    {(tester.profile.name || 'T').charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              ))}
-            </div>
+            <TooltipProvider>
+              <div className="flex -space-x-2 overflow-hidden">
+                {validTesters.map((tester) => (
+                  <Tooltip key={tester.user_id}>
+                    <TooltipTrigger asChild>
+                      <Link 
+                        to={`/@${tester.profile.username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block transition-transform hover:-translate-y-1"
+                      >
+                        <Avatar className="border-2 border-background w-8 h-8 cursor-pointer">
+                          <AvatarImage src={tester.profile.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {(tester.profile.name || 'T').charAt(0).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent className="flex flex-col gap-0.5 p-2">
+                      <p className="text-sm font-semibold">{tester.profile.name || 'Tester'}</p>
+                      <p className="text-xs text-muted-foreground">@{tester.profile.username}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
             {remainingcount > 0 && (
               <span className="text-xs text-muted-foreground font-medium">
                 +{remainingcount}

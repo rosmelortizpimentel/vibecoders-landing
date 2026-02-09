@@ -15,6 +15,7 @@ import { FeedbackActionMenu } from './FeedbackActionMenu';
 import { MarkdownEditor } from './MarkdownEditor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TesterSearchDialog } from './TesterSearchDialog';
+import { ImageCarouselDialog } from './ImageCarouselDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -129,6 +130,9 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
   const [feedbackFilter, setFeedbackFilter] = useState<'all' | 'open' | 'in_review' | 'closed'>('all');
   const [testerToRemove, setTesterToRemove] = useState<Tester | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [carouselOpen, setCarouselOpen] = useState(false);
+  const [carouselImages, setCarouselImages] = useState<{ url: string; name: string }[]>([]);
+  const [carouselInitialIndex, setCarouselInitialIndex] = useState(0);
 
   useEffect(() => {
     if (config.beta_active) {
@@ -308,6 +312,12 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
     return res;
   };
 
+  const openImageCarousel = (images: FeedbackAttachment[], index: number) => {
+    setCarouselImages(images.map(img => ({ url: img.file_url, name: img.file_name })));
+    setCarouselInitialIndex(index);
+    setCarouselOpen(true);
+  };
+
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'bug': return <Bug className="w-4 h-4 text-destructive" />;
@@ -419,10 +429,10 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                     {/* Attachments */}
                     {item.attachments.length > 0 && (
                       <div className="flex flex-wrap gap-2 mb-3">
-                        {item.attachments.map((att) => (
+                        {item.attachments.map((att, idx) => (
                           <button
                             key={att.id}
-                            onClick={() => window.open(att.file_url, '_blank')}
+                            onClick={() => openImageCarousel(item.attachments, idx)}
                             className="block rounded-lg overflow-hidden hover:opacity-90 transition-opacity border"
                           >
                             <img
@@ -720,6 +730,13 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         onSelect={handleAddTester}
+      />
+
+      <ImageCarouselDialog
+        images={carouselImages}
+        initialIndex={carouselInitialIndex}
+        open={carouselOpen}
+        onOpenChange={setCarouselOpen}
       />
     </div>
   );

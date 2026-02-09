@@ -22,6 +22,8 @@ import Post from "./pages/Post";
 import BetaSquads from "./pages/BetaSquads";
 import Ideas from "./pages/Ideas";
 import Prompts from "./pages/Prompts";
+import PromptStudio from "./pages/prompts/PromptStudio";
+import PromptViewer from "./pages/prompts/PromptViewer";
 import Beta from "./pages/Beta";
 import Vibers from "./pages/Vibers";
 import { NotificationsPage } from "./pages/Notifications";
@@ -46,7 +48,6 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/post/:slug" element={<Post />} />
-          <Route path="/app/:appId" element={<AppDetail />} />
           
           {/* Admin routes - protected by Admin component */}
           <Route path="/admin/*" element={<Admin />} />
@@ -73,6 +74,10 @@ const App = () => (
             <Route path="/beta-testing/:appId" element={<Beta />} />
             <Route path="/ideas" element={<Ideas />} />
             <Route path="/prompts" element={<Prompts />} />
+            <Route path="/prompts/new" element={<PromptStudio />} />
+            <Route path="/prompts/:id" element={<PromptViewer />} />
+            <Route path="/prompts/:id/edit" element={<PromptStudio />} />
+            <Route path="/app/:appId" element={<AppDetail />} />
           </Route>
           
           {/* Legacy redirects */}

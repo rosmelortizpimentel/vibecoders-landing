@@ -64,7 +64,7 @@ export function FounderCard({ profile }: FounderCardProps) {
           <div className="flex items-center gap-3 text-sm">
             <button 
               onClick={handleFollowersClick}
-              className="group flex items-center gap-1 cursor-pointer hover:text-gray-900"
+              className="group flex items-center gap-1 cursor-pointer hover:text-gray-900 outline-none"
             >
               <span className="font-bold text-gray-900">{followersCount}</span>
               <span className="text-gray-500 group-hover:text-gray-700 transition-colors">
@@ -73,7 +73,7 @@ export function FounderCard({ profile }: FounderCardProps) {
             </button>
             <button 
               onClick={handleFollowingClick}
-              className="group flex items-center gap-1 cursor-pointer hover:text-gray-900"
+              className="group flex items-center gap-1 cursor-pointer hover:text-gray-900 outline-none"
             >
               <span className="font-bold text-gray-900">{followingCount}</span>
               <span className="text-gray-500 group-hover:text-gray-700 transition-colors">

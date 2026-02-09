@@ -16,7 +16,7 @@
     "home": "Inicio",
     "myProfile": "Mi Perfil",
     "myIdeas": "Mis Ideas",
-    "prompts": "Prompt Vault",
+    "prompts": "Librería de Recursos",
     "vibers": "Mis Conexiones",
     "betaTesting": "Mis Beta Testing",
     "startups": "Explorar",
@@ -25,5 +25,6 @@
     "feedback": "Hablemos",
     "buildLog": "Build Log",
     "admin": "Admin"
-  }
+  },
+  "visitWebsite": "Visitar Sitio Web"
 }

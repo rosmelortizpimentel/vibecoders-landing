@@ -29,13 +29,20 @@ export function PromptFormModal({ open, onOpenChange, editPrompt }: PromptFormMo
   const { t } = useTranslation('prompts');
   const { createPrompt, updatePrompt, uploadFile, deleteFile } = usePrompts();
 
+  /* State */
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [resultUrl, setResultUrl] = useState('');
   const [toolUsed, setToolUsed] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(false);
+  
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<PromptFile[]>([]);
+  
+  const [pendingResultImages, setPendingResultImages] = useState<PendingFile[]>([]);
+  const [uploadedResultImages, setUploadedResultImages] = useState<PromptFile[]>([]);
+  
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -43,19 +50,29 @@ export function PromptFormModal({ open, onOpenChange, editPrompt }: PromptFormMo
       if (editPrompt) {
         setTitle(editPrompt.title);
         setDescription(editPrompt.description || '');
+        setResultUrl(editPrompt.result_url || '');
         setToolUsed(editPrompt.tool_used || '');
         setTags(editPrompt.tags || []);
         setIsPublic(editPrompt.is_public);
-        setUploadedFiles(editPrompt.prompt_files || []);
+        
+        // Split files by role
+        const attachments = (editPrompt.prompt_files || []).filter(f => !f.file_role || f.file_role === 'attachment');
+        const results = (editPrompt.prompt_files || []).filter(f => f.file_role === 'result_image');
+        
+        setUploadedFiles(attachments);
+        setUploadedResultImages(results);
       } else {
         setTitle('');
         setDescription('');
+        setResultUrl('');
         setToolUsed('');
         setTags([]);
         setIsPublic(false);
         setUploadedFiles([]);
+        setUploadedResultImages([]);
       }
       setPendingFiles([]);
+      setPendingResultImages([]);
     }
   }, [open, editPrompt]);
 
@@ -64,8 +81,17 @@ export function PromptFormModal({ open, onOpenChange, editPrompt }: PromptFormMo
     setPendingFiles(prev => [...prev, ...newPending]);
   };
 
+  const handleAddResultImages = (files: File[]) => {
+    const newPending = files.map(f => ({ file: f, id: crypto.randomUUID() }));
+    setPendingResultImages(prev => [...prev, ...newPending]);
+  };
+
   const handleRemovePending = (id: string) => {
     setPendingFiles(prev => prev.filter(p => p.id !== id));
+  };
+
+  const handleRemovePendingResultImage = (id: string) => {
+    setPendingResultImages(prev => prev.filter(p => p.id !== id));
   };
 
   const handleRemoveUploaded = async (id: string, url: string) => {
@@ -73,35 +99,44 @@ export function PromptFormModal({ open, onOpenChange, editPrompt }: PromptFormMo
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
   };
 
+  const handleRemoveUploadedResultImage = async (id: string, url: string) => {
+    await deleteFile(id, url);
+    setUploadedResultImages(prev => prev.filter(f => f.id !== id));
+  };
+
   const handleSubmit = async () => {
     if (!title.trim()) return;
     setSaving(true);
     try {
       let promptId: string;
+      const commonData = {
+        title: title.trim(),
+        description,
+        result_url: resultUrl.trim(),
+        tags,
+        tool_used: toolUsed,
+        is_public: isPublic,
+      };
+
       if (editPrompt) {
         await updatePrompt.mutateAsync({
           id: editPrompt.id,
-          title: title.trim(),
-          description,
-          tags,
-          tool_used: toolUsed,
-          is_public: isPublic,
+          ...commonData,
         });
         promptId = editPrompt.id;
       } else {
-        const created = await createPrompt.mutateAsync({
-          title: title.trim(),
-          description,
-          tags,
-          tool_used: toolUsed,
-          is_public: isPublic,
-        });
+        const created = await createPrompt.mutateAsync(commonData);
         promptId = created.id;
       }
 
-      // Upload pending files
+      // Upload pending attachment files
       for (const pf of pendingFiles) {
-        await uploadFile(promptId, pf.file);
+        await uploadFile(promptId, pf.file, 'attachment');
+      }
+
+      // Upload pending result images
+      for (const pf of pendingResultImages) {
+        await uploadFile(promptId, pf.file, 'result_image');
       }
 
       onOpenChange(false);
@@ -146,9 +181,22 @@ export function PromptFormModal({ open, onOpenChange, editPrompt }: PromptFormMo
               </Select>
             </div>
 
+            {/* Result URL (Live Demo) */}
+            <div className="space-y-1.5">
+              <Label>Result URL (Live Demo)</Label>
+              <Input
+                value={resultUrl}
+                onChange={e => setResultUrl(e.target.value)}
+                placeholder="https://..."
+              />
+            </div>
+
             {/* Content */}
             <div className="space-y-1.5">
               <Label>{t('form.contentLabel')}</Label>
+              <div className="text-xs text-muted-foreground mb-1">
+                Tip: Use brackets like [PROJECT_NAME] to define dynamic variables.
+              </div>
               <MarkdownEditor
                 value={description}
                 onChange={setDescription}
@@ -160,6 +208,19 @@ export function PromptFormModal({ open, onOpenChange, editPrompt }: PromptFormMo
             <div className="space-y-1.5">
               <Label>{t('form.tagsLabel')}</Label>
               <TagInput tags={tags} onChange={setTags} placeholder={t('form.tagsPlaceholder')} />
+            </div>
+
+            {/* Result Images */}
+            <div className="space-y-1.5">
+              <Label>Result Gallery (Screenshots)</Label>
+              <FileUploader
+                pendingFiles={pendingResultImages}
+                onAddFiles={handleAddResultImages}
+                onRemovePending={handleRemovePendingResultImage}
+                uploadedFiles={uploadedResultImages}
+                onRemoveUploaded={handleRemoveUploadedResultImage}
+                uploading={saving}
+              />
             </div>
 
             {/* Attachments */}

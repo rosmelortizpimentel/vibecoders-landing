@@ -44,7 +44,7 @@ export function useBetaContributions(userId: string | undefined) {
               category_id,
               status:app_statuses(name, slug),
               stacks:app_stacks(
-                stack:stacks(id, name, logo_url)
+                stack:tech_stacks(id, name, logo_url)
               ),
               owner:profiles!apps_user_id_fkey(
                 id,

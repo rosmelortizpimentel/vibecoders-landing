@@ -19,6 +19,7 @@ export interface PublicApp {
   screenshots?: string[];
   status: { name: string; slug: string } | null;
   category?: { name: string; slug: string } | null;
+  tags?: string[];
   stacks: PublicAppStack[];
   owner?: {
     id: string;

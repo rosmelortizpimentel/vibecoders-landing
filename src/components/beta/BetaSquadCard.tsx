@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { FlaskConical, Lock, Check, Clock, Users } from 'lucide-react';
 import { toast } from 'sonner';
+import { parseMarkdown } from '@/lib/markdown';
 
 interface BetaSquadCardProps {
   appId: string;
@@ -13,6 +14,7 @@ interface BetaSquadCardProps {
   testersCount: number;
   userTesterStatus: { status: string; id: string } | null;
   isOwner: boolean;
+  betaInstructions?: string | null;
   onJoined: () => void;
   onAccessMission: () => void;
 }
@@ -23,6 +25,7 @@ export function BetaSquadCard({
   testersCount,
   userTesterStatus,
   isOwner,
+  betaInstructions,
   onJoined,
   onAccessMission,
 }: BetaSquadCardProps) {
@@ -128,25 +131,34 @@ export function BetaSquadCard({
   };
 
   return (
-    <Card className="border-primary/20 bg-primary/5">
+    <Card className="border-primary/20 bg-primary/5 overflow-hidden">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <FlaskConical className="w-5 h-5 text-primary" />
           {t('title')}
         </CardTitle>
-        <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        {/* Mission Description */}
+        {!userTesterStatus && !isOwner && !isFull && betaInstructions && (
+          <div className="space-y-3">
+            <div 
+              className="text-xs text-gray-600 leading-relaxed prose prose-sm max-w-none dark:prose-invert"
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(betaInstructions) }}
+            />
+          </div>
+        )}
+
         <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">
+          <div className="flex justify-between text-[11px] uppercase font-bold tracking-wider text-gray-400">
+            <span>
               {t('spotsTotal').replace('{current}', String(testersCount)).replace('{total}', String(betaLimit))}
             </span>
-            <span className="font-medium">
+            <span className="text-primary/70">
               {t('spotsRemaining').replace('{count}', String(spotsRemaining))}
             </span>
           </div>
-          <Progress value={progressPercent} className="h-2" />
+          <Progress value={progressPercent} className="h-1.5 bg-primary/10" />
         </div>
         
         {renderButton()}

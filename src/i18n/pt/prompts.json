@@ -38,7 +38,10 @@
     "copyButton": "Copiar",
     "attachments": "Anexos",
     "by": "por",
-    "download": "Baixar"
+    "download": "Baixar",
+    "results": "Prévia dos Resultados",
+    "variables": "Variáveis Necessárias",
+    "viewLive": "Ver Resultado ao Vivo"
   },
   "card": {
     "private": "Privado",

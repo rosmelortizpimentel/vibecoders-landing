@@ -68,6 +68,8 @@ export interface AppDetailData {
   category: AppCategory | null;
   status: AppStatus | null;
   stacks: TechStack[];
+  screenshots: string[];
+  tags: string[];
   testers_count: number;
   testers: BetaTester[];
   user_tester_status: { status: string; id: string } | null;

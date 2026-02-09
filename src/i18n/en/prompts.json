@@ -1,35 +1,46 @@
 {
-  "title": "Prompt Vault",
-  "subtitle": "Store, organize and share your best AI prompts",
+  "title": "Resource Library",
+  "subtitle": "Explore and share high-quality AI resources and components",
   "tabs": {
     "explore": "Explore",
-    "mine": "My Prompts"
+    "mine": "My Resources"
   },
-  "newPrompt": "New Prompt",
-  "searchPlaceholder": "Search prompts...",
+  "newPrompt": "New Resource",
+  "searchPlaceholder": "Search resources...",
   "filterByTool": "Filter by tool",
   "allTools": "All Tools",
-  "noResults": "No prompts found",
+  "noResults": "No resources found",
   "noResultsDesc": "Try adjusting your search or filters",
-  "noPrompts": "You don't have any prompts yet",
-  "noPromptsDesc": "Create your first prompt to get started",
-  "noPublicPrompts": "No public prompts yet",
-  "noPublicPromptsDesc": "Be the first to share a prompt with the community",
+  "noPrompts": "You don't have any resources yet",
+  "noPromptsDesc": "Create your first resource to get started",
+  "noPublicPrompts": "No public resources yet",
+  "noPublicPromptsDesc": "Be the first to share a resource with the community",
+  "favorites": "My Favorites",
+  "allResources": "All Resources",
   "form": {
-    "createTitle": "New Prompt",
-    "editTitle": "Edit Prompt",
+    "createTitle": "New Resource",
+    "editTitle": "Edit Resource",
+    "intentLabel": "What do you want to create?",
+    "intentPlaceholder": "Select intent",
+    "resourceTypeLabel": "Resource Type",
+    "compatibilityLabel": "Compatibility",
+    "compatibilityPlaceholder": "Select compatible tools",
+    "tools": "Tools",
+    "chatPrompt": "Chat Prompt",
+    "systemRule": "System Rule",
+    "template": "File Template",
+    "filenameLabel": "Filename",
+    "filenamePlaceholder": ".cursorrules",
     "titleLabel": "Title",
     "titlePlaceholder": "e.g. Landing page hero section",
-    "toolLabel": "Tool Used",
-    "toolPlaceholder": "Select a tool",
     "contentLabel": "Content",
-    "contentPlaceholder": "Write your prompt here... Markdown supported",
+    "contentPlaceholder": "Write your prompt or content here... Markdown supported",
     "tagsLabel": "Tags",
     "tagsPlaceholder": "Type and press Enter to add",
     "attachmentsLabel": "Attachments",
     "publicLabel": "Make Public",
-    "publicDesc": "Public prompts help the community",
-    "save": "Save Prompt",
+    "publicDesc": "Public resources help the community",
+    "save": "Save Resource",
     "saving": "Saving...",
     "cancel": "Cancel"
   },
@@ -38,7 +49,10 @@
     "copyButton": "Copy to Clipboard",
     "attachments": "Attachments",
     "by": "by",
-    "download": "Download"
+    "download": "Download",
+    "results": "Results Preview",
+    "variables": "Required Variables",
+    "viewLive": "View Live Result"
   },
   "card": {
     "private": "Private",
@@ -46,7 +60,10 @@
     "copy": "Copy",
     "edit": "Edit",
     "delete": "Delete",
-    "toggleVisibility": "Toggle Visibility"
+    "toggleVisibility": "Toggle Visibility",
+    "makePublic": "Make Public",
+    "makePrivate": "Make Private",
+    "viewDemo": "View Demo"
   },
   "upload": {
     "dragDrop": "Drag & drop files here, or click to browse",
@@ -54,11 +71,11 @@
     "uploading": "Uploading...",
     "remove": "Remove"
   },
-  "confirmDelete": "Are you sure you want to delete this prompt?",
-  "deleted": "Prompt deleted",
-  "saved": "Prompt saved",
+  "confirmDelete": "Are you sure you want to delete this resource?",
+  "deleted": "Resource deleted",
+  "saved": "Resource saved",
   "visibility": {
-    "madePublic": "Prompt is now public",
-    "madePrivate": "Prompt is now private"
+    "madePublic": "Resource is now public",
+    "madePrivate": "Resource is now private"
   }
 }

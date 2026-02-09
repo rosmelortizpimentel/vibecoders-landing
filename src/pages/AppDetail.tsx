@@ -15,12 +15,15 @@ import { BetaHallOfFame } from '@/components/beta/BetaHallOfFame';
 import { BetaMissionCard } from '@/components/beta/BetaMissionCard';
 import { BetaActionCard } from '@/components/beta/BetaActionCard';
 import { BetaCommunityCard } from '@/components/beta/BetaCommunityCard';
+import { FounderCard } from '@/components/profile/FounderCard';
+import { useTesterFeedback } from '@/hooks/useTesterFeedback';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { parseMarkdown } from '@/lib/markdown';
+import { ProjectDNA } from '@/components/ProjectDNA';
 import { 
   ArrowLeft, 
   Shield,
@@ -29,8 +32,16 @@ import {
   Check,
   FileText,
   LogOut,
+  BadgeCheck,
+  Globe,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,6 +54,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
+import { AppDetailView } from '@/components/profile/AppDetailView';
+import { PublicApp } from '@/hooks/usePublicProfile';
+
 export default function AppDetail() {
   const { appId } = useParams<{ appId: string }>();
   const navigate = useNavigate();
@@ -50,12 +64,14 @@ export default function AppDetail() {
   const { t: tCommon } = useTranslation('common');
   const { user } = useAuth();
   const { app, loading, error, refetch } = useAppDetail(appId);
+  const { feedback } = useTesterFeedback(appId);
   const { stats: ownerStats, loading: statsLoading } = useOwnerStats(app?.owner?.id);
   const { leaveBeta, leaving } = useBetaSquad(appId || '');
   
   const [copied, setCopied] = useState(false);
   const [followDialogOpen, setFollowDialogOpen] = useState(false);
   const [followDialogTab, setFollowDialogTab] = useState<'followers' | 'following'>('followers');
+  const [showPublicDetail, setShowPublicDetail] = useState(false);
 
   const handleCopyLink = () => {
     if (app?.beta_link) {
@@ -124,38 +140,97 @@ export default function AppDetail() {
     );
   }
 
-  const isAcceptedTester = app.user_tester_status?.status === 'accepted';
+  const allAttachments = feedback.flatMap(f => f.attachments || []);
+
+  const isAcceptedTester = app?.user_tester_status?.status === 'accepted';
+
+  // Map AppDetailData to PublicApp for AppDetailView
+  const publicApp: PublicApp = {
+    id: app.id,
+    url: app.url,
+    name: app.name,
+    tagline: app.tagline,
+    description: app.description,
+    logo_url: app.logo_url,
+    is_verified: app.is_verified,
+    hours_ideation: app.hours_ideation || 0,
+    hours_building: app.hours_building || 0,
+    screenshots: app.screenshots || [],
+    status: app.status,
+    category: app.category,
+    tags: app.tags || [],
+    stacks: app.stacks,
+    owner: {
+      id: app.owner.id,
+      username: app.owner.username || '',
+      full_name: app.owner.name || '',
+      avatar_url: app.owner.avatar_url,
+      tagline: app.owner.tagline
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Custom Header with App branding */}
-      <AppDetailHeader 
-        appName={app.name}
-        appTagline={app.tagline}
-        logoUrl={app.logo_url}
-      />
-      
-      <main className="flex-1 container mx-auto px-4 py-4 md:py-6 overflow-x-hidden">
+    <div className="space-y-6">
+      <main>
         <div className="max-w-7xl mx-auto">
-          {/* Back Button */}
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="mb-4 -ml-2"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {tCommon('back')}
-          </Button>
-
           {isAcceptedTester ? (
             /* TESTER VIEW (Beta Dashboard) */
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Left Column (2/3) - Mission */}
               <div className="md:col-span-2 space-y-6">
+                
+                {/* App Info & Founder Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* App Info Card - Clickable to open detail */}
+                  <Card 
+                    className="h-full border-primary/20 bg-primary/5 hover:border-primary/40 cursor-pointer transition-colors group"
+                    onClick={() => setShowPublicDetail(true)}
+                  >
+                    <CardContent className="p-5 flex flex-col h-full justify-center">
+                      <div className="flex items-center gap-4">
+                         <div className="shrink-0">
+                            {app.logo_url ? (
+                              <img 
+                                src={app.logo_url} 
+                                alt={app.name || ''} 
+                                className="w-14 h-14 rounded-xl object-cover shadow-sm bg-white group-hover:scale-105 transition-transform"
+                              />
+                            ) : (
+                              <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center border border-primary/10">
+                                <span className="text-xl font-bold text-gray-300">
+                                  {app.name?.charAt(0) || '?'}
+                                </span>
+                              </div>
+                            )}
+                         </div>
+                         <div className="min-w-0 flex-1">
+                            <h3 className="text-lg font-bold text-gray-900 leading-tight truncate group-hover:text-primary transition-colors">
+                              {app.name}
+                            </h3>
+                            <p className="text-sm text-gray-500 font-medium line-clamp-2 mt-0.5">
+                              {app.tagline}
+                            </p>
+                         </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Founder Card */}
+                  <div className="h-full">
+                     <FounderCard profile={{
+                        id: app.owner.id,
+                        username: app.owner.username || '',
+                        full_name: app.owner.name || '',
+                        avatar_url: app.owner.avatar_url,
+                        tagline: app.owner.tagline
+                     }} />
+                  </div>
+                </div>
+
                 <BetaMissionCard 
                   instructions={app.beta_instructions} 
                   betaLink={app.beta_link} 
+                  attachments={allAttachments}
                 />
               </div>
 
@@ -200,106 +275,227 @@ export default function AppDetail() {
               </div>
             </div>
           ) : (
-            /* PUBLIC/OWNER VIEW */
-            <div className="space-y-4 max-w-2xl mx-auto">
-              <div className="grid gap-4 md:grid-cols-3">
-                {/* Author Card - Full width on mobile, right side on desktop */}
-                <div className="md:order-2 md:col-span-1">
-                  <Card>
-                    <CardContent className="p-4">
-                      <Link 
-                        to={app.owner?.username ? `/@${app.owner.username}` : '#'}
-                        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                      >
-                        <Avatar className="w-11 h-11 flex-shrink-0">
-                          <AvatarImage src={app.owner?.avatar_url || undefined} />
-                          <AvatarFallback>
-                            {(app.owner?.name || 'U').charAt(0).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate text-sm">
-                            {app.owner?.name || app.owner?.username || 'Unknown'}
-                          </p>
-                          {app.owner?.tagline && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {app.owner.tagline}
-                            </p>
+            /* PUBLIC/OWNER VIEW - Upgraded to match PublicProfile detail style */
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left Column (2/3) - Main App Content */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* App Hero Card */}
+                <Card className="overflow-hidden border-none shadow-sm bg-white">
+                  <div className="p-6">
+                    <div className="flex flex-col md:flex-row gap-6 items-start">
+                      {/* Logo */}
+                      <div className="shrink-0 mx-auto md:mx-0">
+                        {app.logo_url ? (
+                          <img 
+                            src={app.logo_url} 
+                            alt={app.name || ''} 
+                            className="w-24 h-24 rounded-2xl object-cover shadow-sm ring-1 ring-gray-100"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 rounded-2xl bg-gray-50 flex items-center justify-center ring-1 ring-gray-100">
+                            <span className="text-3xl font-bold text-gray-300">
+                              {app.name?.charAt(0) || '?'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 text-center md:text-left min-w-0">
+                        <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
+                          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
+                            {app.name}
+                          </h1>
+                          {app.is_verified && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <BadgeCheck className="h-6 w-6 text-primary flex-shrink-0" />
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  {t('verifiedOwner')}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                         </div>
-                      </Link>
-                      {/* Social stats */}
-                      <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                        <button
-                          onClick={openFollowersDialog}
-                          className="hover:text-primary transition-colors"
-                        >
-                          <span className="font-medium text-foreground">
-                            {statsLoading ? '...' : ownerStats.followersCount}
-                          </span>{' '}
-                          {t('authorFollowers')}
-                        </button>
-                        <span>·</span>
-                        <button
-                          onClick={openFollowingDialog}
-                          className="hover:text-primary transition-colors"
-                        >
-                          <span className="font-medium text-foreground">
-                            {statsLoading ? '...' : ownerStats.followingCount}
-                          </span>{' '}
-                          {t('authorFollowing')}
-                        </button>
+                        <p className="text-lg text-gray-500 font-medium mb-4">
+                          {app.tagline}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                          <Button 
+                            asChild 
+                            size="sm"
+                            className="rounded-full bg-gray-900 hover:bg-gray-800"
+                          >
+                            <a 
+                              href={app.url.startsWith('http') ? app.url : `https://${app.url}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="flex items-center gap-2"
+                            >
+                              {tCommon('visitWebsite')}
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          </Button>
+                          
+                          {app.status && (
+                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/5 text-primary border border-primary/10">
+                               {app.status.name}
+                             </span>
+                          )}
+                        </div>
                       </div>
+                    </div>
+
+                    {/* Description */}
+                    {app.description && (
+                      <div className="mt-8 pt-8 border-t border-gray-50">
+                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
+                          {t('aboutApp')}
+                        </h3>
+                        <div 
+                          className="prose prose-sm max-w-none text-gray-600 leading-relaxed dark:prose-invert"
+                          dangerouslySetInnerHTML={{ __html: parseMarkdown(app.description) }}
+                        />
+                      </div>
+                    )}
+
+                    {/* ADN Section */}
+                    {(app.hours_ideation || app.hours_building) && (
+                      <div className="mt-8 pt-8 border-t border-gray-50">
+                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
+                          {t('projectDNA')}
+                        </h3>
+                        <ProjectDNA 
+                          ideationHours={app.hours_ideation || 0} 
+                          buildHours={app.hours_building || 0}
+                          className="h-2 mb-4"
+                        />
+                        <div className="grid grid-cols-2 gap-4">
+                          {app.hours_ideation !== null && app.hours_ideation > 0 && (
+                            <div>
+                              <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">{t('ideation')}</p>
+                              <p className="text-xl font-bold text-gray-900">{app.hours_ideation}h</p>
+                            </div>
+                          )}
+                          {app.hours_building !== null && app.hours_building > 0 && (
+                            <div>
+                              <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">{t('construction')}</p>
+                              <p className="text-xl font-bold text-gray-900">{app.hours_building}h</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Tech Stack */}
+                    {app.stacks && app.stacks.length > 0 && (
+                      <div className="mt-8 pt-8 border-t border-gray-50">
+                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
+                          {t('techStack')}
+                        </h3>
+                        <div className="flex flex-wrap gap-3">
+                          {app.stacks.map(stack => (
+                            <div 
+                              key={stack.id}
+                              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 border border-gray-100"
+                            >
+                              <img src={stack.logo_url} alt={stack.name} className="w-5 h-5 object-contain" />
+                              <span className="text-xs font-semibold text-gray-700">{stack.name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+
+                {/* Contributors / Testers Hall of Fame */}
+                {app.testers && app.testers.length > 0 && (
+                   <div className="space-y-4">
+                      <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">
+                        {t('contributors')}
+                      </h3>
+                      <Card className="border-none shadow-sm bg-white">
+                        <CardContent className="p-6">
+                           <BetaHallOfFame 
+                            testers={app.testers} 
+                            totalCount={app.testers_count} 
+                          />
+                        </CardContent>
+                      </Card>
+                   </div>
+                )}
+              </div>
+
+              {/* Right Column (1/3) - Sidebar (Beta Squad + Founder) */}
+              <div className="lg:col-span-1 space-y-6">
+                {/* Squad Card */}
+                {app.beta_active && !app.is_owner && !isAcceptedTester && (
+                  <BetaSquadCard
+                    appId={app.id}
+                    betaLimit={app.beta_limit}
+                    testersCount={app.testers_count}
+                    userTesterStatus={app.user_tester_status}
+                    isOwner={app.is_owner}
+                    betaInstructions={app.beta_instructions}
+                    onJoined={() => refetch()}
+                    onAccessMission={() => refetch()}
+                  />
+                )}
+
+                {/* Founder Card */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">
+                    {t('founder')}
+                  </h3>
+                  <Card className="border-none shadow-sm bg-white overflow-hidden">
+                    <CardContent className="p-0">
+                      <Link 
+                        to={app.owner?.username ? `/@${app.owner.username}` : '#'}
+                        className="block p-5 bg-gradient-to-br from-gray-50 to-white hover:bg-gray-100/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <Avatar className="w-16 h-16 border-2 border-white shadow-sm ring-1 ring-gray-100">
+                            <AvatarImage src={app.owner?.avatar_url || undefined} />
+                            <AvatarFallback className="text-xl font-bold">
+                              {(app.owner?.name || 'U').charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-bold text-gray-900 truncate">
+                              {app.owner?.name || app.owner?.username || 'Unknown'}
+                            </p>
+                            {app.owner?.tagline && (
+                              <p className="text-xs text-gray-500 line-clamp-2 mt-0.5 leading-relaxed">
+                                {app.owner.tagline}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100">
+                           <div className="text-center flex-1">
+                              <p className="text-lg font-bold text-gray-900">{ownerStats.followersCount}</p>
+                              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">{t('followers')}</p>
+                           </div>
+                           <div className="w-px h-8 bg-gray-100" />
+                           <div className="text-center flex-1">
+                              <p className="text-lg font-bold text-gray-900">{ownerStats.followingCount}</p>
+                              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">{t('following')}</p>
+                           </div>
+                        </div>
+                      </Link>
                     </CardContent>
                   </Card>
                 </div>
-
-                {/* App Summary Card - Full width on mobile, left side on desktop */}
-                <div className="md:order-1 md:col-span-2">
-                  <AppSummaryCard
-                    appId={app.id}
-                    name={app.name}
-                    tagline={app.tagline}
-                    logoUrl={app.logo_url}
-                    url={app.url}
-                    isVerified={app.is_verified}
-                    status={app.status}
-                    stacks={app.stacks}
-                    appName={app.name || undefined}
-                  />
-                </div>
               </div>
-
-              {/* Beta Squad Card for non-testers */}
-              {app.beta_active && !app.is_owner && !isAcceptedTester && (
-                <BetaSquadCard
-                  appId={app.id}
-                  betaLimit={app.beta_limit}
-                  testersCount={app.testers_count}
-                  userTesterStatus={app.user_tester_status}
-                  isOwner={app.is_owner}
-                  onJoined={() => refetch()}
-                  onAccessMission={() => refetch()}
-                />
-              )}
-
-              {/* Hall of Fame */}
-              {app.beta_active && app.testers && app.testers.length > 0 && (
-                <Card>
-                  <CardContent className="p-4">
-                    <BetaHallOfFame 
-                      testers={app.testers} 
-                      totalCount={app.testers_count} 
-                    />
-                  </CardContent>
-                </Card>
-              )}
             </div>
           )}
         </div>
       </main>
-
-      <Footer />
 
       {/* Author Follow Dialog */}
       <AuthorFollowDialog
@@ -311,6 +507,20 @@ export default function AppDetail() {
         followersCount={ownerStats.followersCount}
         followingCount={ownerStats.followingCount}
       />
+
+      {/* Public App Detail Preview (for Testers) */}
+      {isAcceptedTester && (
+        <AppDetailView
+          apps={[publicApp]}
+          selectedIndex={showPublicDetail ? 0 : null}
+          onClose={() => setShowPublicDetail(false)}
+          onNavigate={() => {}}
+          defaultOwner={publicApp.owner ? {
+            ...publicApp.owner,
+            name: publicApp.owner.full_name
+          } : undefined}
+        />
+      )}
     </div>
   );
 }

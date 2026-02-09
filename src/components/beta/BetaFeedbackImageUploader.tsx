@@ -10,11 +10,14 @@ interface UploadedImage {
   url: string;
   name: string;
   type: string;
+  path: string;
+  id?: string;
 }
 
 interface BetaFeedbackImageUploaderProps {
   images: UploadedImage[];
   onImagesChange: (images: UploadedImage[]) => void;
+  onImageRemove?: (image: UploadedImage) => void;
   maxImages?: number;
   disabled?: boolean;
 }
@@ -22,6 +25,7 @@ interface BetaFeedbackImageUploaderProps {
 export function BetaFeedbackImageUploader({
   images,
   onImagesChange,
+  onImageRemove,
   maxImages = 10,
   disabled = false,
 }: BetaFeedbackImageUploaderProps) {
@@ -60,10 +64,13 @@ export function BetaFeedbackImageUploader({
     const newImages: UploadedImage[] = [];
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       for (const file of filesToUpload) {
         const fileExt = file.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}.${fileExt}`;
-        const filePath = `beta-feedback/${fileName}`;
+        const filePath = `${user.id}/beta-feedback/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
           .from('feedback-attachments')
@@ -82,6 +89,7 @@ export function BetaFeedbackImageUploader({
           url: urlData.publicUrl,
           name: file.name,
           type: file.type,
+          path: filePath,
         });
       }
 
@@ -101,8 +109,12 @@ export function BetaFeedbackImageUploader({
   };
 
   const handleRemove = (index: number) => {
+    const imageToRemove = images[index];
     const newImages = images.filter((_, i) => i !== index);
     onImagesChange(newImages);
+    if (onImageRemove) {
+      onImageRemove(imageToRemove);
+    }
   };
 
   return (

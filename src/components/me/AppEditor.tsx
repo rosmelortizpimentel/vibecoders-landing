@@ -23,6 +23,8 @@ import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield } from 'luc
 import * as LucideIcons from 'lucide-react';
 import { VerificationBadge } from './VerificationBadge';
 import { VerifyDomainModal } from './VerifyDomainModal';
+import { TagInput } from '@/components/ui/tag-input';
+import { MarkdownEditor } from '@/components/beta/MarkdownEditor';
 
 interface AppEditorProps {
   app: AppData;
@@ -221,16 +223,12 @@ interface AppEditorProps {
 
         {/* Description */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label className="text-[#1c1c1c]">Descripción</Label>
-            <span className="text-xs text-gray-500">Soporta markdown básico</span>
-          </div>
-          <DebouncedTextarea
+          <Label className="text-[#1c1c1c]">Descripción</Label>
+          <MarkdownEditor
             value={localApp.description || ''}
-            onValueChange={value => handleChange('description', value.slice(0, 500))}
+            onChange={value => handleChange('description', value.slice(0, 500))}
             placeholder="Describe qué hace tu app, para quién es, qué problema resuelve..."
-            className="text-sm min-h-[100px] resize-none border-gray-300 bg-white placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
-            maxLength={500}
+            className="text-sm"
           />
           <p className="text-xs text-gray-500 text-right">{descriptionLength}/500</p>
         </div>
@@ -324,6 +322,23 @@ interface AppEditorProps {
               className="text-sm border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
             />
           </div>
+        </div>
+
+        {/* Tags */}
+        <div className="space-y-2">
+          <Label className="text-[#1c1c1c]">Tags</Label>
+          <TagInput
+            tags={localApp.tags || []}
+            maxTags={5}
+            onAddTag={(tag) => {
+              const newTags = [...(localApp.tags || []), tag];
+              handleChange('tags', newTags);
+            }}
+            onRemoveTag={(tag) => {
+              const newTags = (localApp.tags || []).filter(t => t !== tag);
+              handleChange('tags', newTags);
+            }}
+          />
         </div>
 
         {/* Tech Stack */}

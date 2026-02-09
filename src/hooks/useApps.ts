@@ -30,6 +30,7 @@ export interface AppData {
   beta_limit: number;
   beta_link: string | null;
   beta_instructions: string | null;
+  tags: string[];
 }
 
 export function useApps() {
@@ -59,7 +60,8 @@ export function useApps() {
       const appsWithStacks = data?.map(app => ({
         ...app,
         stacks: app.app_stacks?.map((s: { stack_id: string }) => s.stack_id) || [],
-         screenshots: app.screenshots || [],
+        screenshots: app.screenshots || [],
+        tags: (app as any).tags || [],
       })) || [];
 
       setApps(appsWithStacks);
@@ -92,7 +94,7 @@ export function useApps() {
 
     if (error) throw error;
 
-    setApps(prev => [...prev, { ...data, stacks: [], screenshots: [] }]);
+    setApps(prev => [...prev, { ...data, stacks: [], screenshots: [], tags: [] }]);
     return data;
   }, [user, apps]);
 

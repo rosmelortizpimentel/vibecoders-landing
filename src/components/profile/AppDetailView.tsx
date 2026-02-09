@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PublicApp } from '@/hooks/usePublicProfile';
+import { parseMarkdown } from '@/lib/markdown';
 import { ProjectDNA } from '@/components/ProjectDNA';
 import { Button } from '@/components/ui/button';
 import { 
@@ -62,7 +63,8 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
     
     const fetchContributors = async () => {
       setLoadingContributors(true);
-      const { data, error } = await supabase
+      
+      const { data: contributorsData } = await supabase
         .from('beta_testers')
         .select(`
           id,
@@ -71,18 +73,19 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
         `)
         .eq('app_id', app.id)
         .eq('status', 'accepted');
-        
-      if (!error && data) {
-        // Transform data to match interface if needed (Supabase returns array or object)
-        setContributors(data as unknown as Contributor[]);
+
+      if (contributorsData) {
+        setContributors(contributorsData as unknown as Contributor[]);
       } else {
         setContributors([]);
       }
+
       setLoadingContributors(false);
     };
 
     fetchContributors();
   }, [selectedIndex, apps]);
+
   React.useEffect(() => {
     if (selectedIndex === null) return;
     const app = apps[selectedIndex];
@@ -116,6 +119,10 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
     onNavigate(prevIndex);
   };
 
+  const currentOnClose = () => {
+    onClose();
+  };
+
   const appUrl = (() => {
     try {
       const normalized = currentApp.url.trim();
@@ -131,52 +138,79 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
   })();
 
   const content = (
-    <div className="flex flex-col h-full bg-white">
-      {/* Hero / Background Carousel */}
-      <div 
-        className="relative w-full aspect-video overflow-hidden"
-        style={{ 
-          backgroundColor: currentApp.screenshots && currentApp.screenshots.length > 0 
-            ? '#1c1c1c' 
-            : (currentApp.id.charCodeAt(0) % 2 === 0 ? '#485FC7' : '#69CF95')
-        }}
-      >
-        {currentApp.screenshots && currentApp.screenshots.length > 0 ? (
-          <div className="absolute inset-0 w-full h-full">
-            {currentApp.screenshots.map((url, idx) => (
-              <div
-                key={idx}
-                className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out transform ${
-                  idx === screenshotIndex ? 'opacity-40 scale-105' : 'opacity-0 scale-100'
-                }`}
-              >
-                <img 
-                  src={url} 
-                  alt="" 
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        ) : null}
-        
-        {/* Logo Overlay - Centered normally, or at bottom edge if screenshots exist */}
-        <div className={`absolute inset-x-0 flex justify-center ${
+    <div className="flex flex-col h-full bg-white relative">
+      {/* Explicit Close Button for Desktop - High z-index to ensure clickability */}
+      {!isMobile && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            currentOnClose();
+          }}
+          className="absolute top-4 right-4 z-[70] w-10 h-10 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-all shadow-md border border-white/20"
+          aria-label="Close"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+      {/* Hero / Background Carousel Section */}
+      <div className="relative shrink-0">
+        <div 
+          className="relative w-full aspect-video overflow-hidden"
+          style={{ 
+            backgroundColor: currentApp.screenshots && currentApp.screenshots.length > 0 
+              ? '#1c1c1c' 
+              : (currentApp.id.charCodeAt(0) % 2 === 0 ? '#485FC7' : '#69CF95')
+          }}
+        >
+          {currentApp.screenshots && currentApp.screenshots.length > 0 ? (
+            <div className="absolute inset-0 w-full h-full">
+              {currentApp.screenshots.map((url, idx) => (
+                <div
+                  key={idx}
+                  className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
+                    idx === screenshotIndex ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <img 
+                    src={url} 
+                    alt="" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Logo Overlay - Positioned over the boundary */}
+        <div className={`absolute inset-x-0 flex justify-center z-10 ${
           currentApp.screenshots && currentApp.screenshots.length > 0 
             ? 'bottom-0 translate-y-1/2' 
-            : 'inset-y-0 items-center'
+            : 'top-0 h-full items-center'
         }`}>
           <div className="relative group">
-            <div className="p-1.5 bg-white rounded-2xl shadow-xl">
+            <div className={`p-1.5 bg-white rounded-full shadow-xl transition-transform duration-300 scale-100 ring-1 ring-black/5`}>
               {currentApp.logo_url ? (
                 <img 
                   src={currentApp.logo_url} 
                   alt={currentApp.name || ''} 
-                  className="w-20 h-20 rounded-xl object-cover animate-in zoom-in duration-500"
+                  className={`${
+                    currentApp.screenshots && currentApp.screenshots.length > 0 
+                      ? 'w-20 h-20' 
+                      : 'w-32 h-32'
+                  } rounded-full object-cover animate-in zoom-in duration-500`}
                 />
               ) : (
-                <div className="w-20 h-20 rounded-xl bg-gray-50 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-gray-300">
+                <div className={`${
+                  currentApp.screenshots && currentApp.screenshots.length > 0 
+                    ? 'w-20 h-20' 
+                    : 'w-32 h-32'
+                } rounded-full bg-gray-50 flex items-center justify-center`}>
+                  <span className={`${
+                    currentApp.screenshots && currentApp.screenshots.length > 0 
+                      ? 'text-2xl' 
+                      : 'text-4xl'
+                  } font-bold text-gray-300`}>
                     {currentApp.name?.charAt(0) || '?'}
                   </span>
                 </div>
@@ -187,7 +221,7 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
       </div>
 
       <div className={`p-6 flex-1 overflow-y-auto ${
-        currentApp.screenshots && currentApp.screenshots.length > 0 ? 'pt-14' : ''
+        currentApp.screenshots && currentApp.screenshots.length > 0 ? 'pt-20' : ''
       }`}>
         <div className="flex flex-col items-center text-center">
           <div className="flex items-center gap-2 mb-2 justify-center">
@@ -212,17 +246,23 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
             {currentApp.tagline}
           </p>
 
-          {currentApp.category && (
-            <div className="mb-6">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
-                {currentApp.category.name}
-              </span>
-            </div>
+          {currentApp.description && (
+            <div 
+              className="text-xs text-gray-500 mb-6 max-w-[90%] text-center leading-relaxed prose prose-sm dark:prose-invert italic"
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(currentApp.description) }}
+            />
           )}
 
-          {currentApp.description && (
-            <div className="text-sm text-gray-600 mb-8 leading-relaxed max-w-full text-left w-full border-t border-gray-50 pt-6">
-              <p className="whitespace-pre-wrap">{currentApp.description}</p>
+          {currentApp.tags && currentApp.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 justify-center mb-6">
+              {currentApp.tags.map((tag) => (
+                <span 
+                  key={tag} 
+                  className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-600 border border-gray-200"
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
           )}
         </div>
@@ -257,22 +297,24 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
         )}
 
         {/* Tech Stack */}
-        <div className="mb-8">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
-            Tech Stack
-          </h3>
-          <div className="flex flex-wrap gap-2">
-            {currentApp.stacks.map(stack => (
-              <div 
-                key={stack.id}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-100 shadow-sm"
-              >
-                <img src={stack.logo_url} alt={stack.name} className="w-4 h-4 object-contain" />
-                <span className="text-xs font-medium text-gray-700">{stack.name}</span>
-              </div>
-            ))}
+        {currentApp.stacks.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+              Tech Stack
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {currentApp.stacks.map(stack => (
+                <div 
+                  key={stack.id}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-gray-100 shadow-sm"
+                >
+                  <img src={stack.logo_url} alt={stack.name} className="w-4 h-4 object-contain" />
+                  <span className="text-xs font-medium text-gray-700">{stack.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         {/* Footer CTA */}
         {contributors.length > 0 && (
           <div className="mb-8">
@@ -349,13 +391,13 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
 
   if (isMobile) {
     return (
-      <Dialog open={selectedIndex !== null} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="p-0 border-none max-w-none w-screen h-[100dvh] flex flex-col sm:rounded-none overflow-hidden">
+      <Dialog open={selectedIndex !== null} onOpenChange={(open) => { if (!open) currentOnClose(); }}>
+        <DialogContent className="p-0 border-none max-w-none w-screen h-[100dvh] flex flex-col sm:rounded-none overflow-hidden [&>button]:hidden">
           <DialogHeader className="absolute top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 h-14 flex flex-row items-center justify-between px-4 sm:px-4 space-y-0">
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={onClose}
+              onClick={currentOnClose}
               className="rounded-full w-10 h-10 hover:bg-gray-100"
             >
               <X className="w-5 h-5" />
@@ -393,8 +435,8 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
   }
 
   return (
-    <Sheet open={selectedIndex !== null} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent side="right" className="p-0 sm:max-w-md border-l-gray-100">
+    <Sheet open={selectedIndex !== null} onOpenChange={(open) => { if (!open) currentOnClose(); }}>
+      <SheetContent side="right" className="p-0 sm:max-w-md border-l-gray-100 [&>button]:hidden">
         <SheetHeader className="sr-only">
           <SheetTitle>{currentApp.name}</SheetTitle>
         </SheetHeader>

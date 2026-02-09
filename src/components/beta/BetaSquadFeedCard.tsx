@@ -65,6 +65,7 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
 
   const handleJoinSuccess = () => {
     queryClient.invalidateQueries({ queryKey: ['beta-squads-public'] });
+    queryClient.invalidateQueries({ queryKey: ['my-beta-squads'] });
   };
 
   // Render CTA button based on user status
