@@ -235,11 +235,11 @@ const FeatureGrid = () => {
     return parts.map((part, i) => {
       if (part.startsWith("'") && part.endsWith("'")) {
         const inner = part.slice(1, -1);
-        let colorClass = "bg-stone-100 text-stone-700 border-stone-200";
+        let colorClass = "bg-stone-50 text-stone-600 border-stone-200";
         if (inner.toLowerCase().includes("tester")) {
-          colorClass = "bg-[#67CFA2]/10 text-[#67CFA2] border-[#67CFA2]/20";
+          colorClass = "bg-stone-50 text-stone-600 border-stone-200";
         } else if (inner.toLowerCase().includes("verificada") || inner.toLowerCase().includes("verified")) {
-          colorClass = "bg-[#3D5AFE]/10 text-[#3D5AFE] border-[#3D5AFE]/20";
+          colorClass = "bg-stone-50 text-stone-600 border-stone-200";
         }
         return (
           <span key={i} className={`inline-flex items-center mx-1 px-1.5 py-0.5 rounded-md border text-[12px] font-bold tracking-tight whitespace-nowrap ${colorClass} transition-transform duration-300 hover:scale-105`}>
@@ -334,20 +334,20 @@ const FeatureGrid = () => {
             <div className="flex-1 rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
               <div className="border-b border-gray-100 px-4 py-2.5 flex items-center justify-between">
                 <span className="text-xs font-semibold text-stone-700 flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5 text-stone-400" />
+                  <Users className="h-3.5 w-3.5 text-stone-900" />
                   {t('grid.card2.activeTesters')}
                 </span>
-                <span className="text-[10px] font-medium text-[#67CFA2] bg-[#67CFA2]/10 px-2 py-0.5 rounded-full">{t('grid.card2.online')}</span>
+                <span className="text-[10px] font-medium text-stone-500 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full">{t('grid.card2.online')}</span>
               </div>
               <div className="divide-y divide-gray-50">
                 {[
-                  { name: 'Ana M.', status: 'Testing v2.1', color: 'bg-[#3D5AFE]' },
-                  { name: 'Carlos R.', status: 'Bug reported', color: 'bg-stone-200' },
-                  { name: 'Sofia T.', status: 'Approved', color: 'bg-[#67CFA2]' },
-                  { name: 'Diego L.', status: 'Reviewing UX', color: 'bg-[#000319]' },
+                  { name: 'Ana M.', status: 'Testing v2.1', color: 'bg-stone-900' },
+                  { name: 'Carlos R.', status: 'Bug reported', color: 'bg-stone-400' },
+                  { name: 'Sofia T.', status: 'Approved', color: 'bg-stone-900' },
+                  { name: 'Diego L.', status: 'Reviewing UX', color: 'bg-stone-600' },
                 ].map((t, i) => (
                   <div key={i} className="flex items-center gap-3 px-4 py-2.5">
-                    <div className={`h-7 w-7 rounded-full ${t.color} flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0`}>
+                    <div className={`h-7 w-7 rounded-full ${t.color} flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 shadow-sm`}>
                       {t.name.charAt(0)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -358,7 +358,7 @@ const FeatureGrid = () => {
                 ))}
               </div>
               <div className="border-t border-gray-100 p-3">
-                <button className="w-full rounded-lg bg-[#3D5AFE] py-2 text-xs font-semibold text-white flex items-center justify-center gap-1.5 hover:bg-[#3D5AFE]/90 transition-colors">
+                <button className="w-full rounded-lg bg-stone-900 py-2 text-xs font-semibold text-white flex items-center justify-center gap-1.5 hover:bg-stone-800 transition-colors shadow-sm">
                   <Users className="h-3.5 w-3.5" />
                   {t('grid.card2.joinSquad')}
                 </button>
@@ -384,13 +384,16 @@ const FeatureGrid = () => {
                   </div>
                   {/* IN PROGRESS Column */}
                   <div className="bg-white p-2.5 space-y-1.5">
-                    <span className="font-semibold text-[#3D5AFE] uppercase tracking-wider block mb-2">{t('grid.card3.inProgress')}</span>
-                    <div className="rounded bg-[#3D5AFE]/10 border border-[#3D5AFE]/20 px-2 py-1.5 text-stone-600">API v3</div>
+                    <span className="font-semibold text-stone-500 uppercase tracking-wider block mb-2">{t('grid.card3.inProgress')}</span>
+                    <div className="rounded bg-stone-50 border border-stone-200 px-2 py-1.5 text-stone-600">API v3</div>
                   </div>
                   {/* DONE Column */}
                   <div className="bg-white p-2.5 space-y-1.5">
-                    <span className="font-semibold text-[#67CFA2] uppercase tracking-wider block mb-2">{t('grid.card3.done')}</span>
-                    <div className="rounded bg-[#67CFA2]/10 border border-[#67CFA2]/20 px-2 py-1.5 text-stone-600 line-through opacity-70">Landing</div>
+                    <span className="font-semibold text-stone-500 uppercase tracking-wider block mb-2">{t('grid.card3.done')}</span>
+                    <div className="rounded bg-stone-50 border border-stone-200 px-2 py-1.5 text-stone-600 line-through opacity-70 flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                      Landing
+                    </div>
                   </div>
                 </div>
               </div>
@@ -494,31 +497,31 @@ const FeatureGrid = () => {
             {/* Badge container - Trophy Case */}
             <div className="mb-7 h-auto md:h-44 w-full rounded-xl border border-gray-200 bg-stone-50/50 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 overflow-hidden">
               {/* Badge 1: App Verificada */}
-              <div className="flex-1 w-full flex flex-col items-center p-3 rounded-lg border border-blue-100 bg-white/80 shadow-sm transition-transform duration-500 group-hover:-translate-y-1">
-                <div className="h-10 w-10 mb-2 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100">
-                  <ShieldCheck className="h-5 w-5 text-blue-600" />
+              <div className="flex-1 w-full flex flex-col items-center p-3 rounded-lg border border-stone-200 bg-stone-50 shadow-sm transition-transform duration-500 group-hover:-translate-y-1">
+                <div className="h-10 w-10 mb-2 rounded-full bg-white flex items-center justify-center border border-stone-200">
+                  <ShieldCheck className="h-5 w-5 text-stone-900" strokeWidth={1.5} />
                 </div>
-                <span className="text-[10px] font-bold text-blue-700 text-center leading-tight uppercase tracking-tight">
+                <span className="text-[10px] font-bold text-stone-600 text-center leading-tight uppercase tracking-tight">
                   {t('grid.card6.appVerified')}
                 </span>
               </div>
 
               {/* Badge 2: Tester Oficial */}
-              <div className="flex-1 w-full flex flex-col items-center p-3 rounded-lg border border-emerald-100 bg-white shadow-md transition-transform duration-500 sm:group-hover:-translate-y-2">
-                <div className="h-10 w-10 mb-2 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100 shadow-inner">
-                  <Medal className="h-5 w-5 text-[#67CFA2]" />
+              <div className="flex-1 w-full flex flex-col items-center p-3 rounded-lg border border-stone-200 bg-white shadow-md transition-transform duration-500 sm:group-hover:-translate-y-2">
+                <div className="h-10 w-10 mb-2 rounded-full bg-stone-50 flex items-center justify-center border border-stone-200 shadow-sm">
+                  <Medal className="h-5 w-5 text-stone-900" strokeWidth={1.5} />
                 </div>
-                <span className="text-[10px] font-bold text-emerald-700 text-center leading-tight uppercase tracking-tight">
+                <span className="text-[10px] font-bold text-stone-600 text-center leading-tight uppercase tracking-tight">
                   {t('grid.card6.officialTester')}
                 </span>
               </div>
 
               {/* Badge 3: Top Builder */}
-              <div className="flex-1 w-full flex flex-col items-center p-3 rounded-lg border border-stone-200 bg-stone-800 transition-transform duration-500 group-hover:-translate-y-1">
-                <div className="h-10 w-10 mb-2 rounded-full bg-stone-700 flex items-center justify-center border border-stone-600">
-                  <Trophy className="h-5 w-5 text-stone-100" />
+              <div className="flex-1 w-full flex flex-col items-center p-3 rounded-lg border border-stone-200 bg-white transition-transform duration-500 group-hover:-translate-y-1">
+                <div className="h-10 w-10 mb-2 rounded-full bg-stone-50 flex items-center justify-center border border-stone-200">
+                  <Trophy className="h-5 w-5 text-stone-900" strokeWidth={1.5} />
                 </div>
-                <span className="text-[10px] font-bold text-stone-100 text-center leading-tight uppercase tracking-tight">
+                <span className="text-[10px] font-bold text-stone-600 text-center leading-tight uppercase tracking-tight">
                   {t('grid.card6.topBuilder')}
                 </span>
               </div>
