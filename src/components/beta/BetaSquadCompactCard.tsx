@@ -40,24 +40,24 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
   };
 
   return (
-    <Card className="min-w-[240px] max-w-[280px] shrink-0 border-border bg-card/50 hover:bg-card transition-colors">
-      <CardContent className="p-4 flex flex-col gap-4">
+    <Card className="w-full border-border bg-card/50 hover:bg-card transition-colors">
+      <CardContent className="p-3 flex flex-col gap-2">
         {/* App Info */}
-        <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 rounded-lg border border-border">
+        <div className="flex items-center gap-2">
+          <Avatar className="h-8 w-8 rounded-lg border border-border shrink-0">
             {app.logo_url ? (
               <AvatarImage src={app.logo_url} alt={app.name || ''} className="object-cover" />
             ) : (
-              <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-xs font-bold">
+              <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
                 {app.name?.charAt(0) || '?'}
               </AvatarFallback>
             )}
           </Avatar>
           <div className="min-w-0 flex-1">
-            <h4 className="font-bold text-sm text-foreground truncate">
+            <h4 className="font-bold text-xs text-foreground truncate">
               {app.name}
             </h4>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] text-muted-foreground">
               {t('testerRole')}
             </p>
           </div>
@@ -66,46 +66,44 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
         {/* Status Badge */}
         <div className="flex">
           {status === 'accepted' ? (
-            <Badge variant="default" className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20 gap-1.5 font-medium">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+            <Badge variant="default" className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20 gap-1 font-medium text-[10px] px-1.5 py-0">
+              <CheckCircle2 className="w-3 h-3" />
               {t('squadActiveBadge')}
             </Badge>
           ) : status === 'pending' ? (
-            <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 border-yellow-500/20 gap-1.5 font-medium">
-              <Hourglass className="w-3.5 h-3.5" />
+            <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 border-yellow-500/20 gap-1 font-medium text-[10px] px-1.5 py-0">
+              <Hourglass className="w-3 h-3" />
               {t('waitingBadge')}
             </Badge>
           ) : (
-            <Badge variant="outline" className="text-muted-foreground gap-1.5">
-              <XCircle className="w-3.5 h-3.5" />
+            <Badge variant="outline" className="text-muted-foreground gap-1 text-[10px] px-1.5 py-0">
+              <XCircle className="w-3 h-3" />
               {t('statusRejected')}
             </Badge>
           )}
         </div>
 
         {/* Action Button */}
-        <div className="flex gap-2">
-          {status === 'accepted' ? (
-            <Button 
-              size="sm" 
-              className="w-full font-semibold"
-              onClick={() => navigate(`/app/${app.id}`)}
-            >
-              {t('giveFeedback')}
-            </Button>
-          ) : (
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              onClick={handleCancel}
-              disabled={leaving}
-            >
-              <Trash2 className="w-3.5 h-3.5 mr-2" />
-              {t('cancel')}
-            </Button>
-          )}
-        </div>
+        {status === 'accepted' ? (
+          <Button 
+            size="sm" 
+            className="w-full font-semibold h-7 text-xs"
+            onClick={() => navigate(`/app/${app.id}`)}
+          >
+            {t('giveFeedback')}
+          </Button>
+        ) : (
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-7 text-xs"
+            onClick={handleCancel}
+            disabled={leaving}
+          >
+            <Trash2 className="w-3 h-3 mr-1.5" />
+            {t('cancel')}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

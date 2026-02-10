@@ -91,9 +91,9 @@ export default function BetaSquads() {
                 ))}
               </div>
             ) : (
-              <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 no-scrollbar snap-x">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {mySquads.map((app) => (
-                  <div key={app.id} className="snap-start">
+                  <div key={app.id}>
                     <BetaSquadCompactCard app={app} />
                   </div>
                 ))}
