@@ -75,7 +75,7 @@ export default function Projects() {
           )}
 
           {/* Fresh Drops Carousel Section */}
-          <section className="mt-20 w-full pt-8 border-t border-border/40">
+          <section className="mt-20 w-full max-w-full min-w-0 pt-8 border-t border-border/40 overflow-hidden">
             <div className="flex items-center gap-2 mb-6">
               <div className="p-2 bg-muted rounded-lg">
                 <Rocket className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />

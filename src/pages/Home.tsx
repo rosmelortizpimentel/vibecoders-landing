@@ -44,7 +44,7 @@ export default function Home() {
   return (
     <div className="flex-1 space-y-6 w-full max-w-full overflow-x-hidden sm:p-0 min-w-0 px-0.5 pb-24">
       {/* Fresh Drops Carousel - Moved to Top */}
-      <section className="pt-2 w-full min-w-0 overflow-hidden">
+      <section className="pt-2 w-full max-w-full min-w-0 overflow-hidden">
         <div className="flex items-center gap-2 mb-4 px-1">
           <div className="p-2 bg-muted rounded-lg">
             <Rocket className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />

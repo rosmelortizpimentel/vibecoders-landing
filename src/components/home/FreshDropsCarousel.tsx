@@ -41,7 +41,7 @@ export function FreshDropsCarousel({ apps }: FreshDropsCarouselProps) {
 
   // Component for the card
   const AppCard = ({ app }: { app: FreshDropApp }) => (
-    <div className="w-[calc(100vw-32px)] max-w-[468px] sm:w-[420px] shrink-0 h-full py-2">
+    <div className="w-full sm:w-[420px] h-full py-2">
       <div className="bg-card border border-border rounded-xl p-3 flex flex-row items-center gap-3 relative hover:border-primary/20 transition-all h-full shadow-sm">
         <div className="flex-shrink-0">
           {app.logo_url && !brokenLogos[app.id] ? (
@@ -107,7 +107,7 @@ export function FreshDropsCarousel({ apps }: FreshDropsCarouselProps) {
   );
 
   return (
-    <div className="w-full relative py-2 select-none">
+    <div className="w-full max-w-full min-w-0 relative py-2 select-none overflow-hidden">
       <Carousel
         opts={{
           align: "start",
@@ -123,18 +123,18 @@ export function FreshDropsCarousel({ apps }: FreshDropsCarouselProps) {
         ]}
         className="w-full"
       >
-        <CarouselContent className="-ml-4 h-full py-2">
+        <CarouselContent className="sm:-ml-4 h-full py-2">
           {apps.map((app) => (
-            <CarouselItem key={app.id} className="pl-4 basis-auto h-full">
+            <CarouselItem key={app.id} className="basis-full sm:basis-auto sm:pl-4 h-full">
               <AppCard app={app} />
             </CarouselItem>
           ))}
         </CarouselContent>
       </Carousel>
 
-      {/* Faders for smooth edges */}
-      <div className="absolute inset-y-0 left-0 w-8 sm:w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
-      <div className="absolute inset-y-0 right-0 w-8 sm:w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+      {/* Faders for smooth edges — hidden on mobile */}
+      <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none hidden sm:block" />
+      <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none hidden sm:block" />
     </div>
   );
 }
