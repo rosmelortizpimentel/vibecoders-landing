@@ -28,6 +28,8 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import FoundersMarquee from '@/components/home/FoundersMarquee';
+import AppsShowcase from '@/components/home/AppsShowcase';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import canadaFlag from '@/assets/canada-flag.png';
 import sheepAvatar from '@/assets/sheep-avatar.jpg';
@@ -822,8 +824,9 @@ const NewLanding = () => {
     <div className="min-h-screen bg-background">
       <main>
         <NewHeroSection />
-        <NewWaveDivider fromColor="hsl(231, 99%, 62%)" toColor="#ffffff" />
+        <FoundersMarquee />
         <FeatureGrid />
+        <AppsShowcase />
         <PricingSection />
       </main>
       <NewWaveDivider fromColor="#ffffff" toColor="#1c1c1c" size="sm" />

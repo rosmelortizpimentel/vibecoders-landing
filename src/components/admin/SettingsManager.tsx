@@ -4,10 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, Save, Plus, Trash2, Settings, Upload, X, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Loader2, Save, Plus, Trash2, Settings, Upload, X, ToggleLeft, ToggleRight, RefreshCw, Database } from 'lucide-react';
 import { toast } from 'sonner';
 import { useFeatureFlags } from '@/hooks/useFeatureFlags';
 import { Switch } from '@/components/ui/switch';
+import { migrateGoogleAvatars } from '@/utils/migrateAvatars';
 import {
   Dialog,
   DialogContent,
@@ -46,7 +47,8 @@ export function SettingsManager() {
   const [newValue, setNewValue] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useState<HTMLInputElement | null>(null); // This won't work as expected with useState for ref, using useRef
+  const [isMigrating, setIsMigrating] = useState(false);
+  const fileInputRef = useState<HTMLInputElement | null>(null);
   
   const { flags, toggleFlag, isLoading: isLoadingFlags } = useFeatureFlags();
 
@@ -164,6 +166,25 @@ export function SettingsManager() {
       toast.error('Error al subir la imagen');
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleMigrateAvatars = async () => {
+    setIsMigrating(true);
+    const toastId = toast.loading('Migrando avatars de Google...');
+    
+    try {
+      const result = await migrateGoogleAvatars();
+      if (result.success) {
+        toast.success(`Migración completada: ${result.successCount} exitosos, ${result.failCount} fallidos`, { id: toastId });
+      } else {
+        throw result.error;
+      }
+    } catch (err) {
+      console.error('Error during migration:', err);
+      toast.error('Error durante la migración', { id: toastId });
+    } finally {
+      setIsMigrating(false);
     }
   };
 
@@ -437,6 +458,38 @@ export function SettingsManager() {
             No hay configuraciones. Crea una nueva.
           </div>
         )}
+      </div>
+
+      {/* Maintenance Section */}
+      <div className="pt-8 border-t border-gray-100">
+        <div className="flex items-center gap-3 mb-4">
+          <Database className="h-5 w-5 text-gray-400" />
+          <h3 className="text-lg font-semibold text-[#1C1C1C]">Mantenimiento</h3>
+        </div>
+        
+        <div className="bg-stone-50 border border-stone-200 rounded-xl p-6">
+          <div className="flex items-start justify-between gap-6">
+            <div className="flex-1">
+              <h4 className="font-bold text-stone-900 mb-1">Migración de Avatars</h4>
+              <p className="text-sm text-stone-500 max-w-md">
+                Copia las fotos de perfil que aún están en Google (`lh3.googleusercontent.com`) al almacenamiento local de Supabase para evitar bloqueos y fallos de carga.
+              </p>
+            </div>
+            <Button
+              onClick={handleMigrateAvatars}
+              disabled={isMigrating}
+              variant="outline"
+              className="border-stone-200 hover:bg-white hover:border-stone-300 transition-all font-bold"
+            >
+              {isMigrating ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              {isMigrating ? 'Migrando...' : 'Iniciar Migración'}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
