@@ -1,0 +1,146 @@
+{
+  "hero": {
+    "badge": "La communaute officielle des Vibe Coders",
+    "headline1": "Arretez d'imaginer.",
+    "headline2": "Commencez a construire.",
+    "subheadline": "Construisez en public, obtenez de vrais retours et accélérez vos lancements avec les configurations utilisées par les experts.",
+    "greeting": "Bonjour, {{name}}",
+    "goToProfile": "Aller a mon profil",
+    "continueGoogle": "Continuer avec Google",
+    "continueLinkedIn": "Continuer avec LinkedIn",
+    "socialProof": "{{countApps}} apps vérifiées • {{countBuilders}} builders en action • {{countSpots}} places restantes"
+  },
+  "grid": {
+    "sectionTag": "Le cycle complet du Builder",
+    "sectionTitle": "Là où les builders se connectent et construisent.",
+    "card1": {
+      "title": "Votre portfolio vend.",
+      "body": "Présentez vos apps, vendez vos services de conseil et permettez à vos clients de réserver un appel directement avec vous. Votre code conclut les affaires.",
+      "hireMe": "Services",
+      "openToWork": "DISPONIBLE",
+      "subtitle": "Tech Lead. Turning ideas into products.",
+      "following": "abonnements",
+      "followers": "abonnés"
+    },
+    "card2": {
+      "title": "Feedback reel.",
+      "body": "Obtenez un Squad de testeurs qui trouve les bugs de votre app avant vos clients.",
+      "activeTesters": "Testeurs Actifs",
+      "online": "5 en ligne",
+      "joinSquad": "Rejoindre le Squad"
+    },
+    "card3": {
+      "title": "Capturez des idées. Gérez des Roadmaps.",
+      "body": "Enregistrez vos idées en vrac pour ne pas les perdre, et gardez un contrôle professionnel des fonctionnalités de vos applications lancées avec un Roadmap organisé.",
+      "roadmap": "Roadmap",
+      "idea": "IDÉES",
+      "todo": "À FAIRE",
+      "inProgress": "En Cours",
+      "done": "Termine"
+    },
+    "card4": {
+      "title": "Accélérez votre construction.",
+      "body": "Votre raccourci vers la production. Copiez les règles et les prompts utilisés par les experts pour construire sans friction et maîtriser le Vibe Coding.",
+      "copy": "Copier"
+    },
+    "card5": {
+      "title": "Apprenez des autres.",
+      "body": "Lisez les histoires et lecons d'autres builders. Des guides pratiques pour lancer de meilleurs logiciels.",
+      "blog": "Blog",
+      "article1": "Comment j'ai lance mon SaaS en 72 heures",
+      "article1Time": "5 min de lecture",
+      "article2": "Guide: Prompts qui fonctionnent",
+      "article2Time": "8 min de lecture",
+      "article3": "De l'idee au MVP: mon processus",
+      "article3Time": "6 min de lecture"
+    },
+    "card6": {
+      "title": "Bâtissez votre réputation.",
+      "body": "Accumulez des étapes réelles. Obtenez des badges 'Testeur Officiel' ou 'Application Vérifiée' qui valident votre expertise auprès de la communauté et des clients.",
+      "appVerified": "Application Vérifiée",
+      "officialTester": "Testeur Officiel",
+      "topBuilder": "Top Builder"
+    }
+  },
+  "pricing": {
+    "urgency": "Plus que {{count}} places Fondateur",
+    "visitor": {
+      "title": "PREMIER LANCEMENT",
+      "subtitle": "(Bientôt disponible)",
+      "price": "0 $ / an",
+      "desc": "Pour ceux qui valident leur première idée",
+      "cta": "Rejoindre la liste d'attente",
+      "features": [
+        {
+          "title": "Profil public de Builder",
+          "desc": "Montrez qui vous êtes et ce que vous construisez.",
+          "included": true
+        },
+        {
+          "title": "Publiez 1 app gratuitement",
+          "desc": "Gagnez des points en aidant les autres pour débloquer plus d'apps.",
+          "included": true
+        },
+        {
+          "title": "Explorez le Vault public",
+          "desc": "Accédez aux prompts et règles partagés par d'autres builders.",
+          "included": true
+        },
+        {
+          "title": "Accédez aux Squads de Testing",
+          "desc": "Testez les apps des autres et demandez des testeurs pour les vôtres.",
+          "included": true
+        }
+      ]
+    },
+    "founder": {
+      "tag": "EXCLUSIF",
+      "title": "BÂTISSEUR FONDATEUR",
+      "subtitle": "Pour ceux qui construisent sérieusement et veulent grandir",
+      "priceText": "0 $ À VIE",
+      "oldPrice": "24 $/an",
+      "ctaLinkedIn": "Réclamer avec LinkedIn",
+      "ctaGoogle": "Réclamer avec Google",
+      "trustText": "Accès en 1 clic. Pas de carte de crédit.",
+      "cta": "Réclamer un compte Fondateur",
+      "bonusTitle": "BONUS FONDATEUR",
+      "bonusFeature": "Toutes les futures fonctionnalités incluses, gratuit pour toujours",
+      "bonusDesc": "Nouveaux outils, intégrations et fonctionnalités que nous lançons.",
+      "features": [
+        {
+          "title": "Applications illimitées",
+          "desc": "Affichez tout votre portfolio sans restrictions.",
+          "included": true
+        },
+        {
+          "title": "Bouton Services et 'Book Call'",
+          "desc": "Permettez aux clients de réserver des appels avec vous.",
+          "included": true
+        },
+        {
+          "title": "Publiez dans les Squads de Testing sans prérequis",
+          "desc": "Demandez des testeurs sans avoir besoin de tester d'abord.",
+          "included": true
+        },
+        {
+          "title": "Badge 'Verified Builder'",
+          "desc": "Renforcez votre réputation auprès de la communauté.",
+          "included": true
+        },
+        {
+          "title": "Vault complet (public + privé)",
+          "desc": "Copiez les configs d'experts et sauvegardez vos propres prompts.",
+          "included": true
+        },
+        {
+          "title": "Gestion de Roadmap pour vos apps",
+          "desc": "Organisez fonctionnalités, bugs et améliorations publiquement.",
+          "included": true
+        }
+      ]
+    }
+  },
+  "footer": {
+    "manifesto": "\"Votre identité ne tient pas dans un CV. Elle se prouve par les produits.\""
+  }
+}

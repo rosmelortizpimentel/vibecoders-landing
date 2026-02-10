@@ -24,6 +24,7 @@ import betaEs from '@/i18n/es/beta.json';
 import notificationsEs from '@/i18n/es/notifications.json';
 import vibersEs from '@/i18n/es/vibers.json';
 import promptsEs from '@/i18n/es/prompts.json';
+import newLandingEs from '@/i18n/es/newLanding.json';
 
 // English imports
 import commonEn from '@/i18n/en/common.json';
@@ -49,6 +50,7 @@ import betaEn from '@/i18n/en/beta.json';
 import notificationsEn from '@/i18n/en/notifications.json';
 import vibersEn from '@/i18n/en/vibers.json';
 import promptsEn from '@/i18n/en/prompts.json';
+import newLandingEn from '@/i18n/en/newLanding.json';
 
 // French imports
 import commonFr from '@/i18n/fr/common.json';
@@ -74,6 +76,7 @@ import betaFr from '@/i18n/fr/beta.json';
 import notificationsFr from '@/i18n/fr/notifications.json';
 import vibersFr from '@/i18n/fr/vibers.json';
 import promptsFr from '@/i18n/fr/prompts.json';
+import newLandingFr from '@/i18n/fr/newLanding.json';
 
 // Portuguese imports
 import commonPt from '@/i18n/pt/common.json';
@@ -99,6 +102,7 @@ import betaPt from '@/i18n/pt/beta.json';
 import notificationsPt from '@/i18n/pt/notifications.json';
 import vibersPt from '@/i18n/pt/vibers.json';
 import promptsPt from '@/i18n/pt/prompts.json';
+import newLandingPt from '@/i18n/pt/newLanding.json';
 
 const translations = {
   es: {
@@ -125,6 +129,7 @@ const translations = {
     notifications: notificationsEs,
     vibers: vibersEs,
     prompts: promptsEs,
+    newLanding: newLandingEs,
   },
   en: {
     common: commonEn,
@@ -150,6 +155,7 @@ const translations = {
     notifications: notificationsEn,
     vibers: vibersEn,
     prompts: promptsEn,
+    newLanding: newLandingEn,
   },
   fr: {
     common: commonFr,
@@ -175,6 +181,7 @@ const translations = {
     notifications: notificationsFr,
     vibers: vibersFr,
     prompts: promptsFr,
+    newLanding: newLandingFr,
   },
   pt: {
     common: commonPt,
@@ -200,6 +207,7 @@ const translations = {
     notifications: notificationsPt,
     vibers: vibersPt,
     prompts: promptsPt,
+    newLanding: newLandingPt,
   },
 } as const;
 

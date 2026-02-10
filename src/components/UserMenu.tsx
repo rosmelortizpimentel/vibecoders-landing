@@ -41,7 +41,7 @@ const UserMenu = () => {
   const [open, setOpen] = useState(false);
 
   // Mostrar botón de Ingresar si no hay usuario (solo en landing)
-  if (!loading && !user && location.pathname === '/') {
+  if (!loading && !user && (location.pathname === '/' || location.pathname === '/new')) {
     return (
       <div className="fixed right-4 top-4 z-50 flex items-center gap-2">
         <LanguageSwitcher variant="header" className="text-white" />
