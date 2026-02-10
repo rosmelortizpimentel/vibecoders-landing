@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Layers, Settings, Users, Mail, Cpu, MessageCircle, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { LayoutGrid, Layers, Settings, Users, Mail, Cpu, MessageCircle, ChevronLeft, ChevronRight, Menu, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -34,6 +34,11 @@ const menuItems = [
     title: 'Waitlist',
     href: '/admin/waitlist',
     icon: Mail,
+  },
+  {
+    title: 'Notificaciones',
+    href: '/admin/notifications',
+    icon: Bell,
   },
   {
     title: 'Settings',
