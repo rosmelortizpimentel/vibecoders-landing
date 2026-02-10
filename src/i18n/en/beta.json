@@ -110,6 +110,8 @@
   "verifyResolutionDesc": "The developer has marked this bug as resolved. Please verify if the issue persists.",
   "confirmFixed": "Yes, it's fixed",
   "stillBroken": "No, still broken",
+  "confirmFixedWarning": "This will mark the report as fixed and close it.",
+  "stillBrokenWarning": "This will reopen the report as still broken.",
   "attachImages": "Attach images",
   "addImages": "Add",
   "maxImages": "Maximum 10 images",

@@ -36,7 +36,7 @@ export function FeedbackStatusBadge({ status, className }: FeedbackStatusBadgePr
   return (
     <Badge 
       variant="outline" 
-      className={cn('gap-1 text-xs font-normal', variant, className)}
+      className={cn('gap-1 text-[10px] font-bold uppercase tracking-wider', variant, className)}
     >
       {icon}
       {label}

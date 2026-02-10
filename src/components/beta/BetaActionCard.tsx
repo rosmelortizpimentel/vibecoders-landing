@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, MessageSquare, Pencil, Trash2, MoreVertical, Circle, Clock, FileText } from 'lucide-react';
+import { Plus, MessageSquare, Pencil, Trash2, MoreVertical, Circle, Clock, FileText, CheckCircle2, RotateCcw } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ImageCarouselDialog } from './ImageCarouselDialog';
 import { 
@@ -34,11 +34,12 @@ interface BetaActionCardProps {
 
 export function BetaActionCard({ appId }: BetaActionCardProps) {
   const { t } = useTranslation('beta');
-  const { feedback, refetch, deleteFeedback, responding } = useTesterFeedback(appId);
+  const { feedback, refetch, deleteFeedback, respondToResolution, responding } = useTesterFeedback(appId);
   const [open, setOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [pendingResolution, setPendingResolution] = useState<{ feedbackId: string; type: 'confirmed' | 'reopened' } | null>(null);
   
   const [carouselOpen, setCarouselOpen] = useState(false);
   const [carouselImages, setCarouselImages] = useState<{ url: string; name: string }[]>([]);
@@ -88,6 +89,26 @@ export function BetaActionCard({ appId }: BetaActionCardProps) {
       refetch();
     } catch (err) {
       toast.error('Error deleting report');
+    }
+  };
+
+  const handleConfirmFixed = async (feedbackId: string) => {
+    try {
+      await respondToResolution({ feedbackId, response: 'confirmed' });
+      toast.success(t('feedbackClosed'));
+      refetch();
+    } catch (err) {
+      toast.error(t('error'));
+    }
+  };
+
+  const handleReopen = async (feedbackId: string) => {
+    try {
+      await respondToResolution({ feedbackId, response: 'reopened' });
+      toast.success(t('feedbackReopened'));
+      refetch();
+    } catch (err) {
+      toast.error(t('error'));
     }
   };
 
@@ -153,7 +174,7 @@ export function BetaActionCard({ appId }: BetaActionCardProps) {
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge 
                           variant="outline" 
-                          className={cn("text-[10px] h-5 px-1.5 font-medium border", getStatusBadgeStyles(item.status))}
+                          className={cn("text-[10px] h-5 px-1.5 font-bold border uppercase tracking-wider", getStatusBadgeStyles(item.status))}
                         >
                           {getStatusLabel(item.status)}
                         </Badge>
@@ -189,6 +210,36 @@ export function BetaActionCard({ appId }: BetaActionCardProps) {
                         )}
                       </div>
                     </div>
+
+                    {/* Pending verification actions */}
+                    {item.status === 'in_review' && (
+                      <div 
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center justify-end gap-1.5 pt-1"
+                      >
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 px-2 text-[10px] font-medium border-primary/20 text-primary hover:bg-primary/5 hover:text-primary"
+                          onClick={() => setPendingResolution({ feedbackId: item.id, type: 'confirmed' })}
+                          disabled={responding}
+                        >
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          {t('confirmFixed')}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 px-2 text-[10px] font-medium border-muted-foreground/20 text-muted-foreground hover:bg-muted/50"
+                          onClick={() => setPendingResolution({ feedbackId: item.id, type: 'reopened' })}
+                          disabled={responding}
+                        >
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          {t('stillBroken')}
+                        </Button>
+                      </div>
+                    )}
+
                     <div className="text-[10px] text-muted-foreground/60 font-medium">
                        {new Date(item.created_at).toLocaleDateString(navigator.language, { 
                          day: 'numeric', 
@@ -271,7 +322,7 @@ export function BetaActionCard({ appId }: BetaActionCardProps) {
               <div className="flex items-center justify-between mt-2">
                 <Badge 
                   variant="outline" 
-                  className={cn("text-xs font-medium border px-2 py-0.5", selectedItem && getStatusBadgeStyles(selectedItem.status))}
+                  className={cn("text-xs font-bold border px-2 py-0.5 uppercase tracking-wider", selectedItem && getStatusBadgeStyles(selectedItem.status))}
                 >
                   {selectedItem && getStatusLabel(selectedItem.status)}
                 </Badge>
@@ -331,6 +382,30 @@ export function BetaActionCard({ appId }: BetaActionCardProps) {
               </Button>
             </div>
           )}
+
+          {selectedItem?.status === 'in_review' && (
+            <div className="p-4 border-t bg-muted/20 flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-muted-foreground border-muted-foreground/20 hover:bg-muted/50"
+                onClick={() => { setPendingResolution({ feedbackId: selectedItem.id, type: 'reopened' }); setDetailOpen(false); }}
+                disabled={responding}
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                {t('stillBroken')}
+              </Button>
+              <Button 
+                size="sm" 
+                className="bg-primary hover:bg-primary/90 text-white"
+                onClick={() => { setPendingResolution({ feedbackId: selectedItem.id, type: 'confirmed' }); setDetailOpen(false); }}
+                disabled={responding}
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                {t('confirmFixed')}
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -356,6 +431,36 @@ export function BetaActionCard({ appId }: BetaActionCardProps) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {t('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!pendingResolution} onOpenChange={(v) => !v && setPendingResolution(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('areYouSure')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingResolution?.type === 'confirmed'
+                ? t('confirmFixedWarning') || 'This will mark the report as fixed and close it.'
+                : t('stillBrokenWarning') || 'This will reopen the report as still broken.'
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingResolution?.type === 'confirmed') {
+                  handleConfirmFixed(pendingResolution.feedbackId);
+                } else if (pendingResolution) {
+                  handleReopen(pendingResolution.feedbackId);
+                }
+                setPendingResolution(null);
+              }}
+              className="bg-primary text-white hover:bg-primary/90"
+            >
+              {pendingResolution?.type === 'confirmed' ? t('confirmFixed') : t('stillBroken')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

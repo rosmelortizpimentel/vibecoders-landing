@@ -109,6 +109,8 @@
   "verifyResolutionDesc": "El desarrollador ha marcado este bug como resuelto. Por favor verifica si el problema persiste.",
   "confirmFixed": "Sí, está solucionado",
   "stillBroken": "No, sigue ocurriendo",
+  "confirmFixedWarning": "Esto marcará el reporte como solucionado y lo cerrará.",
+  "stillBrokenWarning": "Esto reabrirá el reporte indicando que el problema persiste.",
   "attachImages": "Adjuntar imágenes",
   "addImages": "Añadir",
   "maxImages": "Máximo 10 imágenes",

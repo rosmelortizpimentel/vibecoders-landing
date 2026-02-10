@@ -593,10 +593,10 @@ const PricingSection = () => {
           </div>
         </div>
 
-        <div className="grid gap-10 md:grid-cols-2 lg:gap-16 items-stretch">
+        <div className="grid gap-6 md:gap-10 md:grid-cols-2 lg:gap-16 md:items-stretch">
           {/* Card 1: PRIMER LANZAMIENTO */}
           <div className="relative rounded-2xl border border-stone-200 bg-stone-50/50 p-8 shadow-sm transition-all md:p-10 flex flex-col opacity-60">
-            <div className="mb-8">
+            <div className="mb-4 md:mb-8">
               <h3 className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-stone-400">
                 {t('pricing.visitor.title')}
               </h3>
@@ -605,14 +605,14 @@ const PricingSection = () => {
               </p>
             </div>
             
-            <div className="mb-10">
+            <div className="mb-6 md:mb-10">
               <span className="text-5xl font-black tracking-tighter text-stone-900">
                 $0
               </span>
               <span className="ml-2 text-stone-400 font-bold uppercase text-xs tracking-widest">/ año</span>
             </div>
             
-            <ul className="mb-12 w-full space-y-6 text-left">
+            <ul className="mb-6 md:mb-12 w-full space-y-4 md:space-y-6 text-left">
               {visitorFeatures.map((feature, i) => (
                 <li key={i} className={`flex items-start gap-3 text-sm ${!feature.included ? 'opacity-40' : ''}`}>
                   <div className="mt-1 shrink-0">
@@ -648,7 +648,7 @@ const PricingSection = () => {
               {t('pricing.founder.tag')}
             </div>
 
-            <div className="mb-8">
+            <div className="mb-4 md:mb-8">
               <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-stone-900">
                 {t('pricing.founder.title')}
               </h3>
@@ -657,7 +657,7 @@ const PricingSection = () => {
               </p>
             </div>
             
-            <div className="mb-8">
+            <div className="mb-5 md:mb-8">
               <div className="mb-2">
                 <span className="text-xl sm:text-2xl font-bold text-stone-400 line-through decoration-stone-400/50 decoration-2">
                   {t('pricing.founder.oldPrice')}
@@ -671,7 +671,7 @@ const PricingSection = () => {
               </p>
             </div>
             
-            <ul className="mb-10 w-full space-y-5 text-left flex-grow">
+            <ul className="mb-6 md:mb-10 w-full space-y-4 md:space-y-5 text-left flex-grow">
               {founderFeatures.map((feature, i) => (
                 <li key={i} className="flex items-start gap-3 text-sm">
                   <div className="mt-1 shrink-0">
@@ -692,7 +692,7 @@ const PricingSection = () => {
             </ul>
 
             {/* Bonus Section - Grayscale/Premium */}
-            <div className="mb-8 rounded-xl bg-stone-100 border border-stone-200 p-5 relative overflow-hidden group-hover:bg-stone-100/80 transition-colors">
+            <div className="mb-5 md:mb-8 rounded-xl bg-stone-100 border border-stone-200 p-4 md:p-5 relative overflow-hidden group-hover:bg-stone-100/80 transition-colors">
               <div className="absolute top-0 right-0 p-2 opacity-10">
                 <Medal className="w-16 h-16 text-stone-900" />
               </div>

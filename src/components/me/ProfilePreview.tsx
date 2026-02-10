@@ -36,14 +36,23 @@ interface ProfilePreviewProps {
   isMobileSheet?: boolean;
 }
 
+// Smart URL normalizer: if the value already looks like a URL (contains a dot + slash or www.), 
+// just ensure it has https://. Otherwise, treat it as a username/handle.
+const normalizeUrl = (value: string, baseUrl: string): string => {
+  const v = value.trim();
+  if (v.startsWith('http://') || v.startsWith('https://')) return v;
+  if (v.includes('.') && (v.includes('/') || v.startsWith('www.'))) return `https://${v}`;
+  return `${baseUrl}${v}`;
+};
+
 const socialConfig = [
-  { key: 'lovable', icon: LovableIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://lovable.dev/@${v}` },
-  { key: 'linkedin', icon: Linkedin, getUrl: (v: string) => v.startsWith('http') ? v : `https://linkedin.com/in/${v}` },
-  { key: 'twitter', icon: XIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://x.com/${v}` },
-  { key: 'instagram', icon: Instagram, getUrl: (v: string) => v.startsWith('http') ? v : `https://instagram.com/${v}` },
-  { key: 'youtube', icon: Youtube, getUrl: (v: string) => v.startsWith('http') ? v : `https://youtube.com/@${v}` },
-  { key: 'tiktok', icon: TikTokIcon, getUrl: (v: string) => v.startsWith('http') ? v : `https://tiktok.com/@${v}` },
-  { key: 'github', icon: Github, getUrl: (v: string) => v.startsWith('http') ? v : `https://github.com/${v}` },
+  { key: 'lovable', icon: LovableIcon, getUrl: (v: string) => normalizeUrl(v, 'https://lovable.dev/@') },
+  { key: 'linkedin', icon: Linkedin, getUrl: (v: string) => normalizeUrl(v, 'https://linkedin.com/in/') },
+  { key: 'twitter', icon: XIcon, getUrl: (v: string) => normalizeUrl(v, 'https://x.com/') },
+  { key: 'instagram', icon: Instagram, getUrl: (v: string) => normalizeUrl(v, 'https://instagram.com/@') },
+  { key: 'youtube', icon: Youtube, getUrl: (v: string) => normalizeUrl(v, 'https://youtube.com/@') },
+  { key: 'tiktok', icon: TikTokIcon, getUrl: (v: string) => normalizeUrl(v, 'https://tiktok.com/@') },
+  { key: 'github', icon: Github, getUrl: (v: string) => normalizeUrl(v, 'https://github.com/') },
   { key: 'email_public', icon: Mail, getUrl: (v: string) => `mailto:${v}` },
 ] as const;
 
