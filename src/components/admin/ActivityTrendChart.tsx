@@ -25,19 +25,12 @@ export function ActivityTrendChart({ data }: ActivityTrendChartProps) {
     });
   }, [data]);
 
-  const totalInPeriod = chartData.reduce((sum, d) => sum + d.count, 0);
-  const avgPerDay = chartData.length > 0 ? Math.round(totalInPeriod / chartData.length) : 0;
-
   return (
     <div className="rounded-lg border bg-card p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-medium text-foreground">{t('dailyActiveUsers')}</h3>
           <p className="text-xs text-muted-foreground">{t('last30Days')}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-foreground">{avgPerDay}</p>
-          <p className="text-xs text-muted-foreground">{t('avgPerDay')}</p>
         </div>
       </div>
       

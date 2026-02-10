@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ExternalLink, Users, Loader2, Search, Mail, ListChecks } from 'lucide-react';
+import { ExternalLink, Users, Loader2, Search, Mail, ListChecks, Copy } from 'lucide-react';
 import { FollowListDialog } from './FollowListDialog';
 import { RegistrationTrendChart } from './RegistrationTrendChart';
 import { ActivityTrendChart } from './ActivityTrendChart';
@@ -57,6 +57,7 @@ export function UsersManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showOnlyAnonymous, setShowOnlyAnonymous] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<{ id: string; type: 'followers' | 'following' } | null>(null);
 
@@ -89,17 +90,24 @@ export function UsersManager() {
     }
   };
 
-  // Filter users based on search query
+  // Filter users based on search query and anonymous status
   const filteredUsers = useMemo(() => {
-    if (!searchQuery.trim()) return users;
+    let result = users;
+    
+    if (showOnlyAnonymous) {
+      result = result.filter(user => !user.username || user.username.trim() === '');
+    }
+
+    if (!searchQuery.trim()) return result;
+    
     const query = searchQuery.toLowerCase();
-    return users.filter(
+    return result.filter(
       (user) =>
         user.name?.toLowerCase().includes(query) ||
         user.username?.toLowerCase().includes(query) ||
         user.email?.toLowerCase().includes(query)
     );
-  }, [users, searchQuery]);
+  }, [users, searchQuery, showOnlyAnonymous]);
 
   // Sortable data
   const { sortedData, requestSort, getSortIndicator } = useSortableData<EnrichedUser, keyof EnrichedUser>(filteredUsers, {
@@ -110,6 +118,11 @@ export function UsersManager() {
   const handleCountClick = (userId: string, type: 'followers' | 'following') => {
     setSelectedUser({ id: userId, type });
     setDialogOpen(true);
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copiado al portapapeles`);
   };
 
   const handleOpenGmail = () => {
@@ -177,10 +190,20 @@ export function UsersManager() {
             className="pl-9"
           />
         </div>
-        <Button onClick={handleOpenGmail} disabled={users.length === 0} className="gap-2">
-          <Mail className="h-4 w-4" />
-          {t('emailAll')} ({users.length})
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant={showOnlyAnonymous ? "default" : "outline"}
+            onClick={() => setShowOnlyAnonymous(!showOnlyAnonymous)}
+            className="gap-2 shrink-0"
+          >
+            <Users className="h-4 w-4" />
+            Solo Anónimos
+          </Button>
+          <Button onClick={handleOpenGmail} disabled={users.length === 0} className="gap-2 shrink-0">
+            <Mail className="h-4 w-4" />
+            {t('emailAll')} ({users.length})
+          </Button>
+        </div>
       </div>
 
       {/* Records count */}
@@ -216,9 +239,41 @@ export function UsersManager() {
                       <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <p className="font-medium text-foreground truncate">{user.name || 'Sin nombre'}</p>
-                      <p className="text-sm text-muted-foreground truncate">@{user.username}</p>
-                      <p className="text-xs text-muted-foreground/70 truncate">{user.email}</p>
+                      <div className="flex items-center gap-2 group/copy">
+                        <p className="font-medium text-foreground truncate">{user.name || 'Sin nombre'}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 opacity-0 group-hover/copy:opacity-100 transition-opacity"
+                          onClick={() => copyToClipboard(user.name || '', 'Nombre')}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 group/copy-user">
+                        <p className="text-sm text-muted-foreground truncate">@{user.username}</p>
+                        {user.username && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-4 w-4 opacity-0 group-hover/copy-user:opacity-100 transition-opacity"
+                            onClick={() => copyToClipboard(user.username || '', 'Username')}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 group/copy-email">
+                        <p className="text-xs text-muted-foreground/70 truncate">{user.email}</p>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 opacity-0 group-hover/copy-email:opacity-100 transition-opacity"
+                          onClick={() => copyToClipboard(user.email, 'Correo')}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </TableCell>
@@ -263,14 +318,24 @@ export function UsersManager() {
                   {user.lastActivity ? formatTorontoDate(user.lastActivity) : <span className="text-muted-foreground/50">{t('never')}</span>}
                 </TableCell>
                 <TableCell className="text-center">
-                  <Button variant="ghost" size="sm" asChild>
-                    <a
-                      href={`/@${user.username}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    asChild 
+                    disabled={!user.username}
+                    className={!user.username ? 'opacity-30 cursor-not-allowed' : ''}
+                  >
+                    {user.username ? (
+                      <a
+                        href={`/@${user.username}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    ) : (
                       <ExternalLink className="h-4 w-4" />
-                    </a>
+                    )}
                   </Button>
                 </TableCell>
               </TableRow>

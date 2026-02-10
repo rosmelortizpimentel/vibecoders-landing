@@ -54,7 +54,6 @@ Deno.serve(async (req) => {
     const { data: profiles, error: profilesError } = await supabaseAdmin
       .from("profiles")
       .select("id, name, username, avatar_url, created_at")
-      .not("username", "is", null)
       .order("created_at", { ascending: false });
 
     if (profilesError) throw profilesError;
