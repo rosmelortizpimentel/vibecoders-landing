@@ -156,7 +156,9 @@ Deno.serve(async (req) => {
       // Determine most recent activity: compare lastSignIn and lastActivityDate
       let lastActivity: string | null = lastSignIn;
       if (lastActivityDate) {
-        const activityTs = new Date(lastActivityDate + "T23:59:59Z").toISOString();
+        // Use midday UTC to ensure it stays on the same calendar day in Toronto
+        // and doesn't artificially override a more precise lastSignIn time
+        const activityTs = new Date(`${lastActivityDate}T12:00:00Z`).toISOString();
         if (!lastActivity || activityTs > lastActivity) {
           lastActivity = activityTs;
         }
