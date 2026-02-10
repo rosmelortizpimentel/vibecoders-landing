@@ -1,11 +1,29 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import React from "react";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { 
+  Bell, 
+  Heart, 
+  UserPlus, 
+  Send, 
+  Zap, 
+  Database, 
+  Info, 
+  Loader2 
+} from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const notificationCases = [
   {
@@ -136,7 +154,7 @@ export function NotificationDocumentation() {
         </p>
       </div>
 
-      <Card className="border-border/50">
+      <Card className="border-border/50 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -156,38 +174,38 @@ export function NotificationDocumentation() {
                   key={notif.id} 
                   className={`group transition-colors ${!isEnabled ? 'opacity-60 bg-muted/10' : ''}`}
                 >
-                  <TableCell className="py-3">
-                    <div className="flex items-center gap-3">
+                  <TableCell className="py-2.5">
+                    <div className="flex items-center gap-2.5">
                       <div className={`p-1.5 rounded-lg ${notif.bgColor} ${notif.color}`}>
                         <notif.icon className="h-4 w-4" />
                       </div>
                       <div>
-                        <div className="font-semibold text-sm">{notif.title}</div>
-                        <div className="text-[10px] font-mono text-muted-foreground uppercase">{notif.type}</div>
+                        <div className="font-semibold text-xs">{notif.title}</div>
+                        <div className="text-[10px] font-mono text-muted-foreground uppercase leading-none">{notif.type}</div>
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="py-3 hidden md:table-cell">
-                    <div className="space-y-1">
-                      <p className="text-xs text-foreground line-clamp-1">{notif.description}</p>
+                  <TableCell className="py-2.5 hidden md:table-cell">
+                    <div className="space-y-0.5">
+                      <p className="text-[11px] text-foreground line-clamp-1">{notif.description}</p>
                       <p className="text-[10px] text-muted-foreground italic line-clamp-1">{notif.details}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="py-3">
-                    <Badge variant="outline" className="text-[10px] font-mono bg-muted/20 whitespace-nowrap">
+                  <TableCell className="py-2.5">
+                    <Badge variant="outline" className="text-[9px] font-mono bg-muted/20 px-1.5 py-0 h-4 whitespace-nowrap">
                       {notif.trigger}
                     </Badge>
                   </TableCell>
-                  <TableCell className="py-3 text-right">
-                    <div className="flex items-center justify-end gap-3">
+                  <TableCell className="py-2.5 text-right">
+                    <div className="flex items-center justify-end gap-2.5">
                       <span className={`text-[10px] font-medium hidden sm:inline ${isEnabled ? 'text-emerald-600' : 'text-muted-foreground'}`}>
-                        {isEnabled ? 'ACTIVO' : 'INACTIVO'}
+                        {isEnabled ? 'ON' : 'OFF'}
                       </span>
                       <Switch 
                         checked={isEnabled}
                         onCheckedChange={(checked) => toggleMutation.mutate({ type: notif.type, enabled: checked })}
                         disabled={toggleMutation.isPending}
-                        className="scale-90"
+                        className="scale-75 origin-right"
                       />
                     </div>
                   </TableCell>
@@ -199,37 +217,16 @@ export function NotificationDocumentation() {
       </Card>
 
       <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-start gap-3">
-        <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+        <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <h4 className="text-xs font-semibold">Nota técnica para el Administrador</h4>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Las notificaciones marcadas como <b>Inactivas</b> dejarán de insertarse en la base de datos <code>notifications</code>. 
-            Este control es global y afecta a todos los usuarios de la plataforma por igual. 
-            El tipo <b>Sistema</b> permite envíos manuales desde scripts o el dashboard de Supabase omitiendo el actor.
+          <h4 className="text-[11px] font-semibold">Nota técnica para el Administrador</h4>
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            Las notificaciones marcadas como <b>Inactivas</b> no se generarán en la base de datos. 
+            El tipo <b>Sistema</b> se reserva para comunicaciones manuales desde Supabase o scripts de mantenimiento 
+            (ej: anuncios globales o correcciones de perfil) sin necesidad de una acción disparada por un usuario.
           </p>
         </div>
       </div>
-    </div>
-  );
-}
-
-      <Card className="bg-primary/5 border-primary/20">
-        <CardContent className="p-6">
-          <div className="flex items-start gap-4">
-            <div className="p-2 bg-primary/10 rounded-full">
-              <Bell className="h-5 w-5 text-primary" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-sm font-semibold">Nota sobre el Sistema</h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Todas las notificaciones se almacenan en la tabla <code>notifications</code> y se distribuyen en tiempo real 
-                mediante Supabase Realtime Channels. Si añades un nuevo tipo, recuerda registrarlo en el enum 
-                <code>NotificationType</code> en el hook <code>useNotifications.ts</code>.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
