@@ -547,6 +547,7 @@ const FeatureGrid = () => {
 /* ─── Pricing Section - Lifetime Deal ─── */
 const PricingSection = () => {
   const { t, pricing } = useTranslation('newLanding');
+  const { signInWithGoogle, signInWithLinkedIn } = useAuth();
   const [spotsLeft, setSpotsLeft] = useState(37); // Initial fallback as requested
 
   useEffect(() => {
@@ -558,6 +559,22 @@ const PricingSection = () => {
     };
     fetchStats();
   }, []);
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle(`${window.location.origin}/me`);
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+    }
+  };
+
+  const handleLinkedInSignIn = async () => {
+    try {
+      await signInWithLinkedIn(`${window.location.origin}/me`);
+    } catch (error) {
+      console.error('Error signing in with LinkedIn:', error);
+    }
+  };
 
   // Use the dynamic spotsLeft in the urgency text
   const urgencyText = t('pricing.urgency', { count: spotsLeft });
@@ -713,7 +730,7 @@ const PricingSection = () => {
             <div className="w-full flex flex-col gap-3 mt-auto">
               {/* Primary: LinkedIn (Brand Color) */}
               <Button 
-                onClick={() => { window.location.href = '/auth/linkedin' }} // Placeholder for actual auth logic
+                onClick={handleLinkedInSignIn} 
                 className="w-full h-14 rounded-xl bg-[#0A66C2] hover:bg-[#004182] text-white font-bold text-base shadow-md transition-all hover:scale-[1.01] flex items-center justify-center gap-3"
               >
                 <Linkedin className="h-5 w-5 fill-white" />
@@ -722,7 +739,7 @@ const PricingSection = () => {
 
               {/* Secondary: Google (White/Border) */}
               <Button 
-                 onClick={() => { window.location.href = '/auth/google' }} // Placeholder for actual auth logic
+                 onClick={handleGoogleSignIn} 
                  className="w-full h-14 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 font-medium text-base transition-all hover:scale-[1.01] flex items-center justify-center gap-3"
               >
                 {/* Google Logo SVG */}
