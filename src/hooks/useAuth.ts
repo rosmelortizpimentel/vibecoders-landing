@@ -65,6 +65,20 @@ export function useAuth() {
     }
   };
 
+  const signInWithLinkedIn = async (redirectTo?: string) => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'linkedin_oidc',
+      options: {
+        redirectTo: redirectTo || `${window.location.origin}/me`,
+      },
+    });
+    
+    if (error) {
+      console.error('Error signing in with LinkedIn:', error);
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -92,6 +106,7 @@ export function useAuth() {
     session,
     loading,
     signInWithGoogle,
+    signInWithLinkedIn,
     signInWithIdToken,
     signOut,
   };

@@ -13,6 +13,7 @@ import {
   Settings,
   CreditCard,
   ChevronLeft,
+  Linkedin
 } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -30,7 +31,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 const UserMenu = () => {
-  const { user, loading, signInWithGoogle, signOut } = useAuth();
+  const { user, loading, signInWithGoogle, signInWithLinkedIn, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useProfile();
@@ -44,13 +45,6 @@ const UserMenu = () => {
     return (
       <div className="fixed right-4 top-4 z-50 flex items-center gap-2">
         <LanguageSwitcher variant="header" className="text-white" />
-        <Button
-          onClick={() => signInWithGoogle()}
-          className="gap-2 bg-white text-[#1c1c1c] hover:bg-white/90 font-semibold shadow-lg"
-        >
-          <LogIn className="h-4 w-4" />
-          {t.signIn}
-        </Button>
       </div>
     );
   }

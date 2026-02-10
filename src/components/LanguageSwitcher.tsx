@@ -42,12 +42,13 @@ export function LanguageSwitcher({ variant = 'dropdown', className }: LanguageSw
           variant === 'mobile' ? "w-full justify-between" : "",
           className
         )}
+        style={{ color: '#1c1c1c' }}
       >
         <div className="flex items-center gap-2">
-          <Globe className="h-4 w-4 text-muted-foreground" />
+          <Globe className="h-4 w-4" style={{ color: '#1c1c1c' }} />
           <span>{variant === 'mobile' ? currentLang.label : language.toUpperCase()}</span>
         </div>
-        {variant === 'mobile' && <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        {variant === 'mobile' && <ChevronDown className="h-4 w-4" style={{ color: '#1c1c1c' }} />}
       </button>
     );
   }
