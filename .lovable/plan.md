@@ -1,107 +1,150 @@
 
+## Sistema de Membresias y Pagos con Stripe
 
-## Boveda de Prompts (Prompt Vault)
+Feature completa para implementar tiers de usuario (Founder, Free, Pro) con integracion de Stripe para suscripciones anuales y logica de asignacion automatica de cupos de fundador.
 
-Feature completa para que los usuarios gestionen, organicen y compartan prompts de IA con soporte para archivos adjuntos, tags personalizados y preparada para un futuro marketplace.
+### 1. Base de Datos - Nueva tabla `user_subscriptions`
 
-### 1. Base de Datos
+En lugar de agregar columnas al `profiles` (que es publico), crear una tabla dedicada:
 
-**Tabla `prompts`:**
-- `id` UUID PK
-- `user_id` UUID FK a auth.users
-- `title` text NOT NULL
-- `description` text (Markdown)
-- `tags` text[] default '{}'
-- `tool_used` text (Lovable, Cursor, Windsurf, ChatGPT, etc.)
-- `is_public` boolean default false
-- `price` decimal nullable (futuro, oculto)
-- `is_for_sale` boolean default false (futuro, oculto)
-- `created_at`, `updated_at` timestamps
-
-**RLS:**
-- SELECT: publicos para todos OR propios del owner
-- INSERT/UPDATE/DELETE: solo owner
-
-**Tabla `prompt_files`:**
-- `id` UUID PK
-- `prompt_id` UUID FK a prompts ON DELETE CASCADE
-- `file_url` text NOT NULL
-- `file_name` text NOT NULL
-- `file_size` integer NOT NULL
-- `file_type` text NOT NULL
-- `created_at` timestamp
+```text
+user_subscriptions
+  id           uuid PK default gen_random_uuid()
+  user_id      uuid NOT NULL UNIQUE (references auth.users on delete cascade)
+  tier         text NOT NULL default 'pending'  -- 'founder', 'free', 'pro', 'pending'
+  founder_number integer nullable
+  price        decimal default 0
+  stripe_customer_id  text nullable
+  subscription_id     text nullable
+  subscription_status text nullable  -- 'active', 'canceled', 'past_due', etc.
+  current_period_end  timestamptz nullable
+  created_at   timestamptz default now()
+  updated_at   timestamptz default now()
+```
 
 **RLS:**
-- SELECT: si el prompt es publico o es el owner
-- INSERT: si el prompt es del owner
-- DELETE: si el prompt es del owner
+- SELECT: usuarios ven solo su propia suscripcion
+- INSERT: solo el propio usuario (o service role via edge functions)
+- UPDATE: solo via service role (edge functions)
 
-**Storage bucket:** `prompt-attachments` (publico, RLS para subida solo por usuarios autenticados en su propia carpeta)
+**Funcion SQL auxiliar:** `assign_founder_tier(p_user_id uuid)` que:
+1. Cuenta cuantos founders existen
+2. Si < 100, asigna tier='founder' con founder_number
+3. Si >= 100, asigna tier='pending'
+4. Retorna el tier asignado
 
-### 2. Ruta y Navegacion
+### 2. Habilitar Stripe
 
-- Nueva ruta `/prompts` dentro del `DashboardLayout`
-- Nuevo item en el Sidebar con icono `BookOpen` entre "My Ideas" y "My Connections"
-- Traducciones en `common.json` (en/es/fr/pt): `navigation.prompts: "Prompt Vault"`
+Antes de escribir codigo, se habilitara la integracion de Stripe de Lovable para obtener las herramientas de creacion de productos/precios.
 
-### 3. UI - Pagina /prompts
+### 3. Edge Functions nuevas
 
-**Layout con Tabs:**
-- **Tab "Explorar"**: Grid de prompts publicos de toda la comunidad
-  - Barra de busqueda + filtros por tag y herramienta
-  - Cards con: titulo, tags, herramienta, avatar del autor, boton "Copy"
-  - Click abre modal de detalle con contenido completo, boton "Copiar al portapapeles" y lista de archivos adjuntos con descarga
-- **Tab "Mis Prompts"**: Lista/grid de prompts propios
-  - Badge de visibilidad (privado/publico)
-  - Acciones: Editar, Eliminar, Toggle visibilidad
-  - Boton "Nuevo Prompt" abre modal de creacion/edicion
+| Edge Function | Descripcion |
+|---------------|-------------|
+| `check-founder-status` | Tras OAuth, verifica cupos y asigna tier. Retorna tier + founder_number |
+| `create-checkout-session` | Crea sesion de Stripe Checkout para plan Pro ($24/year) |
+| `stripe-webhook` | Recibe eventos de Stripe (checkout.session.completed, subscription updates) |
 
-### 4. Modal Crear/Editar Prompt
+**`check-founder-status`** (POST, autenticado):
+- Busca si el usuario ya tiene un registro en `user_subscriptions`
+- Si no existe, llama a `assign_founder_tier()` 
+- Retorna `{ tier, founderNumber, needsPlanSelection }`
 
-- **Title**: Input texto
-- **Tool Used**: Select con opciones (Lovable, Cursor, Windsurf, ChatGPT, Claude, Bolt, v0, Replit, Other)
-- **Content/Description**: MarkdownEditor (reutilizando componente existente)
-- **Tags**: Input con Enter para agregar tags como chips, X para eliminar
-- **Attachments**: Zona drag & drop, validacion max 10MB por archivo, multiples archivos, lista con boton X para remover, progress de subida
-- **Privacy Toggle**: Switch "Hacer Publico"
+**`create-checkout-session`** (POST, autenticado):
+- Crea un Stripe Customer si no existe
+- Crea una Checkout Session en modo `subscription` con el price de $24/year
+- Retorna `{ url }` para redirect
 
-### 5. Vista de Detalle (Modal)
+**`stripe-webhook`** (POST, publico con verificacion de firma):
+- Maneja `checkout.session.completed`: actualiza tier a 'pro'
+- Maneja `customer.subscription.updated/deleted`: sincroniza estado
 
-- Contenido renderizado como Markdown (reutilizando `parseMarkdown`)
-- Boton "Copiar al portapapeles" para el contenido
-- Lista de archivos adjuntos con iconos de descarga
-- Info del autor (avatar, username) con link al perfil
+### 4. Flujo post-login modificado
 
-### 6. Archivos a crear/modificar
+**Archivo: `src/hooks/useAuth.ts`**
+
+Despues del login exitoso (SIGNED_IN), en lugar de redirigir siempre a `/me`:
+1. Llamar a `check-founder-status` edge function
+2. Si tier = 'founder' o 'free' o 'pro' -> redirigir a `/home` (dashboard)
+3. Si tier = 'pending' -> redirigir a `/choose-plan`
+
+### 5. Paginas nuevas
+
+**`/choose-plan` (src/pages/ChoosePlan.tsx)**:
+- Muestra mensaje "Los 100 cupos de Fundador se agotaron"
+- Dos cards: Plan Free ($0) y Builder Pro ($24/year)
+- Boton "Empezar gratis": llama edge function para setear tier='free', redirige a /home
+- Boton "Suscribirme": llama `create-checkout-session`, redirige a Stripe
+
+**`/payment-success` (src/pages/PaymentSuccess.tsx)**:
+- Muestra confirmacion de pago
+- Auto-redirect a /home en 3 segundos
+
+### 6. Componente de Upgrade en Dashboard
+
+**Archivo: `src/components/home/UpgradeBanner.tsx`**:
+- Se muestra en /home para usuarios con tier 'free'
+- CTA "Upgrade a Builder Pro - $24/year"
+- Click -> mismo flujo de Stripe Checkout
+
+### 7. Banner de Fundador en Dashboard
+
+**Archivo: `src/components/home/FounderWelcome.tsx`**:
+- Se muestra una vez para founders recien registrados
+- "Eres Fundador #X! Acceso gratis de por vida"
+- Dismissible
+
+### 8. Hook `useSubscription`
+
+**Archivo: `src/hooks/useSubscription.ts`**:
+- Consulta `user_subscriptions` para el usuario actual
+- Expone `{ tier, founderNumber, isFounder, isPro, isFree, loading }`
+- Se usa en el Dashboard, Sidebar, y cualquier feature que necesite verificar acceso
+
+### 9. Manejo de errores de pago
+
+- Si Stripe redirige con `?cancelled=true` a `/choose-plan`, mostrar toast de pago cancelado
+- El webhook de Stripe reintentara automaticamente si falla
+
+### 10. Landing Page - Cupos dinamicos
+
+Actualizar `get-landing-stats` para contar founders reales de `user_subscriptions` y calcular cupos restantes con precision.
+
+---
+
+### Detalle tecnico - Archivos a crear/modificar
 
 | Archivo | Accion |
 |---------|--------|
-| Nueva migration SQL | Tablas `prompts`, `prompt_files`, bucket `prompt-attachments` |
-| `src/pages/Prompts.tsx` | Pagina principal con tabs |
-| `src/hooks/usePrompts.ts` | Hook para CRUD de prompts |
-| `src/components/prompts/PromptCard.tsx` | Card para grid |
-| `src/components/prompts/PromptDetailModal.tsx` | Modal de detalle |
-| `src/components/prompts/PromptFormModal.tsx` | Modal crear/editar |
-| `src/components/prompts/TagInput.tsx` | Componente de tags con chips |
-| `src/components/prompts/FileUploader.tsx` | Zona de upload con drag & drop |
-| `src/App.tsx` | Agregar ruta `/prompts` |
-| `src/components/layout/Sidebar.tsx` | Agregar link en navegacion |
-| `src/integrations/supabase/types.ts` | Tipos de las nuevas tablas |
-| `src/i18n/en/prompts.json` | Traducciones ingles |
-| `src/i18n/es/prompts.json` | Traducciones espanol |
-| `src/i18n/en/common.json` | Key de navegacion |
-| `src/i18n/es/common.json` | Key de navegacion |
+| Nueva migration SQL | Tabla `user_subscriptions`, funcion `assign_founder_tier` |
+| `supabase/functions/check-founder-status/index.ts` | Verificar/asignar tier post-login |
+| `supabase/functions/create-checkout-session/index.ts` | Crear sesion Stripe Checkout |
+| `supabase/functions/stripe-webhook/index.ts` | Webhook de Stripe |
+| `supabase/functions/get-landing-stats/index.ts` | Actualizar conteo de cupos |
+| `supabase/config.toml` | Registrar nuevas funciones con verify_jwt=false |
+| `src/hooks/useAuth.ts` | Flujo post-login con verificacion de tier |
+| `src/hooks/useSubscription.ts` | Hook para acceder al tier del usuario |
+| `src/pages/ChoosePlan.tsx` | Pagina de seleccion de plan |
+| `src/pages/PaymentSuccess.tsx` | Pagina de exito de pago |
+| `src/components/home/UpgradeBanner.tsx` | Banner de upgrade para free users |
+| `src/components/home/FounderWelcome.tsx` | Banner de bienvenida para founders |
+| `src/pages/Home.tsx` | Integrar banners condicionales |
+| `src/App.tsx` | Nuevas rutas /choose-plan, /payment-success |
+| `src/i18n/en/plans.json` | Traducciones ingles |
+| `src/i18n/es/plans.json` | Traducciones espanol |
 
-### 7. Patrones a seguir
+### Orden de implementacion
 
-- Hook con `useQuery`/`useMutation` de TanStack (como `useToolsStack`, `useApps`)
-- Supabase client directo (como en `IdeasTab`)
-- Layout master-detail similar a Ideas pero con tabs
-- Componentes UI existentes: Dialog, Tabs, Input, Button, Badge, Switch, Avatar, ScrollArea
-- Markdown: reutilizar `parseMarkdown` de `src/lib/markdown.ts` y `MarkdownEditor`
-- Storage upload pattern igual que `feedback-attachments`
+1. Habilitar Stripe (herramienta de Lovable)
+2. Migration SQL (tabla + funcion)
+3. Edge functions (check-founder-status, create-checkout-session, stripe-webhook)
+4. Hook useSubscription
+5. Paginas ChoosePlan y PaymentSuccess
+6. Modificar flujo de auth (useAuth redirect)
+7. Componentes de dashboard (FounderWelcome, UpgradeBanner)
+8. Actualizar landing stats
+9. Traducciones
 
-### 8. Nota sobre build errors existentes
+### Nota importante
 
-Los errores de build actuales (en `types.ts`, `useApps`, `useDashboardStats`, etc.) son preexistentes y no estan relacionados con esta feature. Se corregiran como parte de la actualizacion de `types.ts` al agregar las nuevas tablas.
-
+Se necesitara la **Stripe Secret Key** para la integracion. Lovable la solicitara al habilitar Stripe. El producto y precio de $24/year se crearan programaticamente via la API de Stripe durante la implementacion.
