@@ -210,6 +210,7 @@ export type Database = {
           screenshots: string[] | null
           status_id: string | null
           tagline: string | null
+          tags: string[] | null
           updated_at: string
           url: string
           user_id: string
@@ -237,6 +238,7 @@ export type Database = {
           screenshots?: string[] | null
           status_id?: string | null
           tagline?: string | null
+          tags?: string[] | null
           updated_at?: string
           url: string
           user_id: string
@@ -264,6 +266,7 @@ export type Database = {
           screenshots?: string[] | null
           status_id?: string | null
           tagline?: string | null
+          tags?: string[] | null
           updated_at?: string
           url?: string
           user_id?: string
@@ -363,6 +366,7 @@ export type Database = {
           created_at: string | null
           feedback_id: string
           file_name: string
+          file_path: string | null
           file_type: string
           file_url: string
           id: string
@@ -371,6 +375,7 @@ export type Database = {
           created_at?: string | null
           feedback_id: string
           file_name: string
+          file_path?: string | null
           file_type: string
           file_url: string
           id?: string
@@ -379,6 +384,7 @@ export type Database = {
           created_at?: string | null
           feedback_id?: string
           file_name?: string
+          file_path?: string | null
           file_type?: string
           file_url?: string
           id?: string
@@ -634,9 +640,34 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_configs: {
+        Row: {
+          description: string | null
+          enabled: boolean | null
+          label: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean | null
+          label: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean | null
+          label?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           actor_id: string | null
+          broadcast_id: string | null
           created_at: string
           id: string
           meta: Json
@@ -648,6 +679,7 @@ export type Database = {
         }
         Insert: {
           actor_id?: string | null
+          broadcast_id?: string | null
           created_at?: string
           id?: string
           meta?: Json
@@ -659,6 +691,7 @@ export type Database = {
         }
         Update: {
           actor_id?: string | null
+          broadcast_id?: string | null
           created_at?: string
           id?: string
           meta?: Json
@@ -672,6 +705,20 @@ export type Database = {
           {
             foreignKeyName: "notifications_actor_id_fkey"
             columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_broadcast_id_fkey"
+            columns: ["broadcast_id"]
+            isOneToOne: false
+            referencedRelation: "system_broadcasts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -733,6 +780,7 @@ export type Database = {
           bio: string | null
           card_style: string | null
           created_at: string | null
+          display_order: number | null
           email_public: string | null
           font_family: string | null
           github: string | null
@@ -768,6 +816,7 @@ export type Database = {
           bio?: string | null
           card_style?: string | null
           created_at?: string | null
+          display_order?: number | null
           email_public?: string | null
           font_family?: string | null
           github?: string | null
@@ -803,6 +852,7 @@ export type Database = {
           bio?: string | null
           card_style?: string | null
           created_at?: string | null
+          display_order?: number | null
           email_public?: string | null
           font_family?: string | null
           github?: string | null
@@ -873,12 +923,17 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          filename: string | null
           id: string
+          intent_category: Database["public"]["Enums"]["intent_category"] | null
           is_for_sale: boolean | null
           is_public: boolean | null
           price: number | null
+          resource_type: Database["public"]["Enums"]["resource_type"] | null
+          result_url: string | null
           tags: string[] | null
           title: string
+          tool_compatibility: string[] | null
           tool_used: string | null
           updated_at: string
           user_id: string
@@ -886,12 +941,19 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          filename?: string | null
           id?: string
+          intent_category?:
+            | Database["public"]["Enums"]["intent_category"]
+            | null
           is_for_sale?: boolean | null
           is_public?: boolean | null
           price?: number | null
+          resource_type?: Database["public"]["Enums"]["resource_type"] | null
+          result_url?: string | null
           tags?: string[] | null
           title: string
+          tool_compatibility?: string[] | null
           tool_used?: string | null
           updated_at?: string
           user_id: string
@@ -899,12 +961,19 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          filename?: string | null
           id?: string
+          intent_category?:
+            | Database["public"]["Enums"]["intent_category"]
+            | null
           is_for_sale?: boolean | null
           is_public?: boolean | null
           price?: number | null
+          resource_type?: Database["public"]["Enums"]["resource_type"] | null
+          result_url?: string | null
           tags?: string[] | null
           title?: string
+          tool_compatibility?: string[] | null
           tool_used?: string | null
           updated_at?: string
           user_id?: string
@@ -912,6 +981,39 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "prompts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_likes: {
+        Row: {
+          created_at: string
+          resource_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          resource_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          resource_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_likes_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_likes_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -997,6 +1099,54 @@ export type Database = {
           project_thumbnail?: string
           project_title?: string
           project_url?: string
+        }
+        Relationships: []
+      }
+      system_broadcasts: {
+        Row: {
+          auto_show: boolean | null
+          button_link: string | null
+          button_text: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          image_url: string | null
+          is_popup: boolean | null
+          sent_count: number | null
+          status: Database["public"]["Enums"]["broadcast_status"] | null
+          subtitle: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          auto_show?: boolean | null
+          button_link?: string | null
+          button_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          is_popup?: boolean | null
+          sent_count?: number | null
+          status?: Database["public"]["Enums"]["broadcast_status"] | null
+          subtitle?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          auto_show?: boolean | null
+          button_link?: string | null
+          button_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          image_url?: string | null
+          is_popup?: boolean | null
+          sent_count?: number | null
+          status?: Database["public"]["Enums"]["broadcast_status"] | null
+          subtitle?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1268,6 +1418,34 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_showcase_apps: {
+        Args: never
+        Returns: {
+          app_logo_url: string
+          app_name: string
+          app_tagline: string
+          app_url: string
+          founder_avatar_url: string
+          founder_display_name: string
+          founder_handle: string
+          id: string
+          is_verified: boolean
+          stacks: Json
+          status: Json
+        }[]
+      }
+      get_verified_founders: {
+        Args: never
+        Returns: {
+          apps_count: number
+          avatar_url: string
+          city: string
+          display_name: string
+          social_links: Json
+          tagline: string
+          username: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1275,9 +1453,19 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_notification_enabled: { Args: { p_type: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "admin"
+      broadcast_status: "draft" | "sent"
+      intent_category:
+        | "ui_gen"
+        | "backend_logic"
+        | "app_config"
+        | "branding_assets"
+        | "database"
+        | "testing"
+      resource_type: "chat_prompt" | "system_rule" | "file_template"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1406,6 +1594,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "admin"],
+      broadcast_status: ["draft", "sent"],
+      intent_category: [
+        "ui_gen",
+        "backend_logic",
+        "app_config",
+        "branding_assets",
+        "database",
+        "testing",
+      ],
+      resource_type: ["chat_prompt", "system_rule", "file_template"],
     },
   },
 } as const
