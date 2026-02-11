@@ -61,7 +61,7 @@ export function SystemNotificationPopup({ isOpen, onClose, notification }: Syste
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-white border-2 border-primary/10 rounded-2xl overflow-hidden shadow-2xl">
+      <DialogContent className="sm:max-w-md bg-white border-2 border-primary/10 rounded-2xl overflow-hidden shadow-2xl max-h-[95vh] overflow-y-auto">
         <DialogHeader className="pt-6 pb-2">
           <div className="mx-auto mb-4 flex justify-center">
             <Avatar className="w-16 h-16 border-4 border-white shadow-lg ring-2 ring-primary/5">
