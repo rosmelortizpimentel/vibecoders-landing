@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
-export type NotificationType = 'app_like' | 'follow' | 'beta_req' | 'system';
+export type NotificationType = 'app_like' | 'follow' | 'beta_req' | 'beta_accepted' | 'beta_feedback' | 'feedback_status' | 'system';
 
 export interface Notification {
   id: string;

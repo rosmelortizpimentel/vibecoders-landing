@@ -9,9 +9,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 interface NotificationPopoverProps {
   onClose?: () => void;
+  onShowPopup?: (notification: any) => void;
 }
 
-export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ onClose }) => {
+export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ onClose, onShowPopup }) => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, isLoading } = useNotifications();
   const navigate = useNavigate();
   const { t } = useTranslation('notifications');
@@ -68,6 +69,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({ onClos
                     onRead={markAsRead}
                     onDelete={deleteNotification}
                     onClose={onClose}
+                    onShowPopup={onShowPopup}
                   />
                 ))}
               </div>

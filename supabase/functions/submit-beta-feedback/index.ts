@@ -138,6 +138,42 @@ Deno.serve(async (req) => {
 
     // Note: feedback_count is updated by database trigger
 
+    // ADD NOTIFICATION LOGIC
+    try {
+      // Get app owner
+      const { data: appData } = await supabase
+        .from('apps')
+        .select('user_id, name')
+        .eq('id', app_id)
+        .single();
+
+      if (appData) {
+        const { data: config } = await supabase
+          .from('notification_configs')
+          .select('enabled')
+          .eq('type', 'beta_feedback')
+          .single();
+
+        if (config?.enabled !== false) {
+          await supabase
+            .from('notifications')
+            .insert({
+              recipient_id: appData.user_id,
+              actor_id: user.id,
+              type: 'beta_feedback',
+              resource_id: feedback.id,
+              resource_slug: app_id,
+              meta: {
+                app_name: appData.name || 'App',
+                feedback_type: type
+              }
+            });
+        }
+      }
+    } catch (notifErr) {
+      console.error('Non-critical error sending feedback notification:', notifErr);
+    }
+
     console.log('Feedback submitted:', { app_id, tester_id: user.id, type, attachments_count: attachments?.length || 0 })
 
     return new Response(

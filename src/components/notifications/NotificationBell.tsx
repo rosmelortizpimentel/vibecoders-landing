@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { 
@@ -9,10 +9,40 @@ import {
 import { NotificationPopover } from './NotificationPopover';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { SystemNotificationPopup } from './SystemNotificationPopup';
 
 export const NotificationBell: React.FC = () => {
-  const { unreadCount } = useNotifications();
+  const { notifications, unreadCount, markAsRead } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
+  const [activePopupNotification, setActivePopupNotification] = useState<any>(null);
+
+  useEffect(() => {
+    if (notifications.length > 0 && !activePopupNotification) {
+      const autoShowNotif = notifications.find(n => 
+        !n.read_at && 
+        n.type === 'system' && 
+        (n.meta as any)?.auto_show === true
+      );
+      
+      if (autoShowNotif) {
+        setActivePopupNotification(autoShowNotif);
+      }
+    }
+  }, [notifications, activePopupNotification]);
+
+  const handleClosePopup = () => {
+    if (activePopupNotification) {
+      markAsRead(activePopupNotification.id);
+    }
+    setActivePopupNotification(null);
+  };
+
+  const handleManualPopupShow = (notification: any) => {
+    setIsOpen(false); // Close the popover to prevent Radix UI locking issues
+    setTimeout(() => {
+      setActivePopupNotification(notification);
+    }, 100);
+  };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -43,8 +73,19 @@ export const NotificationBell: React.FC = () => {
         alignOffset={-4}
         collisionPadding={16}
       >
-        <NotificationPopover onClose={() => setIsOpen(false)} />
+        <NotificationPopover 
+          onClose={() => setIsOpen(false)} 
+          onShowPopup={handleManualPopupShow}
+        />
       </PopoverContent>
+      
+      {activePopupNotification && (
+        <SystemNotificationPopup 
+          isOpen={!!activePopupNotification} 
+          onClose={handleClosePopup} 
+          notification={activePopupNotification} 
+        />
+      )}
     </Popover>
   );
 };

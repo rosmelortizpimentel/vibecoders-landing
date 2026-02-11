@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
 import { es, enUS, fr, pt } from 'date-fns/locale';
 import { Heart, UserPlus, FlaskConical, Bell, MessageSquare, Trash2, Check } from 'lucide-react';
@@ -6,26 +7,56 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Notification } from '@/hooks/useNotifications';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { SystemNotificationPopup } from './SystemNotificationPopup';
 
 interface NotificationItemProps {
   notification: Notification;
   onRead: (id: string) => void;
   onDelete?: (id: string) => void;
   onClose?: () => void;
+  onShowPopup?: (notification: Notification) => void;
 }
 
 export const NotificationItem: React.FC<NotificationItemProps> = ({ 
   notification, 
   onRead,
   onDelete,
-  onClose
+  onClose,
+  onShowPopup
 }) => {
   const navigate = useNavigate();
   const { t } = useTranslation('notifications');
   const { language } = useLanguage();
+  const [imageUrl, setImageUrl] = useState('');
+
+  useEffect(() => {
+    const getSignedUrl = async () => {
+      if (!notification.meta?.image_url) return;
+      
+      const path = String(notification.meta.image_url);
+      if (path.startsWith('http')) {
+        setImageUrl(path);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.storage
+          .from('broadcasts')
+          .createSignedUrl(path, 3600);
+
+        if (error) throw error;
+        setImageUrl(data.signedUrl);
+      } catch (err) {
+        console.error('Error getting signed URL:', err);
+      }
+    };
+
+    getSignedUrl();
+  }, [notification.meta?.image_url]);
 
   const getDateLocale = () => {
     switch (language) {
@@ -42,7 +73,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       case 'app_like': return <Heart className="w-4 h-4 text-red-500 fill-red-500" />;
       case 'follow': return <UserPlus className="w-4 h-4 text-blue-500" />;
       case 'beta_req': return <FlaskConical className="w-4 h-4 text-purple-500" />;
-      case 'system': return <Bell className="w-4 h-4 text-yellow-500" />;
+      case 'system': 
+        if (notification.meta?.image_url) return null; // We'll show the image as avatar/content
+        return <Bell className="w-4 h-4 text-yellow-500" />;
       default: return <Bell className="w-4 h-4 text-gray-400" />;
     }
   };
@@ -70,12 +103,49 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
             <span className="font-bold">{actorName}</span> {t('messages.betaReq')} <span className="font-bold">{String(appName)}</span>
           </p>
         );
-      case 'system':
+      case 'system': {
+        const title = notification.meta?.title || t('messages.systemFallback');
+        const subtitle = notification.meta?.subtitle;
+        const message = notification.meta?.message; // legacy support
+        const broadcastImageUrl = notification.meta?.image_url;
+        
         return (
-          <p className="text-[13px]">
-            {String(notification.meta?.message || t('messages.systemFallback'))}
-          </p>
+          <div className="space-y-1">
+            <p className="text-[13px] font-bold">
+              {String(title)}
+            </p>
+            {(subtitle || message) && (
+              <p className="text-[12px] text-muted-foreground leading-snug">
+                {String(subtitle || message)}
+              </p>
+            )}
+            {notification.meta?.image_url && (
+              <div className="mt-2 rounded-lg overflow-hidden border border-border/50 max-w-sm bg-muted/30">
+                <img 
+                  src={imageUrl || ''} 
+                  alt="Notification" 
+                  className="w-full h-auto object-contain max-h-40"
+                />
+              </div>
+            )}
+            {notification.meta?.button_text && notification.meta?.button_link && (
+              <Button 
+                size="sm" 
+                variant="secondary" 
+                className="mt-2 h-7 text-[11px] px-3 hov-button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const link = String(notification.meta?.button_link);
+                  window.open(link.startsWith('http') ? link : `https://${link}`, '_blank');
+                  onRead(notification.id);
+                }}
+              >
+                {String(notification.meta.button_text)}
+              </Button>
+            )}
+          </div>
         );
+      }
       default:
         return <p className="text-[13px]">{t('messages.generic')}</p>;
     }
@@ -83,6 +153,13 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
 
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
+    
+    const isPopup = (notification.meta as any)?.is_popup;
+    if (isPopup && onShowPopup) {
+      onShowPopup(notification);
+      return;
+    }
+
     onRead(notification.id);
     if (notification.resource_slug) {
       navigate(notification.resource_slug);
@@ -110,7 +187,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
         "w-9 h-9 border border-border transition-opacity",
         notification.read_at && "opacity-60"
       )}>
-        {notification.actor?.avatar_url ? (
+        {notification.type === 'system' ? (
+          <AvatarImage src={vibecodersLogo} alt="VibeCoders" />
+        ) : notification.actor?.avatar_url ? (
           <AvatarImage src={notification.actor.avatar_url} />
         ) : (
           <AvatarFallback className="bg-primary/10 text-primary text-xs">
@@ -189,6 +268,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
+      
     </div>
   );
 };

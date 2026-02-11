@@ -11,7 +11,7 @@ import { SettingsManager } from '@/components/admin/SettingsManager';
 import { UsersManager } from '@/components/admin/UsersManager';
 import { WaitlistManager } from '@/components/admin/WaitlistManager';
 import { FeedbackManager } from '@/components/admin/FeedbackManager';
-import { NotificationDocumentation } from '@/components/admin/NotificationDocumentation';
+import { NotificationManager } from '@/components/admin/NotificationManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -78,7 +78,7 @@ const Admin = () => {
         <Route path="users" element={<UsersManager />} />
         <Route path="waitlist" element={<WaitlistManager />} />
         <Route path="settings" element={<SettingsManager />} />
-        <Route path="notifications" element={<NotificationDocumentation />} />
+        <Route path="notifications" element={<NotificationManager />} />
       </Route>
     </Routes>
   );

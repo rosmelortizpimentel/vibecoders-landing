@@ -130,6 +130,34 @@ Deno.serve(async (req) => {
 
     console.log('User joined beta:', { app_id, user_id: user.id, status })
 
+    // ADD NOTIFICATION LOGIC
+    try {
+      // Check if notification is enabled
+      const { data: config } = await supabase
+        .from('notification_configs')
+        .select('enabled')
+        .eq('type', 'beta_req')
+        .single();
+      
+      if (config?.enabled !== false) {
+        await supabase
+          .from('notifications')
+          .insert({
+            recipient_id: app.user_id,
+            actor_id: user.id,
+            type: 'beta_req',
+            resource_id: app_id,
+            resource_slug: null,
+            meta: { 
+              app_name: app.name || 'App',
+              status: status 
+            }
+          });
+      }
+    } catch (notifErr) {
+      console.error('Non-critical error sending notification:', notifErr);
+    }
+
     return new Response(
       JSON.stringify({ success: true, status, tester }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
