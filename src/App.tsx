@@ -33,6 +33,16 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import { NotificationsPage } from "./pages/Notifications";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { DashboardLayout } from "./layouts/DashboardLayout";
+import { useAuth } from "./hooks/useAuth";
+import { Loader2 } from "lucide-react";
+
+/** Auth guard for /closed — no sidebar, fullscreen */
+function ClosedGuard() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#000519]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (!user) return <Navigate to="/" replace />;
+  return <Closed />;
+}
 
 const queryClient = new QueryClient();
 
@@ -66,10 +76,11 @@ const App = () => (
           
 
 
+          {/* Closed access - fullscreen, auth-protected but no dashboard layout */}
+          <Route path="/closed" element={<ClosedGuard />} />
+
           {/* Authenticated routes with shared layout (persistent header/footer) */}
           <Route element={<DashboardLayout />}>
-            {/* Closed access / waitlist page */}
-            <Route path="/closed" element={<Closed />} />
             <Route path="/home" element={<Home />} />
             <Route path="/explore" element={<Projects />} />
             <Route path="/public-beta-testing" element={<BetaSquads />} />
