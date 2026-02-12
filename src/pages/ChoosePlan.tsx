@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Check, X, Zap, Loader2, Lock, Linkedin, Map, MessageSquare, Megaphone, Phone, ShieldCheck } from 'lucide-react';
+import { Check, X, Loader2, Lock, Map, MessageSquare, Megaphone, Phone, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useToast } from '@/hooks/use-toast';
@@ -10,7 +10,7 @@ export default function ChoosePlan() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { tier, loading: subLoading, setFreeTier, createCheckout } = useSubscription();
+  const { tier, loading: subLoading, createCheckout } = useSubscription();
 
   useEffect(() => {
     if (searchParams.get('cancelled') === 'true') {
@@ -34,15 +34,6 @@ export default function ChoosePlan() {
     }
   }, [authLoading, user, navigate]);
 
-  const handleFree = async () => {
-    try {
-      await setFreeTier.mutateAsync();
-      navigate('/home', { replace: true });
-    } catch (e) {
-      toast({ title: 'Error', description: 'No se pudo activar el plan gratuito.', variant: 'destructive' });
-    }
-  };
-
   const handlePro = async () => {
     try {
       const result = await createCheckout.mutateAsync();
@@ -65,7 +56,7 @@ export default function ChoosePlan() {
   const freeFeatures = [
     { text: 'Valida tus apps con feedback de expertos', included: true },
     { text: 'Networking con +100 fundadores', included: true },
-    { text: 'Crea tu perfil y demuestra lo que estás construyendo', included: true },
+    { text: 'Crea tu perfil y demuestra lo que estás construyendo', included: true, hasExample: true },
     { text: 'Sin acceso a la Suite de Widgets', included: false },
   ];
 
@@ -74,7 +65,7 @@ export default function ChoosePlan() {
     { text: 'Roadmap público listo: No gastes ni un commit en esto', icon: <Map className="h-4 w-4 text-[#3D5AFE]" /> },
     { text: 'Captura Feedback y Bugs: Sin montar otro backend', icon: <MessageSquare className="h-4 w-4 text-[#3D5AFE]" /> },
     { text: 'Banners sin Deploy: Lanza alertas sin tocar código', icon: <Megaphone className="h-4 w-4 text-[#3D5AFE]" /> },
-    { text: 'Vende tus Servicios: Botón "Book Call" integrado', icon: <Phone className="h-4 w-4 text-[#3D5AFE]" /> },
+    { text: 'Vende tus Servicios: Botón "Book Call" integrado a tu Perfil', icon: <Phone className="h-4 w-4 text-[#3D5AFE]" />, bold: true },
     { text: 'Precio de $9.90 congelado de por vida', icon: <ShieldCheck className="h-4 w-4 text-[#3D5AFE]" /> },
   ];
 
@@ -89,17 +80,17 @@ export default function ChoosePlan() {
           </span>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-stone-900 mb-4">
-            Elige tu plan para continuar
+            Desbloquea todo con Pro Builder
           </h1>
           <p className="text-sm sm:text-base text-stone-500 max-w-lg mx-auto leading-relaxed">
-            Comienza gratis o desbloquea todo con Builder Pro
+            Ahorra +$500/mes reemplazando múltiples herramientas SaaS con una suite integrada
           </p>
         </div>
 
-        {/* Pricing Grid — matches landing ClosedAccessSection */}
+        {/* Pricing Grid */}
         <div className="grid gap-6 md:grid-cols-2 md:gap-8 lg:gap-10 md:items-stretch">
 
-          {/* Card A: Free */}
+          {/* Card A: Free — Current Plan */}
           <div className="rounded-2xl border border-stone-200 bg-stone-50/50 p-6 sm:p-8 md:p-10 flex flex-col">
             <div className="mb-6 md:mb-8">
               <h3 className="text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2">
@@ -118,7 +109,7 @@ export default function ChoosePlan() {
             </div>
 
             <ul className="mb-8 md:mb-12 space-y-4 text-left flex-grow">
-              {freeFeatures.map(({ text, included }) => (
+              {freeFeatures.map(({ text, included, hasExample }) => (
                 <li key={text} className={`flex items-start gap-3 text-sm ${!included ? 'opacity-40' : ''}`}>
                   <div className="mt-0.5 shrink-0">
                     {included ? (
@@ -127,26 +118,30 @@ export default function ChoosePlan() {
                       <X className="h-4 w-4 text-stone-300" />
                     )}
                   </div>
-                  <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
-                    {text}
-                  </span>
+                  <div>
+                    <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
+                      {text}
+                    </span>
+                    {hasExample && (
+                      <a
+                        href="https://www.vibecoders.la/@rosmelortiz"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-1 text-xs text-[#3D5AFE] hover:underline font-medium"
+                      >
+                        Mira un ejemplo →
+                      </a>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
 
             <div className="mt-auto">
-              <button
-                onClick={handleFree}
-                disabled={setFreeTier.isPending}
-                className="w-full h-12 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-semibold text-sm transition-all flex items-center justify-center gap-2.5 disabled:opacity-50"
-              >
-                {setFreeTier.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Zap className="w-4 h-4" />
-                )}
-                Empezar gratis
-              </button>
+              <div className="w-full h-12 rounded-xl border border-stone-200 bg-stone-100 text-stone-400 font-semibold text-sm flex items-center justify-center gap-2.5 cursor-default">
+                <Check className="w-4 h-4" />
+                Tu plan actual
+              </div>
             </div>
           </div>
 
@@ -181,12 +176,12 @@ export default function ChoosePlan() {
             </div>
 
             <ul className="mb-8 md:mb-10 space-y-4 text-left flex-grow">
-              {proFeatures.map(({ text, icon }) => (
+              {proFeatures.map(({ text, icon, bold }) => (
                 <li key={text} className="flex items-start gap-3 text-sm">
                   <div className="mt-0.5 shrink-0">
                     {icon}
                   </div>
-                  <span className="font-medium text-white/75">
+                  <span className={`font-medium ${bold ? 'font-bold text-white/90' : 'text-white/75'}`}>
                     {text}
                   </span>
                 </li>
