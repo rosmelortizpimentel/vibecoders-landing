@@ -16,10 +16,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, ArrowUpCircle } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
@@ -64,6 +65,7 @@ export function AuthenticatedHeader({
   const t = useTranslation('common');
   const tAuth = useTranslation('auth');
   const tProfile = useTranslation('profile');
+  const { isFree, loading: subLoading } = useSubscription();
   
   const displayName = formatDisplayName(profile?.name, tAuth.user);
   const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
@@ -153,6 +155,20 @@ export function AuthenticatedHeader({
                   </>
                 ) : null}
               </div>
+            )}
+
+            {/* Upgrade Button - only for free tier */}
+            {isFree && !subLoading && (
+              <Link
+                to="/choose-plan"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-md hover:shadow-lg"
+              >
+                <ArrowUpCircle className="h-4 w-4" />
+                <div className="flex flex-col items-start leading-none">
+                  <span className="text-sm font-bold">$9.90/año</span>
+                  <span className="text-[9px] font-medium text-white/80">Oferta de Pre-Lanzamiento</span>
+                </div>
+              </Link>
             )}
 
             {/* Notification Bell */}
