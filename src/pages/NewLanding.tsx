@@ -547,8 +547,14 @@ const FeatureGrid = () => {
 /* ─── Freemium Banner (shown when spots run out) ─── */
 const FreemiumBanner = ({ totalBuilders, onLinkedInClick, onGoogleClick }: { totalBuilders: number; onLinkedInClick: () => void; onGoogleClick: () => void }) => {
   const { t } = useTranslation('newLanding');
-  const avatarInitials = ['AM', 'CR', 'ST', 'DL', 'JP'];
-  const avatarColors = ['bg-stone-900', 'bg-stone-600', 'bg-[#3D5AFE]', 'bg-stone-400', 'bg-stone-700'];
+  const avatarPhotos = [
+    'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/e2df4196-aa86-465e-9a62-0d2508843b9e/avatar_1770449276650.jpeg',
+    'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/b8256ba9-2633-4c0c-b14f-4d6ad3c770a9/avatar_migrated_1770716423332.png',
+    'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/2a409748-c62a-4015-8d7a-f152ddcb1e0c/avatar_migrated_1770716415391.png',
+    'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/deeaea5d-f7e9-4dc0-8852-b5ec81de42a1/avatar_migrated_1770716424592.png',
+    'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/45335b21-6d8b-4369-afce-340d8e6adb99/avatar_1770308992103.png',
+    'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/7f969e81-1b47-420f-bb35-fb2e498c6068/avatar_migrated_1770716417376.jpeg',
+  ];
 
   return (
     <section className="bg-white py-24 md:py-32 px-4 overflow-hidden border-t border-stone-100">
@@ -556,13 +562,13 @@ const FreemiumBanner = ({ totalBuilders, onLinkedInClick, onGoogleClick }: { tot
         {/* Avatar Stack */}
         <div className="flex items-center mb-4">
           <div className="flex -space-x-2">
-            {avatarInitials.map((initials, i) => (
-              <div
+            {avatarPhotos.map((src, i) => (
+              <img
                 key={i}
-                className={`h-9 w-9 rounded-full ${avatarColors[i]} flex items-center justify-center text-white text-xs font-bold border-2 border-white shadow-sm`}
-              >
-                {initials}
-              </div>
+                src={src}
+                alt=""
+                className="h-9 w-9 rounded-full object-cover border-2 border-white shadow-sm"
+              />
             ))}
           </div>
           <span className="ml-3 text-sm text-stone-500 font-medium">
