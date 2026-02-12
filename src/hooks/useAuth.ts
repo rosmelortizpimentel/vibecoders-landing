@@ -25,11 +25,9 @@ export function useAuth() {
               window.location.href = returnUrl;
             }, 0);
           } else {
-            // Check founder status and redirect accordingly
-            supabase.functions.invoke('check-founder-status').then(({ data }) => {
-              if (data?.needsPlanSelection) {
-                window.location.href = '/choose-plan';
-              } else if (window.location.pathname === '/') {
+            // Check founder status and redirect to profile
+            supabase.functions.invoke('check-founder-status').then(() => {
+              if (window.location.pathname === '/') {
                 window.location.href = '/me/profile';
               }
             }).catch(console.error);
