@@ -32,22 +32,17 @@ export function DashboardLayout() {
     return () => window.removeEventListener('sidebar-resize', handleResize as EventListener);
   }, []);
 
-  // Check founder status for new users — redirect to /closed if access is closed
+  // Check founder status for new users
   useEffect(() => {
     if (authLoading || !user) {
       setCheckingAccess(false);
       return;
     }
+    
+    // Clean up stale Stripe redirect flag (only relevant during initial OAuth callback)
+    localStorage.removeItem('pendingStripeRedirect');
+    
     let cancelled = false;
-    
-    // If useAuth is handling a Stripe redirect, skip the access check entirely
-    const pendingStripe = localStorage.getItem('pendingStripeRedirect');
-    const signupSource = localStorage.getItem('signupSource');
-    if (pendingStripe === 'true' || signupSource === 'paid_card') {
-      setCheckingAccess(false);
-      return;
-    }
-    
     supabase.functions.invoke('check-founder-status').then(() => {
       if (!cancelled) setCheckingAccess(false);
     }).catch(() => {
