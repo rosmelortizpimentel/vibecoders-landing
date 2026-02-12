@@ -653,8 +653,8 @@ const PricingSection = () => {
     }
   };
 
-  // TEMP: Force freemium banner for preview. Restore to: if (spotsLeft <= 0)
-  if (true) {
+  // When spots run out, show freemium banner instead
+  if (spotsLeft <= 0) {
     return <FreemiumBanner totalBuilders={totalBuilders} onLinkedInClick={handleLinkedInSignIn} onGoogleClick={handleGoogleSignIn} />;
   }
 

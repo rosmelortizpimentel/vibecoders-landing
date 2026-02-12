@@ -200,7 +200,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer / User Menu */}
-      <div className="mt-auto border-t border-border/50 px-4 pt-4 pb-8 overflow-visible">
+      <div className="mt-auto border-t border-border/50 px-4 pt-4 pb-4 overflow-visible">
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button 
