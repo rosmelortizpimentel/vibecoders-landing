@@ -1,90 +1,132 @@
 
 
-# Rediseno de la seccion "Acceso Cerrado" en la Landing
+# Plan: Early Adopter $9.90 con flujo de registro diferenciado
 
-## Objetivo
-Reemplazar el actual `FreemiumBanner` (seccion blanca basica con botones de login) por una seccion premium estilo dark con multiples bloques informativos cuando los cupos de fundador se agotan.
+## Resumen
 
-## Estructura de la nueva seccion
+Crear un plan Early Adopter a $9.90/ano en Stripe, diferenciar el flujo de login segun que boton use el usuario (gratis vs pago), y mostrar esa informacion en el panel de admin.
 
-La seccion reemplazara el `FreemiumBanner` actual (lineas 547-620 de `NewLanding.tsx`) con un componente de fondo oscuro (`#000519`) que contiene los siguientes bloques en orden vertical:
+## Paso 1: Crear producto y precio en Stripe
 
-```text
-+-----------------------------------------------+
-|  ACCESO CERRADO (badge)                        |
-|  Los primeros 100 vibecoders ya estan dentro   |
-|  [Avatar stack con fotos reales]               |
-|  Texto de acceso completado                    |
-+-----------------------------------------------+
-|  LANZAMIENTO OFICIAL (label)                   |
-|  [Countdown: DD : HH : MM : SS]               |
-|  (basado en timezone Toronto, Canada)          |
-+-----------------------------------------------+
-|  Lo que viene: Vibecoders Communication Suite  |
-|  Widgets embebibles que reemplazan +$500/mes   |
-|  [Grid 2x5 de widgets con iconos]              |
-+-----------------------------------------------+
-|  Quieres saber un poco mas y estar en la       |
-|  lista de espera?                              |
-|  [Boton LinkedIn] [Boton Google]               |
-+-----------------------------------------------+
-|  Precio exclusivo de lanzamiento               |
-|  (solo para lista de espera)                   |
-|  Texto de urgencia y sin tarjeta               |
-+-----------------------------------------------+
+- Crear un nuevo producto "Early Adopter" con precio $9.90/ano (recurring yearly) usando las herramientas de Stripe
+- Guardar el price_id en `general_settings` como `stripe_early_adopter_990_price_id`
+
+## Paso 2: Migracion de base de datos
+
+Agregar columna `signup_source` a la tabla `user_subscriptions`:
+
+```sql
+ALTER TABLE public.user_subscriptions 
+ADD COLUMN signup_source text DEFAULT NULL;
 ```
 
-## Cambios por archivo
+Valores posibles: `'free_card'`, `'paid_card'`, `NULL` (usuarios anteriores).
 
-### 1. `src/pages/NewLanding.tsx`
-- Reescribir el componente `FreemiumBanner` con la nueva estructura premium
-- Agregar un hook `useCountdown` local (mismo patron que `Closed.tsx`) con fecha objetivo `2026-03-01T00:00:00-05:00` (timezone Toronto/EST)
-- Reutilizar las mismas URLs de avatar que ya existen en el componente actual
-- Reutilizar los iconos de widgets del array `WIDGET_ICONS` (mismo patron que `Closed.tsx`)
-- Mantener los botones de LinkedIn y Google con los mismos handlers existentes
+## Paso 3: Modificar el flujo de autenticacion en la landing
 
-### 2. Archivos de traduccion (4 idiomas)
-Agregar nuevas claves bajo `pricing.closed` en cada archivo:
+### En `NewLanding.tsx` - ClosedAccessSection:
 
-**`src/i18n/es/newLanding.json`** - Agregar:
-- `pricing.closed.badge`: "ACCESO CERRADO"
-- `pricing.closed.title`: "Los primeros 100 vibecoders ya estan dentro"
-- `pricing.closed.joinedText`: "+{{count}} builders activos"
-- `pricing.closed.subtitle`: "El acceso exclusivo para founders se ha completado."
-- `pricing.closed.comingSoon`: "Pero algo grande viene el 1 de marzo."
-- `pricing.closed.launchLabel`: "Lanzamiento oficial"
-- `pricing.closed.days/hours/minutes/seconds`: labels del countdown
-- `pricing.closed.suiteTitle`: "Lo que viene: Vibecoders Communication Suite"
-- `pricing.closed.suiteSubtitle`: "Widgets embebibles que reemplazan +$500/mes en herramientas SaaS"
-- `pricing.closed.waitlistTitle`: "Quieres saber un poco mas y estar en la lista de espera?"
-- `pricing.closed.ctaLinkedIn`: "Continuar con LinkedIn"
-- `pricing.closed.ctaGoogle`: "Continuar con Google"
-- `pricing.closed.priceTitle`: "Precio exclusivo de lanzamiento"
-- `pricing.closed.priceSubtitle`: "(solo para lista de espera)"
-- `pricing.closed.priceNote`: "Este lanzamiento es diferente: solo sera accesible por tiempo limitado."
-- `pricing.closed.trustText`: "Sin tarjeta. Te avisamos cuando lanzamos."
+- Los botones del **Card A (Free)** guardan en `localStorage` un flag: `signupSource = 'free_card'` antes de llamar a `signInWithGoogle/LinkedIn`
+- Los botones del **Card B ($9.90)** guardan: `signupSource = 'paid_card'` antes de llamar a `signInWithGoogle/LinkedIn`
 
-Lo mismo para `en/newLanding.json`, `fr/newLanding.json`, `pt/newLanding.json`.
+### En `useAuth.ts` - onAuthStateChange (SIGNED_IN):
 
-Tambien se reutilizaran las claves de widgets ya existentes en `closed.json` (`suite.widgets.*`) referenciando desde el namespace `closed`.
+Despues de que `check-founder-status` asigna el tier `free`:
+1. Leer `localStorage.getItem('signupSource')`
+2. Si es `'paid_card'`:
+   - Llamar a una nueva edge function `create-checkout-session` con el price_id del Early Adopter ($9.90)
+   - Redirigir automaticamente a la URL de Stripe Checkout
+3. Si es `'free_card'` o no existe:
+   - Flujo normal, redirigir a `/me/profile`
+4. Limpiar el flag de localStorage
 
-### 3. Detalle de diseno visual
-- Fondo: `bg-[#000519]` con bordes superior/inferior suaves
-- Badge "ACCESO CERRADO" con icono Lock, borde sutil, estilo pill
-- Avatar stack: las 6 fotos reales ya existentes con texto "+N builders activos"
-- Countdown: estilo monospace con cajas semi-transparentes (mismo patron visual de `Closed.tsx`)
-- Grid de widgets: 2 columnas mobile, 5 columnas desktop, iconos de Lucide
-- Botones de auth: LinkedIn (azul profesional) y Google (blanco con borde) dentro de un contenedor con sombra sutil
-- Seccion de precio: texto `$24/ano` destacado en color secondary/dorado, nota de urgencia debajo
-- Sin emojis en ningun lugar
-- Tipografia limpia, tracking amplio en labels, peso bold en titulos
+## Paso 4: Actualizar edge function `check-founder-status`
 
-### 4. Widgets reutilizados
-Se importaran los mismos iconos que usa `Closed.tsx`: Bug, Map, Activity, Megaphone, FileText, Vote, HelpCircle, Star, Users, Compass. Se definira el array de widgets directamente en el componente.
+Modificar para que acepte un parametro opcional `signup_source` y lo guarde en `user_subscriptions.signup_source` al crear/actualizar el registro del usuario.
 
-## Seccion tecnica
+Alternativa mas simple: crear una edge function pequena `set-signup-source` que actualice el campo, o guardar el source directamente desde el frontend despues del login.
 
-- El countdown usa `Date.now()` vs fecha fija `2026-03-01T00:00:00-05:00` (EST/Toronto)
-- Se mantiene la logica condicional existente: `if (spotsLeft <= 0)` renderiza el nuevo componente en vez del pricing normal
-- Los handlers `onLinkedInClick` y `onGoogleClick` se pasan como props igual que antes
-- No se elimina el codigo del `PricingSection` original (se mantiene para cuando haya cupos)
+## Paso 5: Modificar `create-checkout-session`
+
+Agregar soporte para recibir un `price_id` opcional en el body de la request. Si se recibe, usar ese price_id en vez del configurado en `general_settings`. Esto permite redirigir al plan de $9.90 desde el flujo de paid_card.
+
+Alternativa: leer el price_id del Early Adopter desde `general_settings` usando una nueva key y pasarlo como parametro desde el frontend.
+
+## Paso 6: Webhook de Stripe (`stripe-webhook`)
+
+El webhook ya maneja `checkout.session.completed` y asigna tier `pro`. No necesita cambios para el Early Adopter ya que se le asigna el mismo tier `pro` con los mismos beneficios. El precio pagado ya se guarda en el campo `price`.
+
+## Paso 7: Guardar signup_source en la base de datos
+
+En `check-founder-status` o en un nuevo endpoint, al registrar al usuario nuevo, guardar el `signup_source` que se pasa desde el frontend (via header, body, o query param).
+
+Enfoque elegido: Modificar `check-founder-status` para leer un parametro `signupSource` del body y guardarlo en `user_subscriptions.signup_source`.
+
+## Paso 8: Mostrar indicador en Admin
+
+### En `admin-users-list` edge function:
+- Incluir `signup_source` en el SELECT de `user_subscriptions`
+- Pasarlo al frontend como parte del objeto de usuario
+
+### En `UsersManager.tsx`:
+- Agregar campo `signup_source` a la interfaz `EnrichedUser`
+- Mostrar un badge/indicador junto al tier del usuario:
+  - Si `signup_source === 'paid_card'`: badge con icono de tarjeta de credito (ej. "Pago")
+  - Si `signup_source === 'free_card'`: badge con texto "Gratis"
+  - Si `null`: sin indicador (usuarios anteriores)
+
+## Paso 9: Si el usuario cancela el pago de Stripe
+
+Si el usuario hace clic en los botones del Card B, se loguea, y luego cancela el checkout de Stripe:
+- Ya tiene su cuenta creada con tier `free`
+- Al volver a la app, tiene sesion activa y acceso normal como usuario free
+- No se pierde nada, simplemente no tiene el plan Early Adopter
+
+## Seccion tecnica - Flujo completo
+
+```text
+Usuario en Landing
+       |
+       +-- Clic en Card A (Free) --> localStorage: signupSource='free_card' --> OAuth
+       |                                                                        |
+       +-- Clic en Card B ($9.90) --> localStorage: signupSource='paid_card' --> OAuth
+                                                                                |
+                                                                          SIGNED_IN event
+                                                                                |
+                                                                   check-founder-status
+                                                                   (guarda signup_source)
+                                                                                |
+                                                                       tier = 'free'
+                                                                                |
+                                                              +--- signupSource?  ---+
+                                                              |                      |
+                                                         'free_card'            'paid_card'
+                                                              |                      |
+                                                         /me/profile        create-checkout ($9.90)
+                                                                                     |
+                                                                              Stripe Checkout
+                                                                                     |
+                                                                           +----paid?----+
+                                                                           |             |
+                                                                        webhook      cancel
+                                                                        tier=pro     tier=free
+                                                                           |             |
+                                                                    /payment-success   /me
+```
+
+## Archivos a modificar
+
+1. **Migracion SQL** - Agregar columna `signup_source` a `user_subscriptions`
+2. **`src/pages/NewLanding.tsx`** - Guardar `signupSource` en localStorage segun el boton
+3. **`src/hooks/useAuth.ts`** - Leer `signupSource` tras SIGNED_IN y redirigir a checkout si es `paid_card`
+4. **`supabase/functions/check-founder-status/index.ts`** - Aceptar y guardar `signup_source`
+5. **`supabase/functions/create-checkout-session/index.ts`** - Aceptar price_id opcional del body
+6. **`supabase/functions/admin-users-list/index.ts`** - Incluir `signup_source` en response
+7. **`src/components/admin/UsersManager.tsx`** - Mostrar indicador de signup_source
+8. **`src/integrations/supabase/types.ts`** - Se actualizara automaticamente con la migracion
+
+## Stripe
+
+- Crear producto: "Early Adopter $9.90" con precio $9.90/ano recurring
+- Guardar price_id en `general_settings`
+
