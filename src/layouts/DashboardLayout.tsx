@@ -48,12 +48,8 @@ export function DashboardLayout() {
       return;
     }
     
-    supabase.functions.invoke('check-founder-status').then(({ data }) => {
-      if (!cancelled && data?.accessClosed) {
-        window.location.href = '/closed';
-      } else {
-        setCheckingAccess(false);
-      }
+    supabase.functions.invoke('check-founder-status').then(() => {
+      if (!cancelled) setCheckingAccess(false);
     }).catch(() => {
       if (!cancelled) setCheckingAccess(false);
     });
