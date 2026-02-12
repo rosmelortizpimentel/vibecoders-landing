@@ -15,72 +15,38 @@
     "title": "Lo que viene: Vibecoders Communication Suite",
     "subtitle": "10 widgets embebibles que reemplazan +$500/mes en herramientas SaaS",
     "widgets": {
-      "feedback": {
-        "name": "Feedback",
-        "description": "Bug reports, sugerencias y mejoras UX directo desde tu app"
-      },
-      "roadmap": {
-        "name": "Roadmap",
-        "description": "Muestra tu backlog, en progreso y completados públicamente"
-      },
-      "status": {
-        "name": "Status Page",
-        "description": "Uptime, incidentes y logs en tiempo real para tus usuarios"
-      },
-      "announcements": {
-        "name": "Announcements",
-        "description": "Banners, popups y notificaciones informativas"
-      },
-      "changelog": {
-        "name": "Changelog",
-        "description": "Muestra actualizaciones y releases de tu app automáticamente"
-      },
-      "voting": {
-        "name": "Feature Voting",
-        "description": "Tus usuarios votan por los features que quieren ver"
-      },
-      "help": {
-        "name": "Help Center",
-        "description": "FAQs, documentación y soporte embebido self-service"
-      },
-      "social": {
-        "name": "Social Proof",
-        "description": "Testimonios y reviews en tiempo real de tus usuarios"
-      },
-      "community": {
-        "name": "Community",
-        "description": "Actividad de la comunidad, FOMO y viralidad integrada"
-      },
-      "onboarding": {
-        "name": "Onboarding",
-        "description": "Tours guiados, tooltips y guías interactivas sin código"
-      }
+      "feedback": { "name": "Feedback", "description": "Bug reports, sugerencias y mejoras UX directo desde tu app" },
+      "roadmap": { "name": "Roadmap", "description": "Muestra tu backlog, en progreso y completados públicamente" },
+      "status": { "name": "Status Page", "description": "Uptime, incidentes y logs en tiempo real para tus usuarios" },
+      "announcements": { "name": "Announcements", "description": "Banners, popups y notificaciones informativas" },
+      "changelog": { "name": "Changelog", "description": "Muestra actualizaciones y releases de tu app automáticamente" },
+      "voting": { "name": "Feature Voting", "description": "Tus usuarios votan por los features que quieren ver" },
+      "help": { "name": "Help Center", "description": "FAQs, documentación y soporte embebido self-service" },
+      "social": { "name": "Social Proof", "description": "Testimonios y reviews en tiempo real de tus usuarios" },
+      "community": { "name": "Community", "description": "Actividad de la comunidad, FOMO y viralidad integrada" },
+      "onboarding": { "name": "Onboarding", "description": "Tours guiados, tooltips y guías interactivas sin código" }
     }
   },
   "comparison": {
     "title": "Lo que ahorras con Vibecoders Suite",
-    "replaces": "Reemplaza",
-    "typicalCost": "Costo típico",
     "included": "Incluido",
     "totalSavings": "Total que ahorras",
     "perMonth": "/mes",
     "tools": {
-      "feedback": "Canny, UserVoice → $79-399/mes",
-      "roadmap": "Productboard → $20-80/mes",
-      "status": "StatusPage.io → $29-99/mes",
-      "announcements": "Intercom → $74+/mes",
-      "changelog": "Headway, Beamer → $49-99/mes",
-      "help": "Zendesk, Helpscout → $19-89/mes",
-      "voting": "Canny → Incluido",
-      "onboarding": "Appcues, Userguiding → $249+/mes"
+      "feedback": { "name": "Canny, UserVoice — $79-399/mes", "purpose": "Recolección de feedback y reportes de bugs" },
+      "roadmap": { "name": "Productboard — $20-80/mes", "purpose": "Gestión de roadmap y priorización de producto" },
+      "status": { "name": "StatusPage.io — $29-99/mes", "purpose": "Página de estado y monitoreo de uptime" },
+      "announcements": { "name": "Intercom — $74+/mes", "purpose": "Comunicación in-app y banners informativos" },
+      "changelog": { "name": "Headway, Beamer — $49-99/mes", "purpose": "Log de actualizaciones y releases" },
+      "help": { "name": "Zendesk, Helpscout — $19-89/mes", "purpose": "Centro de ayuda y soporte al cliente" },
+      "voting": { "name": "Canny — Incluido", "purpose": "Votación de features por usuarios" },
+      "onboarding": { "name": "Appcues, Userguiding — $249+/mes", "purpose": "Tours guiados y onboarding interactivo" }
     }
   },
   "waitlist": {
     "title": "¿Quieres estar en la lista de espera?",
     "subtitle": "Te avisaremos cuando lancemos. Los primeros en la lista tendrán acceso prioritario.",
-    "placeholder": "tu@email.com",
-    "button": "Unirme a la lista de espera",
-    "sending": "Enviando..."
+    "button": "Unirme a la lista de espera"
   },
   "success": {
     "title": "¡Estás en la lista!",
