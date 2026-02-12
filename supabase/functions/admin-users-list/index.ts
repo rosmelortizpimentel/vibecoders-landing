@@ -106,6 +106,33 @@ Deno.serve(async (req) => {
       .select("follower_id, following_id");
     if (followsError) throw followsError;
 
+    // Fetch apps count per user
+    const { data: appsData, error: appsError } = await supabaseAdmin
+      .from("apps")
+      .select("user_id")
+      .eq("is_visible", true);
+    if (appsError) console.error("Error fetching apps:", appsError);
+
+    const appsCountMap = new Map<string, number>();
+    if (appsData) {
+      for (const app of appsData) {
+        appsCountMap.set(app.user_id, (appsCountMap.get(app.user_id) || 0) + 1);
+      }
+    }
+
+    // Fetch profile views count per user
+    const { data: viewsData, error: viewsError } = await supabaseAdmin
+      .from("profile_views")
+      .select("profile_id");
+    if (viewsError) console.error("Error fetching profile views:", viewsError);
+
+    const viewsCountMap = new Map<string, number>();
+    if (viewsData) {
+      for (const v of viewsData) {
+        viewsCountMap.set(v.profile_id, (viewsCountMap.get(v.profile_id) || 0) + 1);
+      }
+    }
+
     // Fetch latest activity per user from user_activity_log
     const { data: activityData, error: activityError } = await supabaseAdmin
       .from("user_activity_log")
@@ -200,6 +227,8 @@ Deno.serve(async (req) => {
         founder_number: sub?.founder_number || null,
         subscription_status: sub?.subscription_status || null,
         current_period_end: sub?.current_period_end || null,
+        appsCount: appsCountMap.get(profile.id) || 0,
+        profileViews: viewsCountMap.get(profile.id) || 0,
       };
     });
 
