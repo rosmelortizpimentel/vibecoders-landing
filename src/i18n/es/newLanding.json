@@ -64,6 +64,14 @@
   },
   "pricing": {
     "urgency": "Solo quedan {{count}} cupos de Fundador",
+    "freemium": {
+      "socialProof": "Únete a +{{count}} builders activos",
+      "title": "Construye en público. Valida con expertos.",
+      "subtitle": "El acceso a la comunidad y las herramientas de testing es 100% gratuito. Empieza hoy mismo.",
+      "ctaLinkedIn": "Empezar gratis con LinkedIn",
+      "ctaGoogle": "Empezar gratis con Google",
+      "trustText": "Acceso instantáneo. No se requiere tarjeta de crédito."
+    },
     "visitor": {
       "title": "PRIMER LANZAMIENTO",
       "subtitle": "(Disponible pronto)",
