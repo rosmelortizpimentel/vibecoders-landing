@@ -1,0 +1,35 @@
+{
+  "badge": "PRO",
+  "title": "Vibe Coder Pro",
+  "subtitle": "Desbloquea todo el potencial de tu perfil y lleva tus proyectos al siguiente nivel.",
+  "benefits": {
+    "unlimitedApps": {
+      "title": "Publica Apps Ilimitadas",
+      "description": "Sin limites para mostrar todos tus proyectos al mundo."
+    },
+    "bookCall": {
+      "title": "Activa Boton de Servicios y 'Book Call'",
+      "description": "Permite que potenciales clientes te contacten directamente."
+    },
+    "betaSquads": {
+      "title": "Publica en Squads de Testing sin requisitos",
+      "description": "Accede a testers reales sin necesidad de cumplir condiciones previas."
+    },
+    "roadmap": {
+      "title": "Gestiona el Roadmap de tus Apps",
+      "description": "Organiza y comparte la hoja de ruta de cada proyecto."
+    },
+    "vault": {
+      "title": "Boveda Privada de Recursos",
+      "description": "Almacena prompts, plantillas y archivos de forma segura."
+    },
+    "verifiedBadge": {
+      "title": "Insignia de 'Verified Builder'",
+      "description": "Destaca con un sello de confianza en tu perfil publico."
+    }
+  },
+  "price": "$24",
+  "priceUnit": "/ ano",
+  "cta": "Quiero ser Pro",
+  "close": "Ahora no"
+}
