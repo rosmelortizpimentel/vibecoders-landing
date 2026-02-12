@@ -203,7 +203,7 @@ export default function ChoosePlan() {
                 Suscribirme por $9.90 →
               </button>
               <p className="text-center text-sm text-white/40 mt-3 font-semibold">
-                El precio sube el 1ro de Marzo.
+                A partir del 1ro de Marzo costará $59.90/año.
               </p>
             </div>
           </div>
