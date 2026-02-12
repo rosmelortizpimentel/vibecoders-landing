@@ -39,6 +39,15 @@ export function DashboardLayout() {
       return;
     }
     let cancelled = false;
+    
+    // If user came from a paid card signup, skip the access check
+    // and let useAuth handle the Stripe redirect
+    const signupSource = localStorage.getItem('signupSource');
+    if (signupSource === 'paid_card') {
+      setCheckingAccess(false);
+      return;
+    }
+    
     supabase.functions.invoke('check-founder-status').then(({ data }) => {
       if (!cancelled && data?.accessClosed) {
         window.location.href = '/closed';
