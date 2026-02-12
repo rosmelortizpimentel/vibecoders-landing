@@ -85,8 +85,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Delete user_subscriptions
+    // Delete dependent records that block auth.users deletion
+    await supabaseAdmin.from("scrape_logs").delete().eq("user_id", userId);
     await supabaseAdmin.from("user_subscriptions").delete().eq("user_id", userId);
+    await supabaseAdmin.from("user_activity_log").delete().eq("user_id", userId);
 
     // Delete from auth.users (cascades to profiles via trigger/FK)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
