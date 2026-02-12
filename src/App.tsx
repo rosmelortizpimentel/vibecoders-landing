@@ -27,6 +27,7 @@ import PromptStudio from "./pages/prompts/PromptStudio";
 import PromptViewer from "./pages/prompts/PromptViewer";
 import Beta from "./pages/Beta";
 import Vibers from "./pages/Vibers";
+import Closed from "./pages/Closed";
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import { NotificationsPage } from "./pages/Notifications";
@@ -53,6 +54,9 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/post/:slug" element={<Post />} />
+          
+          {/* Closed access / waitlist page */}
+          <Route path="/closed" element={<Closed />} />
           
           {/* Plan selection & payment */}
           <Route path="/choose-plan" element={<ChoosePlan />} />

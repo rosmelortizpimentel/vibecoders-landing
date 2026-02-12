@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "badge": "ACCÈS FERMÉ",
+    "title": "Les 100 premiers vibecoders sont déjà dedans",
+    "subtitle": "L'accès exclusif fondateur est complet. Mais quelque chose de grand arrive le 1er mars.",
+    "launchLabel": "Lancement officiel"
+  },
+  "countdown": {
+    "days": "Jours",
+    "hours": "Heures",
+    "minutes": "Min",
+    "seconds": "Sec"
+  },
+  "suite": {
+    "title": "Ce qui arrive : Vibecoders Communication Suite",
+    "subtitle": "10 widgets intégrables remplaçant +500$/mois d'outils SaaS",
+    "widgets": {
+      "feedback": { "name": "Feedback", "description": "Rapports de bugs, suggestions et améliorations UX depuis votre app" },
+      "roadmap": { "name": "Roadmap", "description": "Affichez votre backlog, en cours et terminés publiquement" },
+      "status": { "name": "Status Page", "description": "Uptime, incidents et logs en temps réel" },
+      "announcements": { "name": "Announcements", "description": "Bannières, popups et notifications informatives" },
+      "changelog": { "name": "Changelog", "description": "Affichez les mises à jour et versions automatiquement" },
+      "voting": { "name": "Feature Voting", "description": "Vos utilisateurs votent pour les fonctionnalités souhaitées" },
+      "help": { "name": "Help Center", "description": "FAQs, documentation et support self-service intégré" },
+      "social": { "name": "Social Proof", "description": "Témoignages et avis en temps réel de vos utilisateurs" },
+      "community": { "name": "Community", "description": "Activité communautaire, FOMO et viralité intégrée" },
+      "onboarding": { "name": "Onboarding", "description": "Tours guidés, tooltips et guides interactifs sans code" }
+    }
+  },
+  "comparison": {
+    "title": "Ce que vous économisez avec Vibecoders Suite",
+    "replaces": "Remplace",
+    "typicalCost": "Coût typique",
+    "included": "Inclus",
+    "totalSavings": "Économies totales",
+    "perMonth": "/mois",
+    "tools": {
+      "feedback": "Canny, UserVoice → 79-399$/mois",
+      "roadmap": "Productboard → 20-80$/mois",
+      "status": "StatusPage.io → 29-99$/mois",
+      "announcements": "Intercom → 74$+/mois",
+      "changelog": "Headway, Beamer → 49-99$/mois",
+      "help": "Zendesk, Helpscout → 19-89$/mois",
+      "voting": "Canny → Inclus",
+      "onboarding": "Appcues, Userguiding → 249$+/mois"
+    }
+  },
+  "waitlist": {
+    "title": "Voulez-vous rejoindre la liste d'attente ?",
+    "subtitle": "Nous vous notifierons au lancement. Les premiers inscrits auront un accès prioritaire.",
+    "placeholder": "vous@email.com",
+    "button": "Rejoindre la liste d'attente",
+    "sending": "Envoi..."
+  },
+  "success": { "title": "Vous êtes sur la liste !", "subtitle": "Nous vous notifierons au lancement le 1er mars." },
+  "alreadyRegistered": { "title": "Vous êtes déjà sur la liste !", "subtitle": "Nous vous préviendrons le moment venu." }
+}

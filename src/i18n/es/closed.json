@@ -1,0 +1,93 @@
+{
+  "hero": {
+    "badge": "ACCESO CERRADO",
+    "title": "Los primeros 100 vibecoders ya están dentro",
+    "subtitle": "El acceso exclusivo para founders se ha completado. Pero algo grande viene el 1 de marzo.",
+    "launchLabel": "Lanzamiento oficial"
+  },
+  "countdown": {
+    "days": "Días",
+    "hours": "Horas",
+    "minutes": "Min",
+    "seconds": "Seg"
+  },
+  "suite": {
+    "title": "Lo que viene: Vibecoders Communication Suite",
+    "subtitle": "10 widgets embebibles que reemplazan +$500/mes en herramientas SaaS",
+    "widgets": {
+      "feedback": {
+        "name": "Feedback",
+        "description": "Bug reports, sugerencias y mejoras UX directo desde tu app"
+      },
+      "roadmap": {
+        "name": "Roadmap",
+        "description": "Muestra tu backlog, en progreso y completados públicamente"
+      },
+      "status": {
+        "name": "Status Page",
+        "description": "Uptime, incidentes y logs en tiempo real para tus usuarios"
+      },
+      "announcements": {
+        "name": "Announcements",
+        "description": "Banners, popups y notificaciones informativas"
+      },
+      "changelog": {
+        "name": "Changelog",
+        "description": "Muestra actualizaciones y releases de tu app automáticamente"
+      },
+      "voting": {
+        "name": "Feature Voting",
+        "description": "Tus usuarios votan por los features que quieren ver"
+      },
+      "help": {
+        "name": "Help Center",
+        "description": "FAQs, documentación y soporte embebido self-service"
+      },
+      "social": {
+        "name": "Social Proof",
+        "description": "Testimonios y reviews en tiempo real de tus usuarios"
+      },
+      "community": {
+        "name": "Community",
+        "description": "Actividad de la comunidad, FOMO y viralidad integrada"
+      },
+      "onboarding": {
+        "name": "Onboarding",
+        "description": "Tours guiados, tooltips y guías interactivas sin código"
+      }
+    }
+  },
+  "comparison": {
+    "title": "Lo que ahorras con Vibecoders Suite",
+    "replaces": "Reemplaza",
+    "typicalCost": "Costo típico",
+    "included": "Incluido",
+    "totalSavings": "Total que ahorras",
+    "perMonth": "/mes",
+    "tools": {
+      "feedback": "Canny, UserVoice → $79-399/mes",
+      "roadmap": "Productboard → $20-80/mes",
+      "status": "StatusPage.io → $29-99/mes",
+      "announcements": "Intercom → $74+/mes",
+      "changelog": "Headway, Beamer → $49-99/mes",
+      "help": "Zendesk, Helpscout → $19-89/mes",
+      "voting": "Canny → Incluido",
+      "onboarding": "Appcues, Userguiding → $249+/mes"
+    }
+  },
+  "waitlist": {
+    "title": "¿Quieres estar en la lista de espera?",
+    "subtitle": "Te avisaremos cuando lancemos. Los primeros en la lista tendrán acceso prioritario.",
+    "placeholder": "tu@email.com",
+    "button": "Unirme a la lista de espera",
+    "sending": "Enviando..."
+  },
+  "success": {
+    "title": "¡Estás en la lista!",
+    "subtitle": "Te notificaremos cuando lancemos el 1 de marzo."
+  },
+  "alreadyRegistered": {
+    "title": "¡Ya estás en la lista!",
+    "subtitle": "Te avisaremos cuando sea el momento."
+  }
+}

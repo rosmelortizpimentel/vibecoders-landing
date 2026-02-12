@@ -25,9 +25,11 @@ export function useAuth() {
               window.location.href = returnUrl;
             }, 0);
           } else {
-            // Check founder status and redirect to profile
-            supabase.functions.invoke('check-founder-status').then(() => {
-              if (window.location.pathname === '/') {
+            // Check founder status and redirect
+            supabase.functions.invoke('check-founder-status').then(({ data }) => {
+              if (data?.accessClosed) {
+                window.location.href = '/closed';
+              } else if (window.location.pathname === '/') {
                 window.location.href = '/me/profile';
               }
             }).catch(console.error);
