@@ -1,0 +1,35 @@
+{
+  "badge": "PRO",
+  "title": "Vibe Coder Pro",
+  "subtitle": "Unlock the full potential of your profile and take your projects to the next level.",
+  "benefits": {
+    "unlimitedApps": {
+      "title": "Unlimited App Publishing",
+      "description": "No limits to showcase all your projects to the world."
+    },
+    "bookCall": {
+      "title": "Enable Services & 'Book Call' Button",
+      "description": "Let potential clients reach out to you directly."
+    },
+    "betaSquads": {
+      "title": "Publish to Testing Squads with No Requirements",
+      "description": "Access real testers without meeting any prerequisites."
+    },
+    "roadmap": {
+      "title": "Manage Your Apps Roadmap",
+      "description": "Organize and share the roadmap for each project."
+    },
+    "vault": {
+      "title": "Private Resource Vault",
+      "description": "Store prompts, templates and files securely."
+    },
+    "verifiedBadge": {
+      "title": "'Verified Builder' Badge",
+      "description": "Stand out with a trust seal on your public profile."
+    }
+  },
+  "price": "$24",
+  "priceUnit": "/ year",
+  "cta": "Go Pro",
+  "close": "Not now"
+}

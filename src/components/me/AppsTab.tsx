@@ -10,6 +10,8 @@ import { Plus, Loader2, Sparkles, ChevronLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useFeatureFlags } from "@/hooks/useFeatureFlags";
 import { useTranslation } from '@/hooks/useTranslation';
+import { useSubscription } from '@/hooks/useSubscription';
+import { ProUpgradeModal } from '@/components/pro/ProUpgradeModal';
 import {
   Dialog,
   DialogContent,
@@ -44,7 +46,9 @@ export function AppsTab({ appsHook }: AppsTabProps) {
   const t = useTranslation('apps');
   const { getFlag } = useFeatureFlags();
   const isMobile = useIsMobile();
+  const { tier } = useSubscription();
   const [isUrlInputOpen, setIsUrlInputOpen] = useState(false);
+  const [showProModal, setShowProModal] = useState(false);
   const [verifyingApp, setVerifyingApp] = useState<AppData | null>(null);
   const [scrapingAppId, setScrapingAppId] = useState<string | null>(null);
 
@@ -208,7 +212,13 @@ export function AppsTab({ appsHook }: AppsTabProps) {
       {/* Add App Button */}
       {!isUrlInputOpen ? (
         <button
-          onClick={() => setIsUrlInputOpen(true)}
+          onClick={() => {
+            if (tier === 'free' && apps.length >= 1) {
+              setShowProModal(true);
+            } else {
+              setIsUrlInputOpen(true);
+            }
+          }}
           className="w-full border border-dashed border-border rounded-lg h-14 hover:border-muted-foreground hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm font-medium"
         >
           <Plus className="h-4 w-4" />
@@ -330,6 +340,8 @@ export function AppsTab({ appsHook }: AppsTabProps) {
           onSuccess={() => setVerifyingApp(null)}
         />
       )}
+
+      <ProUpgradeModal open={showProModal} onOpenChange={setShowProModal} />
     </div>
   );
 }

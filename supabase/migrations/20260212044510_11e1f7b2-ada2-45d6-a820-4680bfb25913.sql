@@ -1,0 +1,1 @@
+UPDATE user_subscriptions SET tier = 'free', founder_number = NULL WHERE user_id = 'c8fd62b0-821e-4472-9c7c-5f6de17a398f';

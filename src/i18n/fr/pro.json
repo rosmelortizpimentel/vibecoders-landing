@@ -1,0 +1,35 @@
+{
+  "badge": "PRO",
+  "title": "Vibe Coder Pro",
+  "subtitle": "Debloquez tout le potentiel de votre profil et faites passer vos projets au niveau superieur.",
+  "benefits": {
+    "unlimitedApps": {
+      "title": "Publication d'Apps Illimitee",
+      "description": "Aucune limite pour montrer tous vos projets au monde."
+    },
+    "bookCall": {
+      "title": "Activez le Bouton Services et 'Book Call'",
+      "description": "Permettez aux clients potentiels de vous contacter directement."
+    },
+    "betaSquads": {
+      "title": "Publiez dans les Squads de Test sans conditions",
+      "description": "Accedez a de vrais testeurs sans prerequis."
+    },
+    "roadmap": {
+      "title": "Gerez la Roadmap de vos Apps",
+      "description": "Organisez et partagez la feuille de route de chaque projet."
+    },
+    "vault": {
+      "title": "Coffre-fort Prive de Ressources",
+      "description": "Stockez prompts, modeles et fichiers en toute securite."
+    },
+    "verifiedBadge": {
+      "title": "Badge 'Verified Builder'",
+      "description": "Demarquez-vous avec un sceau de confiance sur votre profil public."
+    }
+  },
+  "price": "$24",
+  "priceUnit": "/ an",
+  "cta": "Passer Pro",
+  "close": "Pas maintenant"
+}
