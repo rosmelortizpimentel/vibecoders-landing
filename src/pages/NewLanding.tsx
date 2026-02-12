@@ -709,7 +709,11 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
                 {t('pricing.plans.pro.title')}
               </h3>
               <p className="text-sm text-white/35 font-medium">
-                {t('pricing.plans.pro.desc')}
+                {t('pricing.plans.pro.desc').split('.').filter(Boolean).map((sentence, i, arr) => (
+                  <span key={i}>
+                    {sentence.trim()}.{i < arr.length - 1 && <br />}
+                  </span>
+                ))}
               </p>
             </div>
 

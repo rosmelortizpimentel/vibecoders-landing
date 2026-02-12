@@ -110,8 +110,8 @@
         "f3": "Crie seu perfil e mostre o que voce esta construindo",
         "f3_example": "vibecoders.la/@rosmelortiz",
         "f4": "Sem acesso a Suite de Widgets",
-        "cta": "Cadastrar-se Gratis",
-        "ctaGoogle": "Cadastrar com Google"
+        "cta": "Entrar com LinkedIn",
+        "ctaGoogle": "Entrar com Google"
       },
       "pro": {
         "badge": "Oferta Pre-Lancamento",
@@ -126,7 +126,7 @@
         "f4": "Banners sem Deploy: Lance alertas sem tocar no codigo",
         "f5": "Venda seus Servicos: Botao \"Book Call\" integrado ao seu Perfil",
         "f6": "Preco de $9.90 congelado para sempre",
-        "cta": "Reservar por $9.90",
+        "cta": "Reservar com LinkedIn",
         "ctaGoogle": "Reservar com Google",
         "footer": "O preco sobe para $24.00 em 1 de Marco."
       }
