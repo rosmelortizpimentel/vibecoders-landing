@@ -138,7 +138,7 @@ export default function ChoosePlan() {
             </div>
 
             <div>
-              <h3 className="text-xl font-bold text-foreground">Builder Pro</h3>
+              <h3 className="text-xl font-bold text-foreground">Vibe Coder Pro</h3>
               <div className="mt-2">
                 <span className="text-4xl font-bold text-foreground">$24</span>
                 <span className="text-muted-foreground ml-1">/ año</span>
