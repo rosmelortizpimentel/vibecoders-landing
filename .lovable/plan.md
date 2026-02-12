@@ -1,35 +1,90 @@
 
-# Agregar mensaje de precio exclusivo $24/año en la waitlist
 
-## Cambios
+# Rediseno de la seccion "Acceso Cerrado" en la Landing
 
-### 1. Actualizar la seccion Waitlist CTA en `src/pages/Closed.tsx`
+## Objetivo
+Reemplazar el actual `FreemiumBanner` (seccion blanca basica con botones de login) por una seccion premium estilo dark con multiples bloques informativos cuando los cupos de fundador se agotan.
 
-Agregar debajo del subtitulo actual un bloque destacado con el precio exclusivo de $24/año y un mensaje de que este precio se congelara para quienes se unan a la waitlist, mientras que despues sera mayor.
+## Estructura de la nueva seccion
 
-Visualmente sera un badge/highlight con el precio "$24/year" en color `secondary` (amarillo) para que destaque sobre el fondo oscuro, con texto explicativo debajo.
+La seccion reemplazara el `FreemiumBanner` actual (lineas 547-620 de `NewLanding.tsx`) con un componente de fondo oscuro (`#000519`) que contiene los siguientes bloques en orden vertical:
 
-### 2. Actualizar traducciones en los 4 idiomas
+```text
++-----------------------------------------------+
+|  ACCESO CERRADO (badge)                        |
+|  Los primeros 100 vibecoders ya estan dentro   |
+|  [Avatar stack con fotos reales]               |
+|  Texto de acceso completado                    |
++-----------------------------------------------+
+|  LANZAMIENTO OFICIAL (label)                   |
+|  [Countdown: DD : HH : MM : SS]               |
+|  (basado en timezone Toronto, Canada)          |
++-----------------------------------------------+
+|  Lo que viene: Vibecoders Communication Suite  |
+|  Widgets embebibles que reemplazan +$500/mes   |
+|  [Grid 2x5 de widgets con iconos]              |
++-----------------------------------------------+
+|  Quieres saber un poco mas y estar en la       |
+|  lista de espera?                              |
+|  [Boton LinkedIn] [Boton Google]               |
++-----------------------------------------------+
+|  Precio exclusivo de lanzamiento               |
+|  (solo para lista de espera)                   |
+|  Texto de urgencia y sin tarjeta               |
++-----------------------------------------------+
+```
 
-Agregar nuevas claves en `waitlist`:
-- `waitlist.priceHighlight` — El precio exclusivo (ej: "$24/año")
-- `waitlist.priceNote` — Mensaje de que el precio sera mayor pero se congela para ellos
+## Cambios por archivo
 
-**Textos por idioma:**
+### 1. `src/pages/NewLanding.tsx`
+- Reescribir el componente `FreemiumBanner` con la nueva estructura premium
+- Agregar un hook `useCountdown` local (mismo patron que `Closed.tsx`) con fecha objetivo `2026-03-01T00:00:00-05:00` (timezone Toronto/EST)
+- Reutilizar las mismas URLs de avatar que ya existen en el componente actual
+- Reutilizar los iconos de widgets del array `WIDGET_ICONS` (mismo patron que `Closed.tsx`)
+- Mantener los botones de LinkedIn y Google con los mismos handlers existentes
 
-| Idioma | priceHighlight | priceNote |
-|--------|---------------|-----------|
-| ES | Precio exclusivo: $24/año | Este precio aumentara despues del lanzamiento. Al unirte a la lista, lo congelamos para ti. |
-| EN | Exclusive price: $24/year | This price will increase after launch. By joining the waitlist, we freeze it for you. |
-| FR | Prix exclusif : 24$/an | Ce prix augmentera apres le lancement. En rejoignant la liste, nous le gelons pour vous. |
-| PT | Preco exclusivo: $24/ano | Este preco aumentara apos o lancamento. Ao entrar na lista, congelamos para voce. |
+### 2. Archivos de traduccion (4 idiomas)
+Agregar nuevas claves bajo `pricing.closed` en cada archivo:
 
-### Archivos afectados
+**`src/i18n/es/newLanding.json`** - Agregar:
+- `pricing.closed.badge`: "ACCESO CERRADO"
+- `pricing.closed.title`: "Los primeros 100 vibecoders ya estan dentro"
+- `pricing.closed.joinedText`: "+{{count}} builders activos"
+- `pricing.closed.subtitle`: "El acceso exclusivo para founders se ha completado."
+- `pricing.closed.comingSoon`: "Pero algo grande viene el 1 de marzo."
+- `pricing.closed.launchLabel`: "Lanzamiento oficial"
+- `pricing.closed.days/hours/minutes/seconds`: labels del countdown
+- `pricing.closed.suiteTitle`: "Lo que viene: Vibecoders Communication Suite"
+- `pricing.closed.suiteSubtitle`: "Widgets embebibles que reemplazan +$500/mes en herramientas SaaS"
+- `pricing.closed.waitlistTitle`: "Quieres saber un poco mas y estar en la lista de espera?"
+- `pricing.closed.ctaLinkedIn`: "Continuar con LinkedIn"
+- `pricing.closed.ctaGoogle`: "Continuar con Google"
+- `pricing.closed.priceTitle`: "Precio exclusivo de lanzamiento"
+- `pricing.closed.priceSubtitle`: "(solo para lista de espera)"
+- `pricing.closed.priceNote`: "Este lanzamiento es diferente: solo sera accesible por tiempo limitado."
+- `pricing.closed.trustText`: "Sin tarjeta. Te avisamos cuando lanzamos."
 
-| Archivo | Accion |
-|---------|--------|
-| `src/pages/Closed.tsx` | Agregar bloque de precio entre subtitle y boton |
-| `src/i18n/es/closed.json` | Agregar claves `waitlist.priceHighlight` y `waitlist.priceNote` |
-| `src/i18n/en/closed.json` | Idem |
-| `src/i18n/fr/closed.json` | Idem |
-| `src/i18n/pt/closed.json` | Idem |
+Lo mismo para `en/newLanding.json`, `fr/newLanding.json`, `pt/newLanding.json`.
+
+Tambien se reutilizaran las claves de widgets ya existentes en `closed.json` (`suite.widgets.*`) referenciando desde el namespace `closed`.
+
+### 3. Detalle de diseno visual
+- Fondo: `bg-[#000519]` con bordes superior/inferior suaves
+- Badge "ACCESO CERRADO" con icono Lock, borde sutil, estilo pill
+- Avatar stack: las 6 fotos reales ya existentes con texto "+N builders activos"
+- Countdown: estilo monospace con cajas semi-transparentes (mismo patron visual de `Closed.tsx`)
+- Grid de widgets: 2 columnas mobile, 5 columnas desktop, iconos de Lucide
+- Botones de auth: LinkedIn (azul profesional) y Google (blanco con borde) dentro de un contenedor con sombra sutil
+- Seccion de precio: texto `$24/ano` destacado en color secondary/dorado, nota de urgencia debajo
+- Sin emojis en ningun lugar
+- Tipografia limpia, tracking amplio en labels, peso bold en titulos
+
+### 4. Widgets reutilizados
+Se importaran los mismos iconos que usa `Closed.tsx`: Bug, Map, Activity, Megaphone, FileText, Vote, HelpCircle, Star, Users, Compass. Se definira el array de widgets directamente en el componente.
+
+## Seccion tecnica
+
+- El countdown usa `Date.now()` vs fecha fija `2026-03-01T00:00:00-05:00` (EST/Toronto)
+- Se mantiene la logica condicional existente: `if (spotsLeft <= 0)` renderiza el nuevo componente en vez del pricing normal
+- Los handlers `onLinkedInClick` y `onGoogleClick` se pasan como props igual que antes
+- No se elimina el codigo del `PricingSection` original (se mantiene para cuando haya cupos)
