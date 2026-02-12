@@ -46,7 +46,7 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8 rounded-lg border border-border shrink-0">
             {app.logo_url ? (
-              <AvatarImage src={app.logo_url} alt={app.name || ''} className="object-cover" />
+              <AvatarImage src={app.logo_url} alt={app.name || ''} className="object-contain p-0.5" />
             ) : (
               <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-[10px] font-bold">
                 {app.name?.charAt(0) || '?'}
