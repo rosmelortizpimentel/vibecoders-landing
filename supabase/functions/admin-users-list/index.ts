@@ -58,6 +58,24 @@ Deno.serve(async (req) => {
 
     if (profilesError) throw profilesError;
 
+    // Fetch subscriptions
+    const { data: subscriptions, error: subsError } = await supabaseAdmin
+      .from("user_subscriptions")
+      .select("user_id, tier, founder_number, subscription_status, current_period_end");
+    if (subsError) console.error("Error fetching subscriptions:", subsError);
+
+    const subsMap = new Map<string, { tier: string; founder_number: number | null; subscription_status: string | null; current_period_end: string | null }>();
+    if (subscriptions) {
+      for (const s of subscriptions) {
+        subsMap.set(s.user_id, {
+          tier: s.tier,
+          founder_number: s.founder_number,
+          subscription_status: s.subscription_status,
+          current_period_end: s.current_period_end,
+        });
+      }
+    }
+
     // Fetch auth users for emails and last_sign_in_at
     const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers({
       perPage: 1000,
@@ -153,11 +171,8 @@ Deno.serve(async (req) => {
       const lastSignIn = authInfo?.lastSignIn || null;
       const lastActivityDate = latestActivityMap.get(profile.id) || null;
 
-      // Determine most recent activity: compare lastSignIn and lastActivityDate
       let lastActivity: string | null = lastSignIn;
       if (lastActivityDate) {
-        // Use midday UTC to ensure it stays on the same calendar day in Toronto
-        // and doesn't artificially override a more precise lastSignIn time
         const activityTs = new Date(`${lastActivityDate}T12:00:00Z`).toISOString();
         if (!lastActivity || activityTs > lastActivity) {
           lastActivity = activityTs;
@@ -167,6 +182,8 @@ Deno.serve(async (req) => {
       const isOnWaitlist = waitlistEmails.has(email.toLowerCase());
       const followersCount = follows?.filter((f) => f.following_id === profile.id).length || 0;
       const followingCount = follows?.filter((f) => f.follower_id === profile.id).length || 0;
+
+      const sub = subsMap.get(profile.id);
 
       return {
         id: profile.id,
@@ -179,6 +196,10 @@ Deno.serve(async (req) => {
         followersCount,
         followingCount,
         lastActivity,
+        tier: sub?.tier || null,
+        founder_number: sub?.founder_number || null,
+        subscription_status: sub?.subscription_status || null,
+        current_period_end: sub?.current_period_end || null,
       };
     });
 
