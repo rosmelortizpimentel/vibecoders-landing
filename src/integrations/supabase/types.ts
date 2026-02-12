@@ -1349,6 +1349,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           founder_number: number | null
+          founder_welcome_seen: boolean
           id: string
           price: number | null
           stripe_customer_id: string | null
@@ -1362,6 +1363,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           founder_number?: number | null
+          founder_welcome_seen?: boolean
           id?: string
           price?: number | null
           stripe_customer_id?: string | null
@@ -1375,6 +1377,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           founder_number?: number | null
+          founder_welcome_seen?: boolean
           id?: string
           price?: number | null
           stripe_customer_id?: string | null

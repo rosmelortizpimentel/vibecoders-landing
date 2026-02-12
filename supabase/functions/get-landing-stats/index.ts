@@ -40,16 +40,22 @@ Deno.serve(async (req) => {
       .select("*", { count: "exact", head: true })
       .eq("tier", "founder");
 
-    // If table doesn't exist yet, fall back to old logic
-    const realFounders = founderError ? 0 : (founderCount || 0);
-    
-    const baseOccupancy = (profileCount || 0) + 20;
+    // Get max founder_number (already includes +20 offset in DB)
+    const { data: maxData } = await supabaseAdmin
+      .from("user_subscriptions")
+      .select("founder_number")
+      .not("founder_number", "is", null)
+      .order("founder_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const maxFounderNumber = maxData?.founder_number || (profileCount || 0) + 20;
     const totalApps = appCount || 0;
-    const spotsLeft = Math.max(0, 100 - baseOccupancy);
+    const spotsLeft = Math.max(0, 100 - maxFounderNumber);
 
     return new Response(
       JSON.stringify({
-        totalBuilders: baseOccupancy,
+        totalBuilders: maxFounderNumber,
         totalApps: totalApps,
         spotsLeft: spotsLeft
       }),
