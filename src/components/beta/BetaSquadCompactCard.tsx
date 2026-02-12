@@ -66,13 +66,13 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
         {/* Status Badge */}
         <div className="flex mb-3">
           {status === 'accepted' ? (
-            <Badge variant="outline" className="bg-transparent border-[1.5px] border-[#68CFA2] text-[#68CFA2] hover:bg-transparent gap-1 font-medium text-[10px] px-3 py-1 rounded-2xl">
-              <CheckCircle2 className="w-3 h-3 text-[#68CFA2]" />
+            <Badge variant="outline" className="bg-transparent border border-[#68CFA2]/40 text-[#68CFA2] hover:bg-transparent gap-1 font-medium text-[10px] px-3 py-1 rounded-2xl">
+              <CheckCircle2 className="w-3 h-3" />
               {t('squadActiveBadge')}
             </Badge>
           ) : status === 'pending' ? (
-            <Badge variant="outline" className="bg-transparent border-[1.5px] border-[#FFD700] text-[#FFD700] hover:bg-transparent gap-1 font-medium text-[10px] px-3 py-1 rounded-2xl">
-              <Hourglass className="w-3 h-3 text-[#FFD700]" />
+            <Badge variant="outline" className="bg-transparent border border-[#FFD700]/50 text-[#D4A800] hover:bg-transparent gap-1 font-medium text-[10px] px-3 py-1 rounded-2xl">
+              <Hourglass className="w-3 h-3" />
               {t('waitingBadge')}
             </Badge>
           ) : (
@@ -88,7 +88,7 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
           <Button 
             size="sm" 
             variant="outline"
-            className="w-full font-medium h-8 text-xs bg-transparent border-2 border-[#68CFA2] text-[#68CFA2] rounded-lg hover:bg-[rgba(104,207,162,0.1)] hover:text-[#68CFA2] hover:border-[#68CFA2]"
+            className="w-full font-medium h-8 text-xs bg-transparent border-[1.5px] border-primary/30 text-primary rounded-lg hover:bg-primary/5 hover:border-primary/50"
             onClick={() => navigate(`/app/${app.id}`)}
           >
             {t('giveFeedback')}
@@ -97,7 +97,7 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
           <Button 
             size="sm" 
             variant="outline" 
-            className="w-full font-medium h-8 text-xs bg-transparent border-2 border-[#8B5CF6] text-[#8B5CF6] rounded-lg hover:bg-[rgba(139,92,246,0.1)] hover:text-[#8B5CF6] hover:border-[#8B5CF6]"
+            className="w-full font-medium h-8 text-xs bg-transparent border-[1.5px] border-muted-foreground/30 text-muted-foreground rounded-lg hover:bg-muted/50 hover:border-muted-foreground/50"
             onClick={handleCancel}
             disabled={leaving}
           >
