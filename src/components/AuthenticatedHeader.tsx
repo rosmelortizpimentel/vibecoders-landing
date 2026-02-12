@@ -16,7 +16,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, ArrowUpCircle } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
@@ -161,13 +161,10 @@ export function AuthenticatedHeader({
             {isFree && !subLoading && (
               <Link
                 to="/choose-plan"
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white transition-colors shadow-md hover:shadow-lg"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-stone-900 hover:bg-stone-800 text-white transition-colors border border-amber-500/60 hover:border-amber-400/80"
               >
-                <ArrowUpCircle className="h-4 w-4" />
-                <div className="flex flex-col items-start leading-none">
-                  <span className="text-sm font-bold">$9.90/año</span>
-                  <span className="text-[9px] font-medium text-white/80">Oferta de Pre-Lanzamiento</span>
-                </div>
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                <span className="text-xs font-bold">$9.90/año</span>
               </Link>
             )}
 
