@@ -31,7 +31,6 @@ Deno.serve(async (req) => {
       if (!signature) throw new Error("No stripe-signature header");
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } else {
-      // Dev mode: parse directly (not recommended for production)
       event = JSON.parse(body) as Stripe.Event;
     }
 
@@ -47,26 +46,28 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Read the actual amount from the session (in cents -> dollars)
+      const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
+
       await supabaseAdmin
         .from("user_subscriptions")
         .upsert({
           user_id: userId,
           tier: "pro",
-          price: 24,
+          price: amountTotal,
           stripe_customer_id: session.customer as string,
           subscription_id: session.subscription as string,
           subscription_status: "active",
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
 
-      console.log(`[STRIPE-WEBHOOK] User ${userId} upgraded to pro`);
+      console.log(`[STRIPE-WEBHOOK] User ${userId} upgraded to pro (paid $${amountTotal})`);
     }
 
     if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = subscription.customer as string;
 
-      // Find user by stripe_customer_id
       const { data: sub } = await supabaseAdmin
         .from("user_subscriptions")
         .select("user_id")
