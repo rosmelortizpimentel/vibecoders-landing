@@ -315,7 +315,7 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
             </div>
           </div>
         )}
-        {/* Footer CTA */}
+        {/* Contributors */}
         {contributors.length > 0 && (
           <div className="mb-8">
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
@@ -374,18 +374,34 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
         })()}
       </div>
 
-      {/* Footer CTA */}
-      <div className="p-4 border-t border-gray-100 bg-white md:sticky bottom-0">
-        <Button 
-          asChild 
-          className="w-full h-12 text-base font-semibold bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/90 rounded-xl"
-        >
-          <a href={appUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-            {t('visitWebsite')}
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        </Button>
-      </div>
+      {/* Footer CTA - only on desktop (mobile has its own fixed version) */}
+      {!isMobile && (
+        <div className="p-4 border-t border-gray-100 bg-white sticky bottom-0">
+          <Button 
+            asChild 
+            className="w-full h-12 text-base font-semibold bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/90 rounded-xl"
+          >
+            <a href={appUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+              {t('visitWebsite')}
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
+  const footerCTA = (
+    <div className="p-4 border-t border-gray-100 bg-white">
+      <Button 
+        asChild 
+        className="w-full h-12 text-base font-semibold bg-[#1c1c1c] text-white hover:bg-[#1c1c1c]/90 rounded-xl"
+      >
+        <a href={appUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+          {t('visitWebsite')}
+          <ExternalLink className="w-4 h-4" />
+        </a>
+      </Button>
     </div>
   );
 
@@ -426,8 +442,12 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
               </Button>
             </div>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto mt-14 pb-20">
+          <div className="flex-1 overflow-y-auto mt-14 pb-4">
             {content}
+          </div>
+          {/* Fixed bottom CTA for mobile */}
+          <div className="shrink-0">
+            {footerCTA}
           </div>
         </DialogContent>
       </Dialog>
