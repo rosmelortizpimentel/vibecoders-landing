@@ -670,8 +670,8 @@ const PricingSection = () => {
   const founderFeatures = (pricing?.founder?.features || []) as PricingFeature[];
 
   return (
-    <section className="bg-white py-28 px-4 overflow-hidden border-t border-stone-100">
-      <div className="container mx-auto max-w-5xl">
+    <section className="bg-white py-28 px-4 sm:px-6 overflow-hidden border-t border-stone-100">
+      <div className="mx-auto max-w-5xl">
         {/* Urgency Header - Premium Floating Pill */}
         <div className="mb-20 flex justify-center text-center px-4">
           <div className="group relative flex items-center gap-3 rounded-full bg-stone-900 px-5 py-2 shadow-xl shadow-stone-900/10 hover:scale-105 transition-transform duration-300">
@@ -693,7 +693,7 @@ const PricingSection = () => {
 
         <div className="grid gap-6 md:gap-10 md:grid-cols-2 lg:gap-16 md:items-stretch">
           {/* Card 1: PRIMER LANZAMIENTO */}
-          <div className="relative rounded-2xl border border-stone-200 bg-stone-50/50 p-8 shadow-sm transition-all md:p-10 flex flex-col opacity-60">
+          <div className="relative rounded-2xl border border-stone-200 bg-stone-50/50 p-5 sm:p-8 shadow-sm transition-all md:p-10 flex flex-col opacity-60">
             <div className="mb-4 md:mb-8">
               <h3 className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-stone-400">
                 {t('pricing.visitor.title')}
@@ -740,7 +740,7 @@ const PricingSection = () => {
           </div>
 
           {/* Card 2: BUILDER FUNDADOR */}
-          <div className="relative rounded-2xl border-2 border-stone-900 bg-white p-8 shadow-xl md:p-10 flex flex-col">
+          <div className="relative rounded-2xl border-2 border-stone-900 bg-white p-5 sm:p-8 shadow-xl md:p-10 flex flex-col">
             {/* Professional EXCLUSIVE Tag - Black */}
             <div className="absolute -top-3.5 left-10 rounded-md bg-stone-900 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-sm">
               {t('pricing.founder.tag')}
