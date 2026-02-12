@@ -665,7 +665,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
                         rel="noopener noreferrer"
                         className="block mt-1 text-xs text-[#3D5AFE] hover:underline font-medium"
                       >
-                        {t('pricing.plans.free.f3_example')}
+                        {t('pricing.plans.free.f3_example')} →
                       </a>
                     )}
                   </div>
@@ -767,11 +767,6 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
                 {t('pricing.plans.pro.ctaGoogle')}
               </button>
             </div>
-
-            {/* Footer note */}
-            <p className="mt-4 text-center text-[11px] text-white/20 font-medium">
-              {t('pricing.plans.pro.footer')}
-            </p>
           </div>
         </div>
       </div>
