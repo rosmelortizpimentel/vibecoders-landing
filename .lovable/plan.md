@@ -1,61 +1,69 @@
+## Eliminar usuarios desde el panel de Admin
 
+### Objetivo
 
-## Recrear productos Stripe, configurar plan activo y cupones
+Agregar un boton de eliminar usuario en la tabla de `/admin/users` que permita borrar un usuario completo (de `profiles`, `user_subscriptions`, y `auth.users`) para poder re-testear el flujo de registro con un email existente.
 
-### Problema
-Se cambio la cuenta de Stripe (nuevo secret key). Los productos/precios anteriores (`prod_Txitz3oH1wkuMK` / `price_1SznRLLFgAgDUEYY51o3ceGj`) ya no existen en la nueva cuenta. Hay que recrear todo y hacer el sistema configurable.
+### Seguridad
 
-### Paso 1: Crear productos y precios en Stripe
+- Solo admins pueden ejecutar esta accion
+- Se validara el rol admin en la Edge Function usando `has_role`
+- No se permitira eliminar usuarios con rol `admin`
+- Se mostrara un dialogo de confirmacion con el nombre/email del usuario
 
-Usando las herramientas de Stripe:
+### Cambios necesarios
 
-1. **Builder Pro (produccion)**: $24/year, recurrente anual
-2. **Builder Pro Test**: $1/year, recurrente anual (para pruebas)
+#### 1. Nueva Edge Function: `admin-delete-user`
 
-### Paso 2: Crear cupon VIBECODERS
+Crear `supabase/functions/admin-delete-user/index.ts` que:
 
-- Nombre: `VIBECODERS`
-- 100% de descuento
-- Duracion: `forever`
+- Valide el token JWT y el rol admin del solicitante
+- Reciba el `user_id` a eliminar via POST body
+- Verifique que el usuario objetivo NO sea admin
+- Elimine en orden:
+  1. `user_subscriptions` (donde `user_id = target`)
+  2. `profiles` (donde `id = target`) -- cascade deberia manejar follows, apps, etc.
+  3. `auth.users` via `supabaseAdmin.auth.admin.deleteUser(userId)`
+- La eliminacion de `auth.users` con cascade deberia limpiar automaticamente `profiles` (por el FK), pero haremos la limpieza explicita por seguridad
 
-### Paso 3: Guardar configuracion en `general_settings`
+#### 2. Actualizar `UsersManager.tsx`
 
-Insertar en `general_settings` las siguientes claves para que el plan activo sea configurable desde el admin:
+- Agregar un boton de eliminar (icono Trash2) en cada fila de la tabla
+- Mostrar un `AlertDialog` de confirmacion que muestre el nombre y email del usuario
+- Deshabilitar el boton para el usuario actual (no auto-eliminarse)
+- Al confirmar, llamar a la Edge Function y refrescar la lista
+- Mostrar toast de exito/error
 
-| Key | Value | Descripcion |
-|-----|-------|-------------|
-| `stripe_active_price_id` | (price_id del plan de $1 para pruebas) | Price ID activo para checkout |
-| `stripe_active_product_name` | Builder Pro Test | Nombre del plan activo |
-| `stripe_active_price_amount` | 1 | Precio en USD del plan activo |
-| `stripe_pro_price_id` | (price_id del plan de $24) | Price ID de produccion |
-| `stripe_test_price_id` | (price_id del plan de $1) | Price ID de pruebas |
-| `stripe_allow_coupons` | true | Activar cupones en checkout |
+#### 3. Enriquecer datos de usuario
 
-### Paso 4: Actualizar Edge Function `create-checkout-session`
+- Agregar el campo `tier` y `founder_number` desde `user_subscriptions` en la Edge Function `admin-users-list` para mostrar el tier en la tabla y facilitar la identificacion de founders vs free
 
-Cambios:
-- En lugar de un `PRICE_ID` hardcodeado, leer `stripe_active_price_id` desde `general_settings`
-- Si `stripe_allow_coupons` es `true`, agregar `allow_promotion_codes: true` a la sesion de checkout
+### Flujo del usuario
 
-### Paso 5: Actualizar `stripe-webhook`
+```text
+Admin ve tabla de usuarios
+  -> Click en icono de eliminar
+  -> AlertDialog: "Eliminar a [nombre] ([email])? Esta accion es irreversible."
+  -> Confirmar
+  -> Edge Function valida admin, elimina datos
+  -> Toast de exito, tabla se refresca
+  -> Admin puede registrarse con ese email de nuevo
+```
 
-- Sin cambios de logica, solo eliminar el precio hardcodeado `price: 24` y dejarlo dinamico leyendo el monto real de la sesion
+### Detalles tecnicos
 
-### Paso 6: Instrucciones para Webhook
+**Edge Function `admin-delete-user`:**
 
-Despues de implementar, te dare las instrucciones para configurar el webhook en la nueva cuenta de Stripe:
+- Metodo: POST
+- Body: `{ userId: string }`
+- Usa `SUPABASE_SERVICE_ROLE_KEY` para operaciones admin
+- Verifica que el target no tenga rol admin antes de eliminar
+- Elimina de `user_subscriptions`, luego usa `auth.admin.deleteUser()` (que cascadea a profiles por el trigger/FK)
 
-1. Ir a Stripe Dashboard > Developers > Webhooks
-2. Crear endpoint: `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/stripe-webhook`
-3. Eventos: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
-4. Copiar el Signing Secret y actualizarlo como `STRIPE_WEBHOOK_SECRET` en los secretos de Supabase
+**UI:**
 
-### Orden de ejecucion
-
-1. Crear producto Builder Pro ($24/year) en Stripe
-2. Crear producto Builder Pro Test ($1/year) en Stripe
-3. Crear cupon VIBECODERS (100% off, forever)
-4. Insertar configuracion en `general_settings`
-5. Actualizar `create-checkout-session` para leer de `general_settings` y habilitar cupones
-6. Actualizar `stripe-webhook` para no hardcodear precio
-
+- Columna adicional o integracion del boton en la columna "Perfil" existente
+- Badge de tier (Founder #X / Free / Pro) visible en la tabla para contexto  
+  
+  
+anade tambien un filtro por plan, y muestra en una columna el plan que tiene actualmente y la fecha de registro y cuantos dias le queda por renovar, si cancelo tambien debo poder ver ese estado.
