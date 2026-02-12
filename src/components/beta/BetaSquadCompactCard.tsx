@@ -64,19 +64,19 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
         </div>
 
         {/* Status Badge */}
-        <div className="flex">
+        <div className="flex mb-3">
           {status === 'accepted' ? (
-            <Badge variant="default" className="bg-green-500/10 text-green-500 hover:bg-green-500/20 border-green-500/20 gap-1 font-medium text-[10px] px-1.5 py-0">
-              <CheckCircle2 className="w-3 h-3" />
+            <Badge variant="outline" className="bg-transparent border-[1.5px] border-[#68CFA2] text-[#68CFA2] hover:bg-transparent gap-1 font-medium text-[10px] px-3 py-1 rounded-2xl">
+              <CheckCircle2 className="w-3 h-3 text-[#68CFA2]" />
               {t('squadActiveBadge')}
             </Badge>
           ) : status === 'pending' ? (
-            <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20 border-yellow-500/20 gap-1 font-medium text-[10px] px-1.5 py-0">
-              <Hourglass className="w-3 h-3" />
+            <Badge variant="outline" className="bg-transparent border-[1.5px] border-[#FFD700] text-[#FFD700] hover:bg-transparent gap-1 font-medium text-[10px] px-3 py-1 rounded-2xl">
+              <Hourglass className="w-3 h-3 text-[#FFD700]" />
               {t('waitingBadge')}
             </Badge>
           ) : (
-            <Badge variant="outline" className="text-muted-foreground gap-1 text-[10px] px-1.5 py-0">
+            <Badge variant="outline" className="text-muted-foreground gap-1 text-[10px] px-3 py-1 rounded-2xl">
               <XCircle className="w-3 h-3" />
               {t('statusRejected')}
             </Badge>
@@ -87,7 +87,8 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
         {status === 'accepted' ? (
           <Button 
             size="sm" 
-            className="w-full font-semibold h-7 text-xs"
+            variant="outline"
+            className="w-full font-medium h-8 text-xs bg-transparent border-2 border-[#68CFA2] text-[#68CFA2] rounded-lg hover:bg-[rgba(104,207,162,0.1)] hover:text-[#68CFA2] hover:border-[#68CFA2]"
             onClick={() => navigate(`/app/${app.id}`)}
           >
             {t('giveFeedback')}
@@ -95,8 +96,8 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
         ) : (
           <Button 
             size="sm" 
-            variant="ghost" 
-            className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-7 text-xs"
+            variant="outline" 
+            className="w-full font-medium h-8 text-xs bg-transparent border-2 border-[#8B5CF6] text-[#8B5CF6] rounded-lg hover:bg-[rgba(139,92,246,0.1)] hover:text-[#8B5CF6] hover:border-[#8B5CF6]"
             onClick={handleCancel}
             disabled={leaving}
           >
