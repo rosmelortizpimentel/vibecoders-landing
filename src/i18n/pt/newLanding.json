@@ -85,6 +85,8 @@
       "priceAmount": "$24/ano",
       "priceNote": "Este lançamento é diferente: só será acessível por tempo limitado.",
       "trustText": "Sem cartão. Avisamos quando lançarmos.",
+      "socialProofCaption": "+100 builders ativos construindo em publico",
+      "joinSubheadline": "Junte-se a comunidade gratuitamente hoje. Escale com nossas ferramentas amanha.",
       "widgets": {
         "feedback": "Feedback",
         "roadmap": "Roadmap",
@@ -96,6 +98,34 @@
         "social": "Social Proof",
         "community": "Community",
         "onboarding": "Onboarding"
+      }
+    },
+    "plans": {
+      "free": {
+        "title": "Vibe Coder",
+        "desc": "Para quem quer validar ideias e conectar.",
+        "priceLabel": "para sempre",
+        "f1": "Perfil publico de Builder",
+        "f2": "Acesso aos Squads de Testing",
+        "f3": "Networking com os 100 fundadores",
+        "f4": "Sem acesso aos Widgets",
+        "cta": "Cadastrar-se Gratis",
+        "ctaGoogle": "Cadastrar com Google"
+      },
+      "pro": {
+        "badge": "Oferta Pre-Lancamento",
+        "title": "Pro Builder + Suite",
+        "desc": "Tudo do Gratuito, mais ferramentas profissionais.",
+        "oldPrice": "$59.90",
+        "price": "$9.90",
+        "priceLabel": "/ ano",
+        "f1": "Tudo incluido no Gratuito",
+        "f2": "Acesso a Communication Suite (1 Mar)",
+        "f3": "Widgets: Roadmap, Feedback e Anuncios",
+        "f4": "Preco de $9.90 congelado para sempre",
+        "cta": "Reservar por $9.90",
+        "ctaGoogle": "Reservar com Google",
+        "footer": "O preco sobe para $24.00 em 1 de Marco."
       }
     },
     "freemium": {
