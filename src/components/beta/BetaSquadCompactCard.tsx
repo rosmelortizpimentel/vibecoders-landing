@@ -88,7 +88,7 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
           <Button 
             size="sm" 
             variant="outline"
-            className="w-full font-medium h-8 text-xs bg-transparent border-[1.5px] border-primary/30 text-primary rounded-lg hover:bg-primary/5 hover:border-primary/50"
+            className="w-full font-medium h-8 text-xs bg-transparent border-[1.5px] border-border text-muted-foreground rounded-lg hover:border-[#68CFA2] hover:text-[#68CFA2] hover:bg-[rgba(104,207,162,0.05)]"
             onClick={() => navigate(`/app/${app.id}`)}
           >
             {t('giveFeedback')}
