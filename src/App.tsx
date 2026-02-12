@@ -27,6 +27,8 @@ import PromptStudio from "./pages/prompts/PromptStudio";
 import PromptViewer from "./pages/prompts/PromptViewer";
 import Beta from "./pages/Beta";
 import Vibers from "./pages/Vibers";
+import ChoosePlan from "./pages/ChoosePlan";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import { NotificationsPage } from "./pages/Notifications";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { DashboardLayout } from "./layouts/DashboardLayout";
@@ -51,6 +53,10 @@ const App = () => (
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/post/:slug" element={<Post />} />
+          
+          {/* Plan selection & payment */}
+          <Route path="/choose-plan" element={<ChoosePlan />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           
           {/* Admin routes - protected by Admin component */}
           <Route path="/admin/*" element={<Admin />} />

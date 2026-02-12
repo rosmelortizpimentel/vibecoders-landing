@@ -11,6 +11,9 @@ import { AppHealthPanel } from '@/components/home/AppHealthPanel';
 import { FreshDropsCarousel } from '@/components/home/FreshDropsCarousel';
 import { ShowcaseCardSkeleton } from '@/components/showcase/ShowcaseCardSkeleton';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
+import { FounderWelcome } from '@/components/home/FounderWelcome';
+import { UpgradeBanner } from '@/components/home/UpgradeBanner';
+import { useSubscription } from '@/hooks/useSubscription';
 
 // Modals
 import { TrafficModal } from '@/components/home/modals/TrafficModal';
@@ -23,6 +26,7 @@ export default function Home() {
   const t = useTranslation('home');
   const { stats, isLoading, acceptTester, rejectTester } = useDashboardStats();
   const { data: freshDrops = [], isLoading: freshDropsLoading } = useFreshDrops();
+  const { isFounder, isFree, founderNumber } = useSubscription();
 
   // Modal States
   const [isTrafficOpen, setIsTrafficOpen] = useState(false);
@@ -43,6 +47,14 @@ export default function Home() {
 
   return (
     <div className="flex-1 space-y-6 w-full max-w-full overflow-x-hidden sm:p-0 min-w-0 px-0.5 pb-24">
+      {/* Founder Welcome Banner */}
+      {isFounder && founderNumber && (
+        <FounderWelcome founderNumber={founderNumber} />
+      )}
+
+      {/* Upgrade Banner for Free Users */}
+      {isFree && <UpgradeBanner />}
+
       {/* Fresh Drops Carousel - Moved to Top */}
       <section className="pt-2 w-full max-w-full min-w-0 overflow-hidden">
         <div className="flex items-center gap-2 mb-4 px-1">

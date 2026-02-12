@@ -38,3 +38,15 @@ verify_jwt = false
 
 [functions.submit-beta-feedback]
 verify_jwt = false
+
+[functions.check-founder-status]
+verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.set-free-tier]
+verify_jwt = false
