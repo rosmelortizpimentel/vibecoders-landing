@@ -200,7 +200,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer / User Menu */}
-      <div className="mt-auto border-t border-border/50 p-4">
+      <div className="mt-auto border-t border-border/50 px-4 pt-4 pb-6 overflow-visible">
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button 
@@ -301,12 +301,8 @@ export function Sidebar() {
         </DropdownMenu>
       </div>
       
-      {/* Toggle Button at bottom for better accessibility if needed */}
-      <div className="p-2 flex justify-center border-t border-border/50 md:hidden">
-          <button onClick={() => setIsCollapsed(!isCollapsed)}>
-            {isCollapsed ? <ChevronRight /> : <ChevronLeft />}
-          </button>
-      </div>
+
+
     </div>
   );
 }
