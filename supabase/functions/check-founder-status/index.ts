@@ -70,14 +70,14 @@ Deno.serve(async (req) => {
     }
 
     const row = Array.isArray(result) ? result[0] : result;
-    const tier = row?.tier || "pending";
+    const tier = row?.tier || "free";
     const founderNumber = row?.founder_number || null;
 
     return new Response(
       JSON.stringify({
         tier,
         founderNumber,
-        needsPlanSelection: tier === "pending",
+        needsPlanSelection: false,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
