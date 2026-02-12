@@ -28,33 +28,20 @@ export function useAuth() {
               window.location.href = returnUrl;
             }, 0);
           } else {
+            // If paid_card, set a flag BEFORE the async call so DashboardLayout knows not to redirect
+            if (signupSource === 'paid_card') {
+              localStorage.setItem('pendingStripeRedirect', 'true');
+            }
+            
             // Check founder status and redirect
             const body: Record<string, string> = {};
             if (signupSource) body.signupSource = signupSource;
             
             supabase.functions.invoke('check-founder-status', { body }).then(async ({ data }) => {
-              if (data?.accessClosed) {
-                // If paid_card, redirect to checkout before showing closed
-                if (signupSource === 'paid_card') {
-                  try {
-                    const { data: checkoutData } = await supabase.functions.invoke('create-checkout-session', {
-                      body: { priceId: 'price_1T07aoEK9buyjfG9VsJ3R1te' },
-                    });
-                    if (checkoutData?.url) {
-                      window.location.href = checkoutData.url;
-                      return;
-                    }
-                  } catch (e) {
-                    console.error('Checkout error:', e);
-                  }
-                }
-                window.location.href = '/closed';
-              } else if (signupSource === 'paid_card') {
-                // Existing user coming from paid card - redirect to checkout
+              if (signupSource === 'paid_card') {
+                // Always redirect to Stripe for paid_card, regardless of accessClosed
                 try {
-                  const { data: checkoutData } = await supabase.functions.invoke('create-checkout-session', {
-                    body: { priceId: 'price_1T07aoEK9buyjfG9VsJ3R1te' },
-                  });
+                  const { data: checkoutData } = await supabase.functions.invoke('create-checkout-session');
                   if (checkoutData?.url) {
                     window.location.href = checkoutData.url;
                     return;
@@ -62,11 +49,17 @@ export function useAuth() {
                 } catch (e) {
                   console.error('Checkout error:', e);
                 }
-                window.location.href = '/me/profile';
+                localStorage.removeItem('pendingStripeRedirect');
+                window.location.href = '/choose-plan';
+              } else if (data?.accessClosed) {
+                window.location.href = '/closed';
               } else if (window.location.pathname === '/') {
                 window.location.href = '/me/profile';
               }
-            }).catch(console.error);
+            }).catch((err) => {
+              console.error(err);
+              localStorage.removeItem('pendingStripeRedirect');
+            });
           }
         }
       }
