@@ -1,51 +1,46 @@
-import { useState, useEffect } from 'react';
-import { X, Crown } from 'lucide-react';
+import { Crown } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface FounderWelcomeProps {
   founderNumber: number;
+  open: boolean;
+  onDismiss: () => void;
 }
 
-export function FounderWelcome({ founderNumber }: FounderWelcomeProps) {
-  const [dismissed, setDismissed] = useState(false);
+export function FounderWelcome({ founderNumber, open, onDismiss }: FounderWelcomeProps) {
+  const { user } = useAuth();
 
-  useEffect(() => {
-    const key = `founder_welcome_dismissed`;
-    if (localStorage.getItem(key)) {
-      setDismissed(true);
+  const handleClose = async () => {
+    onDismiss();
+    if (user?.id) {
+      await supabase
+        .from('user_subscriptions' as any)
+        .update({ founder_welcome_seen: true } as any)
+        .eq('user_id', user.id);
     }
-  }, []);
-
-  const handleDismiss = () => {
-    localStorage.setItem('founder_welcome_dismissed', 'true');
-    setDismissed(true);
   };
 
-  if (dismissed) return null;
-
   return (
-    <div className="relative rounded-xl border border-primary/30 bg-primary/5 p-4 md:p-6">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-2 right-2 h-6 w-6"
-        onClick={handleDismiss}
-      >
-        <X className="w-4 h-4" />
-      </Button>
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-primary/10 rounded-lg">
-          <Crown className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h3 className="font-bold text-foreground">
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
+      <DialogContent className="sm:max-w-md text-center">
+        <DialogHeader className="items-center">
+          <div className="mx-auto p-4 bg-primary/10 rounded-full mb-2">
+            <Crown className="w-8 h-8 text-primary" />
+          </div>
+          <DialogTitle className="text-2xl">
             🎉 ¡Eres Fundador #{founderNumber}!
-          </h3>
-          <p className="text-sm text-muted-foreground">
+          </DialogTitle>
+          <DialogDescription className="text-base">
             Acceso gratis de por vida. Gracias por creer en la comunidad desde el inicio.
-          </p>
-        </div>
-      </div>
-    </div>
+          </DialogDescription>
+        </DialogHeader>
+        <Button onClick={handleClose} className="mt-4 w-full">
+          ¡Genial, entendido!
+        </Button>
+      </DialogContent>
+    </Dialog>
   );
 }

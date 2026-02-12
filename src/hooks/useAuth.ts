@@ -30,7 +30,7 @@ export function useAuth() {
               if (data?.needsPlanSelection) {
                 window.location.href = '/choose-plan';
               } else if (window.location.pathname === '/' || window.location.pathname.startsWith('/me')) {
-                window.location.href = '/home';
+                window.location.href = '/me/profile';
               }
             }).catch(console.error);
           }

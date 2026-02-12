@@ -11,6 +11,7 @@ interface Subscription {
   subscription_id: string | null;
   subscription_status: string | null;
   current_period_end: string | null;
+  founder_welcome_seen: boolean;
 }
 
 export function useSubscription() {
@@ -40,6 +41,7 @@ export function useSubscription() {
         subscription_id: (data as any).subscription_id,
         subscription_status: (data as any).subscription_status,
         current_period_end: (data as any).current_period_end,
+        founder_welcome_seen: (data as any).founder_welcome_seen ?? false,
       } as Subscription;
     },
     enabled: !!user?.id,
@@ -83,6 +85,7 @@ export function useSubscription() {
     subscription,
     tier: tier || null,
     founderNumber: subscription?.founder_number || null,
+    founderWelcomeSeen: subscription?.founder_welcome_seen ?? true,
     isFounder: tier === 'founder',
     isPro: tier === 'pro',
     isFree: tier === 'free',
