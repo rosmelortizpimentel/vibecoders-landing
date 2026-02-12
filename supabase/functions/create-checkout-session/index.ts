@@ -31,6 +31,15 @@ Deno.serve(async (req) => {
     const user = userData.user;
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+    // Read optional priceId from body
+    let requestedPriceId: string | null = null;
+    try {
+      const body = await req.json();
+      requestedPriceId = body?.priceId || null;
+    } catch {
+      // No body - use default
+    }
+
     // Read active price and coupon settings from general_settings
     const { data: settings } = await supabaseAdmin
       .from("general_settings")
@@ -42,8 +51,8 @@ Deno.serve(async (req) => {
       settingsMap[s.key] = s.value;
     }
 
-    const priceId = settingsMap["stripe_active_price_id"];
-    if (!priceId) throw new Error("stripe_active_price_id not configured in general_settings");
+    const priceId = requestedPriceId || settingsMap["stripe_active_price_id"];
+    if (!priceId) throw new Error("No price_id available");
 
     const allowCoupons = settingsMap["stripe_allow_coupons"] === "true";
 

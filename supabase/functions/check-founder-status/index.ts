@@ -37,6 +37,15 @@ Deno.serve(async (req) => {
 
     const userId = userData.user.id;
 
+    // Read optional signupSource from body
+    let signupSource: string | null = null;
+    try {
+      const body = await req.json();
+      signupSource = body?.signupSource || null;
+    } catch {
+      // No body or invalid JSON - that's fine
+    }
+
     // Check existing subscription
     const { data: existing } = await supabaseAdmin
       .from("user_subscriptions")
@@ -45,6 +54,14 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existing && existing.tier !== "pending") {
+      // Update signup_source if provided and not already set
+      if (signupSource) {
+        await supabaseAdmin
+          .from("user_subscriptions")
+          .update({ signup_source: signupSource })
+          .eq("user_id", userId)
+          .is("signup_source", null);
+      }
       return new Response(
         JSON.stringify({
           tier: existing.tier,
@@ -72,6 +89,14 @@ Deno.serve(async (req) => {
     const row = Array.isArray(result) ? result[0] : result;
     const tier = row?.tier || "free";
     const founderNumber = row?.founder_number || null;
+
+    // Save signup_source for newly created subscription
+    if (signupSource) {
+      await supabaseAdmin
+        .from("user_subscriptions")
+        .update({ signup_source: signupSource })
+        .eq("user_id", userId);
+    }
 
     // If tier is 'free' and user had no prior subscription, access is closed
     if (tier === "free" && !existing) {
