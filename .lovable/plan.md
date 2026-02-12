@@ -1,56 +1,61 @@
 
 
-## Asignar Founders existentes y corregir errores de build
+## Recrear productos Stripe, configurar plan activo y cupones
 
 ### Problema
-Solo Luciana esta registrada como Founder #1 en `user_subscriptions`, pero hay 75 usuarios previos en `profiles` que se registraron antes que ella y deberian ser founders. Luciana deberia ser Founder #76, no #1.
+Se cambio la cuenta de Stripe (nuevo secret key). Los productos/precios anteriores (`prod_Txitz3oH1wkuMK` / `price_1SznRLLFgAgDUEYY51o3ceGj`) ya no existen en la nueva cuenta. Hay que recrear todo y hacer el sistema configurable.
 
-Ademas, hay multiples errores de build pre-existentes que deben corregirse.
+### Paso 1: Crear productos y precios en Stripe
 
-### Paso 1: Datos - Insertar founders en user_subscriptions
+Usando las herramientas de Stripe:
 
-Ejecutar un INSERT masivo usando la herramienta de datos (no migracion) que:
+1. **Builder Pro (produccion)**: $24/year, recurrente anual
+2. **Builder Pro Test**: $1/year, recurrente anual (para pruebas)
 
-1. **Eliminar** el registro actual de Luciana (Founder #1 incorrecto)
-2. **Insertar** los 75 usuarios de `profiles` como founders, ordenados por `created_at`, con `founder_number` del 1 al 75
-3. **Re-insertar** a Luciana como Founder #76
+### Paso 2: Crear cupon VIBECODERS
 
-```sql
-DELETE FROM user_subscriptions WHERE user_id = 'f1959bb1-f3a2-4c35-b055-c587a178889b';
+- Nombre: `VIBECODERS`
+- 100% de descuento
+- Duracion: `forever`
 
-INSERT INTO user_subscriptions (user_id, tier, founder_number, price)
-SELECT id, 'founder', ROW_NUMBER() OVER (ORDER BY created_at ASC), 0
-FROM profiles
-WHERE id != 'f1959bb1-f3a2-4c35-b055-c587a178889b'
-ON CONFLICT (user_id) DO UPDATE SET
-  tier = 'founder',
-  founder_number = EXCLUDED.founder_number;
+### Paso 3: Guardar configuracion en `general_settings`
 
-INSERT INTO user_subscriptions (user_id, tier, founder_number, price)
-VALUES ('f1959bb1-f3a2-4c35-b055-c587a178889b', 'founder', 76, 0)
-ON CONFLICT (user_id) DO UPDATE SET
-  tier = 'founder',
-  founder_number = 76;
-```
+Insertar en `general_settings` las siguientes claves para que el plan activo sea configurable desde el admin:
 
-### Paso 2: Corregir errores de build
+| Key | Value | Descripcion |
+|-----|-------|-------------|
+| `stripe_active_price_id` | (price_id del plan de $1 para pruebas) | Price ID activo para checkout |
+| `stripe_active_product_name` | Builder Pro Test | Nombre del plan activo |
+| `stripe_active_price_amount` | 1 | Precio en USD del plan activo |
+| `stripe_pro_price_id` | (price_id del plan de $24) | Price ID de produccion |
+| `stripe_test_price_id` | (price_id del plan de $1) | Price ID de pruebas |
+| `stripe_allow_coupons` | true | Activar cupones en checkout |
 
-Se corregiran los siguientes archivos con errores de TypeScript:
+### Paso 4: Actualizar Edge Function `create-checkout-session`
 
-| Archivo | Error | Solucion |
-|---------|-------|----------|
-| `UsersManager.tsx` | `toast` no encontrado | Agregar import de `toast` desde sonner |
-| `FoundersMarquee.tsx` | `@ts-expect-error` innecesario | Eliminar la directiva (ya existe en tipos) |
-| `AppsTab.tsx` | `AppsTabProps` no encontrado | Definir la interfaz o importarla |
-| `ProfileTab.tsx` | Atributo duplicado en JSX | Eliminar el atributo repetido |
-| `UsernameEditor.tsx` | Atributo duplicado en JSX | Eliminar el atributo repetido |
-| `PromptFormModal.tsx` | `TOOL_OPTIONS` no exportado, tipos faltantes | Corregir import y agregar campos faltantes |
-| `useDashboardStats.ts` | `tagline` no existe en tipo | Agregar `tagline` al select query |
-| `useNotifications.ts` | Tipo incompatible | Agregar cast apropiado |
-| `usePrompts.ts` | Spread de tipo no-objeto | Corregir el spread |
-| `Vibers.tsx` | `tagline` no existe en `ProfileSummary` | Agregar `tagline` a la interfaz |
+Cambios:
+- En lugar de un `PRICE_ID` hardcodeado, leer `stripe_active_price_id` desde `general_settings`
+- Si `stripe_allow_coupons` es `true`, agregar `allow_promotion_codes: true` a la sesion de checkout
+
+### Paso 5: Actualizar `stripe-webhook`
+
+- Sin cambios de logica, solo eliminar el precio hardcodeado `price: 24` y dejarlo dinamico leyendo el monto real de la sesion
+
+### Paso 6: Instrucciones para Webhook
+
+Despues de implementar, te dare las instrucciones para configurar el webhook en la nueva cuenta de Stripe:
+
+1. Ir a Stripe Dashboard > Developers > Webhooks
+2. Crear endpoint: `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/stripe-webhook`
+3. Eventos: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`
+4. Copiar el Signing Secret y actualizarlo como `STRIPE_WEBHOOK_SECRET` en los secretos de Supabase
 
 ### Orden de ejecucion
 
-1. Ejecutar las queries SQL para asignar founders (3 queries)
-2. Corregir los 10+ archivos con errores de build en paralelo
+1. Crear producto Builder Pro ($24/year) en Stripe
+2. Crear producto Builder Pro Test ($1/year) en Stripe
+3. Crear cupon VIBECODERS (100% off, forever)
+4. Insertar configuracion en `general_settings`
+5. Actualizar `create-checkout-session` para leer de `general_settings` y habilitar cupones
+6. Actualizar `stripe-webhook` para no hardcodear precio
+
