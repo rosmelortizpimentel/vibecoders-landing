@@ -545,7 +545,7 @@ const FeatureGrid = () => {
 };
 
 /* ─── Closed Access Section (shown when spots run out) ─── */
-const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: { totalBuilders: number; onLinkedInClick: () => void; onGoogleClick: () => void }) => {
+const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: { totalBuilders: number; onLinkedInClick: (signupSource?: string) => void; onGoogleClick: (signupSource?: string) => void }) => {
   const { t } = useTranslation('newLanding');
 
   const avatarPhotos = [
@@ -649,14 +649,14 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
             {/* Auth Buttons - Outline */}
             <div className="mt-auto flex flex-col gap-2.5">
               <button
-                onClick={onLinkedInClick}
+                onClick={() => onLinkedInClick('free_card')}
                 className="w-full h-12 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-semibold text-sm transition-all flex items-center justify-center gap-2.5"
               >
                 <Linkedin className="h-4 w-4 text-[#0A66C2]" />
                 {t('pricing.plans.free.cta')}
               </button>
               <button
-                onClick={onGoogleClick}
+                onClick={() => onGoogleClick('free_card')}
                 className="w-full h-12 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-600 font-medium text-sm transition-all flex items-center justify-center gap-2.5"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -716,7 +716,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
             {/* Auth Buttons - Solid */}
             <div className="mt-auto flex flex-col gap-2.5">
               <button
-                onClick={onLinkedInClick}
+                onClick={() => onLinkedInClick('paid_card')}
                 className="w-full h-14 rounded-xl font-bold text-base text-white flex items-center justify-center gap-3 transition-all hover:scale-[1.01] shadow-lg"
                 style={{ background: 'linear-gradient(135deg, #3D5AFE 0%, #2a3eb1 100%)' }}
               >
@@ -724,7 +724,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
                 {t('pricing.plans.pro.cta')}
               </button>
               <button
-                onClick={onGoogleClick}
+                onClick={() => onGoogleClick('paid_card')}
                 className="w-full h-12 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-white/60 font-medium text-sm transition-all flex items-center justify-center gap-2.5"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
@@ -766,16 +766,18 @@ const PricingSection = () => {
     fetchStats();
   }, []);
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (signupSource?: string) => {
     try {
+      if (signupSource) localStorage.setItem('signupSource', signupSource);
       await signInWithGoogle(`${window.location.origin}/me`);
     } catch (error) {
       console.error('Error signing in with Google:', error);
     }
   };
 
-  const handleLinkedInSignIn = async () => {
+  const handleLinkedInSignIn = async (signupSource?: string) => {
     try {
+      if (signupSource) localStorage.setItem('signupSource', signupSource);
       await signInWithLinkedIn(`${window.location.origin}/me`);
     } catch (error) {
       console.error('Error signing in with LinkedIn:', error);
@@ -940,7 +942,7 @@ const PricingSection = () => {
             <div className="w-full flex flex-col gap-3 mt-auto">
               {/* Primary: LinkedIn (Brand Color) */}
               <Button 
-                onClick={handleLinkedInSignIn} 
+                onClick={() => handleLinkedInSignIn()} 
                 className="w-full h-14 rounded-xl bg-[#0A66C2] hover:bg-[#004182] text-white font-bold text-base shadow-md transition-all hover:scale-[1.01] flex items-center justify-center gap-3"
               >
                 <Linkedin className="h-5 w-5 fill-white" />
@@ -949,7 +951,7 @@ const PricingSection = () => {
 
               {/* Secondary: Google (White/Border) */}
               <Button 
-                 onClick={handleGoogleSignIn} 
+                 onClick={() => handleGoogleSignIn()} 
                  className="w-full h-14 rounded-xl bg-white border border-stone-200 hover:bg-stone-50 text-stone-700 font-medium text-base transition-all hover:scale-[1.01] flex items-center justify-center gap-3"
               >
                 {/* Google Logo SVG */}

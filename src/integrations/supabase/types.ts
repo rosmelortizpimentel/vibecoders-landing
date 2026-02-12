@@ -1352,6 +1352,7 @@ export type Database = {
           founder_welcome_seen: boolean
           id: string
           price: number | null
+          signup_source: string | null
           stripe_customer_id: string | null
           subscription_id: string | null
           subscription_status: string | null
@@ -1366,6 +1367,7 @@ export type Database = {
           founder_welcome_seen?: boolean
           id?: string
           price?: number | null
+          signup_source?: string | null
           stripe_customer_id?: string | null
           subscription_id?: string | null
           subscription_status?: string | null
@@ -1380,6 +1382,7 @@ export type Database = {
           founder_welcome_seen?: boolean
           id?: string
           price?: number | null
+          signup_source?: string | null
           stripe_customer_id?: string | null
           subscription_id?: string | null
           subscription_status?: string | null

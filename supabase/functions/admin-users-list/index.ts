@@ -61,10 +61,10 @@ Deno.serve(async (req) => {
     // Fetch subscriptions
     const { data: subscriptions, error: subsError } = await supabaseAdmin
       .from("user_subscriptions")
-      .select("user_id, tier, founder_number, subscription_status, current_period_end");
+      .select("user_id, tier, founder_number, subscription_status, current_period_end, signup_source");
     if (subsError) console.error("Error fetching subscriptions:", subsError);
 
-    const subsMap = new Map<string, { tier: string; founder_number: number | null; subscription_status: string | null; current_period_end: string | null }>();
+    const subsMap = new Map<string, { tier: string; founder_number: number | null; subscription_status: string | null; current_period_end: string | null; signup_source: string | null }>();
     if (subscriptions) {
       for (const s of subscriptions) {
         subsMap.set(s.user_id, {
@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
           founder_number: s.founder_number,
           subscription_status: s.subscription_status,
           current_period_end: s.current_period_end,
+          signup_source: s.signup_source,
         });
       }
     }
@@ -227,6 +228,7 @@ Deno.serve(async (req) => {
         founder_number: sub?.founder_number || null,
         subscription_status: sub?.subscription_status || null,
         current_period_end: sub?.current_period_end || null,
+        signup_source: sub?.signup_source || null,
         appsCount: appsCountMap.get(profile.id) || 0,
         profileViews: viewsCountMap.get(profile.id) || 0,
       };

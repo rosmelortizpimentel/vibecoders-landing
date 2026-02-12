@@ -19,6 +19,9 @@ export function useAuth() {
         // Handle return URL after successful sign in
         if (event === 'SIGNED_IN' && currentSession?.user) {
           const returnUrl = localStorage.getItem('authReturnUrl');
+          const signupSource = localStorage.getItem('signupSource');
+          localStorage.removeItem('signupSource');
+          
           if (returnUrl) {
             localStorage.removeItem('authReturnUrl');
             setTimeout(() => {
@@ -26,9 +29,40 @@ export function useAuth() {
             }, 0);
           } else {
             // Check founder status and redirect
-            supabase.functions.invoke('check-founder-status').then(({ data }) => {
+            const body: Record<string, string> = {};
+            if (signupSource) body.signupSource = signupSource;
+            
+            supabase.functions.invoke('check-founder-status', { body }).then(async ({ data }) => {
               if (data?.accessClosed) {
+                // If paid_card, redirect to checkout before showing closed
+                if (signupSource === 'paid_card') {
+                  try {
+                    const { data: checkoutData } = await supabase.functions.invoke('create-checkout-session', {
+                      body: { priceId: 'price_1T07aoEK9buyjfG9VsJ3R1te' },
+                    });
+                    if (checkoutData?.url) {
+                      window.location.href = checkoutData.url;
+                      return;
+                    }
+                  } catch (e) {
+                    console.error('Checkout error:', e);
+                  }
+                }
                 window.location.href = '/closed';
+              } else if (signupSource === 'paid_card') {
+                // Existing user coming from paid card - redirect to checkout
+                try {
+                  const { data: checkoutData } = await supabase.functions.invoke('create-checkout-session', {
+                    body: { priceId: 'price_1T07aoEK9buyjfG9VsJ3R1te' },
+                  });
+                  if (checkoutData?.url) {
+                    window.location.href = checkoutData.url;
+                    return;
+                  }
+                } catch (e) {
+                  console.error('Checkout error:', e);
+                }
+                window.location.href = '/me/profile';
               } else if (window.location.pathname === '/') {
                 window.location.href = '/me/profile';
               }
