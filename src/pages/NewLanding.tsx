@@ -654,9 +654,21 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
                       <X className="h-4 w-4 text-stone-300" />
                     )}
                   </div>
-                  <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
-                    {t(`pricing.plans.free.${key}`)}
-                  </span>
+                  <div>
+                    <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
+                      {t(`pricing.plans.free.${key}`)}
+                    </span>
+                    {key === 'f3' && included && (
+                      <a
+                        href="https://www.vibecoders.la/@rosmelortiz"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-1 text-xs text-[#3D5AFE] hover:underline font-medium"
+                      >
+                        {t('pricing.plans.free.f3_example')}
+                      </a>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
