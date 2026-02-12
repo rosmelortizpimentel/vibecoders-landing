@@ -40,10 +40,10 @@ export function DashboardLayout() {
     }
     let cancelled = false;
     
-    // If user came from a paid card signup, skip the access check
-    // and let useAuth handle the Stripe redirect
+    // If useAuth is handling a Stripe redirect, skip the access check entirely
+    const pendingStripe = localStorage.getItem('pendingStripeRedirect');
     const signupSource = localStorage.getItem('signupSource');
-    if (signupSource === 'paid_card') {
+    if (pendingStripe === 'true' || signupSource === 'paid_card') {
       setCheckingAccess(false);
       return;
     }
