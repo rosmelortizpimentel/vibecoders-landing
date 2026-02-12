@@ -1,35 +1,55 @@
 
-# Agregar mensaje de precio exclusivo $24/año en la waitlist
 
-## Cambios
+## Limpiar y corregir la configuracion de precios de Stripe
 
-### 1. Actualizar la seccion Waitlist CTA en `src/pages/Closed.tsx`
+### Problema actual
 
-Agregar debajo del subtitulo actual un bloque destacado con el precio exclusivo de $24/año y un mensaje de que este precio se congelara para quienes se unan a la waitlist, mientras que despues sera mayor.
+Hay 10 settings de Stripe en `general_settings`, muchos redundantes o desactualizados. El precio activo apunta a $24/ano cuando deberia apuntar a $9.90/ano.
 
-Visualmente sera un badge/highlight con el precio "$24/year" en color `secondary` (amarillo) para que destaque sobre el fondo oscuro, con texto explicativo debajo.
+### Cambios en la base de datos (general_settings)
 
-### 2. Actualizar traducciones en los 4 idiomas
+1. **Actualizar `stripe_active_price_id`** de `price_1SzoOTEK9buyjfG9HP7bspLX` ($24) a `price_1T07aoEK9buyjfG9VsJ3R1te` ($9.90)
 
-Agregar nuevas claves en `waitlist`:
-- `waitlist.priceHighlight` — El precio exclusivo (ej: "$24/año")
-- `waitlist.priceNote` — Mensaje de que el precio sera mayor pero se congela para ellos
+2. **Actualizar `stripe_active_price_amount`** de `24` a `9.90`
 
-**Textos por idioma:**
+3. **Actualizar `stripe_active_product_name`** de `Vibe Coders Pro` a `Vibe Coder Pro Early Adopter` (o el nombre que prefieras)
 
-| Idioma | priceHighlight | priceNote |
-|--------|---------------|-----------|
-| ES | Precio exclusivo: $24/año | Este precio aumentara despues del lanzamiento. Al unirte a la lista, lo congelamos para ti. |
-| EN | Exclusive price: $24/year | This price will increase after launch. By joining the waitlist, we freeze it for you. |
-| FR | Prix exclusif : 24$/an | Ce prix augmentera apres le lancement. En rejoignant la liste, nous le gelons pour vous. |
-| PT | Preco exclusivo: $24/ano | Este preco aumentara apos o lancamento. Ao entrar na lista, congelamos para voce. |
+4. **Eliminar settings redundantes** que ya no se usan y solo generan confusion:
+   - `stripe_early_adopter_990_price_id` (ya estara como el activo)
+   - `stripe_early_adopter_price_id` (plan de $12, obsoleto)
+   - `stripe_early_adopter_price_amount` (obsoleto)
+   - `stripe_early_adopter_product_name` (obsoleto)
 
-### Archivos afectados
+5. **Mantener** los siguientes para referencia futura:
+   - `stripe_active_price_id` = $9.90 (el activo)
+   - `stripe_active_price_amount` = 9.90
+   - `stripe_active_product_name` = nombre del plan activo
+   - `stripe_allow_coupons` = true
+   - `stripe_pro_price_id` = $24 (para cuando suba el precio)
+   - `stripe_test_price_id` = $1 (para pruebas)
 
-| Archivo | Accion |
-|---------|--------|
-| `src/pages/Closed.tsx` | Agregar bloque de precio entre subtitle y boton |
-| `src/i18n/es/closed.json` | Agregar claves `waitlist.priceHighlight` y `waitlist.priceNote` |
-| `src/i18n/en/closed.json` | Idem |
-| `src/i18n/fr/closed.json` | Idem |
-| `src/i18n/pt/closed.json` | Idem |
+### Resultado
+
+Despues de estos cambios, `create-checkout-session` usara automaticamente el precio de $9.90/ano porque lee `stripe_active_price_id` de la tabla. Los settings quedaran limpios y claros: solo 6 entradas en lugar de 10.
+
+### Detalle tecnico
+
+Se ejecutara una migracion SQL con:
+
+```text
+-- 1. Actualizar el precio activo a $9.90
+UPDATE general_settings SET value = 'price_1T07aoEK9buyjfG9VsJ3R1te' WHERE key = 'stripe_active_price_id';
+UPDATE general_settings SET value = '9.90' WHERE key = 'stripe_active_price_amount';
+UPDATE general_settings SET value = 'Vibe Coder Pro Early Adopter' WHERE key = 'stripe_active_product_name';
+
+-- 2. Eliminar settings obsoletos
+DELETE FROM general_settings WHERE key IN (
+  'stripe_early_adopter_990_price_id',
+  'stripe_early_adopter_price_id',
+  'stripe_early_adopter_price_amount',
+  'stripe_early_adopter_product_name'
+);
+```
+
+No se requieren cambios en el codigo -- `create-checkout-session` ya lee dinamicamente de `general_settings`.
+

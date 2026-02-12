@@ -16,10 +16,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
@@ -64,6 +65,7 @@ export function AuthenticatedHeader({
   const t = useTranslation('common');
   const tAuth = useTranslation('auth');
   const tProfile = useTranslation('profile');
+  const { isFree, loading: subLoading } = useSubscription();
   
   const displayName = formatDisplayName(profile?.name, tAuth.user);
   const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
@@ -153,6 +155,17 @@ export function AuthenticatedHeader({
                   </>
                 ) : null}
               </div>
+            )}
+
+            {/* Upgrade Button - only for free tier */}
+            {isFree && !subLoading && (
+              <Link
+                to="/choose-plan"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-stone-900 hover:bg-stone-800 text-white transition-colors border border-amber-500/60 hover:border-amber-400/80"
+              >
+                <Zap className="h-3.5 w-3.5 fill-current" />
+                <span className="text-xs font-bold">$9.90/año</span>
+              </Link>
             )}
 
             {/* Notification Bell */}

@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ExternalLink, Users, Loader2, Search, Mail, ListChecks, Copy, Trash2, AppWindow, Eye } from 'lucide-react';
+import { ExternalLink, Users, Loader2, Search, Mail, ListChecks, Copy, Trash2, AppWindow, Eye, CreditCard, UserPlus } from 'lucide-react';
 import { FollowListDialog } from './FollowListDialog';
 import { RegistrationTrendChart } from './RegistrationTrendChart';
 import { ActivityTrendChart } from './ActivityTrendChart';
@@ -55,6 +55,7 @@ interface EnrichedUser {
   current_period_end: string | null;
   appsCount: number;
   profileViews: number;
+  signup_source: string | null;
 }
 
 interface DailyActivity {
@@ -416,6 +417,18 @@ export function UsersManager() {
                   <div className="flex flex-col items-center gap-1">
                     {getTierBadge(user)}
                     {getSubscriptionStatusBadge(user.subscription_status)}
+                    {user.signup_source === 'paid_card' && (
+                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px] gap-1">
+                        <CreditCard className="h-3 w-3" />
+                        Pago
+                      </Badge>
+                    )}
+                    {user.signup_source === 'free_card' && (
+                      <Badge variant="outline" className="text-[10px] gap-1">
+                        <UserPlus className="h-3 w-3" />
+                        Gratis
+                      </Badge>
+                    )}
                     {remaining && (
                       <span className={`text-xs ${remaining.days < 0 ? 'text-red-400' : remaining.days < 7 ? 'text-orange-400' : 'text-muted-foreground'}`}>
                         {remaining.label}

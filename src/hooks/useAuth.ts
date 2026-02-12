@@ -19,20 +19,54 @@ export function useAuth() {
         // Handle return URL after successful sign in
         if (event === 'SIGNED_IN' && currentSession?.user) {
           const returnUrl = localStorage.getItem('authReturnUrl');
+          const signupSource = localStorage.getItem('signupSource');
+          localStorage.removeItem('signupSource');
+          
           if (returnUrl) {
             localStorage.removeItem('authReturnUrl');
             setTimeout(() => {
               window.location.href = returnUrl;
             }, 0);
           } else {
+            // If paid_card, set a flag BEFORE the async call so DashboardLayout knows not to redirect
+            if (signupSource === 'paid_card') {
+              localStorage.setItem('pendingStripeRedirect', 'true');
+            }
+            
             // Check founder status and redirect
-            supabase.functions.invoke('check-founder-status').then(({ data }) => {
-              if (data?.accessClosed) {
-                window.location.href = '/closed';
+            const body: Record<string, string> = {};
+            if (signupSource) body.signupSource = signupSource;
+            
+            supabase.functions.invoke('check-founder-status', { body }).then(async ({ data }) => {
+              if (signupSource === 'paid_card') {
+                // Only redirect to Stripe if user doesn't already have a paid subscription
+                const userTier = data?.tier;
+                if (userTier === 'pro' || userTier === 'founder') {
+                  // Already paid -- go to dashboard
+                  localStorage.removeItem('pendingStripeRedirect');
+                  window.location.href = '/me/profile';
+                  return;
+                }
+                
+                try {
+                  const { data: checkoutData } = await supabase.functions.invoke('create-checkout-session');
+                  if (checkoutData?.url) {
+                    localStorage.removeItem('pendingStripeRedirect');
+                    window.location.href = checkoutData.url;
+                    return;
+                  }
+                } catch (e) {
+                  console.error('Checkout error:', e);
+                }
+                localStorage.removeItem('pendingStripeRedirect');
+                window.location.href = '/choose-plan';
               } else if (window.location.pathname === '/') {
                 window.location.href = '/me/profile';
               }
-            }).catch(console.error);
+            }).catch((err) => {
+              console.error(err);
+              localStorage.removeItem('pendingStripeRedirect');
+            });
           }
         }
       }
