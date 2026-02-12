@@ -34,15 +34,18 @@ Deno.serve(async (req) => {
 
     if (appError) throw appError;
 
-    // Logic requested by user:
-    // 1. Inflated profiles: profiles + 20
-    // 2. Spots left calculation: 
-    //    100 - (profiles + 20) - apps
+    // 3. Get real founder count from user_subscriptions
+    const { count: founderCount, error: founderError } = await supabaseAdmin
+      .from("user_subscriptions")
+      .select("*", { count: "exact", head: true })
+      .eq("tier", "founder");
+
+    // If table doesn't exist yet, fall back to old logic
+    const realFounders = founderError ? 0 : (founderCount || 0);
     
     const baseOccupancy = (profileCount || 0) + 20;
     const totalApps = appCount || 0;
-    // User requested formula: 100 - totalBuilders
-    const spotsLeft = Math.max(0, 100 - baseOccupancy);
+    const spotsLeft = Math.max(0, 100 - realFounders);
 
     return new Response(
       JSON.stringify({

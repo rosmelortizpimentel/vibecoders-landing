@@ -21,10 +21,18 @@ export function useAuth() {
           const returnUrl = localStorage.getItem('authReturnUrl');
           if (returnUrl) {
             localStorage.removeItem('authReturnUrl');
-            // Use setTimeout to defer navigation and avoid React Router issues
             setTimeout(() => {
               window.location.href = returnUrl;
             }, 0);
+          } else {
+            // Check founder status and redirect accordingly
+            supabase.functions.invoke('check-founder-status').then(({ data }) => {
+              if (data?.needsPlanSelection) {
+                window.location.href = '/choose-plan';
+              } else if (window.location.pathname === '/' || window.location.pathname === '/me') {
+                window.location.href = '/home';
+              }
+            }).catch(console.error);
           }
         }
       }
