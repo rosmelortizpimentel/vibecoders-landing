@@ -10,12 +10,14 @@ import { FounderWelcome } from '@/components/home/FounderWelcome';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export function DashboardLayout() {
   const { user, loading: authLoading, signOut } = useAuth();
   const { profile } = useProfile();
   const { isFounder, founderNumber, founderWelcomeSeen } = useSubscription();
   const queryClient = useQueryClient();
+  const [checkingAccess, setCheckingAccess] = useState(true);
   
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebarCollapsed') === 'true';
@@ -30,9 +32,36 @@ export function DashboardLayout() {
     return () => window.removeEventListener('sidebar-resize', handleResize as EventListener);
   }, []);
 
+  // Check founder status for new users — redirect to /closed if access is closed
+  useEffect(() => {
+    if (authLoading || !user) {
+      setCheckingAccess(false);
+      return;
+    }
+    let cancelled = false;
+    supabase.functions.invoke('check-founder-status').then(({ data }) => {
+      if (!cancelled && data?.accessClosed) {
+        window.location.href = '/closed';
+      } else {
+        setCheckingAccess(false);
+      }
+    }).catch(() => {
+      if (!cancelled) setCheckingAccess(false);
+    });
+    return () => { cancelled = true; };
+  }, [user, authLoading]);
+
   // Redirect if not authenticated (after loading)
   if (!authLoading && !user) {
     return <Navigate to="/" replace />;
+  }
+
+  if (authLoading || checkingAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-card">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
