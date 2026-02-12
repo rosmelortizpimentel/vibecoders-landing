@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.set-free-tier]
 verify_jwt = false
+
+[functions.admin-delete-user]
+verify_jwt = false
