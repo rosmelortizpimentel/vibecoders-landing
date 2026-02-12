@@ -15,72 +15,38 @@
     "title": "What's coming: Vibecoders Communication Suite",
     "subtitle": "10 embeddable widgets replacing +$500/mo in SaaS tools",
     "widgets": {
-      "feedback": {
-        "name": "Feedback",
-        "description": "Bug reports, suggestions and UX improvements from your app"
-      },
-      "roadmap": {
-        "name": "Roadmap",
-        "description": "Show your backlog, in progress and completed publicly"
-      },
-      "status": {
-        "name": "Status Page",
-        "description": "Uptime, incidents and real-time logs for your users"
-      },
-      "announcements": {
-        "name": "Announcements",
-        "description": "Banners, popups and informational notifications"
-      },
-      "changelog": {
-        "name": "Changelog",
-        "description": "Show app updates and releases automatically"
-      },
-      "voting": {
-        "name": "Feature Voting",
-        "description": "Your users vote for the features they want to see"
-      },
-      "help": {
-        "name": "Help Center",
-        "description": "FAQs, documentation and embedded self-service support"
-      },
-      "social": {
-        "name": "Social Proof",
-        "description": "Real-time testimonials and reviews from your users"
-      },
-      "community": {
-        "name": "Community",
-        "description": "Community activity, FOMO and built-in virality"
-      },
-      "onboarding": {
-        "name": "Onboarding",
-        "description": "Guided tours, tooltips and interactive no-code guides"
-      }
+      "feedback": { "name": "Feedback", "description": "Bug reports, suggestions and UX improvements from your app" },
+      "roadmap": { "name": "Roadmap", "description": "Show your backlog, in progress and completed publicly" },
+      "status": { "name": "Status Page", "description": "Uptime, incidents and real-time logs for your users" },
+      "announcements": { "name": "Announcements", "description": "Banners, popups and informational notifications" },
+      "changelog": { "name": "Changelog", "description": "Show app updates and releases automatically" },
+      "voting": { "name": "Feature Voting", "description": "Your users vote for the features they want to see" },
+      "help": { "name": "Help Center", "description": "FAQs, documentation and embedded self-service support" },
+      "social": { "name": "Social Proof", "description": "Real-time testimonials and reviews from your users" },
+      "community": { "name": "Community", "description": "Community activity, FOMO and built-in virality" },
+      "onboarding": { "name": "Onboarding", "description": "Guided tours, tooltips and interactive no-code guides" }
     }
   },
   "comparison": {
     "title": "What you save with Vibecoders Suite",
-    "replaces": "Replaces",
-    "typicalCost": "Typical cost",
     "included": "Included",
     "totalSavings": "Total savings",
     "perMonth": "/mo",
     "tools": {
-      "feedback": "Canny, UserVoice → $79-399/mo",
-      "roadmap": "Productboard → $20-80/mo",
-      "status": "StatusPage.io → $29-99/mo",
-      "announcements": "Intercom → $74+/mo",
-      "changelog": "Headway, Beamer → $49-99/mo",
-      "help": "Zendesk, Helpscout → $19-89/mo",
-      "voting": "Canny → Included",
-      "onboarding": "Appcues, Userguiding → $249+/mo"
+      "feedback": { "name": "Canny, UserVoice — $79-399/mo", "purpose": "Feedback collection and bug reporting" },
+      "roadmap": { "name": "Productboard — $20-80/mo", "purpose": "Roadmap management and product prioritization" },
+      "status": { "name": "StatusPage.io — $29-99/mo", "purpose": "Status page and uptime monitoring" },
+      "announcements": { "name": "Intercom — $74+/mo", "purpose": "In-app communication and informational banners" },
+      "changelog": { "name": "Headway, Beamer — $49-99/mo", "purpose": "Update and release log" },
+      "help": { "name": "Zendesk, Helpscout — $19-89/mo", "purpose": "Help center and customer support" },
+      "voting": { "name": "Canny — Included", "purpose": "User feature voting" },
+      "onboarding": { "name": "Appcues, Userguiding — $249+/mo", "purpose": "Guided tours and interactive onboarding" }
     }
   },
   "waitlist": {
     "title": "Want to join the waitlist?",
     "subtitle": "We'll notify you when we launch. Early waitlisters get priority access.",
-    "placeholder": "you@email.com",
-    "button": "Join the waitlist",
-    "sending": "Sending..."
+    "button": "Join the waitlist"
   },
   "success": {
     "title": "You're on the list!",

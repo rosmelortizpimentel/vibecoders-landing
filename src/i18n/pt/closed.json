@@ -29,28 +29,24 @@
   },
   "comparison": {
     "title": "O que você economiza com Vibecoders Suite",
-    "replaces": "Substitui",
-    "typicalCost": "Custo típico",
     "included": "Incluído",
     "totalSavings": "Economia total",
     "perMonth": "/mês",
     "tools": {
-      "feedback": "Canny, UserVoice → $79-399/mês",
-      "roadmap": "Productboard → $20-80/mês",
-      "status": "StatusPage.io → $29-99/mês",
-      "announcements": "Intercom → $74+/mês",
-      "changelog": "Headway, Beamer → $49-99/mês",
-      "help": "Zendesk, Helpscout → $19-89/mês",
-      "voting": "Canny → Incluído",
-      "onboarding": "Appcues, Userguiding → $249+/mês"
+      "feedback": { "name": "Canny, UserVoice — $79-399/mês", "purpose": "Coleta de feedback e relatórios de bugs" },
+      "roadmap": { "name": "Productboard — $20-80/mês", "purpose": "Gestão de roadmap e priorização de produto" },
+      "status": { "name": "StatusPage.io — $29-99/mês", "purpose": "Página de status e monitoramento de uptime" },
+      "announcements": { "name": "Intercom — $74+/mês", "purpose": "Comunicação in-app e banners informativos" },
+      "changelog": { "name": "Headway, Beamer — $49-99/mês", "purpose": "Log de atualizações e releases" },
+      "help": { "name": "Zendesk, Helpscout — $19-89/mês", "purpose": "Centro de ajuda e suporte ao cliente" },
+      "voting": { "name": "Canny — Incluído", "purpose": "Votação de recursos pelos usuários" },
+      "onboarding": { "name": "Appcues, Userguiding — $249+/mês", "purpose": "Tours guiados e onboarding interativo" }
     }
   },
   "waitlist": {
     "title": "Quer entrar na lista de espera?",
     "subtitle": "Avisaremos quando lançarmos. Os primeiros da lista terão acesso prioritário.",
-    "placeholder": "voce@email.com",
-    "button": "Entrar na lista de espera",
-    "sending": "Enviando..."
+    "button": "Entrar na lista de espera"
   },
   "success": { "title": "Você está na lista!", "subtitle": "Avisaremos quando lançarmos em 1 de março." },
   "alreadyRegistered": { "title": "Você já está na lista!", "subtitle": "Avisaremos quando for a hora." }
