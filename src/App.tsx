@@ -27,7 +27,7 @@ import PromptStudio from "./pages/prompts/PromptStudio";
 import PromptViewer from "./pages/prompts/PromptViewer";
 import Beta from "./pages/Beta";
 import Vibers from "./pages/Vibers";
-// Closed page removed - no longer needed
+
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import { NotificationsPage } from "./pages/Notifications";
@@ -36,7 +36,7 @@ import { DashboardLayout } from "./layouts/DashboardLayout";
 import { useAuth } from "./hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
-// ClosedGuard removed - /closed no longer exists
+
 
 const queryClient = new QueryClient();
 
@@ -70,7 +70,7 @@ const App = () => (
           
 
 
-          {/* /closed route removed */}
+          
 
           {/* Authenticated routes with shared layout (persistent header/footer) */}
           <Route element={<DashboardLayout />}>
