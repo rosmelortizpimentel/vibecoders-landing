@@ -29,7 +29,7 @@ export function useAuth() {
             supabase.functions.invoke('check-founder-status').then(({ data }) => {
               if (data?.needsPlanSelection) {
                 window.location.href = '/choose-plan';
-              } else if (window.location.pathname === '/' || window.location.pathname === '/me') {
+              } else if (window.location.pathname === '/' || window.location.pathname.startsWith('/me')) {
                 window.location.href = '/home';
               }
             }).catch(console.error);
