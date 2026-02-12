@@ -110,8 +110,8 @@
         "f3": "Crea tu perfil y demuestra lo que estás construyendo",
         "f3_example": "Mira un ejemplo",
         "f4": "Sin acceso a la Suite de Widgets",
-        "cta": "Unirme con LinkedIn",
-        "ctaGoogle": "Unirme con Google"
+        "cta": "Unirme Gratis",
+        "ctaGoogle": "Unirme Gratis"
       },
       "pro": {
         "badge": "Pre-Lanzamiento",
@@ -126,8 +126,8 @@
         "f4": "Banners sin Deploy: Lanza alertas sin tocar código",
         "f5": "Vende tus Servicios: Botón \"Book Call\" integrado a tu Perfil",
         "f6": "Precio de $9.90 congelado de por vida",
-        "cta": "Reservar con LinkedIn",
-        "ctaGoogle": "Reservar con Google",
+        "cta": "Reservar por $9.90",
+        "ctaGoogle": "Reservar por $9.90",
         "footer": "El precio sube a $24.00 el 1 de Marzo."
       }
     },

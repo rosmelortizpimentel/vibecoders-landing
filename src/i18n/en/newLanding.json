@@ -110,8 +110,8 @@
         "f3": "Create your profile and showcase what you're building",
         "f3_example": "See an example",
         "f4": "No access to the Widget Suite",
-        "cta": "Join with LinkedIn",
-        "ctaGoogle": "Join with Google"
+        "cta": "Join Free",
+        "ctaGoogle": "Join Free"
       },
       "pro": {
         "badge": "Pre-Launch Offer",
@@ -126,8 +126,8 @@
         "f4": "Banners without Deploy: Launch alerts without touching code",
         "f5": "Sell your Services: Integrated \"Book Call\" button on your Profile",
         "f6": "$9.90 price locked for life",
-        "cta": "Reserve with LinkedIn",
-        "ctaGoogle": "Reserve with Google",
+        "cta": "Reserve for $9.90",
+        "ctaGoogle": "Reserve for $9.90",
         "footer": "Price goes up to $24.00 on March 1st."
       }
     },

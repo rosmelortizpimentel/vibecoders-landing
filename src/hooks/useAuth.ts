@@ -51,8 +51,6 @@ export function useAuth() {
                 }
                 localStorage.removeItem('pendingStripeRedirect');
                 window.location.href = '/choose-plan';
-              } else if (data?.accessClosed) {
-                window.location.href = '/closed';
               } else if (window.location.pathname === '/') {
                 window.location.href = '/me/profile';
               }
