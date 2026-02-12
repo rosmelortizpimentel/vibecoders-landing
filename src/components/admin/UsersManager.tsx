@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ExternalLink, Users, Loader2, Search, Mail, ListChecks, Copy, Trash2 } from 'lucide-react';
+import { ExternalLink, Users, Loader2, Search, Mail, ListChecks, Copy, Trash2, AppWindow, Eye } from 'lucide-react';
 import { FollowListDialog } from './FollowListDialog';
 import { RegistrationTrendChart } from './RegistrationTrendChart';
 import { ActivityTrendChart } from './ActivityTrendChart';
@@ -53,6 +53,8 @@ interface EnrichedUser {
   founder_number: number | null;
   subscription_status: string | null;
   current_period_end: string | null;
+  appsCount: number;
+  profileViews: number;
 }
 
 interface DailyActivity {
@@ -353,6 +355,8 @@ export function UsersManager() {
               <SortableHeader column="isOnWaitlist" className="text-center">Waitlist</SortableHeader>
               <SortableHeader column="followersCount" className="text-center">Seguidores</SortableHeader>
               <SortableHeader column="followingCount" className="text-center">Siguiendo</SortableHeader>
+              <SortableHeader column="appsCount" className="text-center">Apps</SortableHeader>
+              <SortableHeader column="profileViews" className="text-center">Vistas</SortableHeader>
               <SortableHeader column="created_at">Registro</SortableHeader>
               <SortableHeader column="lastActivity">{t('lastActivity')}</SortableHeader>
               <TableHead className="text-center">Acciones</TableHead>
@@ -457,6 +461,18 @@ export function UsersManager() {
                     <Users className="mr-1 h-4 w-4" />
                     {user.followingCount}
                   </Button>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                    <AppWindow className="h-3.5 w-3.5" />
+                    {user.appsCount}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
+                    <Eye className="h-3.5 w-3.5" />
+                    {user.profileViews}
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {formatTorontoDate(user.created_at)}
