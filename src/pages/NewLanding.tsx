@@ -22,6 +22,10 @@ import {
   Check,
   X,
   Clock,
+  Map,
+  MessageSquare,
+  Megaphone,
+  Phone,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -569,7 +573,18 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
     { key: 'f2', included: true },
     { key: 'f3', included: true },
     { key: 'f4', included: true },
+    { key: 'f5', included: true },
+    { key: 'f6', included: true },
   ];
+
+  const proFeatureIcons: Record<string, React.ReactNode> = {
+    f1: <Check className="h-4 w-4 text-[#3D5AFE]" />,
+    f2: <Map className="h-4 w-4 text-[#3D5AFE]" />,
+    f3: <MessageSquare className="h-4 w-4 text-[#3D5AFE]" />,
+    f4: <Megaphone className="h-4 w-4 text-[#3D5AFE]" />,
+    f5: <Phone className="h-4 w-4 text-[#3D5AFE]" />,
+    f6: <ShieldCheck className="h-4 w-4 text-[#3D5AFE]" />,
+  };
 
   return (
     <section className="bg-white py-20 md:py-28 px-4 sm:px-6 border-t border-stone-100">
@@ -704,9 +719,9 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
               {proFeatures.map(({ key }) => (
                 <li key={key} className="flex items-start gap-3 text-sm">
                   <div className="mt-0.5 shrink-0">
-                    <Check className="h-4 w-4 text-[#3D5AFE]" />
+                    {proFeatureIcons[key] || <Check className="h-4 w-4 text-[#3D5AFE]" />}
                   </div>
-                  <span className="font-medium text-white/75">
+                  <span className={`font-medium text-white/75 ${key === 'f5' ? 'font-bold text-white/90' : ''}`}>
                     {t(`pricing.plans.pro.${key}`)}
                   </span>
                 </li>
