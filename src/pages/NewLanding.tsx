@@ -22,14 +22,6 @@ import {
   Check,
   X,
   Clock,
-  Bug,
-  Map,
-  Activity,
-  Megaphone,
-  FileText,
-  Vote,
-  HelpCircle,
-  Compass,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -553,43 +545,8 @@ const FeatureGrid = () => {
 };
 
 /* ─── Closed Access Section (shown when spots run out) ─── */
-const CLOSED_WIDGET_ICONS = [
-  { key: 'feedback', icon: Bug },
-  { key: 'roadmap', icon: Map },
-  { key: 'status', icon: Activity },
-  { key: 'announcements', icon: Megaphone },
-  { key: 'changelog', icon: FileText },
-  { key: 'voting', icon: Vote },
-  { key: 'help', icon: HelpCircle },
-  { key: 'social', icon: Star },
-  { key: 'community', icon: Users },
-  { key: 'onboarding', icon: Compass },
-] as const;
-
-const LAUNCH_DATE = new Date('2026-03-01T00:00:00-05:00').getTime();
-
-function useClosedCountdown() {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  useEffect(() => {
-    const tick = () => {
-      const diff = Math.max(0, LAUNCH_DATE - Date.now());
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / (1000 * 60)) % 60),
-        seconds: Math.floor((diff / 1000) % 60),
-      });
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
-  return timeLeft;
-}
-
 const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: { totalBuilders: number; onLinkedInClick: () => void; onGoogleClick: () => void }) => {
   const { t } = useTranslation('newLanding');
-  const countdown = useClosedCountdown();
 
   const avatarPhotos = [
     'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/e2df4196-aa86-465e-9a62-0d2508843b9e/avatar_1770449276650.jpeg',
@@ -600,140 +557,192 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
     'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/7f969e81-1b47-420f-bb35-fb2e498c6068/avatar_migrated_1770716417376.jpeg',
   ];
 
+  const freeFeatures = [
+    { key: 'f1', included: true },
+    { key: 'f2', included: true },
+    { key: 'f3', included: true },
+    { key: 'f4', included: false },
+  ];
+
+  const proFeatures = [
+    { key: 'f1', included: true },
+    { key: 'f2', included: true },
+    { key: 'f3', included: true },
+    { key: 'f4', included: true },
+  ];
+
   return (
-    <section className="bg-[#000519] py-20 md:py-28 px-4 overflow-hidden">
-      <div className="mx-auto max-w-3xl flex flex-col items-center text-center">
+    <section className="bg-white py-20 md:py-28 px-4 sm:px-6 border-t border-stone-100">
+      <div className="mx-auto max-w-5xl">
 
-        {/* Block 1: Access Closed */}
-        <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-white/60 uppercase tracking-[0.15em] mb-8">
-          <Lock className="h-3.5 w-3.5" />
-          {t('pricing.closed.badge')}
-        </span>
-
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight leading-tight mb-6 text-white">
-          {t('pricing.closed.title')}
-        </h2>
-
-        {/* Avatar Stack */}
-        <div className="flex items-center mb-6">
-          <div className="flex -space-x-2.5">
-            {avatarPhotos.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt=""
-                className="h-10 w-10 rounded-full object-cover border-2 border-[#000519] shadow-lg"
-              />
-            ))}
-          </div>
-          <span className="ml-3 text-sm text-white/40 font-medium">
-            {t('pricing.closed.joinedText', { count: totalBuilders > 100 ? totalBuilders : 100 })}
+        {/* Social Proof Banner */}
+        <div className="rounded-3xl bg-[#000519] p-8 sm:p-10 md:p-14 text-center mb-12 md:mb-16">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-[10px] font-semibold text-white/50 uppercase tracking-[0.15em] mb-6">
+            <Lock className="h-3 w-3" />
+            {t('pricing.closed.badge')}
           </span>
-        </div>
 
-        <p className="text-base sm:text-lg text-white/40 max-w-xl mb-3">
-          {t('pricing.closed.subtitle')}
-        </p>
-        <p className="text-base sm:text-lg text-white/60 font-medium max-w-xl mb-16">
-          {t('pricing.closed.comingSoon')}
-        </p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-white mb-6 leading-tight">
+            {t('pricing.closed.title')}
+          </h2>
 
-        {/* Block 2: Countdown */}
-        <div className="mb-16 w-full">
-          <p className="text-[10px] sm:text-xs uppercase tracking-[0.25em] text-white/25 mb-4 font-medium">
-            {t('pricing.closed.launchLabel')}
-          </p>
-          <div className="flex justify-center gap-2 sm:gap-4">
-            {(['days', 'hours', 'minutes', 'seconds'] as const).map((unit) => (
-              <div key={unit} className="flex flex-col items-center">
-                <span className="text-2xl sm:text-3xl md:text-5xl font-mono font-bold tabular-nums bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 sm:px-4 py-2 sm:py-3 min-w-[56px] sm:min-w-[72px] text-white">
-                  {String(countdown[unit]).padStart(2, '0')}
-                </span>
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-white/25 mt-1.5">
-                  {t(`pricing.closed.${unit}`)}
-                </span>
-              </div>
-            ))}
+          {/* Avatar Stack */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
+            <div className="flex -space-x-2.5">
+              {avatarPhotos.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt=""
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-full object-cover border-2 border-[#000519] shadow-lg"
+                />
+              ))}
+            </div>
+            <span className="text-xs sm:text-sm text-white/40 font-medium">
+              {t('pricing.closed.socialProofCaption')}
+            </span>
           </div>
+
+          <p className="text-sm sm:text-base text-white/35 max-w-lg mx-auto leading-relaxed">
+            {t('pricing.closed.joinSubheadline')}
+          </p>
         </div>
 
-        {/* Block 3: Suite Preview */}
-        <div className="mb-16 w-full max-w-4xl">
-          <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">
-            {t('pricing.closed.suiteTitle')}
-          </h3>
-          <p className="text-white/35 text-xs sm:text-sm mb-8">
-            {t('pricing.closed.suiteSubtitle')}
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-            {CLOSED_WIDGET_ICONS.map(({ key, icon: Icon }) => (
-              <div
-                key={key}
-                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3 sm:p-4 hover:border-white/[0.12] hover:bg-white/[0.04] transition-all duration-300"
+        {/* Pricing Grid */}
+        <div className="grid gap-6 md:grid-cols-2 md:gap-8 lg:gap-10 md:items-stretch">
+
+          {/* Card A: Free */}
+          <div className="rounded-2xl border border-stone-200 bg-stone-50/50 p-6 sm:p-8 md:p-10 flex flex-col">
+            <div className="mb-6 md:mb-8">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-stone-400 mb-2">
+                {t('pricing.plans.free.title')}
+              </h3>
+              <p className="text-sm text-stone-500 font-medium">
+                {t('pricing.plans.free.desc')}
+              </p>
+            </div>
+
+            <div className="mb-6 md:mb-10">
+              <span className="text-5xl font-black tracking-tighter text-stone-900">$0</span>
+              <span className="ml-2 text-stone-400 font-bold uppercase text-xs tracking-widest">
+                {t('pricing.plans.free.priceLabel')}
+              </span>
+            </div>
+
+            <ul className="mb-8 md:mb-12 space-y-4 text-left flex-grow">
+              {freeFeatures.map(({ key, included }) => (
+                <li key={key} className={`flex items-start gap-3 text-sm ${!included ? 'opacity-40' : ''}`}>
+                  <div className="mt-0.5 shrink-0">
+                    {included ? (
+                      <Check className="h-4 w-4 text-stone-400" />
+                    ) : (
+                      <X className="h-4 w-4 text-stone-300" />
+                    )}
+                  </div>
+                  <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
+                    {t(`pricing.plans.free.${key}`)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Auth Buttons - Outline */}
+            <div className="mt-auto flex flex-col gap-2.5">
+              <button
+                onClick={onLinkedInClick}
+                className="w-full h-12 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-semibold text-sm transition-all flex items-center justify-center gap-2.5"
               >
-                <div className="h-8 w-8 rounded-lg bg-white/[0.06] flex items-center justify-center mb-2">
-                  <Icon className="h-4 w-4 text-white/50" />
-                </div>
-                <h4 className="font-semibold text-xs sm:text-sm text-white/70">
-                  {t(`pricing.closed.widgets.${key}`)}
-                </h4>
+                <Linkedin className="h-4 w-4 text-[#0A66C2]" />
+                {t('pricing.plans.free.cta')}
+              </button>
+              <button
+                onClick={onGoogleClick}
+                className="w-full h-12 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-600 font-medium text-sm transition-all flex items-center justify-center gap-2.5"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                {t('pricing.plans.free.ctaGoogle')}
+              </button>
+            </div>
+          </div>
+
+          {/* Card B: Pro Pre-sale */}
+          <div className="relative rounded-2xl border-2 border-stone-900 bg-stone-900 p-6 sm:p-8 md:p-10 flex flex-col">
+            {/* Badge */}
+            <div className="absolute -top-3.5 left-6 sm:left-10 rounded-md bg-[#3D5AFE] px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-white shadow-sm">
+              {t('pricing.plans.pro.badge')}
+            </div>
+
+            <div className="mb-6 md:mb-8 mt-2">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white/60 mb-2">
+                {t('pricing.plans.pro.title')}
+              </h3>
+              <p className="text-sm text-white/35 font-medium">
+                {t('pricing.plans.pro.desc')}
+              </p>
+            </div>
+
+            <div className="mb-6 md:mb-10">
+              <div className="mb-1">
+                <span className="text-base font-bold text-white/25 line-through decoration-white/15 decoration-2">
+                  {t('pricing.plans.pro.oldPrice')}
+                </span>
               </div>
-            ))}
-          </div>
-        </div>
+              <span className="text-5xl sm:text-6xl font-black tracking-tighter text-white">
+                {t('pricing.plans.pro.price')}
+              </span>
+              <span className="ml-2 text-white/35 font-bold uppercase text-xs tracking-widest">
+                {t('pricing.plans.pro.priceLabel')}
+              </span>
+            </div>
 
-        {/* Block 4: Waitlist CTA */}
-        <div className="mb-16 w-full max-w-md">
-          <h3 className="text-lg sm:text-xl font-bold text-white mb-6">
-            {t('pricing.closed.waitlistTitle')}
-          </h3>
+            <ul className="mb-8 md:mb-10 space-y-4 text-left flex-grow">
+              {proFeatures.map(({ key }) => (
+                <li key={key} className="flex items-start gap-3 text-sm">
+                  <div className="mt-0.5 shrink-0">
+                    <Check className="h-4 w-4 text-[#3D5AFE]" />
+                  </div>
+                  <span className="font-medium text-white/75">
+                    {t(`pricing.plans.pro.${key}`)}
+                  </span>
+                </li>
+              ))}
+            </ul>
 
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={onLinkedInClick}
-              className="w-full h-14 rounded-xl font-bold text-base text-white flex items-center justify-center gap-3 transition-all hover:scale-[1.01] shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #0077B5 0%, #005582 100%)' }}
-            >
-              <Linkedin className="h-5 w-5 fill-white" />
-              {t('pricing.closed.ctaLinkedIn')}
-            </button>
+            {/* Auth Buttons - Solid */}
+            <div className="mt-auto flex flex-col gap-2.5">
+              <button
+                onClick={onLinkedInClick}
+                className="w-full h-14 rounded-xl font-bold text-base text-white flex items-center justify-center gap-3 transition-all hover:scale-[1.01] shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #3D5AFE 0%, #2a3eb1 100%)' }}
+              >
+                <Linkedin className="h-5 w-5 fill-white" />
+                {t('pricing.plans.pro.cta')}
+              </button>
+              <button
+                onClick={onGoogleClick}
+                className="w-full h-12 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-white/60 font-medium text-sm transition-all flex items-center justify-center gap-2.5"
+              >
+                <svg className="h-4 w-4" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                {t('pricing.plans.pro.ctaGoogle')}
+              </button>
+            </div>
 
-            <button
-              onClick={onGoogleClick}
-              className="w-full h-14 rounded-xl bg-white/[0.06] border border-white/10 hover:bg-white/[0.1] text-white/80 font-medium text-base transition-all hover:scale-[1.01] flex items-center justify-center gap-3"
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z" fill="#FBBC05" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-              </svg>
-              {t('pricing.closed.ctaGoogle')}
-            </button>
-          </div>
-        </div>
-
-        {/* Block 5: Exclusive Price */}
-        <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] px-6 py-8">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/30 font-semibold mb-1">
-              {t('pricing.closed.priceTitle')}
-            </p>
-            <p className="text-[10px] uppercase tracking-wider text-white/20 mb-4">
-              {t('pricing.closed.priceSubtitle')}
-            </p>
-            <p className="text-3xl sm:text-4xl font-black text-secondary mb-4">
-              {t('pricing.closed.priceAmount')}
-            </p>
-            <p className="text-xs sm:text-sm text-white/35 leading-relaxed mb-3">
-              {t('pricing.closed.priceNote')}
-            </p>
-            <p className="text-[10px] text-white/25 font-medium">
-              {t('pricing.closed.trustText')}
+            {/* Footer note */}
+            <p className="mt-4 text-center text-[11px] text-white/20 font-medium">
+              {t('pricing.plans.pro.footer')}
             </p>
           </div>
         </div>
-
       </div>
     </section>
   );

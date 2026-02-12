@@ -85,6 +85,8 @@
       "priceAmount": "$24/year",
       "priceNote": "This launch is different: it will only be accessible for a limited time.",
       "trustText": "No credit card. We'll notify you when we launch.",
+      "socialProofCaption": "+100 active builders building in public",
+      "joinSubheadline": "Join the community for free today. Scale with our tools tomorrow.",
       "widgets": {
         "feedback": "Feedback",
         "roadmap": "Roadmap",
@@ -96,6 +98,34 @@
         "social": "Social Proof",
         "community": "Community",
         "onboarding": "Onboarding"
+      }
+    },
+    "plans": {
+      "free": {
+        "title": "Vibe Coder",
+        "desc": "For those who want to validate ideas and connect.",
+        "priceLabel": "forever",
+        "f1": "Public Builder Profile",
+        "f2": "Access to Testing Squads",
+        "f3": "Networking with 100 founders",
+        "f4": "No access to Widgets",
+        "cta": "Sign Up Free",
+        "ctaGoogle": "Sign Up with Google"
+      },
+      "pro": {
+        "badge": "Pre-Launch Offer",
+        "title": "Pro Builder + Suite",
+        "desc": "Everything in Free, plus professional tools.",
+        "oldPrice": "$59.90",
+        "price": "$9.90",
+        "priceLabel": "/ year",
+        "f1": "Everything included in Free",
+        "f2": "Access to Communication Suite (Mar 1)",
+        "f3": "Widgets: Roadmap, Feedback & Announcements",
+        "f4": "$9.90 price locked for life",
+        "cta": "Reserve for $9.90",
+        "ctaGoogle": "Reserve with Google",
+        "footer": "Price goes up to $24.00 on March 1st."
       }
     },
     "freemium": {
