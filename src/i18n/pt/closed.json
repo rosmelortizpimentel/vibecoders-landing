@@ -46,6 +46,8 @@
   "waitlist": {
     "title": "Quer entrar na lista de espera?",
     "subtitle": "Avisaremos quando lançarmos. Os primeiros da lista terão acesso prioritário.",
+    "priceHighlight": "Preço exclusivo: $24/ano",
+    "priceNote": "Este preço aumentará após o lançamento. Ao entrar na lista, congelamos para você.",
     "button": "Entrar na lista de espera"
   },
   "success": { "title": "Você está na lista!", "subtitle": "Avisaremos quando lançarmos em 1 de março." },

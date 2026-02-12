@@ -48,9 +48,9 @@
   "waitlist": {
     "title": "Voulez-vous rejoindre la liste d'attente ?",
     "subtitle": "Nous vous notifierons au lancement. Les premiers inscrits auront un accès prioritaire.",
-    "placeholder": "vous@email.com",
-    "button": "Rejoindre la liste d'attente",
-    "sending": "Envoi..."
+    "priceHighlight": "Prix exclusif : 24$/an",
+    "priceNote": "Ce prix augmentera après le lancement. En rejoignant la liste, nous le gelons pour vous.",
+    "button": "Rejoindre la liste d'attente"
   },
   "success": { "title": "Vous êtes sur la liste !", "subtitle": "Nous vous notifierons au lancement le 1er mars." },
   "alreadyRegistered": { "title": "Vous êtes déjà sur la liste !", "subtitle": "Nous vous préviendrons le moment venu." }

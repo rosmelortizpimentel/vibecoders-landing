@@ -177,7 +177,11 @@ export default function Closed() {
         ) : (
           <>
             <h2 className="text-xl sm:text-2xl font-bold mb-2">{t('waitlist.title')}</h2>
-            <p className="text-white/40 text-xs sm:text-sm mb-6">{t('waitlist.subtitle')}</p>
+            <p className="text-white/40 text-xs sm:text-sm mb-4">{t('waitlist.subtitle')}</p>
+            <div className="rounded-xl border border-secondary/20 bg-secondary/[0.06] px-5 py-4 mb-6">
+              <p className="text-secondary font-bold text-lg sm:text-xl mb-1">{t('waitlist.priceHighlight')}</p>
+              <p className="text-white/40 text-[11px] sm:text-xs">{t('waitlist.priceNote')}</p>
+            </div>
             <Button
               onClick={handleJoinWaitlist}
               disabled={status === 'loading'}

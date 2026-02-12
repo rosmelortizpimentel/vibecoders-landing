@@ -46,6 +46,8 @@
   "waitlist": {
     "title": "Want to join the waitlist?",
     "subtitle": "We'll notify you when we launch. Early waitlisters get priority access.",
+    "priceHighlight": "Exclusive price: $24/year",
+    "priceNote": "This price will increase after launch. By joining the waitlist, we freeze it for you.",
     "button": "Join the waitlist"
   },
   "success": {
