@@ -44,6 +44,7 @@ interface ProfileSummary {
   username: string;
   avatarUrl?: string;
   bannerUrl?: string;
+  tagline?: string;
   activeAppsCount?: number;
   mutualConnectionsCount?: number;
   isFollowing?: boolean;

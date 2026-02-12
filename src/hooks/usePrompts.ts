@@ -366,7 +366,7 @@ export function usePrompt(id: string | undefined) {
         is_liked = !!likeData;
       }
       
-      return { ...data, likes_count: count || 0, is_liked } as unknown as Prompt;
+      return { ...(data as object), likes_count: count || 0, is_liked } as unknown as Prompt;
     },
     enabled: !!id,
   });

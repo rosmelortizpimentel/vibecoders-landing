@@ -10,7 +10,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { MarkdownEditor } from '@/components/beta/MarkdownEditor';
 import { TagInput } from './TagInput';
 import { FileUploader } from './FileUploader';
-import { usePrompts, TOOL_OPTIONS } from '@/hooks/usePrompts';
+import { usePrompts, COMPATIBILITY_OPTIONS, INTENT_OPTIONS } from '@/hooks/usePrompts';
 import type { Prompt, PromptFile } from '@/hooks/usePrompts';
 import { Loader2 } from 'lucide-react';
 
@@ -115,6 +115,9 @@ export function PromptFormModal({ open, onOpenChange, editPrompt }: PromptFormMo
         result_url: resultUrl.trim(),
         tags,
         tool_used: toolUsed,
+        tool_compatibility: [] as string[],
+        resource_type: 'chat_prompt' as const,
+        intent_category: 'ui_gen' as const,
         is_public: isPublic,
       };
 
@@ -174,7 +177,7 @@ export function PromptFormModal({ open, onOpenChange, editPrompt }: PromptFormMo
                   <SelectValue placeholder={t('form.toolPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  {TOOL_OPTIONS.map(tool => (
+                  {COMPATIBILITY_OPTIONS.map(tool => (
                     <SelectItem key={tool} value={tool}>{tool}</SelectItem>
                   ))}
                 </SelectContent>

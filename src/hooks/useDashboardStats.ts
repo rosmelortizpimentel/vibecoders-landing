@@ -70,6 +70,7 @@ interface FollowsResponse {
     username: string | null;
     avatar_url: string | null;
     banner_url: string | null;
+    tagline: string | null;
     apps: { count: number }[];
   };
 }
@@ -104,6 +105,7 @@ export function useDashboardStats() {
               username, 
               avatar_url, 
               banner_url,
+              tagline,
               apps(count)
             )
           `)
@@ -118,6 +120,7 @@ export function useDashboardStats() {
               username, 
               avatar_url, 
               banner_url,
+              tagline,
               apps(count)
             )
           `)

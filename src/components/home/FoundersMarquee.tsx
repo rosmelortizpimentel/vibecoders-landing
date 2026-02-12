@@ -24,7 +24,6 @@ const FoundersMarquee = () => {
   useEffect(() => {
     const fetchFounders = async () => {
       try {
-        // @ts-expect-error - function created in migration but not yet in generated types
         const { data, error } = await supabase.rpc('get_verified_founders');
         if (error) throw error;
         if (data) setFounders(data as unknown as Founder[]);
