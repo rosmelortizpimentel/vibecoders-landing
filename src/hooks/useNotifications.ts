@@ -43,7 +43,7 @@ export function useNotifications() {
         .limit(20);
 
       if (error) throw error;
-      setNotifications(data || []);
+      setNotifications((data || []) as unknown as Notification[]);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {

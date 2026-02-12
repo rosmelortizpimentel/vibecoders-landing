@@ -35,6 +35,10 @@ import {
 import { SortableAppCard } from './SortableAppCard';
 import { VerifyDomainModal } from './VerifyDomainModal';
 
+interface AppsTabProps {
+  appsHook: ReturnType<typeof useApps>;
+}
+
 export function AppsTab({ appsHook }: AppsTabProps) {
   const { apps, loading, createApp, updateApp, deleteApp, uploadAppLogo, reorderApps, verifyApp, refetch } = appsHook;
   const t = useTranslation('apps');

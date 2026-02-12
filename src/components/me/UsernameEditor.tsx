@@ -116,7 +116,6 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
           onFocus={() => { isFocusedRef.current = true; }}
           onBlur={() => { isFocusedRef.current = false; }}
           placeholder={t.username.placeholder}
-          placeholder={t.username.placeholder}
           className="text-sm pl-7 pr-10 border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0 w-full max-w-full"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
