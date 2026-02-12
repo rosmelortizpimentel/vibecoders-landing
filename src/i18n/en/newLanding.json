@@ -64,6 +64,40 @@
   },
   "pricing": {
     "urgency": "Only {{count}} Founder spots left",
+    "closed": {
+      "badge": "ACCESS CLOSED",
+      "title": "The first 100 vibecoders are already inside",
+      "joinedText": "+{{count}} active builders",
+      "subtitle": "Exclusive founder access has been completed.",
+      "comingSoon": "But something big is coming on March 1st.",
+      "launchLabel": "Official launch",
+      "days": "Days",
+      "hours": "Hours",
+      "minutes": "Min",
+      "seconds": "Sec",
+      "suiteTitle": "Coming soon: Vibecoders Communication Suite",
+      "suiteSubtitle": "Embeddable widgets that replace +$500/mo in SaaS tools",
+      "waitlistTitle": "Want to learn more and join the waitlist?",
+      "ctaLinkedIn": "Continue with LinkedIn",
+      "ctaGoogle": "Continue with Google",
+      "priceTitle": "Exclusive launch price",
+      "priceSubtitle": "(waitlist only)",
+      "priceAmount": "$24/year",
+      "priceNote": "This launch is different: it will only be accessible for a limited time.",
+      "trustText": "No credit card. We'll notify you when we launch.",
+      "widgets": {
+        "feedback": "Feedback",
+        "roadmap": "Roadmap",
+        "status": "Status Page",
+        "announcements": "Announcements",
+        "changelog": "Changelog",
+        "voting": "Feature Voting",
+        "help": "Help Center",
+        "social": "Social Proof",
+        "community": "Community",
+        "onboarding": "Onboarding"
+      }
+    },
     "freemium": {
       "socialProof": "Join +{{count}} active builders",
       "title": "Build in public. Validate with experts.",
@@ -79,26 +113,10 @@
       "cta": "Join Waitlist",
       "desc": "For those validating their first idea",
       "features": [
-        {
-          "title": "Public Builder Profile",
-          "desc": "Show who you are and what you build.",
-          "included": true
-        },
-        {
-          "title": "Publish 1 app for free",
-          "desc": "Earn points helping others and unlock more apps.",
-          "included": true
-        },
-        {
-          "title": "Explore public Vault",
-          "desc": "Access prompts and rules shared by other builders.",
-          "included": true
-        },
-        {
-          "title": "Access Testing Squads",
-          "desc": "Test others' apps and request testers for yours.",
-          "included": true
-        }
+        { "title": "Public Builder Profile", "desc": "Show who you are and what you build.", "included": true },
+        { "title": "Publish 1 app for free", "desc": "Earn points helping others and unlock more apps.", "included": true },
+        { "title": "Explore public Vault", "desc": "Access prompts and rules shared by other builders.", "included": true },
+        { "title": "Access Testing Squads", "desc": "Test others' apps and request testers for yours.", "included": true }
       ]
     },
     "founder": {
@@ -115,36 +133,12 @@
       "bonusFeature": "All future features included, free forever",
       "bonusDesc": "New tools, integrations, and functionalities we launch.",
       "features": [
-        {
-          "title": "Unlimited App Publishing",
-          "desc": "Showcase your entire portfolio without restrictions.",
-          "included": true
-        },
-        {
-          "title": "Services Button and 'Book Call'",
-          "desc": "Let clients book calls directly with you.",
-          "included": true
-        },
-        {
-          "title": "Post in Testing Squads without requirements",
-          "desc": "Request testers for your apps without needing to test first.",
-          "included": true
-        },
-        {
-          "title": " 'Verified Builder' badge",
-          "desc": "Build verifiable reputation with the community and clients.",
-          "included": true
-        },
-        {
-          "title": "Complete Vault (Public + Private)",
-          "desc": "Copy expert configs and save your own prompts and rules.",
-          "included": true
-        },
-        {
-          "title": "Roadmap Management for your apps",
-          "desc": "Organize features, bugs, and improvements publicly.",
-          "included": true
-        }
+        { "title": "Unlimited App Publishing", "desc": "Showcase your entire portfolio without restrictions.", "included": true },
+        { "title": "Services Button and 'Book Call'", "desc": "Let clients book calls directly with you.", "included": true },
+        { "title": "Post in Testing Squads without requirements", "desc": "Request testers for your apps without needing to test first.", "included": true },
+        { "title": " 'Verified Builder' badge", "desc": "Build verifiable reputation with the community and clients.", "included": true },
+        { "title": "Complete Vault (Public + Private)", "desc": "Copy expert configs and save your own prompts and rules.", "included": true },
+        { "title": "Roadmap Management for your apps", "desc": "Organize features, bugs, and improvements publicly.", "included": true }
       ]
     }
   },
