@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     
     const baseOccupancy = (profileCount || 0) + 20;
     const totalApps = appCount || 0;
-    const spotsLeft = Math.max(0, 100 - realFounders);
+    const spotsLeft = Math.max(0, 100 - baseOccupancy);
 
     return new Response(
       JSON.stringify({
