@@ -18,8 +18,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
          .from('app_likes')
          .select('id')
          .eq('app_id', appId)
-         .eq('user_id', user.id)
-         .single();
+          .eq('user_id', user.id)
+          .maybeSingle();
  
        setIsLiked(!!data);
      } catch {
