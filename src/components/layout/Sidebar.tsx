@@ -106,7 +106,7 @@ export function Sidebar() {
   return (
     <div 
       className={cn(
-        "hidden md:flex h-screen flex-col fixed left-0 top-0 border-r border-border bg-background z-40 transition-all duration-300",
+        "hidden md:flex h-screen flex-col fixed left-0 top-0 border-r border-border bg-background z-40 transition-all duration-300 overflow-visible",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
@@ -200,7 +200,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer / User Menu */}
-      <div className="mt-auto border-t border-border/50 px-4 pt-4 pb-4 overflow-visible">
+      <div className="mt-auto border-t border-border/50 px-4 pt-4 pb-6 shrink-0">
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button 
