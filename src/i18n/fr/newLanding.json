@@ -64,6 +64,40 @@
   },
   "pricing": {
     "urgency": "Plus que {{count}} places Fondateur",
+    "closed": {
+      "badge": "ACCÈS FERMÉ",
+      "title": "Les 100 premiers vibecoders sont déjà à l'intérieur",
+      "joinedText": "+{{count}} builders actifs",
+      "subtitle": "L'accès exclusif aux fondateurs est complet.",
+      "comingSoon": "Mais quelque chose de grand arrive le 1er mars.",
+      "launchLabel": "Lancement officiel",
+      "days": "Jours",
+      "hours": "Heures",
+      "minutes": "Min",
+      "seconds": "Sec",
+      "suiteTitle": "À venir : Vibecoders Communication Suite",
+      "suiteSubtitle": "Widgets intégrables qui remplacent +500$/mois en outils SaaS",
+      "waitlistTitle": "Vous voulez en savoir plus et rejoindre la liste d'attente ?",
+      "ctaLinkedIn": "Continuer avec LinkedIn",
+      "ctaGoogle": "Continuer avec Google",
+      "priceTitle": "Prix exclusif de lancement",
+      "priceSubtitle": "(liste d'attente uniquement)",
+      "priceAmount": "24$/an",
+      "priceNote": "Ce lancement est différent : il ne sera accessible que pour un temps limité.",
+      "trustText": "Sans carte. Nous vous préviendrons au lancement.",
+      "widgets": {
+        "feedback": "Feedback",
+        "roadmap": "Roadmap",
+        "status": "Status Page",
+        "announcements": "Announcements",
+        "changelog": "Changelog",
+        "voting": "Feature Voting",
+        "help": "Help Center",
+        "social": "Social Proof",
+        "community": "Community",
+        "onboarding": "Onboarding"
+      }
+    },
     "freemium": {
       "socialProof": "Rejoignez +{{count}} builders actifs",
       "title": "Construisez en public. Validez avec des experts.",
@@ -79,26 +113,10 @@
       "desc": "Pour ceux qui valident leur première idée",
       "cta": "Rejoindre la liste d'attente",
       "features": [
-        {
-          "title": "Profil public de Builder",
-          "desc": "Montrez qui vous êtes et ce que vous construisez.",
-          "included": true
-        },
-        {
-          "title": "Publiez 1 app gratuitement",
-          "desc": "Gagnez des points en aidant les autres pour débloquer plus d'apps.",
-          "included": true
-        },
-        {
-          "title": "Explorez le Vault public",
-          "desc": "Accédez aux prompts et règles partagés par d'autres builders.",
-          "included": true
-        },
-        {
-          "title": "Accédez aux Squads de Testing",
-          "desc": "Testez les apps des autres et demandez des testeurs pour les vôtres.",
-          "included": true
-        }
+        { "title": "Profil public de Builder", "desc": "Montrez qui vous êtes et ce que vous construisez.", "included": true },
+        { "title": "Publiez 1 app gratuitement", "desc": "Gagnez des points en aidant les autres pour débloquer plus d'apps.", "included": true },
+        { "title": "Explorez le Vault public", "desc": "Accédez aux prompts et règles partagés par d'autres builders.", "included": true },
+        { "title": "Accédez aux Squads de Testing", "desc": "Testez les apps des autres et demandez des testeurs pour les vôtres.", "included": true }
       ]
     },
     "founder": {
@@ -115,36 +133,12 @@
       "bonusFeature": "Toutes les futures fonctionnalités incluses, gratuit pour toujours",
       "bonusDesc": "Nouveaux outils, intégrations et fonctionnalités que nous lançons.",
       "features": [
-        {
-          "title": "Applications illimitées",
-          "desc": "Affichez tout votre portfolio sans restrictions.",
-          "included": true
-        },
-        {
-          "title": "Bouton Services et 'Book Call'",
-          "desc": "Permettez aux clients de réserver des appels avec vous.",
-          "included": true
-        },
-        {
-          "title": "Publiez dans les Squads de Testing sans prérequis",
-          "desc": "Demandez des testeurs sans avoir besoin de tester d'abord.",
-          "included": true
-        },
-        {
-          "title": "Badge 'Verified Builder'",
-          "desc": "Renforcez votre réputation auprès de la communauté.",
-          "included": true
-        },
-        {
-          "title": "Vault complet (public + privé)",
-          "desc": "Copiez les configs d'experts et sauvegardez vos propres prompts.",
-          "included": true
-        },
-        {
-          "title": "Gestion de Roadmap pour vos apps",
-          "desc": "Organisez fonctionnalités, bugs et améliorations publiquement.",
-          "included": true
-        }
+        { "title": "Applications illimitées", "desc": "Affichez tout votre portfolio sans restrictions.", "included": true },
+        { "title": "Bouton Services et 'Book Call'", "desc": "Permettez aux clients de réserver des appels avec vous.", "included": true },
+        { "title": "Publiez dans les Squads de Testing sans prérequis", "desc": "Demandez des testeurs sans avoir besoin de tester d'abord.", "included": true },
+        { "title": "Badge 'Verified Builder'", "desc": "Renforcez votre réputation auprès de la communauté.", "included": true },
+        { "title": "Vault complet (public + privé)", "desc": "Copiez les configs d'experts et sauvegardez vos propres prompts.", "included": true },
+        { "title": "Gestion de Roadmap pour vos apps", "desc": "Organisez fonctionnalités, bugs et améliorations publiquement.", "included": true }
       ]
     }
   },

@@ -64,6 +64,40 @@
   },
   "pricing": {
     "urgency": "Solo quedan {{count}} cupos de Fundador",
+    "closed": {
+      "badge": "ACCESO CERRADO",
+      "title": "Los primeros 100 vibecoders ya están dentro",
+      "joinedText": "+{{count}} builders activos",
+      "subtitle": "El acceso exclusivo para founders se ha completado.",
+      "comingSoon": "Pero algo grande viene el 1 de marzo.",
+      "launchLabel": "Lanzamiento oficial",
+      "days": "Días",
+      "hours": "Horas",
+      "minutes": "Min",
+      "seconds": "Seg",
+      "suiteTitle": "Lo que viene: Vibecoders Communication Suite",
+      "suiteSubtitle": "Widgets embebibles que reemplazan +$500/mes en herramientas SaaS",
+      "waitlistTitle": "¿Quieres saber un poco más y estar en la lista de espera?",
+      "ctaLinkedIn": "Continuar con LinkedIn",
+      "ctaGoogle": "Continuar con Google",
+      "priceTitle": "Precio exclusivo de lanzamiento",
+      "priceSubtitle": "(solo para lista de espera)",
+      "priceAmount": "$24/año",
+      "priceNote": "Este lanzamiento es diferente: solo será accesible por tiempo limitado.",
+      "trustText": "Sin tarjeta. Te avisamos cuando lanzamos.",
+      "widgets": {
+        "feedback": "Feedback",
+        "roadmap": "Roadmap",
+        "status": "Status Page",
+        "announcements": "Announcements",
+        "changelog": "Changelog",
+        "voting": "Feature Voting",
+        "help": "Help Center",
+        "social": "Social Proof",
+        "community": "Community",
+        "onboarding": "Onboarding"
+      }
+    },
     "freemium": {
       "socialProof": "Únete a +{{count}} builders activos",
       "title": "Construye en público. Valida con expertos.",
@@ -79,26 +113,10 @@
       "desc": "Para quien está validando su primera idea",
       "cta": "Unirse a la lista de espera",
       "features": [
-        {
-          "title": "Perfil público de Builder",
-          "desc": "Muestra quién eres y qué construyes.",
-          "included": true
-        },
-        {
-          "title": "Publica 1 app gratis",
-          "desc": "Gana puntos ayudando a otros y desbloquea más apps.",
-          "included": true
-        },
-        {
-          "title": "Explora la Bóveda pública",
-          "desc": "Accede a prompts y reglas compartidas por otros builders.",
-          "included": true
-        },
-        {
-          "title": "Accede a Squads de Testing",
-          "desc": "Testea apps de otros y solicita testers para las tuyas.",
-          "included": true
-        }
+        { "title": "Perfil público de Builder", "desc": "Muestra quién eres y qué construyes.", "included": true },
+        { "title": "Publica 1 app gratis", "desc": "Gana puntos ayudando a otros y desbloquea más apps.", "included": true },
+        { "title": "Explora la Bóveda pública", "desc": "Accede a prompts y reglas compartidas por otros builders.", "included": true },
+        { "title": "Accede a Squads de Testing", "desc": "Testea apps de otros y solicita testers para las tuyas.", "included": true }
       ]
     },
     "founder": {
@@ -115,36 +133,12 @@
       "bonusFeature": "Todos los features futuros incluidos, gratis para siempre",
       "bonusDesc": "Nuevas herramientas, integraciones y funcionalidades que lancemos.",
       "features": [
-        {
-          "title": "Publicación de Apps Ilimitadas",
-          "desc": "Muestra todo tu portafolio sin restricciones.",
-          "included": true
-        },
-        {
-          "title": "Botón de Servicios y 'Book Call'",
-          "desc": "Permite que clientes agenden llamadas directamente contigo.",
-          "included": true
-        },
-        {
-          "title": "Publica en Squads de Testing sin requisitos",
-          "desc": "Solicita testers para tus apps sin necesidad de testear primero.",
-          "included": true
-        },
-        {
-          "title": "Insignia de 'Verified Builder'",
-          "desc": "Construye reputación verificable ante la comunidad y clientes.",
-          "included": true
-        },
-        {
-          "title": "Bóveda completa (pública + privada)",
-          "desc": "Copia configuraciones de expertos y guarda tus propios prompts y reglas.",
-          "included": true
-        },
-        {
-          "title": "Gestión de Roadmap para tus apps",
-          "desc": "Organiza features, bugs y mejoras de tus productos públicamente.",
-          "included": true
-        }
+        { "title": "Publicación de Apps Ilimitadas", "desc": "Muestra todo tu portafolio sin restricciones.", "included": true },
+        { "title": "Botón de Servicios y 'Book Call'", "desc": "Permite que clientes agenden llamadas directamente contigo.", "included": true },
+        { "title": "Publica en Squads de Testing sin requisitos", "desc": "Solicita testers para tus apps sin necesidad de testear primero.", "included": true },
+        { "title": "Insignia de 'Verified Builder'", "desc": "Construye reputación verificable ante la comunidad y clientes.", "included": true },
+        { "title": "Bóveda completa (pública + privada)", "desc": "Copia configuraciones de expertos y guarda tus propios prompts y reglas.", "included": true },
+        { "title": "Gestión de Roadmap para tus apps", "desc": "Organiza features, bugs y mejoras de tus productos públicamente.", "included": true }
       ]
     }
   },
