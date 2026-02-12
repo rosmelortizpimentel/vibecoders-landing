@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Call assign_founder_tier function
+    // User is new (no existing subscription or pending) — call assign_founder_tier
     const { data: result, error: rpcError } = await supabaseAdmin.rpc(
       "assign_founder_tier",
       { p_user_id: userId }
@@ -72,6 +72,19 @@ Deno.serve(async (req) => {
     const row = Array.isArray(result) ? result[0] : result;
     const tier = row?.tier || "free";
     const founderNumber = row?.founder_number || null;
+
+    // If tier is 'free' and user had no prior subscription, access is closed
+    if (tier === "free" && !existing) {
+      return new Response(
+        JSON.stringify({
+          accessClosed: true,
+          tier,
+          founderNumber: null,
+          needsPlanSelection: false,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(
       JSON.stringify({
