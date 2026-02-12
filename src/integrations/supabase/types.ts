@@ -1344,6 +1344,48 @@ export type Database = {
           },
         ]
       }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          founder_number: number | null
+          id: string
+          price: number | null
+          stripe_customer_id: string | null
+          subscription_id: string | null
+          subscription_status: string | null
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          founder_number?: number | null
+          id?: string
+          price?: number | null
+          stripe_customer_id?: string | null
+          subscription_id?: string | null
+          subscription_status?: string | null
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          founder_number?: number | null
+          id?: string
+          price?: number | null
+          stripe_customer_id?: string | null
+          subscription_id?: string | null
+          subscription_status?: string | null
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           browser_name: string | null
@@ -1418,6 +1460,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_founder_tier: {
+        Args: { p_user_id: string }
+        Returns: {
+          founder_number: number
+          tier: string
+        }[]
+      }
       get_showcase_apps: {
         Args: never
         Returns: {
