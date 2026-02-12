@@ -1,83 +1,93 @@
 
 
-## Reemplazar seccion de Precios por Banner Freemium (cuando se alcancen 100 founders)
+# Plan: Popup "Vibe Coder Pro" Upsell + Prueba con usuario free
 
-### Resumen
-Cuando `spotsLeft` sea 0 (los 100 cupos de founder se llenaron), la seccion de precios actual se reemplaza por un banner limpio de invitacion freemium. El codigo actual de precios se mantiene intacto para poder reactivarlo con un simple switch.
+## Resumen
+Crear un componente popup reutilizable con estilo premium (negro/gris/dorado) que se muestre cuando un usuario free intenta usar una funcionalidad Pro. Incluye traducciones en 4 idiomas, y como caso de prueba, se activa al intentar agregar una segunda app.
 
-### Cambios
+---
 
-**1. Archivo: `src/pages/NewLanding.tsx` - Componente `PricingSection`**
+## Cambios a realizar
 
-Se agrega logica condicional dentro del componente:
+### 1. Cambiar tier de luciana.om28@gmail.com a "free"
+- Ejecutar SQL: `UPDATE user_subscriptions SET tier = 'free', founder_number = NULL WHERE user_id = 'c8fd62b0-821e-4472-9c7c-5f6de17a398f'`
 
-- Si `spotsLeft > 0`: se muestra la seccion de precios actual (sin cambios).
-- Si `spotsLeft === 0`: se muestra el nuevo **Banner Freemium**.
+### 2. Crear archivo de traducciones `pro.json` (4 idiomas)
+- **Archivos**: `src/i18n/es/pro.json`, `src/i18n/en/pro.json`, `src/i18n/fr/pro.json`, `src/i18n/pt/pro.json`
+- Contenido: titulo "Vibe Coder Pro", subtitulo invitando a desbloquear, lista de 6 beneficios (titulo + descripcion cada uno), precio "$24/year", texto del boton "Quiero ser Pro", y texto de cierre/cerrar.
 
-El banner freemium incluye:
-- Avatar stack con prueba social ("Unete a +100 builders activos")
-- Titulo: "Construye en publico. Valida con expertos."
-- Subtitulo: "El acceso a la comunidad y las herramientas de testing es 100% gratuito. Empieza hoy mismo."
-- Contenedor flotante con los mismos botones de LinkedIn y Google (reutilizando `handleLinkedInSignIn` y `handleGoogleSignIn`)
-- Texto de los botones cambia de "Reclamar con..." a "Empezar gratis con..."
-- Microcopy: "Acceso instantaneo. No se requiere tarjeta de credito."
+**Beneficios:**
+1. Publica Apps Ilimitadas
+2. Activa Boton de Servicios y 'Book Call'
+3. Publica en Squads de Testing sin requisitos
+4. Gestiona el Roadmap de tus Apps
+5. Boveda Privada de Recursos
+6. Insignia de 'Verified Builder'
 
-**2. Archivos i18n (es, en, fr, pt) - `newLanding.json`**
+### 3. Registrar `pro` en `useTranslation.ts`
+- Importar `pro.json` en los 4 idiomas y agregarlo al objeto `translations`.
 
-Se agregan nuevas claves bajo `pricing.freemium`:
+### 4. Crear componente `src/components/pro/ProUpgradeModal.tsx`
+- **Props**: `open: boolean`, `onOpenChange: (open: boolean) => void`
+- Usa `Dialog` de Radix (responsive, en mobile usa `Drawer` de vaul o simplemente DialogContent con scroll)
+- **Estilo visual** (referencia imagen): fondo oscuro (#0a0a0a / #1a1a1a), textos blancos/grises, acentos dorados (#c9a44c) para checks y badge "PRO"
+- **Estructura**:
+  - Badge superior "PRO" con borde dorado
+  - Titulo: "Vibe Coder Pro"
+  - Subtitulo: invitacion a desbloquear
+  - Lista de 6 beneficios con icono Check en dorado, titulo en bold, descripcion en gris
+  - Precio: "$24/ano"
+  - Boton CTA "Quiero ser Pro" que invoca `createCheckout` de `useSubscription` y redirige a Stripe
+  - Sin emojis
+
+### 5. Modificar `AppsTab.tsx` para mostrar el popup
+- Importar `useSubscription` para obtener `tier` y `createCheckout`
+- En `handleCreate` (o al hacer click en el boton de agregar), antes de abrir el input de URL, verificar:
+  - Si `tier === 'free'` y `apps.length >= 1` --> mostrar `ProUpgradeModal` en lugar de abrir el formulario
+- Agregar state `showProModal` para controlar la visibilidad
+
+---
+
+## Detalles tecnicos
+
+### Estructura del componente ProUpgradeModal
 
 ```text
-pricing.freemium.socialProof     -> "Unete a +{{count}} builders activos"
-pricing.freemium.title           -> "Construye en publico. Valida con expertos."
-pricing.freemium.subtitle        -> "El acceso a la comunidad y las herramientas de testing es 100% gratuito. Empieza hoy mismo."
-pricing.freemium.ctaLinkedIn     -> "Empezar gratis con LinkedIn"
-pricing.freemium.ctaGoogle       -> "Empezar gratis con Google"
-pricing.freemium.trustText       -> "Acceso instantaneo. No se requiere tarjeta de credito."
++----------------------------------+
+|  [PRO badge dorado]              |
+|                                  |
+|  Vibe Coder Pro                  |
+|  Desbloquea todo el potencial... |
+|                                  |
+|  [check] Apps Ilimitadas         |
+|          Descripcion...          |
+|  [check] Book Call               |
+|          Descripcion...          |
+|  [check] Testing sin requisitos  |
+|          Descripcion...          |
+|  [check] Roadmap                 |
+|          Descripcion...          |
+|  [check] Boveda Privada          |
+|          Descripcion...          |
+|  [check] Verified Builder        |
+|          Descripcion...          |
+|                                  |
+|  $24 / ano                       |
+|                                  |
+|  [ Quiero ser Pro -> ]           |
++----------------------------------+
 ```
 
-**3. Avatar Stack**
+### Archivos nuevos
+- `src/components/pro/ProUpgradeModal.tsx`
+- `src/i18n/es/pro.json`
+- `src/i18n/en/pro.json`
+- `src/i18n/fr/pro.json`
+- `src/i18n/pt/pro.json`
 
-Se usaran avatares placeholder (iniciales genericas) o se puede hacer un query ligero a perfiles reales. Para simplificar, se usaran 5 avatares con iniciales aleatorias y el componente Avatar existente de Radix, con bordes blancos y superposicion (-ml-2).
+### Archivos modificados
+- `src/hooks/useTranslation.ts` (registrar seccion `pro`)
+- `src/components/me/AppsTab.tsx` (logica de gate + mostrar modal)
 
-### Estructura del Banner Freemium
-
-```text
-+----------------------------------------------------------+
-|                                                          |
-|         [Avatar Stack: 5 circulos superpuestos]          |
-|         "Unete a +100 builders activos"                  |
-|                                                          |
-|    Construye en publico. Valida con expertos.            |
-|                                                          |
-|    El acceso a la comunidad y las herramientas           |
-|    de testing es 100% gratuito. Empieza hoy.             |
-|                                                          |
-|    +----------------------------------------------+      |
-|    |  shadow-2xl rounded-2xl container             |      |
-|    |                                               |      |
-|    |  [in] Empezar gratis con LinkedIn             |      |
-|    |                                               |      |
-|    |  [G]  Empezar gratis con Google               |      |
-|    |                                               |      |
-|    +----------------------------------------------+      |
-|                                                          |
-|    Acceso instantaneo. No se requiere tarjeta.           |
-|                                                          |
-+----------------------------------------------------------+
-```
-
-### Detalle tecnico
-
-| Archivo | Cambio |
-|---|---|
-| `src/pages/NewLanding.tsx` | Condicional `spotsLeft > 0` para mostrar precios vs banner freemium |
-| `src/i18n/es/newLanding.json` | Nuevas claves `pricing.freemium.*` |
-| `src/i18n/en/newLanding.json` | Nuevas claves `pricing.freemium.*` |
-| `src/i18n/fr/newLanding.json` | Nuevas claves `pricing.freemium.*` |
-| `src/i18n/pt/newLanding.json` | Nuevas claves `pricing.freemium.*` |
-
-### Nota
-- El codigo de precios original NO se elimina, solo se envuelve en la condicion `spotsLeft > 0`
-- Para volver a mostrar precios en el futuro, solo hay que cambiar la condicion
-- Se reutilizan los mismos handlers de autenticacion (Google/LinkedIn) y el mismo estilo de botones
-- El numero de builders para el avatar stack se toma de `totalBuilders` que ya viene del edge function `get-landing-stats`
+### SQL
+- `UPDATE user_subscriptions SET tier = 'free', founder_number = NULL WHERE user_id = 'c8fd62b0-...'`
