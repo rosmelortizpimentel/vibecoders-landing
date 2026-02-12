@@ -39,10 +39,19 @@ export function useAuth() {
             
             supabase.functions.invoke('check-founder-status', { body }).then(async ({ data }) => {
               if (signupSource === 'paid_card') {
-                // Always redirect to Stripe for paid_card, regardless of accessClosed
+                // Only redirect to Stripe if user doesn't already have a paid subscription
+                const userTier = data?.tier;
+                if (userTier === 'pro' || userTier === 'founder') {
+                  // Already paid -- go to dashboard
+                  localStorage.removeItem('pendingStripeRedirect');
+                  window.location.href = '/me/profile';
+                  return;
+                }
+                
                 try {
                   const { data: checkoutData } = await supabase.functions.invoke('create-checkout-session');
                   if (checkoutData?.url) {
+                    localStorage.removeItem('pendingStripeRedirect');
                     window.location.href = checkoutData.url;
                     return;
                   }
