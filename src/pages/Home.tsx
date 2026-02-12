@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { Activity, Heart, Users, ShieldCheck, Rocket, Loader2, User, AppWindow, Trophy } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -12,7 +11,6 @@ import { AppHealthPanel } from '@/components/home/AppHealthPanel';
 import { FreshDropsCarousel } from '@/components/home/FreshDropsCarousel';
 import { ShowcaseCardSkeleton } from '@/components/showcase/ShowcaseCardSkeleton';
 import { DashboardSkeleton } from '@/components/home/DashboardSkeleton';
-import { FounderWelcome } from '@/components/home/FounderWelcome';
 import { UpgradeBanner } from '@/components/home/UpgradeBanner';
 import { useSubscription } from '@/hooks/useSubscription';
 
@@ -27,8 +25,7 @@ export default function Home() {
   const t = useTranslation('home');
   const { stats, isLoading, acceptTester, rejectTester } = useDashboardStats();
   const { data: freshDrops = [], isLoading: freshDropsLoading } = useFreshDrops();
-  const { isFounder, isFree, founderNumber, founderWelcomeSeen } = useSubscription();
-  const queryClient = useQueryClient();
+  const { isFounder, isFree, founderNumber } = useSubscription();
 
   // Modal States
   const [isTrafficOpen, setIsTrafficOpen] = useState(false);
@@ -49,15 +46,6 @@ export default function Home() {
 
   return (
     <div className="flex-1 space-y-6 w-full max-w-full overflow-x-hidden sm:p-0 min-w-0 px-0.5 pb-24">
-      {/* Founder Welcome Popup */}
-      {isFounder && founderNumber && (
-        <FounderWelcome
-          founderNumber={founderNumber}
-          open={!founderWelcomeSeen}
-          onDismiss={() => queryClient.invalidateQueries({ queryKey: ['subscription'] })}
-        />
-      )}
-
       {/* Upgrade Banner for Free Users */}
       {isFree && <UpgradeBanner />}
 
