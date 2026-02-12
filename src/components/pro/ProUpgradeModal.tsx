@@ -40,12 +40,12 @@ export function ProUpgradeModal({ open, onOpenChange }: ProUpgradeModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 border-0 bg-transparent shadow-none [&>button]:text-white/60 [&>button]:hover:text-white">
+      <DialogContent className="max-w-md p-0 border-0 bg-transparent shadow-none [&>button]:text-white/60 [&>button]:hover:text-white max-h-[90dvh] overflow-y-auto">
         <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#141414] to-[#0a0a0a] border border-[#c9a44c]/20 shadow-2xl shadow-[#c9a44c]/5">
           {/* Gold accent line */}
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#c9a44c] to-transparent" />
 
-          <div className="p-6 sm:p-8 space-y-6">
+          <div className="p-5 sm:p-8 space-y-5 sm:space-y-6">
             {/* Badge */}
             <div className="flex justify-center">
               <span className="px-3 py-1 text-xs font-bold tracking-widest uppercase border border-[#c9a44c]/40 rounded-full text-[#c9a44c] bg-[#c9a44c]/10">
