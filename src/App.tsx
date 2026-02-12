@@ -27,11 +27,22 @@ import PromptStudio from "./pages/prompts/PromptStudio";
 import PromptViewer from "./pages/prompts/PromptViewer";
 import Beta from "./pages/Beta";
 import Vibers from "./pages/Vibers";
+import Closed from "./pages/Closed";
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import { NotificationsPage } from "./pages/Notifications";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { DashboardLayout } from "./layouts/DashboardLayout";
+import { useAuth } from "./hooks/useAuth";
+import { Loader2 } from "lucide-react";
+
+/** Auth guard for /closed — no sidebar, fullscreen */
+function ClosedGuard() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#000519]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (!user) return <Navigate to="/" replace />;
+  return <Closed />;
+}
 
 const queryClient = new QueryClient();
 
@@ -54,6 +65,8 @@ const App = () => (
           <Route path="/terms" element={<Terms />} />
           <Route path="/post/:slug" element={<Post />} />
           
+          
+          
           {/* Plan selection & payment */}
           <Route path="/choose-plan" element={<ChoosePlan />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
@@ -62,6 +75,9 @@ const App = () => (
           <Route path="/admin/*" element={<Admin />} />
           
 
+
+          {/* Closed access - fullscreen, auth-protected but no dashboard layout */}
+          <Route path="/closed" element={<ClosedGuard />} />
 
           {/* Authenticated routes with shared layout (persistent header/footer) */}
           <Route element={<DashboardLayout />}>

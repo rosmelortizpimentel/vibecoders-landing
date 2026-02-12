@@ -1,93 +1,35 @@
 
+# Agregar mensaje de precio exclusivo $24/año en la waitlist
 
-# Plan: Popup "Vibe Coder Pro" Upsell + Prueba con usuario free
+## Cambios
 
-## Resumen
-Crear un componente popup reutilizable con estilo premium (negro/gris/dorado) que se muestre cuando un usuario free intenta usar una funcionalidad Pro. Incluye traducciones en 4 idiomas, y como caso de prueba, se activa al intentar agregar una segunda app.
+### 1. Actualizar la seccion Waitlist CTA en `src/pages/Closed.tsx`
 
----
+Agregar debajo del subtitulo actual un bloque destacado con el precio exclusivo de $24/año y un mensaje de que este precio se congelara para quienes se unan a la waitlist, mientras que despues sera mayor.
 
-## Cambios a realizar
+Visualmente sera un badge/highlight con el precio "$24/year" en color `secondary` (amarillo) para que destaque sobre el fondo oscuro, con texto explicativo debajo.
 
-### 1. Cambiar tier de luciana.om28@gmail.com a "free"
-- Ejecutar SQL: `UPDATE user_subscriptions SET tier = 'free', founder_number = NULL WHERE user_id = 'c8fd62b0-821e-4472-9c7c-5f6de17a398f'`
+### 2. Actualizar traducciones en los 4 idiomas
 
-### 2. Crear archivo de traducciones `pro.json` (4 idiomas)
-- **Archivos**: `src/i18n/es/pro.json`, `src/i18n/en/pro.json`, `src/i18n/fr/pro.json`, `src/i18n/pt/pro.json`
-- Contenido: titulo "Vibe Coder Pro", subtitulo invitando a desbloquear, lista de 6 beneficios (titulo + descripcion cada uno), precio "$24/year", texto del boton "Quiero ser Pro", y texto de cierre/cerrar.
+Agregar nuevas claves en `waitlist`:
+- `waitlist.priceHighlight` — El precio exclusivo (ej: "$24/año")
+- `waitlist.priceNote` — Mensaje de que el precio sera mayor pero se congela para ellos
 
-**Beneficios:**
-1. Publica Apps Ilimitadas
-2. Activa Boton de Servicios y 'Book Call'
-3. Publica en Squads de Testing sin requisitos
-4. Gestiona el Roadmap de tus Apps
-5. Boveda Privada de Recursos
-6. Insignia de 'Verified Builder'
+**Textos por idioma:**
 
-### 3. Registrar `pro` en `useTranslation.ts`
-- Importar `pro.json` en los 4 idiomas y agregarlo al objeto `translations`.
+| Idioma | priceHighlight | priceNote |
+|--------|---------------|-----------|
+| ES | Precio exclusivo: $24/año | Este precio aumentara despues del lanzamiento. Al unirte a la lista, lo congelamos para ti. |
+| EN | Exclusive price: $24/year | This price will increase after launch. By joining the waitlist, we freeze it for you. |
+| FR | Prix exclusif : 24$/an | Ce prix augmentera apres le lancement. En rejoignant la liste, nous le gelons pour vous. |
+| PT | Preco exclusivo: $24/ano | Este preco aumentara apos o lancamento. Ao entrar na lista, congelamos para voce. |
 
-### 4. Crear componente `src/components/pro/ProUpgradeModal.tsx`
-- **Props**: `open: boolean`, `onOpenChange: (open: boolean) => void`
-- Usa `Dialog` de Radix (responsive, en mobile usa `Drawer` de vaul o simplemente DialogContent con scroll)
-- **Estilo visual** (referencia imagen): fondo oscuro (#0a0a0a / #1a1a1a), textos blancos/grises, acentos dorados (#c9a44c) para checks y badge "PRO"
-- **Estructura**:
-  - Badge superior "PRO" con borde dorado
-  - Titulo: "Vibe Coder Pro"
-  - Subtitulo: invitacion a desbloquear
-  - Lista de 6 beneficios con icono Check en dorado, titulo en bold, descripcion en gris
-  - Precio: "$24/ano"
-  - Boton CTA "Quiero ser Pro" que invoca `createCheckout` de `useSubscription` y redirige a Stripe
-  - Sin emojis
+### Archivos afectados
 
-### 5. Modificar `AppsTab.tsx` para mostrar el popup
-- Importar `useSubscription` para obtener `tier` y `createCheckout`
-- En `handleCreate` (o al hacer click en el boton de agregar), antes de abrir el input de URL, verificar:
-  - Si `tier === 'free'` y `apps.length >= 1` --> mostrar `ProUpgradeModal` en lugar de abrir el formulario
-- Agregar state `showProModal` para controlar la visibilidad
-
----
-
-## Detalles tecnicos
-
-### Estructura del componente ProUpgradeModal
-
-```text
-+----------------------------------+
-|  [PRO badge dorado]              |
-|                                  |
-|  Vibe Coder Pro                  |
-|  Desbloquea todo el potencial... |
-|                                  |
-|  [check] Apps Ilimitadas         |
-|          Descripcion...          |
-|  [check] Book Call               |
-|          Descripcion...          |
-|  [check] Testing sin requisitos  |
-|          Descripcion...          |
-|  [check] Roadmap                 |
-|          Descripcion...          |
-|  [check] Boveda Privada          |
-|          Descripcion...          |
-|  [check] Verified Builder        |
-|          Descripcion...          |
-|                                  |
-|  $24 / ano                       |
-|                                  |
-|  [ Quiero ser Pro -> ]           |
-+----------------------------------+
-```
-
-### Archivos nuevos
-- `src/components/pro/ProUpgradeModal.tsx`
-- `src/i18n/es/pro.json`
-- `src/i18n/en/pro.json`
-- `src/i18n/fr/pro.json`
-- `src/i18n/pt/pro.json`
-
-### Archivos modificados
-- `src/hooks/useTranslation.ts` (registrar seccion `pro`)
-- `src/components/me/AppsTab.tsx` (logica de gate + mostrar modal)
-
-### SQL
-- `UPDATE user_subscriptions SET tier = 'free', founder_number = NULL WHERE user_id = 'c8fd62b0-...'`
+| Archivo | Accion |
+|---------|--------|
+| `src/pages/Closed.tsx` | Agregar bloque de precio entre subtitle y boton |
+| `src/i18n/es/closed.json` | Agregar claves `waitlist.priceHighlight` y `waitlist.priceNote` |
+| `src/i18n/en/closed.json` | Idem |
+| `src/i18n/fr/closed.json` | Idem |
+| `src/i18n/pt/closed.json` | Idem |
