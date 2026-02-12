@@ -106,7 +106,7 @@ export function Sidebar() {
   return (
     <div 
       className={cn(
-        "hidden md:flex h-screen flex-col fixed left-0 top-0 border-r border-border bg-background z-40 transition-all duration-300 overflow-visible",
+        "hidden md:flex h-screen flex-col fixed left-0 top-0 border-r border-border bg-background z-40 transition-all duration-300",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
@@ -141,7 +141,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 gap-1 flex flex-col overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 min-h-0 px-4 py-4 gap-1 flex flex-col overflow-y-auto overflow-x-hidden">
         {navLinks.map((link) => {
           if ('type' in link && link.type === 'separator') {
              return <Separator key={link.path} className="my-2 bg-border/50" />;
@@ -200,17 +200,17 @@ export function Sidebar() {
       </nav>
 
       {/* Footer / User Menu */}
-      <div className="mt-auto border-t border-border/50 px-4 pt-4 pb-6 shrink-0">
+      <div className="mt-auto border-t border-border/50 px-3 pt-3 pb-3 shrink-0 overflow-visible">
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button 
               className={cn(
-                "w-full flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "w-full flex items-center gap-3 p-2 rounded-lg transition-all duration-200 group ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 overflow-visible",
                 !isCollapsed ? "hover:bg-accent hover:text-accent-foreground justify-between" : "justify-center"
               )}
             >
-              <div className={cn("flex items-center gap-3 truncate", !isCollapsed && "flex-1")}>
-                <Avatar className={cn("shrink-0 border border-border shadow-sm", isCollapsed ? "h-9 w-9" : "h-8 w-8")}>
+              <div className={cn("flex items-center gap-3 overflow-visible", !isCollapsed && "flex-1 min-w-0")}>
+                <Avatar className={cn("shrink-0 border border-border shadow-sm overflow-hidden", isCollapsed ? "h-9 w-9" : "h-8 w-8")}>
                   <AvatarImage src={profile?.avatar_url || ''} alt={profile?.name || 'Avatar'} />
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
                     {profile?.name?.charAt(0) || '?'}
