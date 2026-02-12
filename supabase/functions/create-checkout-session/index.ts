@@ -7,8 +7,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const PRICE_ID = "price_1SznRLLFgAgDUEYY51o3ceGj";
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -33,6 +31,22 @@ Deno.serve(async (req) => {
     const user = userData.user;
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+    // Read active price and coupon settings from general_settings
+    const { data: settings } = await supabaseAdmin
+      .from("general_settings")
+      .select("key, value")
+      .in("key", ["stripe_active_price_id", "stripe_allow_coupons"]);
+
+    const settingsMap: Record<string, string> = {};
+    for (const s of settings || []) {
+      settingsMap[s.key] = s.value;
+    }
+
+    const priceId = settingsMap["stripe_active_price_id"];
+    if (!priceId) throw new Error("stripe_active_price_id not configured in general_settings");
+
+    const allowCoupons = settingsMap["stripe_allow_coupons"] === "true";
+
     // Check if Stripe customer exists
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
@@ -42,15 +56,21 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://vibecoders.la";
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
-      line_items: [{ price: PRICE_ID, quantity: 1 }],
+      line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/choose-plan?cancelled=true`,
       metadata: { userId: user.id },
-    });
+    };
+
+    if (allowCoupons) {
+      sessionParams.allow_promotion_codes = true;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
