@@ -24,9 +24,9 @@ export default function ChoosePlan() {
     }
   }, [searchParams]);
 
-  // Redirect if already has a tier
+  // Redirect if already has a paid tier or is a founder
   useEffect(() => {
-    if (!subLoading && tier && tier !== 'pending') {
+    if (!subLoading && tier && tier !== 'pending' && tier !== 'free') {
       navigate('/home', { replace: true });
     }
   }, [tier, subLoading, navigate]);
