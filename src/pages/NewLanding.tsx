@@ -209,8 +209,8 @@ const NewHeroSection = () => {
           </div>
         )}
 
-        {/* Social Proof - Only shown if stats load successfully */}
-        {stats && (
+        {/* Social Proof - Only shown if stats load and spots remain */}
+        {stats && stats.spotsLeft > 0 && (
           <p
             className="animate-fade-in text-xs md:text-sm text-white/50 opacity-0 tracking-wide font-medium"
             style={{ animationDelay: '0.55s' }}
