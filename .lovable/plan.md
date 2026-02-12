@@ -1,93 +1,110 @@
-
-
-# Plan: Popup "Vibe Coder Pro" Upsell + Prueba con usuario free
+# Plan: Sistema de Acceso Cerrado + Pagina de Waitlist con Vibecoders Suite
 
 ## Resumen
-Crear un componente popup reutilizable con estilo premium (negro/gris/dorado) que se muestre cuando un usuario free intenta usar una funcionalidad Pro. Incluye traducciones en 4 idiomas, y como caso de prueba, se activa al intentar agregar una segunda app.
+
+Cuando se alcancen los 100 founders registrados, los nuevos usuarios que intenten loguearse seran redirigidos a una pagina `/closed` que muestra la vision de la **Vibecoders Communication Suite** (los 10 widgets), un contador regresivo al 1 de marzo, y un formulario de waitlist para que dejen su email.
+
+Los usuarios existentes (ya registrados) seguiran accediendo normalmente.
 
 ---
 
 ## Cambios a realizar
 
-### 1. Cambiar tier de luciana.om28@gmail.com a "free"
-- Ejecutar SQL: `UPDATE user_subscriptions SET tier = 'free', founder_number = NULL WHERE user_id = 'c8fd62b0-821e-4472-9c7c-5f6de17a398f'`
+### 1. Modificar el edge function `check-founder-status`
 
-### 2. Crear archivo de traducciones `pro.json` (4 idiomas)
-- **Archivos**: `src/i18n/es/pro.json`, `src/i18n/en/pro.json`, `src/i18n/fr/pro.json`, `src/i18n/pt/pro.json`
-- Contenido: titulo "Vibe Coder Pro", subtitulo invitando a desbloquear, lista de 6 beneficios (titulo + descripcion cada uno), precio "$24/year", texto del boton "Quiero ser Pro", y texto de cierre/cerrar.
+Agregar un campo `accessClosed` en la respuesta cuando el usuario es nuevo y ya se llenaron los 100 cupos. Esto permite al frontend saber que debe redirigir.
 
-**Beneficios:**
-1. Publica Apps Ilimitadas
-2. Activa Boton de Servicios y 'Book Call'
-3. Publica en Squads de Testing sin requisitos
-4. Gestiona el Roadmap de tus Apps
-5. Boveda Privada de Recursos
-6. Insignia de 'Verified Builder'
+- Si el usuario ya tiene suscripcion (no pending) -> acceso normal
+- Si es nuevo y hay menos de 100 founders -> asignar tier founder (como ahora)
+- Si es nuevo y hay 100+ founders -> retornar `{ accessClosed: true }` en vez de asignar tier free
 
-### 3. Registrar `pro` en `useTranslation.ts`
-- Importar `pro.json` en los 4 idiomas y agregarlo al objeto `translations`.
+### 2. Modificar `useAuth.ts`
 
-### 4. Crear componente `src/components/pro/ProUpgradeModal.tsx`
-- **Props**: `open: boolean`, `onOpenChange: (open: boolean) => void`
-- Usa `Dialog` de Radix (responsive, en mobile usa `Drawer` de vaul o simplemente DialogContent con scroll)
-- **Estilo visual** (referencia imagen): fondo oscuro (#0a0a0a / #1a1a1a), textos blancos/grises, acentos dorados (#c9a44c) para checks y badge "PRO"
-- **Estructura**:
-  - Badge superior "PRO" con borde dorado
-  - Titulo: "Vibe Coder Pro"
-  - Subtitulo: invitacion a desbloquear
-  - Lista de 6 beneficios con icono Check en dorado, titulo en bold, descripcion en gris
-  - Precio: "$24/ano"
-  - Boton CTA "Quiero ser Pro" que invoca `createCheckout` de `useSubscription` y redirige a Stripe
-  - Sin emojis
+En el bloque `SIGNED_IN`, despues de llamar a `check-founder-status`, verificar si la respuesta incluye `accessClosed: true`. Si es asi, redirigir a `/closed` en vez de `/me/profile`.
 
-### 5. Modificar `AppsTab.tsx` para mostrar el popup
-- Importar `useSubscription` para obtener `tier` y `createCheckout`
-- En `handleCreate` (o al hacer click en el boton de agregar), antes de abrir el input de URL, verificar:
-  - Si `tier === 'free'` y `apps.length >= 1` --> mostrar `ProUpgradeModal` en lugar de abrir el formulario
-- Agregar state `showProModal` para controlar la visibilidad
+### 3. Crear pagina `/closed` (nuevo archivo `src/pages/Closed.tsx`) q
+
+Pagina con:
+
+- Header con logo de Vibecoders
+- Mensaje principal: "El acceso esta cerrado" / "Los primeros 100 vibecoders ya estan dentro"
+- Contador regresivo al **1 de marzo de 2026**
+- Seccion visual de la **Vibecoders Communication Suite** mostrando los 10 widgets con iconos, nombres y descripciones cortas en cards atractivas
+- Tabla/seccion comparativa de costos que reemplaza ($500-900/mes en herramientas vs incluido en Vibecoders)
+- Formulario de waitlist (reutilizando la logica existente de `src/lib/waitlist.ts`)
+- Footer minimalista
+
+### 4. Agregar ruta en `App.tsx`
+
+Agregar `<Route path="/closed" element={<Closed />} />` como ruta publica.
+
+### 5. Traducciones (i18n)
+
+Agregar archivo de traducciones `src/i18n/es/closed.json` (y en/fr/pt) con todos los textos de la pagina.
 
 ---
 
 ## Detalles tecnicos
 
-### Estructura del componente ProUpgradeModal
+### Edge function `check-founder-status` - Cambio clave
 
-```text
-+----------------------------------+
-|  [PRO badge dorado]              |
-|                                  |
-|  Vibe Coder Pro                  |
-|  Desbloquea todo el potencial... |
-|                                  |
-|  [check] Apps Ilimitadas         |
-|          Descripcion...          |
-|  [check] Book Call               |
-|          Descripcion...          |
-|  [check] Testing sin requisitos  |
-|          Descripcion...          |
-|  [check] Roadmap                 |
-|          Descripcion...          |
-|  [check] Boveda Privada          |
-|          Descripcion...          |
-|  [check] Verified Builder        |
-|          Descripcion...          |
-|                                  |
-|  $24 / ano                       |
-|                                  |
-|  [ Quiero ser Pro -> ]           |
-+----------------------------------+
+```typescript
+// Despues de asignar tier via assign_founder_tier:
+if (tier === 'free' && !existing) {
+  // Usuario nuevo post-limite: marcar acceso cerrado
+  return Response({ accessClosed: true, tier: 'free' });
+}
 ```
 
-### Archivos nuevos
-- `src/components/pro/ProUpgradeModal.tsx`
-- `src/i18n/es/pro.json`
-- `src/i18n/en/pro.json`
-- `src/i18n/fr/pro.json`
-- `src/i18n/pt/pro.json`
+La logica actual de `assign_founder_tier` ya asigna `free` cuando hay 100+ founders. El cambio es detectar que es un usuario **nuevo** (no tenia registro previo) y en ese caso senalar `accessClosed`.
 
-### Archivos modificados
-- `src/hooks/useTranslation.ts` (registrar seccion `pro`)
-- `src/components/me/AppsTab.tsx` (logica de gate + mostrar modal)
+### useAuth.ts - Redireccion
 
-### SQL
-- `UPDATE user_subscriptions SET tier = 'free', founder_number = NULL WHERE user_id = 'c8fd62b0-...'`
+```typescript
+supabase.functions.invoke('check-founder-status').then(({ data }) => {
+  if (data?.accessClosed) {
+    window.location.href = '/closed';
+  } else if (window.location.pathname === '/') {
+    window.location.href = '/me/profile';
+  }
+});
+```
+
+### Pagina /closed - Estructura visual
+
+La pagina tendra estas secciones:
+
+1. **Hero**: Mensaje de acceso cerrado + contador regresivo
+2. **Suite Grid**: 10 cards (2x5 o 3-col responsive) mostrando cada widget con icono, nombre y descripcion
+3. **Comparacion de valor**: Lo que ahorras vs herramientas individuales
+4. **Waitlist CTA**: Input de email + boton para unirse a la lista de espera
+5. **Footer**: Enlace a redes y legal
+
+### Countdown Timer
+
+Componente con `useEffect` + `setInterval` contando hasta `2026-03-01T00:00:00` mostrando dias, horas, minutos y segundos.
+
+### Waitlist
+
+Se reutiliza `registerToWaitlist()` de `src/lib/waitlist.ts` y el `WaitlistSuccessModal` existente.
+
+---
+
+## Archivos afectados
+
+
+| Archivo                                            | Accion                                 |
+| -------------------------------------------------- | -------------------------------------- |
+| `supabase/functions/check-founder-status/index.ts` | Modificar para retornar `accessClosed` |
+| `src/hooks/useAuth.ts`                             | Agregar redireccion a `/closed`        |
+| `src/pages/Closed.tsx`                             | **Crear** - Pagina completa            |
+| `src/App.tsx`                                      | Agregar ruta `/closed`                 |
+| `src/i18n/es/closed.json`                          | **Crear** - Traducciones espanol       |
+| `src/i18n/en/closed.json`                          | **Crear** - Traducciones ingles        |
+| `src/i18n/fr/closed.json`                          | **Crear** - Traducciones frances       |
+| `src/i18n/pt/closed.json`                          | **Crear** - Traducciones portugues     |
+
+
+No se requieren migraciones de base de datos ya que la tabla `waitlist` ya existe.
+
+El admin debe poder acceder a la pagina /closed para poder validar como luce, los otros usuarios fundadores no.
