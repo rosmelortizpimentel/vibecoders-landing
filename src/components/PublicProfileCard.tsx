@@ -345,32 +345,33 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
 
         {/* Main Content */}
         <div className={`pt-12 md:pt-16 pb-6 px-4 md:px-6 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
-          {/* Name + Pioneer Badge */}
-          <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
-              {profile.name || 'Vibecoder'}
-            </h1>
-            {profile.is_pioneer && profile.show_pioneer_badge && (
-              <PioneerBadge />
-            )}
-            {profile.is_contributor && profile.show_contributor_badge && (
-              <ContributorBadge />
-            )}
+          {/* Name + Pioneer Badge Container - Now justify-between */}
+          <div className="w-full flex items-center justify-between gap-4">
+            <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                {profile.name || 'Vibecoder'}
+              </h1>
+              {profile.is_pioneer && profile.show_pioneer_badge && (
+                <PioneerBadge />
+              )}
+              {profile.is_contributor && profile.show_contributor_badge && (
+                <ContributorBadge />
+              )}
+            </div>
+
             {profile.booking_url && (
               <Button
                 asChild
                 size="sm"
-                className="ml-auto md:ml-2 bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-8 px-3"
+                className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-8 px-3 whitespace-nowrap"
               >
                 <a 
                   href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
+                  <span className="hidden sm:inline">{profile.booking_button_text || 'Book a call'}</span>
                   <Calendar className="h-3.5 w-3.5" />
-                  <span className="text-xs font-medium">
-                    {profile.booking_button_text || 'Book a call'}
-                  </span>
                 </a>
               </Button>
             )}
