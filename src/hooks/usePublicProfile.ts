@@ -42,6 +42,8 @@ export interface PublicProfile {
   bio: string | null;
   location: string | null;
   website: string | null;
+  booking_url: string | null;
+  booking_button_text: string | null;
   accent_color: string | null;
   font_family: string | null;
   member_number: number;

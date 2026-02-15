@@ -773,6 +773,8 @@ export type Database = {
       profiles: {
         Row: {
           accent_color: string | null
+          booking_button_text: string | null
+          booking_url: string | null
           avatar_position: string | null
           avatar_url: string | null
           banner_position: string | null
@@ -809,6 +811,8 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          booking_button_text?: string | null
+          booking_url?: string | null
           avatar_position?: string | null
           avatar_url?: string | null
           banner_position?: string | null
@@ -845,6 +849,8 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          booking_button_text?: string | null
+          booking_url?: string | null
           avatar_position?: string | null
           avatar_url?: string | null
           banner_position?: string | null

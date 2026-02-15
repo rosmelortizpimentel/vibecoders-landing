@@ -67,6 +67,7 @@ Deno.serve(async (req) => {
         name, tagline, bio, location, website, banner_url, avatar_url,
         avatar_position, banner_position,
         accent_color, font_family,
+        booking_url, booking_button_text,
         lovable, twitter, github, linkedin, instagram, youtube, tiktok, email_public
       `)
       .eq('username', username.toLowerCase())
@@ -191,6 +192,8 @@ Deno.serve(async (req) => {
           website: profile.website,
           accent_color: profile.accent_color,
           font_family: profile.font_family,
+          booking_url: profile.booking_url,
+          booking_button_text: profile.booking_button_text,
           member_number: displayMemberNumber,
           is_pioneer: profile.is_pioneer || false,
           show_pioneer_badge: profile.show_pioneer_badge ?? true,

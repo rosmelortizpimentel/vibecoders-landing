@@ -6,7 +6,8 @@ import { useTechStacks } from '@/hooks/useTechStacks';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import lovableIcon from '@/assets/logos/lovable-icon.png';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { PreviewAppCard } from './PreviewAppCard';
@@ -184,6 +185,24 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
           </h2>
           {profile.is_pioneer && profile.show_pioneer_badge && (
             <PioneerBadge />
+          )}
+          {profile.booking_url && (
+            <Button
+              asChild
+              size="sm"
+              className="ml-auto md:ml-2 bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-7 px-2.5"
+            >
+              <a 
+                href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Calendar className="h-3 w-3" />
+                <span className="text-[10px] font-medium leading-none">
+                  {profile.booking_button_text || 'Book a call'}
+                </span>
+              </a>
+            </Button>
           )}
         </div>
 

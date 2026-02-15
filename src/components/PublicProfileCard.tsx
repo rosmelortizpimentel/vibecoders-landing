@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
 import { PioneerBadge } from '@/components/PioneerBadge';
 import { ContributorBadge } from '@/components/ContributorBadge';
@@ -354,6 +355,24 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
             )}
             {profile.is_contributor && profile.show_contributor_badge && (
               <ContributorBadge />
+            )}
+            {profile.booking_url && (
+              <Button
+                asChild
+                size="sm"
+                className="ml-auto md:ml-2 bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-8 px-3"
+              >
+                <a 
+                  href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span className="text-xs font-medium">
+                    {profile.booking_button_text || 'Book a call'}
+                  </span>
+                </a>
+              </Button>
             )}
           </div>
 

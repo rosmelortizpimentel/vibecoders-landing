@@ -27,7 +27,7 @@ const Me = () => {
   const t = useTranslation('profile');
   const [previewOpen, setPreviewOpen] = useState(false);
 
-  const { profile, loading } = profileEditor;
+  const { profile, loading, isSaving, error } = profileEditor;
 
   // Preview logic (hide on mobile/tablet/small screens < 1280px)
   const [isLargeScreen, setIsLargeScreen] = useState(false);
@@ -77,6 +77,8 @@ const Me = () => {
                   onUploadAvatar={profileEditor.uploadAvatar}
                   onUploadBanner={profileEditor.uploadBanner}
                   onDeleteBanner={profileEditor.deleteBanner}
+                  isSaving={isSaving}
+                  error={error}
                 />
               )}
               {activeTab === 'apps' && (
