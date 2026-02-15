@@ -178,29 +178,30 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
 
       {/* Main Content */}
       <div className={`pt-12 md:pt-14 pb-6 px-4 md:px-6 space-y-3 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
-        {/* Name + Pioneer Badge */}
-        <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-          <h2 className="text-lg md:text-xl font-bold text-gray-900">
-            {profile.name || 'Tu Nombre'}
-          </h2>
-          {profile.is_pioneer && profile.show_pioneer_badge && (
-            <PioneerBadge />
-          )}
+        {/* Name + Pioneer Badge Container - Now justify-between */}
+        <div className="w-full flex items-center justify-between gap-4">
+          <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+            <h2 className="text-lg md:text-xl font-bold text-gray-900">
+              {profile.name || 'Tu Nombre'}
+            </h2>
+            {profile.is_pioneer && profile.show_pioneer_badge && (
+              <PioneerBadge />
+            )}
+          </div>
+
           {profile.booking_url && (
             <Button
               asChild
               size="sm"
-              className="ml-auto md:ml-2 bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-7 px-2.5"
+              className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-7 px-2.5 whitespace-nowrap"
             >
               <a 
                 href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
+                <span className="hidden sm:inline">{profile.booking_button_text || 'Book a call'}</span>
                 <Calendar className="h-3 w-3" />
-                <span className="text-[10px] font-medium leading-none">
-                  {profile.booking_button_text || 'Book a call'}
-                </span>
               </a>
             </Button>
           )}
