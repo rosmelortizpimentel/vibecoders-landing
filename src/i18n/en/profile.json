@@ -11,6 +11,8 @@
     "tagline": "Tagline",
     "location": "Location",
     "website": "Website",
+    "bookingUrl": "Booking Link (Calendly, Cal.com)",
+    "bookingButtonText": "Booking Button Text",
     "socialNetworks": "Social Networks",
     "banner": "Banner"
   },
@@ -18,7 +20,9 @@
     "name": "Your full name",
     "tagline": "A phrase that defines you",
     "location": "City, Country",
-    "website": "https://yourwebsite.com"
+    "website": "https://yourwebsite.com",
+    "bookingUrl": "https://calendly.com/your-username",
+    "bookingButtonText": "Book a call"
   },
   "labels": {
     "addBanner": "Add banner",

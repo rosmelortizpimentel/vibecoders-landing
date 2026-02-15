@@ -14,6 +14,8 @@ export interface ProfileData {
   bio: string | null;
   location: string | null;
   website: string | null;
+  booking_url: string | null;
+  booking_button_text: string | null;
   avatar_url: string | null;
   banner_url: string | null;
   og_image_url: string | null;
@@ -66,6 +68,8 @@ export function useProfileEditor() {
         bio: data.bio,
         location: data.location,
         website: data.website,
+        booking_url: data.booking_url,
+        booking_button_text: data.booking_button_text,
         avatar_url: data.avatar_url,
         banner_url: data.banner_url,
         og_image_url: data.og_image_url,

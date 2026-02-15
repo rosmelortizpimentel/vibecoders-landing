@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { PioneerBadge } from '@/components/PioneerBadge';
 import { ContributorBadge } from '@/components/ContributorBadge';
-import { Camera, MapPin, Globe, ImagePlus, AlignLeft, AlignCenter, AlignRight, Trash2 } from 'lucide-react';
+import { Camera, MapPin, Globe, ImagePlus, AlignLeft, AlignCenter, AlignRight, Trash2, Calendar, Loader2, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
@@ -20,9 +20,19 @@ interface ProfileTabProps {
   onUploadAvatar: (file: File) => Promise<string>;
   onUploadBanner: (file: File) => Promise<string>;
   onDeleteBanner?: () => void;
+  isSaving?: boolean;
+  error?: Error | null;
 }
 
-export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, onDeleteBanner }: ProfileTabProps) {
+export function ProfileTab({ 
+  profile, 
+  onUpdate, 
+  onUploadAvatar, 
+  onUploadBanner, 
+  onDeleteBanner,
+  isSaving,
+  error 
+}: ProfileTabProps) {
   const { user } = useAuth();
   const t = useTranslation('profile');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -347,6 +357,53 @@ export function ProfileTab({ profile, onUpdate, onUploadAvatar, onUploadBanner, 
             className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
           />
         </div>
+
+        <div className="space-y-4 pt-2">
+          <div className="space-y-2">
+            <Label htmlFor="booking_url" className="flex items-center gap-2 text-foreground">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              {t.fields.bookingUrl}
+            </Label>
+            <DebouncedInput
+              id="booking_url"
+              value={profile.booking_url || ''}
+              onValueChange={value => onUpdate({ booking_url: value })}
+              placeholder={t.placeholders.bookingUrl}
+              type="url"
+              className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="booking_button_text" className="text-foreground ml-6">
+              {t.fields.bookingButtonText}
+            </Label>
+            <DebouncedInput
+              id="booking_button_text"
+              value={profile.booking_button_text || ''}
+              onValueChange={value => onUpdate({ booking_button_text: value })}
+              placeholder={t.placeholders.bookingButtonText}
+              className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+            />
+          </div>
+        </div>
+
+        {/* Save Status / Error Feedback */}
+        {(isSaving || error) && (
+          <div className={cn(
+            "flex items-center gap-2 text-sm p-3 rounded-lg border",
+            error ? "bg-red-50 border-red-200 text-red-600" : "bg-blue-50 border-blue-200 text-blue-600"
+          )}>
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : error ? (
+              <AlertCircle className="h-4 w-4" />
+            ) : null}
+            <span>
+              {isSaving ? t.saving : error ? `${t.error}: ${error.message}` : null}
+            </span>
+          </div>
+        )}
       </section>
 
       {/* Divider */}
