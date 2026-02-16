@@ -1,0 +1,11 @@
+{
+  "thankYou": "Thank you for your feedback!",
+  "thankYouDescription": "Your answers help us build a better Vibecoders.",
+  "close": "Close",
+  "commentLabel": "Have new ideas?",
+  "commentPlaceholder": "Your ideas or comments here...",
+  "submit": "Send Feedback",
+  "errorSaving": "Error saving your response. Please try again.",
+  "defaultBadge": "SURVEY",
+  "defaultDescription": "Your vote defines the roadmap. Order by priority."
+}

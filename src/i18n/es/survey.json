@@ -1,0 +1,11 @@
+{
+  "thankYou": "¡Gracias por tu feedback!",
+  "thankYouDescription": "Tus respuestas nos ayudan a construir un mejor Vibecoders.",
+  "close": "Cerrar",
+  "commentLabel": "¿Tienes nuevas ideas?",
+  "commentPlaceholder": "Tus ideas o comentarios aquí...",
+  "submit": "Enviar Feedback",
+  "errorSaving": "Error al guardar tu respuesta. Por favor intenta de nuevo.",
+  "defaultBadge": "ENCUESTA",
+  "defaultDescription": "Tu voto define el roadmap. Ordena por prioridad."
+}

@@ -12,6 +12,7 @@ import { UsersManager } from '@/components/admin/UsersManager';
 import { WaitlistManager } from '@/components/admin/WaitlistManager';
 import { FeedbackManager } from '@/components/admin/FeedbackManager';
 import { NotificationManager } from '@/components/admin/NotificationManager';
+import { SurveyManager } from '@/components/admin/SurveyManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -79,6 +80,7 @@ const Admin = () => {
         <Route path="waitlist" element={<WaitlistManager />} />
         <Route path="settings" element={<SettingsManager />} />
         <Route path="notifications" element={<NotificationManager />} />
+        <Route path="surveys" element={<SurveyManager />} />
       </Route>
     </Routes>
   );
