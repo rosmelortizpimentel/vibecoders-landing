@@ -33,6 +33,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import { NotificationsPage } from "./pages/Notifications";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { DashboardLayout } from "./layouts/DashboardLayout";
+import { SurveyPopup } from "./components/beta/SurveyPopup";
 import { useAuth } from "./hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
@@ -47,6 +48,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <InAppBrowserWarning />
+        <SurveyPopup />
         <BrowserRouter>
         <Routes>
           {/* Public routes */}

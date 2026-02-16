@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     // Get app info
     const { data: app, error: appError } = await supabase
       .from('apps')
-      .select('id, user_id, beta_active, beta_mode, beta_limit')
+      .select('id, name, user_id, beta_active, beta_mode, beta_limit')
       .eq('id', app_id)
       .single()
 
@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
             actor_id: user.id,
             type: 'beta_req',
             resource_id: app_id,
-            resource_slug: null,
+            resource_slug: '/me?tab=beta',
             meta: { 
               app_name: app.name || 'App',
               status: status 

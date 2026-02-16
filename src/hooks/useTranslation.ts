@@ -26,6 +26,7 @@ import vibersEs from '@/i18n/es/vibers.json';
 import promptsEs from '@/i18n/es/prompts.json';
 import newLandingEs from '@/i18n/es/newLanding.json';
 import proEs from '@/i18n/es/pro.json';
+import surveyEs from '@/i18n/es/survey.json';
 
 
 // English imports
@@ -54,6 +55,7 @@ import vibersEn from '@/i18n/en/vibers.json';
 import promptsEn from '@/i18n/en/prompts.json';
 import newLandingEn from '@/i18n/en/newLanding.json';
 import proEn from '@/i18n/en/pro.json';
+import surveyEn from '@/i18n/en/survey.json';
 
 
 // French imports
@@ -82,6 +84,7 @@ import vibersFr from '@/i18n/fr/vibers.json';
 import promptsFr from '@/i18n/fr/prompts.json';
 import newLandingFr from '@/i18n/fr/newLanding.json';
 import proFr from '@/i18n/fr/pro.json';
+import surveyFr from '@/i18n/fr/survey.json';
 
 
 // Portuguese imports
@@ -110,6 +113,7 @@ import vibersPt from '@/i18n/pt/vibers.json';
 import promptsPt from '@/i18n/pt/prompts.json';
 import newLandingPt from '@/i18n/pt/newLanding.json';
 import proPt from '@/i18n/pt/pro.json';
+import surveyPt from '@/i18n/pt/survey.json';
 
 
 const translations = {
@@ -139,6 +143,7 @@ const translations = {
     prompts: promptsEs,
     newLanding: newLandingEs,
     pro: proEs,
+    survey: surveyEs,
     
   },
   en: {
@@ -167,6 +172,7 @@ const translations = {
     prompts: promptsEn,
     newLanding: newLandingEn,
     pro: proEn,
+    survey: surveyEn,
     
   },
   fr: {
@@ -195,6 +201,7 @@ const translations = {
     prompts: promptsFr,
     newLanding: newLandingFr,
     pro: proFr,
+    survey: surveyFr,
     
   },
   pt: {
@@ -223,6 +230,7 @@ const translations = {
     prompts: promptsPt,
     newLanding: newLandingPt,
     pro: proPt,
+    survey: surveyPt,
     
   },
 } as const;
