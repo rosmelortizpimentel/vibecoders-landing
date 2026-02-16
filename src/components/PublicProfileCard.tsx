@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck, Calendar } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck, Calendar, Share2, Globe, Twitter, ArrowLeft, MousePointerClick, Heart, UserPlus, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
 import { PioneerBadge } from '@/components/PioneerBadge';
@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { AppDetailView } from './profile/AppDetailView';
+import { AuthModal } from './auth/AuthModal';
 
 interface PublicProfileCardProps {
   profile: PublicProfile;
@@ -238,6 +239,7 @@ function PublicAppCard({
 
 export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfileCardProps) {
   const { user } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const { isFollowing, isLoading: followLoading, followersCount, followingCount, toggleFollow, refetch: refetchFollowData } = useFollow(profile.id);
   const [viewMode, setViewMode] = useState<ViewMode>('apps');
   const [selectedAppIndex, setSelectedAppIndex] = useState<number | null>(null);
@@ -297,6 +299,13 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
     left: 'text-left items-start',
     center: 'text-center items-center',
     right: 'text-right items-end'
+  };
+
+  const handleBookingClick = (e: React.MouseEvent) => {
+    if (!user) {
+      e.preventDefault();
+      setShowAuthModal(true);
+    }
   };
 
   // Get active socials
@@ -363,6 +372,7 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
               <Button
                 asChild
                 size="sm"
+                onClick={handleBookingClick}
                 className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-8 px-3 whitespace-nowrap"
               >
                 <a 
@@ -376,6 +386,13 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
               </Button>
             )}
           </div>
+
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            title={`Agenda una llamada con ${profile.name || 'este Vibecoder'}`}
+            description="Inicia sesión para poder agendar una llamada y conectar con otros builders de la comunidad."
+          />
 
           {/* Username + Followers (Clickeable) */}
           <div className={`flex items-center gap-2 text-sm text-gray-500 mt-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
