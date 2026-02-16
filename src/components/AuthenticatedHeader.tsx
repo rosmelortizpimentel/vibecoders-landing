@@ -16,16 +16,19 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap, Linkedin } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { GlobalShareButton } from './GlobalShareButton';
 
 interface AuthenticatedHeaderProps {
   profile: {
@@ -112,6 +115,10 @@ export function AuthenticatedHeader({
             className="h-10 w-10 rounded-full border-2 border-border hover:border-primary transition-colors"
           />
         </Link>
+        {/* Mobile Share Button */}
+        <div className="flex md:hidden ml-2">
+          <GlobalShareButton showText={false} className="h-8 w-8" />
+        </div>
         <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
           <Link to="/home" className="hover:text-foreground font-medium transition-colors">Home</Link>
           {location.pathname !== '/home' && (
@@ -167,6 +174,11 @@ export function AuthenticatedHeader({
                 <span className="text-xs font-bold">$9.90/año</span>
               </Link>
             )}
+
+            {/* Share Button - Desktop */}
+            <div className="hidden md:flex items-center border-l border-border/50 pl-3 sm:pl-4">
+              <GlobalShareButton showText={false} className="h-8 w-8" />
+            </div>
 
             {/* Notification Bell */}
             <div className="flex items-center border-l border-border/50 pl-3 sm:pl-4">
