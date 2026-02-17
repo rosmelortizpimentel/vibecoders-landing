@@ -94,8 +94,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("[STRIPE-WEBHOOK] Error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("[STRIPE-WEBHOOK] Error:", (error as Error).message);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

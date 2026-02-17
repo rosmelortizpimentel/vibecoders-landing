@@ -51,22 +51,20 @@ export function SurveyManager() {
     queryKey: ['admin-surveys'],
     queryFn: async () => {
       // Get surveys
-      const { data: surveysData, error: surveysError } = await supabase
+      const { data: surveysData, error: surveysError } = await (supabase as any)
         .from('surveys')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (surveysError) throw surveysError;
 
-      // Get options separately to avoid typing issues with direct joins if types aren't synced
-      const { data: optionsData, error: optionsError } = await supabase
+      const { data: optionsData, error: optionsError } = await (supabase as any)
         .from('survey_options')
         .select('*');
 
       if (optionsError) throw optionsError;
 
-      // Get response counts
-      const { data: countsData, error: countsError } = await supabase
+      const { data: countsData, error: countsError } = await (supabase as any)
         .from('survey_responses')
         .select('survey_id');
 
@@ -95,7 +93,7 @@ export function SurveyManager() {
   const createMutation = useMutation({
     mutationFn: async (data: SurveyFormData) => {
       // 1. Insert survey
-      const { data: survey, error: surveyError } = await supabase
+      const { data: survey, error: surveyError } = await (supabase as any)
         .from('surveys')
         .insert({
           title: data.title,
@@ -118,7 +116,7 @@ export function SurveyManager() {
         order_index: index
       }));
 
-      const { error: optionsError } = await supabase
+      const { error: optionsError } = await (supabase as any)
         .from('survey_options')
         .insert(optionsToInsert);
 
@@ -141,7 +139,7 @@ export function SurveyManager() {
       if (!data.id) throw new Error('Missing survey ID');
 
       // 1. Update survey
-      const { error: surveyError } = await supabase
+      const { error: surveyError } = await (supabase as any)
         .from('surveys')
         .update({
           title: data.title,
@@ -158,7 +156,7 @@ export function SurveyManager() {
 
       // 2. Options management is more complex (Delete old, Insert new is simplest for maintenance)
       // First, delete current options
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await (supabase as any)
         .from('survey_options')
         .delete()
         .eq('survey_id', data.id);
@@ -173,7 +171,7 @@ export function SurveyManager() {
         order_index: index
       }));
 
-      const { error: insertError } = await supabase
+      const { error: insertError } = await (supabase as any)
         .from('survey_options')
         .insert(optionsToInsert);
 
@@ -193,7 +191,7 @@ export function SurveyManager() {
   // Delete survey mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('surveys').delete().eq('id', id);
+      const { error } = await (supabase as any).from('surveys').delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -212,7 +210,7 @@ export function SurveyManager() {
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       // If activating, we might want to deactivate others (if project only supports one active survey)
       // For now, simple toggle
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('surveys')
         .update({ is_active })
         .eq('id', id);
