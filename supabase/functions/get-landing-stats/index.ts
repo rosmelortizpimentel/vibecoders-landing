@@ -65,9 +65,9 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error in landing-stats function:", error.message);
+    console.error("Error in landing-stats function:", (error as Error).message);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { 
         status: 500, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
