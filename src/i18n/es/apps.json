@@ -5,6 +5,7 @@
   "delete": "Eliminar",
   "noApps": "No tienes apps todavía",
   "noAppsHint": "Agrega tu primer proyecto para mostrarlo en tu perfil",
+  "appsHint": "Gestiona todas tus Apps",
   "urlPlaceholder": "https://tu-app.com",
   "deleteConfirmTitle": "¿Eliminar esta app?",
   "deleteConfirmDescription": "Esta acción no se puede deshacer. La app será eliminada permanentemente de tu perfil.",
