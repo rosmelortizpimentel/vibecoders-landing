@@ -33,7 +33,9 @@
     "unlink": "Dissocier",
     "linkToCard": "Lier à une Carte",
     "errorMovingCard": "Erreur lors du déplacement",
-    "preview": "Aperçu"
+    "preview": "Aperçu",
+    "publicOnHint": "N'importe qui avec le lien peut le voir",
+    "publicOffHint": "Seulement vous pouvez le voir"
   },
   "listDescriptionPre": "Gérez le roadmap public de vos",
   "listDescriptionBold": "apps vérifiées",

@@ -6,7 +6,7 @@ import { useApps } from '@/hooks/useApps';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Map, ArrowRight, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Loader2, Map, ArrowRight, ShieldCheck, ShieldAlert, ExternalLink } from 'lucide-react';
 import { VerifyDomainModal } from '@/components/me/VerifyDomainModal';
 
 export default function Roadmap() {
@@ -36,7 +36,7 @@ export default function Roadmap() {
     return (
       <Card
         key={app.id}
-        className={`group transition-all border ${verified ? 'hover:shadow-lg cursor-pointer hover:border-primary/30' : 'opacity-50'}`}
+        className={`group transition-all border ${verified ? 'hover:shadow-lg cursor-pointer hover:border-primary/30' : 'hover:shadow-sm'}`}
         onClick={verified ? () => navigate(`/roadmap-editor/${app.id}`) : undefined}
       >
         <CardContent className="p-4">
@@ -52,14 +52,23 @@ export default function Roadmap() {
               <h3 className="font-semibold text-sm truncate">{app.name || 'App'}</h3>
               {app.tagline && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{app.tagline}</p>}
               <div className="flex items-center gap-2 mt-2">
-                {verified ? (
-                  <>
-                    <Badge variant="secondary" className="text-[10px]">
-                      <ShieldCheck className="w-3 h-3 mr-1" />
-                      {tRoadmap('verified')}
-                    </Badge>
-                    <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors ml-auto" />
-                  </>
+                 {verified ? (
+                   <>
+                     <Badge variant="secondary" className="text-[10px]">
+                       <ShieldCheck className="w-3 h-3 mr-1" />
+                       {tRoadmap('verified')}
+                     </Badge>
+                     <a
+                       href={`/roadmap/${appSlug}`}
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       className="ml-auto text-muted-foreground hover:text-primary transition-colors"
+                       onClick={(e) => e.stopPropagation()}
+                     >
+                       <ExternalLink className="w-3.5 h-3.5" />
+                     </a>
+                     <ArrowRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                   </>
                 ) : (
                   <Button
                     size="sm"
