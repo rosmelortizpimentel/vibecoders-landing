@@ -200,6 +200,7 @@ export type Database = {
           created_at: string
           description: string | null
           display_order: number
+          favicon_url: string | null
           hours_building: number | null
           hours_ideation: number | null
           id: string
@@ -228,6 +229,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number
+          favicon_url?: string | null
           hours_building?: number | null
           hours_ideation?: number | null
           id?: string
@@ -256,6 +258,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number
+          favicon_url?: string | null
           hours_building?: number | null
           hours_ideation?: number | null
           id?: string

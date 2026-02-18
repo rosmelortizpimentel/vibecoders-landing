@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoadmap, useRoadmapFeedback, RoadmapLane, RoadmapCard } from '@/hooks/useRoadmap';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,9 +17,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { FontSelector } from '@/components/me/FontSelector';
+import { ColorPicker } from '@/components/me/ColorPicker';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Plus, Settings, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2 } from 'lucide-react';
+import { Loader2, ArrowLeft, Plus, Settings, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DndContext,
@@ -42,6 +46,42 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDroppable } from '@dnd-kit/core';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+
+// Responsive Dialog/Drawer wrapper
+function ResponsiveModal({ open, onOpenChange, title, children, footer, isMobile }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  children: React.ReactNode;
+  footer?: React.ReactNode;
+  isMobile: boolean;
+}) {
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="px-4 pb-6">
+          <DrawerHeader className="px-0">
+            <DrawerTitle>{title}</DrawerTitle>
+          </DrawerHeader>
+          <div className="space-y-4">{children}</div>
+          {footer && <DrawerFooter className="px-0 pt-4">{footer}</DrawerFooter>}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">{children}</div>
+        {footer && <DialogFooter>{footer}</DialogFooter>}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 // Sortable card component
 function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
@@ -111,7 +151,7 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
   );
 }
 
-// Sortable lane wrapper (for lane reordering)
+// Sortable lane wrapper (for lane reordering) - desktop only
 function SortableLaneWrapper({ lane, children }: { lane: RoadmapLane; children: React.ReactNode }) {
   const {
     attributes,
@@ -161,6 +201,7 @@ export default function RoadmapEditor() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { t } = useTranslation('roadmap');
+  const isMobile = useIsMobile();
   const roadmap = useRoadmap(appId);
   const feedbackHook = useRoadmapFeedback(appId);
 
@@ -188,6 +229,9 @@ export default function RoadmapEditor() {
   const [linkingFeedback, setLinkingFeedback] = useState<string | null>(null);
   const [deletingFeedback, setDeletingFeedback] = useState<string | null>(null);
 
+  // Mobile lane accordion
+  const [openLanes, setOpenLanes] = useState<Set<string>>(new Set());
+
   // DnD state
   const [activeCard, setActiveCard] = useState<RoadmapCard | null>(null);
   const sensors = useSensors(
@@ -199,33 +243,6 @@ export default function RoadmapEditor() {
     const { active } = event;
     const card = roadmap.cards.find(c => c.id === active.id);
     if (card) setActiveCard(card);
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-
-    const activeCardId = active.id as string;
-    const overId = over.id as string;
-
-    // Determine source and target lane
-    const activeData = active.data.current;
-    const overData = over.data.current;
-
-    const sourceLaneId = activeData?.laneId as string;
-    let targetLaneId: string | undefined;
-
-    if (overData?.type === 'lane') {
-      targetLaneId = overData.laneId as string;
-    } else if (overData?.type === 'card') {
-      targetLaneId = overData.laneId as string;
-    }
-
-    if (!targetLaneId || sourceLaneId === targetLaneId) return;
-
-    // Move card to new lane optimistically (local state only)
-    roadmap.cards.forEach(() => {}); // no-op to reference
-    // We'll handle the actual move in onDragEnd
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -272,7 +289,6 @@ export default function RoadmapEditor() {
       return;
     }
 
-    // Same lane reorder
     if (sourceLaneId === targetLaneId && overData?.type === 'card') {
       const laneCards = roadmap.cards
         .filter(c => c.lane_id === sourceLaneId)
@@ -310,6 +326,13 @@ export default function RoadmapEditor() {
     }
   }, [roadmap.settings]);
 
+  // Open all lanes by default on mobile
+  useEffect(() => {
+    if (isMobile && roadmap.lanes.length > 0) {
+      setOpenLanes(new Set(roadmap.lanes.map(l => l.id)));
+    }
+  }, [isMobile, roadmap.lanes.length]);
+
   if (authLoading || appLoading || roadmap.loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -340,7 +363,6 @@ export default function RoadmapEditor() {
     );
   }
 
-  // Initialize roadmap
   if (!roadmap.settings) {
     return (
       <div className="text-center py-20 space-y-4">
@@ -377,7 +399,7 @@ export default function RoadmapEditor() {
 
   const handleSaveLane = async () => {
     try {
-      if (editingLane) {
+      if (editingLane?.id) {
         await roadmap.updateLane(editingLane.id, laneForm);
       } else {
         await roadmap.createLane(laneForm.name, laneForm.color);
@@ -410,16 +432,24 @@ export default function RoadmapEditor() {
     } catch { toast.error('Error sending response'); }
   };
 
+  const toggleLane = (laneId: string) => {
+    setOpenLanes(prev => {
+      const next = new Set(prev);
+      if (next.has(laneId)) next.delete(laneId); else next.add(laneId);
+      return next;
+    });
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/me/apps')}>
+    <div className="space-y-4 md:space-y-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/roadmap')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="text-xl font-bold">{app.name || 'App'} — {t('title')}</h1>
+          <div className="min-w-0">
+            <h1 className="text-lg md:text-xl font-bold truncate">{app.name || 'App'} — {t('title')}</h1>
             {roadmap.settings.is_public && (
               <Link
                 to={`/roadmap/${appSlug}`}
@@ -427,113 +457,238 @@ export default function RoadmapEditor() {
                 className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
               >
                 <ExternalLink className="w-3 h-3" />
-                /roadmap/{appSlug}
+                <span className="truncate">/roadmap/{appSlug}</span>
               </Link>
             )}
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setShowFeedbackPanel(!showFeedbackPanel)}>
-            <MessageSquare className="w-4 h-4 mr-1" />
-            Feedback ({feedbackHook.feedback.length})
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-            <Settings className="w-4 h-4 mr-1" />
-            {t('editor.settings')}
-          </Button>
-          <Button size="sm" onClick={() => {
-            setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
-            setEditingLane({} as RoadmapLane);
-          }}>
-            <Plus className="w-4 h-4 mr-1" />
-            {t('editor.addLane')}
-          </Button>
+        <div className="flex gap-2 flex-wrap">
+          {/* Preview button */}
+          {roadmap.settings.is_public && (
+            <Button variant="default" size="sm" asChild>
+              <a href={`/roadmap/${appSlug}`} target="_blank" rel="noopener noreferrer">
+                <Eye className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">{t('editor.preview')}</span>
+              </a>
+            </Button>
+          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => setShowFeedbackPanel(!showFeedbackPanel)}>
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1">Feedback ({feedbackHook.feedback.length})</span>
+                <span className="sm:hidden ml-1">{feedbackHook.feedback.length}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="sm:hidden">Feedback</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
+                <Settings className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1">{t('editor.settings')}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="sm:hidden">{t('editor.settings')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="sm" onClick={() => {
+                setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
+                setEditingLane({} as RoadmapLane);
+              }}>
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1">{t('editor.addLane')}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent className="sm:hidden">{t('editor.addLane')}</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
-      {/* Kanban Board with DnD */}
+      {/* Kanban Board */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext items={roadmap.lanes.map(l => `sortable-lane-${l.id}`)} strategy={horizontalListSortingStrategy}>
-        <div className="flex gap-4 overflow-x-auto pb-4 min-h-[60vh]">
+        {/* Desktop: horizontal scroll with DnD */}
+        <div className="hidden md:block">
+          <SortableContext items={roadmap.lanes.map(l => `sortable-lane-${l.id}`)} strategy={horizontalListSortingStrategy}>
+            <div className="flex gap-4 overflow-x-auto pb-4 min-h-[60vh]">
+              {roadmap.lanes.map(lane => {
+                const laneCards = roadmap.cards
+                  .filter(c => c.lane_id === lane.id)
+                  .sort((a, b) => a.display_order - b.display_order);
+
+                return (
+                  <SortableLaneWrapper key={lane.id} lane={lane}>
+                    <div className="flex items-center justify-between flex-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
+                        <h3 className="font-semibold text-sm">{lane.name}</h3>
+                        <span className="text-xs text-muted-foreground">({laneCards.length})</span>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {
+                            setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
+                            setEditingLane(lane);
+                          }}>
+                            <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
+                            <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <DroppableLane laneId={lane.id}>
+                      <SortableContext items={laneCards.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                        {laneCards.map(card => (
+                          <SortableCard
+                            key={card.id}
+                            card={card}
+                            lane={lane}
+                            t={t}
+                            onEdit={() => {
+                              setCardForm({ title: card.title, description: card.description || '' });
+                              setEditingCard(card);
+                            }}
+                            onMove={() => setMovingCard(card)}
+                            onDelete={() => setDeletingCard(card.id)}
+                          />
+                        ))}
+                      </SortableContext>
+                      {laneCards.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-8">{t('editor.noCards')}</p>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs text-muted-foreground"
+                        onClick={() => {
+                          setCardForm({ title: '', description: '' });
+                          setAddingCardToLane(lane.id);
+                        }}
+                      >
+                        <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
+                      </Button>
+                    </DroppableLane>
+                  </SortableLaneWrapper>
+                );
+              })}
+            </div>
+          </SortableContext>
+        </div>
+
+        {/* Mobile: Collapsible stacked lanes */}
+        <div className="md:hidden space-y-3">
           {roadmap.lanes.map(lane => {
             const laneCards = roadmap.cards
               .filter(c => c.lane_id === lane.id)
               .sort((a, b) => a.display_order - b.display_order);
 
             return (
-              <SortableLaneWrapper key={lane.id} lane={lane}>
-                {/* Lane Header content (inside SortableLaneWrapper which provides the drag handle + outer div) */}
-                <div className="flex items-center justify-between flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
-                    <h3 className="font-semibold text-sm">{lane.name}</h3>
-                    <span className="text-xs text-muted-foreground">({laneCards.length})</span>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => {
-                        setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
-                        setEditingLane(lane);
-                      }}>
-                        <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
-                        <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-
-                {/* Droppable Lane with Sortable Cards */}
-                <DroppableLane laneId={lane.id}>
-                  <SortableContext items={laneCards.map(c => c.id)} strategy={verticalListSortingStrategy}>
-                    {laneCards.map(card => (
-                      <SortableCard
-                        key={card.id}
-                        card={card}
-                        lane={lane}
-                        t={t}
-                        onEdit={() => {
-                          setCardForm({ title: card.title, description: card.description || '' });
-                          setEditingCard(card);
+              <Collapsible key={lane.id} open={openLanes.has(lane.id)} onOpenChange={() => toggleLane(lane.id)}>
+                <div className="rounded-xl border bg-card overflow-hidden">
+                  <CollapsibleTrigger asChild>
+                    <button className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: lane.color }} />
+                        <span className="font-semibold text-sm">{lane.name}</span>
+                        <Badge variant="secondary" className="text-[10px] h-5">{laneCards.length}</Badge>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => e.stopPropagation()}>
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
+                              setEditingLane(lane);
+                            }}>
+                              <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
+                              <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", openLanes.has(lane.id) && "rotate-180")} />
+                      </div>
+                    </button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-3 pb-3 space-y-2">
+                      {laneCards.map(card => (
+                        <Card key={card.id} className="shadow-sm border" style={{ borderLeftColor: lane.color, borderLeftWidth: 3 }}>
+                          <CardContent className="p-3">
+                            <div className="flex justify-between items-start gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
+                                  {card.title}
+                                </p>
+                                {card.description && (
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                                )}
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                                    <MoreVertical className="w-3 h-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => {
+                                    setCardForm({ title: card.title, description: card.description || '' });
+                                    setEditingCard(card);
+                                  }}>
+                                    <Pencil className="w-4 h-4 mr-2" /> {t('editor.editCard')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => setMovingCard(card)}>
+                                    <MoveRight className="w-4 h-4 mr-2" /> {t('editor.moveCard')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => setDeletingCard(card.id)} className="text-destructive">
+                                    <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteCard')}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      {laneCards.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-4">{t('editor.noCards')}</p>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs text-muted-foreground"
+                        onClick={() => {
+                          setCardForm({ title: '', description: '' });
+                          setAddingCardToLane(lane.id);
                         }}
-                        onMove={() => setMovingCard(card)}
-                        onDelete={() => setDeletingCard(card.id)}
-                      />
-                    ))}
-                  </SortableContext>
-
-                  {laneCards.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-8">{t('editor.noCards')}</p>
-                  )}
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="w-full text-xs text-muted-foreground"
-                    onClick={() => {
-                      setCardForm({ title: '', description: '' });
-                      setAddingCardToLane(lane.id);
-                    }}
-                  >
-                    <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
-                  </Button>
-                </DroppableLane>
-              </SortableLaneWrapper>
+                      >
+                        <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
+                      </Button>
+                    </div>
+                  </CollapsibleContent>
+                </div>
+              </Collapsible>
             );
           })}
         </div>
-        </SortableContext>
 
         {/* Drag Overlay */}
         <DragOverlay>
@@ -548,7 +703,7 @@ export default function RoadmapEditor() {
         </DragOverlay>
       </DndContext>
 
-      {/* Feedback Panel (Slide-over style) */}
+      {/* Feedback Panel */}
       {showFeedbackPanel && (
         <div className="border-t pt-6 space-y-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -558,16 +713,16 @@ export default function RoadmapEditor() {
           {feedbackHook.feedback.length === 0 && (
             <p className="text-sm text-muted-foreground">{t('public.noFeedback')}</p>
           )}
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
             {feedbackHook.feedback.map(fb => (
               <Card key={fb.id} className="border">
-                <CardContent className="p-4 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
+                <CardContent className="p-3 md:p-4 space-y-2">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium text-sm">{fb.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{fb.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{fb.description}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <Badge variant="outline" className="text-[10px]">
                         {t(`public.status.${fb.status}`)}
                       </Badge>
@@ -579,12 +734,12 @@ export default function RoadmapEditor() {
                       <span className="font-medium">{t('public.ownerResponse')}:</span> {fb.owner_response}
                     </div>
                   )}
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-1.5 flex-wrap pt-1">
                     <Select
                       value={fb.status}
                       onValueChange={(v) => feedbackHook.updateFeedbackStatus(fb.id, v)}
                     >
-                      <SelectTrigger className="h-7 text-xs w-28">
+                      <SelectTrigger className="h-7 text-xs w-24 sm:w-28">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -601,10 +756,10 @@ export default function RoadmapEditor() {
                     }}>
                       {t('public.reply')}
                     </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setLinkingFeedback(fb.id)}>
+                    <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => setLinkingFeedback(fb.id)}>
                       <Link2 className="w-3 h-3" />
                     </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => setDeletingFeedback(fb.id)}>
+                    <Button variant="outline" size="sm" className="h-7 text-xs px-2 text-destructive hover:text-destructive" onClick={() => setDeletingFeedback(fb.id)}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
@@ -620,126 +775,135 @@ export default function RoadmapEditor() {
         </div>
       )}
 
-      {/* ===== DIALOGS ===== */}
+      {/* ===== MODALS ===== */}
 
-      {/* Settings Dialog */}
-      <Dialog open={showSettings} onOpenChange={setShowSettings}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('editor.settings')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('editor.customTitle')}</Label>
-              <Input
-                value={settingsForm.custom_title}
-                onChange={e => setSettingsForm(prev => ({ ...prev, custom_title: e.target.value }))}
-                placeholder={t('editor.customTitlePlaceholder')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('editor.fontFamily')}</Label>
-              <FontSelector value={settingsForm.font_family} onChange={v => setSettingsForm(prev => ({ ...prev, font_family: v }))} />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label>{t('editor.isPublic')}</Label>
-              <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('editor.faviconUrl')}</Label>
-              <Input
-                value={settingsForm.favicon_url}
-                onChange={e => setSettingsForm(prev => ({ ...prev, favicon_url: e.target.value }))}
-                placeholder="https://example.com/favicon.ico"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSettings(false)}>{t('editor.cancel')}</Button>
-            <Button onClick={handleSaveSettings}>{t('editor.save')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Settings */}
+      <ResponsiveModal open={showSettings} onOpenChange={setShowSettings} title={t('editor.settings')} isMobile={isMobile}
+        footer={<>
+          <Button variant="outline" onClick={() => setShowSettings(false)}>{t('editor.cancel')}</Button>
+          <Button onClick={handleSaveSettings}>{t('editor.save')}</Button>
+        </>}
+      >
+        <div className="space-y-2">
+          <Label>{t('editor.customTitle')}</Label>
+          <Input
+            value={settingsForm.custom_title}
+            onChange={e => setSettingsForm(prev => ({ ...prev, custom_title: e.target.value }))}
+            placeholder={t('editor.customTitlePlaceholder')}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>{t('editor.fontFamily')}</Label>
+          <FontSelector value={settingsForm.font_family} onChange={v => setSettingsForm(prev => ({ ...prev, font_family: v }))} />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label>{t('editor.isPublic')}</Label>
+          <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
+        </div>
+        <div className="space-y-2">
+          <Label>{t('editor.faviconUrl')}</Label>
+          <Input
+            value={settingsForm.favicon_url}
+            onChange={e => setSettingsForm(prev => ({ ...prev, favicon_url: e.target.value }))}
+            placeholder="https://example.com/favicon.ico"
+          />
+        </div>
+      </ResponsiveModal>
 
       {/* Lane Dialog */}
-      <Dialog open={!!editingLane} onOpenChange={() => setEditingLane(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingLane?.id ? t('editor.editLane') : t('editor.addLane')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('editor.laneName')}</Label>
-              <Input value={laneForm.name} onChange={e => setLaneForm(prev => ({ ...prev, name: e.target.value }))} />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('editor.laneColor')}</Label>
-              <div className="flex gap-2 items-center">
-                <input type="color" value={laneForm.color} onChange={e => setLaneForm(prev => ({ ...prev, color: e.target.value }))} className="w-10 h-10 rounded cursor-pointer" />
-                <Input value={laneForm.color} onChange={e => setLaneForm(prev => ({ ...prev, color: e.target.value }))} className="flex-1" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>{t('editor.laneFont')}</Label>
-              <FontSelector value={laneForm.font} onChange={v => setLaneForm(prev => ({ ...prev, font: v }))} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingLane(null)}>{t('editor.cancel')}</Button>
-            <Button onClick={handleSaveLane} disabled={!laneForm.name.trim()}>{t('editor.save')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ResponsiveModal open={!!editingLane} onOpenChange={() => setEditingLane(null)} title={editingLane?.id ? t('editor.editLane') : t('editor.addLane')} isMobile={isMobile}
+        footer={<>
+          <Button variant="outline" onClick={() => setEditingLane(null)}>{t('editor.cancel')}</Button>
+          <Button onClick={handleSaveLane} disabled={!laneForm.name.trim()}>{t('editor.save')}</Button>
+        </>}
+      >
+        <div className="space-y-2">
+          <Label>{t('editor.laneName')}</Label>
+          <Input value={laneForm.name} onChange={e => setLaneForm(prev => ({ ...prev, name: e.target.value }))} />
+        </div>
+        <ColorPicker
+          label={t('editor.laneColor')}
+          value={laneForm.color}
+          onChange={(color) => setLaneForm(prev => ({ ...prev, color }))}
+        />
+        <div className="space-y-2">
+          <Label>{t('editor.laneFont')}</Label>
+          <FontSelector value={laneForm.font} onChange={v => setLaneForm(prev => ({ ...prev, font: v }))} />
+        </div>
+      </ResponsiveModal>
 
       {/* Card Dialog */}
-      <Dialog open={!!editingCard || !!addingCardToLane} onOpenChange={() => { setEditingCard(null); setAddingCardToLane(null); }}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingCard ? t('editor.editCard') : t('editor.addCard')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>{t('editor.cardTitle')}</Label>
-              <Input value={cardForm.title} onChange={e => setCardForm(prev => ({ ...prev, title: e.target.value }))} />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('editor.cardDescription')}</Label>
-              <Textarea value={cardForm.description} onChange={e => setCardForm(prev => ({ ...prev, description: e.target.value }))} rows={3} className="resize-none" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setEditingCard(null); setAddingCardToLane(null); }}>{t('editor.cancel')}</Button>
-            <Button onClick={handleSaveCard} disabled={!cardForm.title.trim()}>{t('editor.save')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ResponsiveModal open={!!editingCard || !!addingCardToLane} onOpenChange={() => { setEditingCard(null); setAddingCardToLane(null); }} title={editingCard ? t('editor.editCard') : t('editor.addCard')} isMobile={isMobile}
+        footer={<>
+          <Button variant="outline" onClick={() => { setEditingCard(null); setAddingCardToLane(null); }}>{t('editor.cancel')}</Button>
+          <Button onClick={handleSaveCard} disabled={!cardForm.title.trim()}>{t('editor.save')}</Button>
+        </>}
+      >
+        <div className="space-y-2">
+          <Label>{t('editor.cardTitle')}</Label>
+          <Input value={cardForm.title} onChange={e => setCardForm(prev => ({ ...prev, title: e.target.value }))} />
+        </div>
+        <div className="space-y-2">
+          <Label>{t('editor.cardDescription')}</Label>
+          <Textarea value={cardForm.description} onChange={e => setCardForm(prev => ({ ...prev, description: e.target.value }))} rows={3} className="resize-none" />
+        </div>
+      </ResponsiveModal>
 
       {/* Move Card Dialog */}
-      <Dialog open={!!movingCard} onOpenChange={() => setMovingCard(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('editor.moveCard')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            {roadmap.lanes.filter(l => l.id !== movingCard?.lane_id).map(lane => (
-              <Button
-                key={lane.id}
-                variant="outline"
-                className="w-full justify-start"
-                onClick={async () => {
-                  if (movingCard) {
-                    await roadmap.moveCard(movingCard.id, lane.id, 0);
-                    setMovingCard(null);
-                  }
-                }}
-              >
-                <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: lane.color }} />
-                {lane.name}
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ResponsiveModal open={!!movingCard} onOpenChange={() => setMovingCard(null)} title={t('editor.moveCard')} isMobile={isMobile}>
+        <div className="space-y-2">
+          {roadmap.lanes.filter(l => l.id !== movingCard?.lane_id).map(lane => (
+            <Button
+              key={lane.id}
+              variant="outline"
+              className="w-full justify-start"
+              onClick={async () => {
+                if (movingCard) {
+                  await roadmap.moveCard(movingCard.id, lane.id, 0);
+                  setMovingCard(null);
+                }
+              }}
+            >
+              <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: lane.color }} />
+              {lane.name}
+            </Button>
+          ))}
+        </div>
+      </ResponsiveModal>
+
+      {/* Respond to Feedback */}
+      <ResponsiveModal open={!!respondingTo} onOpenChange={() => setRespondingTo(null)} title={t('public.reply')} isMobile={isMobile}
+        footer={<>
+          <Button variant="outline" onClick={() => setRespondingTo(null)}>{t('editor.cancel')}</Button>
+          <Button onClick={handleRespondFeedback} disabled={!responseText.trim()}>{t('editor.save')}</Button>
+        </>}
+      >
+        <Textarea value={responseText} onChange={e => setResponseText(e.target.value)} rows={4} className="resize-none" />
+      </ResponsiveModal>
+
+      {/* Link Feedback to Card */}
+      <ResponsiveModal open={!!linkingFeedback} onOpenChange={() => setLinkingFeedback(null)} title={t('editor.linkToCard')} isMobile={isMobile}>
+        <div className="space-y-2 max-h-60 overflow-y-auto">
+          <Button variant="outline" className="w-full justify-start text-muted-foreground" onClick={async () => {
+            if (linkingFeedback) {
+              await feedbackHook.linkToCard(linkingFeedback, null);
+              setLinkingFeedback(null);
+            }
+          }}>
+            {t('editor.unlink')}
+          </Button>
+          {roadmap.cards.map(card => (
+            <Button key={card.id} variant="outline" className="w-full justify-start" onClick={async () => {
+              if (linkingFeedback) {
+                await feedbackHook.linkToCard(linkingFeedback, card.id);
+                setLinkingFeedback(null);
+              }
+            }}>
+              {card.title}
+            </Button>
+          ))}
+        </div>
+      </ResponsiveModal>
 
       {/* Delete Lane Confirm */}
       <AlertDialog open={!!deletingLane} onOpenChange={() => setDeletingLane(null)}>
@@ -782,49 +946,6 @@ export default function RoadmapEditor() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Respond to Feedback */}
-      <Dialog open={!!respondingTo} onOpenChange={() => setRespondingTo(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t('public.reply')}</DialogTitle>
-          </DialogHeader>
-          <Textarea value={responseText} onChange={e => setResponseText(e.target.value)} rows={4} className="resize-none" />
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setRespondingTo(null)}>{t('editor.cancel')}</Button>
-            <Button onClick={handleRespondFeedback} disabled={!responseText.trim()}>{t('editor.save')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Link Feedback to Card */}
-      <Dialog open={!!linkingFeedback} onOpenChange={() => setLinkingFeedback(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('editor.linkToCard')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            <Button variant="outline" className="w-full justify-start text-muted-foreground" onClick={async () => {
-              if (linkingFeedback) {
-                await feedbackHook.linkToCard(linkingFeedback, null);
-                setLinkingFeedback(null);
-              }
-            }}>
-              {t('editor.unlink')}
-            </Button>
-            {roadmap.cards.map(card => (
-              <Button key={card.id} variant="outline" className="w-full justify-start" onClick={async () => {
-                if (linkingFeedback) {
-                  await feedbackHook.linkToCard(linkingFeedback, card.id);
-                  setLinkingFeedback(null);
-                }
-              }}>
-                {card.title}
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Delete Feedback Confirm */}
       <AlertDialog open={!!deletingFeedback} onOpenChange={() => setDeletingFeedback(null)}>

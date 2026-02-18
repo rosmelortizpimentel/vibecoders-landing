@@ -32,8 +32,12 @@
     "backToApps": "Retour",
     "unlink": "Dissocier",
     "linkToCard": "Lier à une Carte",
-    "errorMovingCard": "Erreur lors du déplacement"
+    "errorMovingCard": "Erreur lors du déplacement",
+    "preview": "Aperçu"
   },
+  "listDescription": "Gérez le roadmap public de vos apps vérifiées.",
+  "noVerifiedApps": "Vous avez besoin d'au moins une app vérifiée pour utiliser le Roadmap.",
+  "goToApps": "Aller à Mes Apps",
   "public": {
     "poweredBy": "Propulsé par",
     "feedback": "Commentaires et Suggestions",
