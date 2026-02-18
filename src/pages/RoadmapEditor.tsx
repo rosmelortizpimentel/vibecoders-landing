@@ -152,7 +152,7 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
 }
 
 // Sortable lane wrapper (for lane reordering) - desktop only
-function SortableLaneWrapper({ lane, children }: { lane: RoadmapLane; children: React.ReactNode }) {
+function SortableLaneWrapper({ lane, header, children }: { lane: RoadmapLane; header: React.ReactNode; children: React.ReactNode }) {
   const {
     attributes,
     listeners,
@@ -169,11 +169,14 @@ function SortableLaneWrapper({ lane, children }: { lane: RoadmapLane; children: 
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex-shrink-0 w-72">
+    <div ref={setNodeRef} style={style} className="flex-shrink-0 w-72 flex flex-col">
       <div className="flex items-center gap-1 mb-3 px-1">
         <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5">
           <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
+        {header}
+      </div>
+      <div className="flex-1">
         {children}
       </div>
     </div>
@@ -523,33 +526,37 @@ export default function RoadmapEditor() {
                   .sort((a, b) => a.display_order - b.display_order);
 
                 return (
-                  <SortableLaneWrapper key={lane.id} lane={lane}>
-                    <div className="flex items-center justify-between flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
-                        <h3 className="font-semibold text-sm">{lane.name}</h3>
-                        <span className="text-xs text-muted-foreground">({laneCards.length})</span>
+                  <SortableLaneWrapper
+                    key={lane.id}
+                    lane={lane}
+                    header={
+                      <div className="flex items-center justify-between flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
+                          <h3 className="font-semibold text-sm">{lane.name}</h3>
+                          <span className="text-xs text-muted-foreground">({laneCards.length})</span>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
+                              setEditingLane(lane);
+                            }}>
+                              <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
+                              <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
-                            setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
-                            setEditingLane(lane);
-                          }}>
-                            <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
-                            <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
+                    }
+                  >
                     <DroppableLane laneId={lane.id}>
                       <SortableContext items={laneCards.map(c => c.id)} strategy={verticalListSortingStrategy}>
                         {laneCards.map(card => (
