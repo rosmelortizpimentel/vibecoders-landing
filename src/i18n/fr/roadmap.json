@@ -5,6 +5,7 @@
     "initialize": "Activer le Roadmap",
     "initializeDesc": "Configurez votre roadmap public avec des colonnes par défaut",
     "settings": "Paramètres",
+    "branding": "Branding",
     "addLane": "Ajouter une Colonne",
     "addCard": "Ajouter une Carte",
     "laneName": "Nom de la Colonne",

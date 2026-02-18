@@ -5,6 +5,7 @@
     "initialize": "Activate Roadmap",
     "initializeDesc": "Set up your public roadmap with default lanes",
     "settings": "Settings",
+    "branding": "Branding",
     "addLane": "Add Lane",
     "addCard": "Add Card",
     "laneName": "Lane Name",

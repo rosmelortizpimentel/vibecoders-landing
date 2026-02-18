@@ -76,6 +76,10 @@ const App = () => (
           {/* Public routes */}
           {/* Public routes - New Landing is now Official */}
           <Route path="/" element={<NewLanding />} />
+          {/* Public roadmap & feedback: /@username/app-slug/roadmap */}
+          <Route path="/:handle/:appSlug/roadmap" element={<PublicRoadmap />} />
+          <Route path="/:handle/:appSlug/feedback" element={<PublicRoadmap />} />
+          {/* Legacy redirect */}
           <Route path="/roadmap/:appName" element={<PublicRoadmap />} />
 
           <Route path="/profile" element={<Profile />} />

@@ -5,6 +5,7 @@
     "initialize": "Activar Roadmap",
     "initializeDesc": "Configura tu roadmap público con carriles predeterminados",
     "settings": "Configuración",
+    "branding": "Branding",
     "addLane": "Agregar Carril",
     "addCard": "Agregar Tarjeta",
     "laneName": "Nombre del Carril",
