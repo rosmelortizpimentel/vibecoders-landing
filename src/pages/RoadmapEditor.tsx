@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoadmap, useRoadmapFeedback, RoadmapLane, RoadmapCard } from '@/hooks/useRoadmap';
@@ -20,6 +20,110 @@ import { FontSelector } from '@/components/me/FontSelector';
 import { toast } from 'sonner';
 import { Loader2, ArrowLeft, Plus, Settings, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  DndContext,
+  DragOverlay,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragStartEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { useDroppable } from '@dnd-kit/core';
+
+// Sortable card component
+function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
+  card: RoadmapCard;
+  lane: RoadmapLane;
+  onEdit: () => void;
+  onMove: () => void;
+  onDelete: () => void;
+  t: (key: string) => string;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: card.id, data: { type: 'card', card, laneId: lane.id } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card
+        className="cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow border"
+        style={{ borderLeftColor: lane.color, borderLeftWidth: 3 }}
+      >
+        <CardContent className="p-3">
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex items-start gap-2 flex-1 min-w-0" {...attributes} {...listeners}>
+              <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
+                  {card.title}
+                </p>
+                {card.description && (
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                )}
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                  <MoreVertical className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onEdit}>
+                  <Pencil className="w-4 h-4 mr-2" /> {t('editor.editCard')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onMove}>
+                  <MoveRight className="w-4 h-4 mr-2" /> {t('editor.moveCard')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onDelete} className="text-destructive">
+                  <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteCard')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Droppable lane container
+function DroppableLane({ laneId, children }: { laneId: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `lane-${laneId}`, data: { type: 'lane', laneId } });
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'space-y-2 min-h-[200px] rounded-lg p-2 transition-colors',
+        isOver ? 'bg-primary/10 ring-2 ring-primary/20' : 'bg-muted/30'
+      )}
+    >
+      {children}
+    </div>
+  );
+}
 
 export default function RoadmapEditor() {
   const { appId } = useParams<{ appId: string }>();
@@ -51,6 +155,93 @@ export default function RoadmapEditor() {
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
   const [linkingFeedback, setLinkingFeedback] = useState<string | null>(null);
+
+  // DnD state
+  const [activeCard, setActiveCard] = useState<RoadmapCard | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const card = roadmap.cards.find(c => c.id === active.id);
+    if (card) setActiveCard(card);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeCardId = active.id as string;
+    const overId = over.id as string;
+
+    // Determine source and target lane
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    const sourceLaneId = activeData?.laneId as string;
+    let targetLaneId: string | undefined;
+
+    if (overData?.type === 'lane') {
+      targetLaneId = overData.laneId as string;
+    } else if (overData?.type === 'card') {
+      targetLaneId = overData.laneId as string;
+    }
+
+    if (!targetLaneId || sourceLaneId === targetLaneId) return;
+
+    // Move card to new lane optimistically (local state only)
+    roadmap.cards.forEach(() => {}); // no-op to reference
+    // We'll handle the actual move in onDragEnd
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    setActiveCard(null);
+    const { active, over } = event;
+    if (!over) return;
+
+    const activeCardId = active.id as string;
+    const overId = over.id as string;
+    const activeData = active.data.current;
+    const overData = over.data.current;
+
+    const sourceLaneId = activeData?.laneId as string;
+    let targetLaneId: string;
+    let targetIndex: number;
+
+    if (overData?.type === 'lane') {
+      targetLaneId = overData.laneId as string;
+      // Dropped on empty lane area → append to end
+      const laneCards = roadmap.cards.filter(c => c.lane_id === targetLaneId);
+      targetIndex = laneCards.length;
+    } else if (overData?.type === 'card') {
+      targetLaneId = overData.laneId as string;
+      const overCard = overData.card as RoadmapCard;
+      const laneCards = roadmap.cards
+        .filter(c => c.lane_id === targetLaneId && c.id !== activeCardId)
+        .sort((a, b) => a.display_order - b.display_order);
+      targetIndex = laneCards.findIndex(c => c.id === overCard.id);
+      if (targetIndex === -1) targetIndex = laneCards.length;
+    } else {
+      return;
+    }
+
+    // Same lane reorder
+    if (sourceLaneId === targetLaneId && overData?.type === 'card') {
+      const laneCards = roadmap.cards
+        .filter(c => c.lane_id === sourceLaneId)
+        .sort((a, b) => a.display_order - b.display_order);
+      const oldIndex = laneCards.findIndex(c => c.id === activeCardId);
+      if (oldIndex === targetIndex) return;
+    }
+
+    try {
+      await roadmap.moveCard(activeCardId, targetLaneId, targetIndex);
+    } catch {
+      toast.error('Error moving card');
+    }
+  };
 
   // Fetch app data
   useEffect(() => {
@@ -214,106 +405,100 @@ export default function RoadmapEditor() {
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex gap-4 overflow-x-auto pb-4 min-h-[60vh]">
-        {roadmap.lanes.map(lane => {
-          const laneCards = roadmap.cards
-            .filter(c => c.lane_id === lane.id)
-            .sort((a, b) => a.display_order - b.display_order);
+      {/* Kanban Board with DnD */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex gap-4 overflow-x-auto pb-4 min-h-[60vh]">
+          {roadmap.lanes.map(lane => {
+            const laneCards = roadmap.cards
+              .filter(c => c.lane_id === lane.id)
+              .sort((a, b) => a.display_order - b.display_order);
 
-          return (
-            <div key={lane.id} className="flex-shrink-0 w-72">
-              {/* Lane Header */}
-              <div className="flex items-center justify-between mb-3 px-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
-                  <h3 className="font-semibold text-sm">{lane.name}</h3>
-                  <span className="text-xs text-muted-foreground">({laneCards.length})</span>
+            return (
+              <div key={lane.id} className="flex-shrink-0 w-72">
+                {/* Lane Header */}
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
+                    <h3 className="font-semibold text-sm">{lane.name}</h3>
+                    <span className="text-xs text-muted-foreground">({laneCards.length})</span>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => {
+                        setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
+                        setEditingLane(lane);
+                      }}>
+                        <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
+                        <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => {
-                      setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
-                      setEditingLane(lane);
-                    }}>
-                      <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
-                      <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
 
-              {/* Cards */}
-              <div className="space-y-2 min-h-[200px] bg-muted/30 rounded-lg p-2">
-                {laneCards.map(card => (
-                  <Card
-                    key={card.id}
-                    className="cursor-default shadow-sm hover:shadow-md transition-shadow border"
-                    style={{ borderLeftColor: lane.color, borderLeftWidth: 3 }}
+                {/* Droppable Lane with Sortable Cards */}
+                <DroppableLane laneId={lane.id}>
+                  <SortableContext items={laneCards.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                    {laneCards.map(card => (
+                      <SortableCard
+                        key={card.id}
+                        card={card}
+                        lane={lane}
+                        t={t}
+                        onEdit={() => {
+                          setCardForm({ title: card.title, description: card.description || '' });
+                          setEditingCard(card);
+                        }}
+                        onMove={() => setMovingCard(card)}
+                        onDelete={() => setDeletingCard(card.id)}
+                      />
+                    ))}
+                  </SortableContext>
+
+                  {laneCards.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-8">{t('editor.noCards')}</p>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full text-xs text-muted-foreground"
+                    onClick={() => {
+                      setCardForm({ title: '', description: '' });
+                      setAddingCardToLane(lane.id);
+                    }}
                   >
-                    <CardContent className="p-3">
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
-                            {card.title}
-                          </p>
-                          {card.description && (
-                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
-                          )}
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                              <MoreVertical className="w-3 h-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => {
-                              setCardForm({ title: card.title, description: card.description || '' });
-                              setEditingCard(card);
-                            }}>
-                              <Pencil className="w-4 h-4 mr-2" /> {t('editor.editCard')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setMovingCard(card)}>
-                              <MoveRight className="w-4 h-4 mr-2" /> {t('editor.moveCard')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDeletingCard(card.id)} className="text-destructive">
-                              <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteCard')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-
-                {laneCards.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-8">{t('editor.noCards')}</p>
-                )}
-
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full text-xs text-muted-foreground"
-                  onClick={() => {
-                    setCardForm({ title: '', description: '' });
-                    setAddingCardToLane(lane.id);
-                  }}
-                >
-                  <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
-                </Button>
+                    <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
+                  </Button>
+                </DroppableLane>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+
+        {/* Drag Overlay */}
+        <DragOverlay>
+          {activeCard ? (
+            <Card className="shadow-lg border w-72 rotate-2 opacity-90" style={{ borderLeftWidth: 3, borderLeftColor: roadmap.lanes.find(l => l.id === activeCard.lane_id)?.color }}>
+              <CardContent className="p-3">
+                <p className="font-medium text-sm">{activeCard.title}</p>
+                {activeCard.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{activeCard.description}</p>}
+              </CardContent>
+            </Card>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {/* Feedback Panel (Slide-over style) */}
       {showFeedbackPanel && (
