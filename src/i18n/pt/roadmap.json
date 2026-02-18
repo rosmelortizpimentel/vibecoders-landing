@@ -29,7 +29,10 @@
     "noCards": "Sem cartões ainda",
     "dragHint": "Arraste para reordenar",
     "verifiedOnly": "Apenas apps verificados podem usar o Roadmap",
-    "backToApps": "Voltar"
+    "backToApps": "Voltar",
+    "unlink": "Desvincular",
+    "linkToCard": "Vincular a Cartão",
+    "errorMovingCard": "Erro ao mover o cartão"
   },
   "public": {
     "poweredBy": "Desenvolvido com",
