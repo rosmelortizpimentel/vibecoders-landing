@@ -1409,6 +1409,51 @@ export type Database = {
         }
         Relationships: []
       }
+      sidebar_menu_items: {
+        Row: {
+          created_at: string
+          css_class: string | null
+          display_order: number
+          icon: string
+          id: string
+          is_active: boolean
+          key: string
+          label_key: string
+          path: string
+          requires_waitlist: boolean
+          section: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          css_class?: string | null
+          display_order?: number
+          icon: string
+          id?: string
+          is_active?: boolean
+          key: string
+          label_key: string
+          path: string
+          requires_waitlist?: boolean
+          section?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          css_class?: string | null
+          display_order?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          label_key?: string
+          path?: string
+          requires_waitlist?: boolean
+          section?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       survey_options: {
         Row: {
           created_at: string | null
