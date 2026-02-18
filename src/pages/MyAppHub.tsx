@@ -3,12 +3,12 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useApps } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { supabase } from '@/integrations/supabase/client';
+import { useStatuses } from '@/hooks/useStatuses';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { VerificationBadge } from '@/components/me/VerificationBadge';
+import { getStatusColors } from '@/lib/appStatusColors';
 
 import { AppEditor } from '@/components/me/AppEditor';
 import RoadmapEditor from '@/pages/RoadmapEditor';
@@ -73,12 +73,9 @@ export default function MyAppHub() {
     return await verifyApp(appId);
   };
 
-  const [statusInfo, setStatusInfo] = useState<{ name: string; color: string } | null>(null);
-  useEffect(() => {
-    if (!app?.status_id) return;
-    supabase.from('app_statuses').select('name, color').eq('id', app.status_id).single()
-      .then(({ data }) => { if (data) setStatusInfo(data); });
-  }, [app?.status_id]);
+  const { statuses } = useStatuses();
+  const status = app ? statuses.find(s => s.id === app.status_id) : undefined;
+  const statusColors = getStatusColors(status?.slug);
 
   if (authLoading || appsLoading) {
     return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -97,36 +94,33 @@ export default function MyAppHub() {
 
   return (
     <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-4xl mx-auto">
-      {/* Back + Header */}
-      <div className="mb-4">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/my-apps')} className="text-muted-foreground hover:text-foreground -ml-2 mb-3">
-          <ArrowLeft className="w-4 h-4 mr-1" /> {t.t('hub.backToApps')}
+      {/* Compact Header */}
+      <div className="flex items-center gap-3 mb-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/my-apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8">
+          <ArrowLeft className="w-4 h-4" />
         </Button>
-
-        <div className="flex items-center gap-3">
-          {app.logo_url ? (
-            <img src={app.logo_url} alt={app.name || ''} className="w-10 h-10 rounded-lg object-cover border" />
-          ) : (
-            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-lg font-bold">
-              {(app.name || 'A').charAt(0)}
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">{app.name || app.url}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              {statusInfo && (
-                <Badge variant="outline" className="text-xs" style={{ borderColor: statusInfo.color, color: statusInfo.color }}>{statusInfo.name}</Badge>
-              )}
-              {app.is_verified && <Badge variant="secondary" className="text-xs">{t.verified}</Badge>}
-            </div>
+        {app.logo_url ? (
+          <img src={app.logo_url} alt={app.name || ''} className="w-8 h-8 rounded-lg object-cover border shrink-0" />
+        ) : (
+          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-sm font-bold shrink-0">
+            {(app.name || 'A').charAt(0)}
           </div>
-          <a href={app.url} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">{t.t('hub.viewPage')}</span>
-            </Button>
-          </a>
-        </div>
+        )}
+        <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{app.name || app.url}</h1>
+        {status && (
+          <span className={cn('inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-tight border shrink-0', statusColors.bg, statusColors.text, statusColors.border)}>
+            <span className={cn('w-1.5 h-1.5 rounded-full', statusColors.dot)} />
+            {status.name}
+          </span>
+        )}
+        <VerificationBadge isVerified={app.is_verified} className="shrink-0" />
+        <div className="flex-1" />
+        <a href={app.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{t.t('hub.viewPage')}</span>
+          </Button>
+        </a>
       </div>
 
       {/* Tabs */}

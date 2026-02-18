@@ -5,6 +5,7 @@
   "delete": "Delete",
   "noApps": "You don't have any apps yet",
   "noAppsHint": "Add your first project to show it on your profile",
+  "appsHint": "Manage all your Apps",
   "urlPlaceholder": "https://your-app.com",
   "deleteConfirmTitle": "Delete this app?",
   "deleteConfirmDescription": "This action cannot be undone. The app will be permanently deleted from your profile.",
