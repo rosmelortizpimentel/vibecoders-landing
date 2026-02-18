@@ -953,12 +953,9 @@ export default function RoadmapEditor() {
               <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.columnColors')}</Label>
               {roadmap.lanes.map(lane => (
                 <div key={lane.id} className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: lane.color }} />
-                    <span className="text-sm font-medium truncate">{lane.name}</span>
-                  </div>
+                  <span className="text-sm font-medium truncate flex-1 min-w-0">{lane.name}</span>
                   <ColorPicker
-                    label=""
+                    compact
                     value={lane.color}
                     onChange={async (color) => {
                       try {

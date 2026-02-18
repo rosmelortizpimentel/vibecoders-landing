@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, ThumbsUp, MessageSquare, Paperclip, X, Send, Calendar } from 'lucide-react';
+import { Loader2, ThumbsUp, MessageSquare, Paperclip, X, Send, Calendar, Heart, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
@@ -88,7 +88,8 @@ export default function PublicRoadmap() {
   const [cards, setCards] = useState<RoadmapCard[]>([]);
   const [feedback, setFeedback] = useState<RoadmapFeedback[]>([]);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
-  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [likedFeedbackIds, setLikedFeedbackIds] = useState<Set<string>>(new Set());
+  const [likedCardIds, setLikedCardIds] = useState<Set<string>>(new Set());
   const [fingerprint, setFingerprint] = useState('');
   const [lang, setLang] = useState<string>('en');
   const [activeTab, setActiveTab] = useState<'roadmap' | 'feedback'>(() => {
@@ -185,10 +186,19 @@ export default function PublicRoadmap() {
           .select('feedback_id')
           .eq('device_fingerprint', fp)
           .in('feedback_id', feedback.map(f => f.id));
-        if (data) setLikedIds(new Set(data.map(d => d.feedback_id)));
+        if (data) setLikedFeedbackIds(new Set(data.map(d => d.feedback_id)));
+      }
+      // Check which cards are liked by this fingerprint
+      if (cards.length > 0) {
+        const { data } = await supabase
+          .from('roadmap_card_likes')
+          .select('card_id')
+          .eq('device_fingerprint', fp)
+          .in('card_id', cards.map(c => c.id));
+        if (data) setLikedCardIds(new Set(data.map(d => d.card_id)));
       }
     })();
-  }, [feedback.length]);
+  }, [feedback.length, cards.length]);
 
   // Apply favicon
   useFavicon(settings?.favicon_url ?? undefined);
@@ -217,24 +227,45 @@ export default function PublicRoadmap() {
     return () => { document.head.removeChild(link); };
   }, [settings?.font_family, lanes]);
 
-  const handleToggleLike = async (feedbackId: string) => {
+  const handleToggleFeedbackLike = async (feedbackId: string) => {
     if (!fingerprint) return;
-    const isLiked = likedIds.has(feedbackId);
+    const isLiked = likedFeedbackIds.has(feedbackId);
 
     // Optimistic update
-    setLikedIds(prev => {
+    setLikedFeedbackIds(prev => {
       const next = new Set(prev);
       if (isLiked) next.delete(feedbackId); else next.add(feedbackId);
       return next;
     });
     setFeedback(prev => prev.map(f =>
       f.id === feedbackId ? { ...f, likes_count: f.likes_count + (isLiked ? -1 : 1) } : f
-    ));
+    ).sort((a, b) => b.likes_count - a.likes_count));
 
     if (isLiked) {
       await supabase.from('roadmap_feedback_likes').delete().eq('feedback_id', feedbackId).eq('device_fingerprint', fingerprint);
     } else {
       await supabase.from('roadmap_feedback_likes').insert({ feedback_id: feedbackId, device_fingerprint: fingerprint });
+    }
+  };
+
+  const handleToggleCardLike = async (cardId: string) => {
+    if (!fingerprint) return;
+    const isLiked = likedCardIds.has(cardId);
+
+    // Optimistic update
+    setLikedCardIds(prev => {
+      const next = new Set(prev);
+      if (isLiked) next.delete(cardId); else next.add(cardId);
+      return next;
+    });
+    setCards(prev => prev.map(c =>
+      c.id === cardId ? { ...c, likes_count: (c as any).likes_count + (isLiked ? -1 : 1) } : c
+    ));
+
+    if (isLiked) {
+      await supabase.from('roadmap_card_likes').delete().eq('card_id', cardId).eq('device_fingerprint', fingerprint);
+    } else {
+      await supabase.from('roadmap_card_likes').insert({ card_id: cardId, device_fingerprint: fingerprint });
     }
   };
 
@@ -377,12 +408,26 @@ export default function PublicRoadmap() {
                             <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm border-l-[3px]" style={{ borderLeftColor: lane.color }}>
                               <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
                               {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
-                              {card.completed_at && (
-                                <Badge variant="secondary" className="text-[10px] mt-1.5 h-5 bg-gray-100 text-gray-600">
-                                  <Calendar className="w-3 h-3 mr-1" />
-                                  {format(new Date(card.completed_at), 'MMM d, yyyy')}
-                                </Badge>
-                              )}
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex items-center gap-1.5">
+                                  {card.completed_at && (
+                                    <Badge variant="secondary" className="text-[10px] h-5 bg-gray-100 text-gray-600">
+                                      <Calendar className="w-3 h-3 mr-1" />
+                                      {format(new Date(card.completed_at), 'MMM d, yyyy')}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleToggleCardLike(card.id)}
+                                  className={cn(
+                                    'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all',
+                                    likedCardIds.has(card.id) ? 'bg-rose-50 text-rose-600' : 'text-gray-400 hover:text-rose-500'
+                                  )}
+                                >
+                                  <Heart className={cn('w-3.5 h-3.5', likedCardIds.has(card.id) && 'fill-current')} />
+                                  {(card as any).likes_count > 0 && (card as any).likes_count}
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -407,12 +452,26 @@ export default function PublicRoadmap() {
                             <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm border-l-[3px]" style={{ borderLeftColor: lane.color }}>
                               <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
                               {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
-                              {card.completed_at && (
-                                <Badge variant="secondary" className="text-[10px] mt-1.5 h-5 bg-gray-100 text-gray-600">
-                                  <Calendar className="w-3 h-3 mr-1" />
-                                  {format(new Date(card.completed_at), 'MMM d, yyyy')}
-                                </Badge>
-                              )}
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex items-center gap-1.5">
+                                  {card.completed_at && (
+                                    <Badge variant="secondary" className="text-[10px] h-5 bg-gray-100 text-gray-600">
+                                      <Calendar className="w-3 h-3 mr-1" />
+                                      {format(new Date(card.completed_at), 'MMM d, yyyy')}
+                                    </Badge>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => handleToggleCardLike(card.id)}
+                                  className={cn(
+                                    'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all',
+                                    likedCardIds.has(card.id) ? 'bg-rose-50 text-rose-600' : 'text-gray-400 hover:text-rose-500'
+                                  )}
+                                >
+                                  <Heart className={cn('w-3.5 h-3.5', likedCardIds.has(card.id) && 'fill-current')} />
+                                  {(card as any).likes_count > 0 && (card as any).likes_count}
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -442,23 +501,29 @@ export default function PublicRoadmap() {
                   <div key={fb.id} className="bg-white rounded-xl p-4 shadow-sm border">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
+                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-sm text-gray-900">{fb.title}</h3>
                           <span className={cn('text-[10px] px-2 py-0.5 rounded-full font-medium', STATUS_COLORS[fb.status] || 'bg-gray-100 text-gray-600')}>
                             {sl[fb.status] || fb.status}
                           </span>
+                          {fb.linked_card_id && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 flex items-center gap-1">
+                              <Link2 className="w-3 h-3" />
+                              Included in feature
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-600 mt-1">{fb.description}</p>
                         {fb.author_name && <p className="text-xs text-gray-400 mt-1">— {fb.author_name}</p>}
                       </div>
                       <button
-                        onClick={() => handleToggleLike(fb.id)}
+                        onClick={() => handleToggleFeedbackLike(fb.id)}
                         className={cn(
                           'flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium transition-all shrink-0',
-                          likedIds.has(fb.id) ? 'bg-rose-50 text-rose-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                          likedFeedbackIds.has(fb.id) ? 'bg-rose-50 text-rose-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         )}
                       >
-                        <ThumbsUp className={cn('w-3.5 h-3.5', likedIds.has(fb.id) && 'fill-current')} />
+                        <Heart className={cn('w-3.5 h-3.5', likedFeedbackIds.has(fb.id) && 'fill-current')} />
                         {fb.likes_count}
                       </button>
                     </div>

@@ -5,9 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface ColorPickerProps {
-  label: string;
+  label?: string;
   value: string;
   onChange: (color: string) => void;
+  compact?: boolean;
 }
 
 // Professional matte colors - not too bright/neon
@@ -30,7 +31,7 @@ const PRESET_COLORS = [
   '#9D174D', // Dark pink
 ];
 
-export function ColorPicker({ label, value, onChange }: ColorPickerProps) {
+export function ColorPicker({ label, value, onChange, compact = false }: ColorPickerProps) {
   const [inputValue, setInputValue] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -57,9 +58,37 @@ export function ColorPicker({ label, value, onChange }: ColorPickerProps) {
     onChange(color);
   };
 
+  if (compact) {
+    return (
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            className="w-7 h-7 rounded-full border-2 border-border shadow-sm flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-2 transition-all"
+            style={{ backgroundColor: value }}
+            aria-label="Abrir selector de color"
+          />
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-3" align="end">
+          <HexColorPicker color={value} onChange={handlePickerChange} />
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-muted-foreground text-sm">#</span>
+            <Input
+              value={inputValue.replace('#', '')}
+              onChange={e => handleInputChange('#' + e.target.value)}
+              placeholder="3D5AFE"
+              className="font-mono uppercase text-sm h-8"
+              maxLength={6}
+            />
+          </div>
+        </PopoverContent>
+      </Popover>
+    );
+  }
+
   return (
     <div className="space-y-3">
-      <Label className="text-[#1c1c1c]">{label}</Label>
+      {label && <Label className="text-[#1c1c1c]">{label}</Label>}
       
       <div className="flex items-center gap-3">
         {/* Color Preview - clickable to open picker */}
