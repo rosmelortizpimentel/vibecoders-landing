@@ -1,77 +1,81 @@
 
-# Roadmap Improvements: Favicon Upload, Public Footer, Settings Redesign & Done Date
 
-## 1. Favicon Upload (file-based instead of URL)
+# Roadmap Editor Header Redesign + Feedback Section Independence
 
-**File: `RoadmapEditor.tsx`** -- Settings modal
+## Overview
+Redesign the RoadmapEditor header to show app logo, name, and a Public/Private toggle inline. Add independent feedback section with its own URL and public visibility toggle. Remove "Vista Previa" button.
 
-- Replace the `Input` text field for favicon URL with a **file upload** input
-- When a file is selected, upload it to Supabase Storage bucket `roadmap-attachments` (already exists) under a path like `favicons/{appId}-{timestamp}.{ext}`
-- Get the public URL and store it in `settingsForm.favicon_url`
-- Show a small preview of the current favicon next to the upload button
-- Accept `.ico`, `.png`, `.svg`, `.webp` formats only
+---
 
-## 2. Public Roadmap Footer Fix
+## 1. Header Redesign (`RoadmapEditor.tsx`)
 
-**File: `PublicRoadmap.tsx`**
+### New header layout (left to right):
+- **Back arrow** (existing)
+- **App logo** (`app.logo_url`) -- small 32x32 rounded image
+- **App name** (bold) on line 1, below it a **Public/Private switch** styled as a compact inline toggle tag
+- When **Public** is active, show a "Pagina Publica" link to the right that opens in a new tab
+- **Remove** the "Vista Previa" button entirely
 
-- Make the page layout `min-h-screen flex flex-col` so the footer is always at the bottom
-- Wrap `<main>` in `flex-1`
-- In the footer:
-  - Add the vibecoders logo (small, ~16px) next to "Powered by"
-  - Make "vibecoders.la" a clickable link opening in a new tab (already is, just ensure logo is there)
-- Import `vibecodersLogo` from `@/assets/vibecoders-logo.png` (same pattern as other components)
+### Header right side:
+- **Feedback** button (navigates to feedback view within the editor)
+- **Branding** button (opens sidebar, same as now)
 
-## 3. Settings Modal Redesign -- Branding Focus + Column Colors
+## 2. Feedback as Independent Section with Own URL
 
-**File: `RoadmapEditor.tsx`**
+### Editor view modes:
+- Add a `viewMode` state: `'roadmap' | 'feedback'`
+- Default: `'roadmap'` (shows Kanban columns)
+- When "Feedback" is clicked: switch to `'feedback'` mode
+  - Hide the Kanban board (columns)
+  - Show the feedback panel full-width
+  - URL stays the same (internal state, no route change needed in the editor)
 
-- **Public/Private toggle** stays at top (already done) -- keep as-is
-- **Branding section** below: Title, Font, Favicon upload (grouped under a visual section header)
-- **Column Colors section**: List each lane name with a `ColorPicker` next to it. Changes save immediately to the lane's color
-- Update default lane colors in `useRoadmap.ts`:
-  - Backlog: `#6B7280` (gray -- already correct)
-  - Planned: `#F59E0B` (amber/yellow from palette)
-  - In Progress: `#3B82F6` (blue from palette -- already correct)
-  - Done: `#10B981` (green from palette -- already correct)
+### Feedback public toggle:
+- Add `is_feedback_public` field to `roadmap_settings` (requires DB migration)
+- In the Branding sidebar, add a second toggle for "Feedback Publico" below the existing "Publico" toggle -- independent from the roadmap public toggle
+- The public roadmap page (`PublicRoadmap.tsx`) checks `is_feedback_public` before showing the Feedback tab
 
-## 4. Optional Date Tag on "Done" Cards
+## 3. Database Migration
 
-**Database migration**: Add `completed_at DATE` column to `roadmap_cards` table (nullable)
+Add `is_feedback_public BOOLEAN DEFAULT false` to `roadmap_settings` table.
 
-**File: `useRoadmap.ts`**:
-- Update `RoadmapCard` interface to include `completed_at: string | null`
-- In `moveCard`, when `newLaneId` corresponds to the "Done" lane, optionally set `completed_at`
+## 4. Hook Update (`useRoadmap.ts`)
 
-**File: `RoadmapEditor.tsx`**:
-- When a card is moved to a "Done" lane (via drag or move dialog), show an optional date picker dialog
-- If the user selects a date, save it as `completed_at` on the card
-- If skipped, the card moves without a date
-- Display the date as a small `Badge` tag on the card (e.g., "Feb 18, 2026")
+- Add `is_feedback_public` to `RoadmapSettings` interface
+- Include it in `updateSettings` flow
 
-**File: `PublicRoadmap.tsx`**:
-- Also display the `completed_at` badge on cards in the public view
+## 5. Public Roadmap Update (`PublicRoadmap.tsx`)
+
+- Only show the Feedback tab/section when `settings.is_feedback_public` is true
+- If someone navigates to `/@handle/slug/feedback` but feedback is not public, show "not found" or redirect to roadmap
+
+## 6. i18n Updates
+
+Add keys:
+- `editor.feedbackPublic`: "Feedback Publico"
+- `editor.feedbackPublicOnHint`: "Cualquiera puede enviar feedback"
+- `editor.feedbackPublicOffHint`: "El feedback esta desactivado"
+- `editor.publicPage`: "Pagina Publica"
+
+---
 
 ## Technical Details
 
-### Files to create:
-- New migration SQL for `completed_at` column on `roadmap_cards`
-
 ### Files to modify:
-1. **`src/pages/RoadmapEditor.tsx`** -- Favicon upload, column colors in settings, date picker on Done move
-2. **`src/pages/PublicRoadmap.tsx`** -- Footer layout fix, logo import, completed_at badge display
-3. **`src/hooks/useRoadmap.ts`** -- Update `RoadmapCard` interface, update `DEFAULT_LANES` colors, handle `completed_at` in moveCard
-4. **`src/integrations/supabase/types.ts`** -- Add `completed_at` to roadmap_cards type
+1. **`src/pages/RoadmapEditor.tsx`** -- Header redesign, view mode toggle, feedback public toggle in sidebar
+2. **`src/hooks/useRoadmap.ts`** -- Add `is_feedback_public` to interface
+3. **`src/pages/PublicRoadmap.tsx`** -- Conditionally show feedback based on `is_feedback_public`
+4. **`src/integrations/supabase/types.ts`** -- Update types
+5. **`src/i18n/{en,es,fr,pt}/roadmap.json`** -- New keys
 
-### Default Lane Colors Update:
+### Files to create:
+- New SQL migration for `is_feedback_public` column
+
+### Header mockup (text-based):
 ```text
-Backlog:     #6B7280 (gray)      -- no change
-Planned:     #F59E0B (amber)     -- was #3B82F6
-In Progress: #3B82F6 (blue)      -- was #F59E0B
-Done:        #10B981 (green)     -- no change
+[<-] [logo] App Name              [Feedback (5)] [Branding]
+           [* Publico] [Pagina Publica ->]
 ```
 
-### Date Picker Approach:
-- Use a simple `Input type="date"` inside the move-to-Done confirmation, keeping it lightweight
-- Store as a `DATE` column (no timezone issues)
-- Display formatted with `date-fns` `format()` function (already installed)
+When "Privado" is selected, the "Pagina Publica" link disappears.
+
