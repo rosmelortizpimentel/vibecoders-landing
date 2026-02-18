@@ -27,6 +27,8 @@ import PromptStudio from "./pages/prompts/PromptStudio";
 import PromptViewer from "./pages/prompts/PromptViewer";
 import Beta from "./pages/Beta";
 import Vibers from "./pages/Vibers";
+import RoadmapEditor from "./pages/RoadmapEditor";
+import PublicRoadmap from "./pages/PublicRoadmap";
 
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -54,7 +56,7 @@ const App = () => (
           {/* Public routes */}
           {/* Public routes - New Landing is now Official */}
           <Route path="/" element={<NewLanding />} />
-          {/* <Route path="/old-home" element={<Index />} /> */}
+          <Route path="/roadmap/:appName" element={<PublicRoadmap />} />
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/privacy" element={<Privacy />} />
@@ -98,6 +100,7 @@ const App = () => (
             <Route path="/prompts/:id" element={<PromptViewer />} />
             <Route path="/prompts/:id/edit" element={<PromptStudio />} />
             <Route path="/app/:appId" element={<AppDetail />} />
+            <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
           </Route>
           
           {/* Legacy redirects */}
