@@ -92,10 +92,10 @@ export default function PublicRoadmap() {
   const [fingerprint, setFingerprint] = useState('');
   const [lang, setLang] = useState<string>('en');
   const [activeTab, setActiveTab] = useState<'roadmap' | 'feedback'>(() => {
-    // Detect if we're on the feedback URL
     if (window.location.pathname.endsWith('/feedback')) return 'feedback';
     return 'roadmap';
   });
+  const [isFeedbackPublic, setIsFeedbackPublic] = useState(false);
 
   // Feedback form
   const [fbTitle, setFbTitle] = useState('');
@@ -156,7 +156,10 @@ export default function PublicRoadmap() {
           supabase.from('roadmap_feedback').select('*, roadmap_feedback_attachments(*)').eq('app_id', found.id).order('likes_count', { ascending: false }),
         ]);
 
-        if (settingsRes.data) setSettings(settingsRes.data as RoadmapSettings);
+        if (settingsRes.data) {
+          setSettings(settingsRes.data as RoadmapSettings);
+          setIsFeedbackPublic((settingsRes.data as any).is_feedback_public ?? false);
+        }
         setLanes((lanesRes.data || []) as RoadmapLane[]);
         setCards((cardsRes.data || []) as RoadmapCard[]);
         setFeedback((feedbackRes.data || []).map((f: any) => ({
@@ -312,7 +315,7 @@ export default function PublicRoadmap() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {/* Tab switcher */}
+            {/* Tab switcher - only show feedback tab if feedback is public */}
             <div className="hidden sm:flex bg-gray-100 rounded-lg p-0.5">
               <button
                 onClick={() => setActiveTab('roadmap')}
@@ -320,14 +323,16 @@ export default function PublicRoadmap() {
               >
                 Roadmap
               </button>
-              <button
-                onClick={() => setActiveTab('feedback')}
-                className={cn('px-3 py-1.5 text-sm font-medium rounded-md transition-all', activeTab === 'feedback' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700')}
-              >
-                {l.feedback} ({feedback.length})
-              </button>
+              {isFeedbackPublic && (
+                <button
+                  onClick={() => setActiveTab('feedback')}
+                  className={cn('px-3 py-1.5 text-sm font-medium rounded-md transition-all', activeTab === 'feedback' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700')}
+                >
+                  {l.feedback} ({feedback.length})
+                </button>
+              )}
             </div>
-            {activeTab === 'feedback' && (
+            {activeTab === 'feedback' && isFeedbackPublic && (
               <Button size="sm" onClick={() => setShowFeedbackForm(true)}>
                 <Send className="w-4 h-4 mr-1" />
                 <span className="hidden sm:inline">{l.submit}</span>
@@ -340,9 +345,11 @@ export default function PublicRoadmap() {
           <button onClick={() => setActiveTab('roadmap')} className={cn('flex-1 py-2.5 text-sm font-medium text-center border-b-2 transition-all', activeTab === 'roadmap' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500')}>
             Roadmap
           </button>
-          <button onClick={() => setActiveTab('feedback')} className={cn('flex-1 py-2.5 text-sm font-medium text-center border-b-2 transition-all', activeTab === 'feedback' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500')}>
-            {l.feedback} ({feedback.length})
-          </button>
+          {isFeedbackPublic && (
+            <button onClick={() => setActiveTab('feedback')} className={cn('flex-1 py-2.5 text-sm font-medium text-center border-b-2 transition-all', activeTab === 'feedback' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500')}>
+              {l.feedback} ({feedback.length})
+            </button>
+          )}
         </div>
       </header>
 
@@ -418,8 +425,8 @@ export default function PublicRoadmap() {
           </>
         )}
 
-        {/* Feedback View */}
-        {activeTab === 'feedback' && (
+        {/* Feedback View - only if feedback is public */}
+        {activeTab === 'feedback' && isFeedbackPublic && (
           <div className="space-y-4">
             <div className="sm:hidden mb-4">
               <Button className="w-full" onClick={() => setShowFeedbackForm(true)}>

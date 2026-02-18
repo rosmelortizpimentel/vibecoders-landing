@@ -1260,6 +1260,7 @@ export type Database = {
           favicon_url: string | null
           font_family: string | null
           id: string
+          is_feedback_public: boolean
           is_public: boolean
           updated_at: string
         }
@@ -1270,6 +1271,7 @@ export type Database = {
           favicon_url?: string | null
           font_family?: string | null
           id?: string
+          is_feedback_public?: boolean
           is_public?: boolean
           updated_at?: string
         }
@@ -1280,6 +1282,7 @@ export type Database = {
           favicon_url?: string | null
           font_family?: string | null
           id?: string
+          is_feedback_public?: boolean
           is_public?: boolean
           updated_at?: string
         }

@@ -9,6 +9,7 @@ export interface RoadmapSettings {
   font_family: string;
   favicon_url: string | null;
   is_public: boolean;
+  is_feedback_public: boolean;
   created_at: string;
   updated_at: string;
 }
