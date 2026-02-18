@@ -199,6 +199,24 @@ Deno.serve(async (req: Request) => {
     // Description from metadata.description
     if (scrapData.metadata?.description) updates.description = scrapData.metadata.description;
 
+    // Handle favicon extraction and upload
+    const faviconSource = scrapData.metadata?.favicon;
+    if (faviconSource) {
+      console.log(`[scrape-app-details] Processing favicon: ${faviconSource}`);
+      let faviconUrl = faviconSource;
+      // If relative URL, make absolute
+      if (faviconUrl.startsWith('/')) {
+        try {
+          const parsedUrl = new URL(url);
+          faviconUrl = `${parsedUrl.origin}${faviconUrl}`;
+        } catch {}
+      }
+      const faviconExt = faviconUrl.split('.').pop()?.split('?')[0] || 'ico';
+      const faviconPath = `${user.id}/apps/${app_id}/favicon.${faviconExt}`;
+      const uploadedFaviconUrl = await uploadFromUrl(adminClient, 'profile-assets', faviconPath, faviconUrl);
+      if (uploadedFaviconUrl) updates.favicon_url = uploadedFaviconUrl;
+    }
+
     // Handle logo upload from branding.logo
     const logoSource = scrapData.json?.branding?.logo;
     if (logoSource) {

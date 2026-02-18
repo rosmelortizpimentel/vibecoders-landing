@@ -22,6 +22,7 @@ import AppDetail from "./pages/AppDetail";
 import Post from "./pages/Post";
 import BetaSquads from "./pages/BetaSquads";
 import Ideas from "./pages/Ideas";
+import Roadmap from "./pages/Roadmap";
 import Prompts from "./pages/Prompts";
 import PromptStudio from "./pages/prompts/PromptStudio";
 import PromptViewer from "./pages/prompts/PromptViewer";
@@ -95,6 +96,7 @@ const App = () => (
             <Route path="/beta-testing" element={<Beta />} />
             <Route path="/beta-testing/:appId" element={<Beta />} />
             <Route path="/ideas" element={<Ideas />} />
+            <Route path="/roadmap" element={<Roadmap />} />
             <Route path="/prompts" element={<Prompts />} />
             <Route path="/prompts/new" element={<PromptStudio />} />
             <Route path="/prompts/:id" element={<PromptViewer />} />

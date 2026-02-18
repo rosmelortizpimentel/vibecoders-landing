@@ -32,8 +32,12 @@
     "backToApps": "Volver",
     "unlink": "Desvincular",
     "linkToCard": "Vincular a Tarjeta",
-    "errorMovingCard": "Error al mover la tarjeta"
+    "errorMovingCard": "Error al mover la tarjeta",
+    "preview": "Vista Previa"
   },
+  "listDescription": "Gestiona el roadmap público de tus apps verificadas.",
+  "noVerifiedApps": "Necesitas al menos una app verificada para usar Roadmap.",
+  "goToApps": "Ir a Mis Apps",
   "public": {
     "poweredBy": "Potenciado por",
     "feedback": "Feedback y Sugerencias",

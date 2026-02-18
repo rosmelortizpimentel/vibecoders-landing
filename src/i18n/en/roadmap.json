@@ -32,8 +32,12 @@
     "backToApps": "Back",
     "unlink": "Unlink",
     "linkToCard": "Link to Card",
-    "errorMovingCard": "Error moving card"
+    "errorMovingCard": "Error moving card",
+    "preview": "Preview"
   },
+  "listDescription": "Manage the public roadmap for your verified apps.",
+  "noVerifiedApps": "You need at least one verified app to use Roadmap.",
+  "goToApps": "Go to My Apps",
   "public": {
     "poweredBy": "Powered by",
     "feedback": "Feedback & Suggestions",
