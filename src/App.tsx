@@ -4,6 +4,25 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+
+// Subdomain detection: if user visits scalein.vibecoders.la, redirect to /roadmap/scalein
+const BASE_DOMAINS = ['vibecoders.la', 'vibecoders-la.lovable.app', 'localhost'];
+function getSubdomain(): string | null {
+  const hostname = window.location.hostname;
+  for (const base of BASE_DOMAINS) {
+    if (hostname.endsWith(base) && hostname !== base && hostname !== `www.${base}`) {
+      const sub = hostname.replace(`.${base}`, '');
+      if (sub && !sub.includes('.')) return sub;
+    }
+  }
+  return null;
+}
+
+// On load, if subdomain detected, rewrite URL to /roadmap/:slug
+const detectedSubdomain = getSubdomain();
+if (detectedSubdomain && !window.location.pathname.startsWith('/roadmap/')) {
+  window.history.replaceState(null, '', `/roadmap/${detectedSubdomain}`);
+}
 // import Index from "./pages/Index";
 import NewLanding from "./pages/NewLanding";
 import Home from "./pages/Home";
