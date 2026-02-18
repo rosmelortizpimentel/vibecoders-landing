@@ -20,8 +20,24 @@ export interface SidebarMenuItem {
   displayOrder: number;
   requiresWaitlist: boolean;
   cssClass: string | null;
+  isActive: boolean;
 }
 
+function mapItem(item: any): SidebarMenuItem {
+  return {
+    key: item.key,
+    labelKey: item.label_key,
+    path: item.path,
+    icon: ICON_MAP[item.icon] || LayoutDashboard,
+    section: item.section,
+    displayOrder: item.display_order,
+    requiresWaitlist: item.requires_waitlist,
+    cssClass: item.css_class,
+    isActive: item.is_active,
+  };
+}
+
+/** Returns only active menu items (for sidebar rendering) */
 export function useSidebarMenu() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['sidebar-menu-items'],
@@ -33,18 +49,28 @@ export function useSidebarMenu() {
         .order('display_order', { ascending: true });
 
       if (error) throw error;
-      return (data ?? []).map((item) => ({
-        key: item.key,
-        labelKey: item.label_key,
-        path: item.path,
-        icon: ICON_MAP[item.icon] || LayoutDashboard,
-        section: item.section,
-        displayOrder: item.display_order,
-        requiresWaitlist: item.requires_waitlist,
-        cssClass: item.css_class,
-      })) as SidebarMenuItem[];
+      return (data ?? []).map(mapItem);
     },
-    staleTime: 5 * 60 * 1000, // 5 min cache
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return { items, isLoading };
+}
+
+/** Returns ALL menu items (active + inactive) for route guarding */
+export function useAllMenuItems() {
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['all-menu-items'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sidebar_menu_items')
+        .select('*')
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      return (data ?? []).map(mapItem);
+    },
+    staleTime: 5 * 60 * 1000,
   });
 
   return { items, isLoading };
