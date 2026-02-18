@@ -35,8 +35,14 @@
     "errorMovingCard": "Error moving card",
     "preview": "Preview"
   },
-  "listDescription": "Manage the public roadmap for your verified apps.",
-  "noVerifiedApps": "You need at least one verified app to use Roadmap.",
+  "listDescriptionPre": "Manage the public roadmap for your",
+  "listDescriptionBold": "verified apps",
+  "listDescriptionPost": ".",
+  "verifiedSection": "Verified Apps",
+  "unverifiedSection": "Unverified Apps",
+  "verified": "Verified",
+  "verifyButton": "Verify",
+  "noVerifiedApps": "You don't have any apps yet. Add one to get started.",
   "goToApps": "Go to My Apps",
   "public": {
     "poweredBy": "Powered by",
