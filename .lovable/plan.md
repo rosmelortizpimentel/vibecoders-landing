@@ -1,116 +1,169 @@
 
 
-## Mejoras a la Sección "Mis Ideas"
+## Refactoring: "Un Objeto, Un Lugar" -- Reestructuracion del Menu y Navegacion
 
-### Problemas Detectados
-- El encabezado de la página está en inglés hardcodeado ("My Ideas", "Capture your next big thing...")
-- No hay forma de reordenar las ideas (falta drag and drop)
-- No existe opción para marcar ideas como "Done"
-- No se muestra la antigüedad de cada idea (días)
-- Falta scroll propio en la sección
+### Resumen
+
+Consolidar la navegacion para que cada concepto viva en un solo lugar. Las apps pasan a tener su propio "hub" con tabs internos (Info, Roadmap, Feedback, Squad). Mi Perfil queda con solo Datos y Branding. Se eliminan entradas redundantes del menu.
 
 ---
 
-### Cambios Propuestos
+### Menu Final del Sidebar
 
-#### 1. Migración de Base de Datos
-Agregar dos columnas nuevas a la tabla `user_ideas`:
-- `display_order` (integer, default 0) -- para el orden drag and drop
-- `is_done` (boolean, default false) -- para marcar como completada
+| Orden | Icono | Clave | Ruta | Seccion |
+|-------|-------|-------|------|---------|
+| 1 | LayoutDashboard | home | /home | personal |
+| 2 | Bell | notifications | /notifications | personal |
+| 3 | User | my-profile | /me | maker |
+| 4 | Layers | my-apps | /my-apps | maker |
+| 5 | Lightbulb | ideas | /ideas | maker |
+| 6 | Users | connections | /connections | community |
+| 7 | MessageSquare | feedback | /feedback | community |
 
-#### 2. Traducciones en los 4 Idiomas
-Agregar claves nuevas al archivo `profile.json` de cada idioma (es, en, fr, pt):
-- `ideas.pageTitle` -- Título de la página
-- `ideas.pageDescription` -- Descripción de la página
-- `ideas.daysAgo` -- "hace X días" / "X days ago"
-- `ideas.today` -- "hoy" / "today"
-- `ideas.markDone` -- "Marcar como hecha"
-- `ideas.markPending` -- "Reactivar"
-- `ideas.done` -- "Hecha"
-- `ideas.search` -- "Buscar..."
-
-#### 3. Página Ideas.tsx
-- Reemplazar textos hardcodeados por traducciones usando `useTranslation('profile')`
-- La página ocupará el alto completo con scroll propio
-
-#### 4. Componente IdeasTab.tsx -- Mejoras Principales
-
-**Drag and Drop (con @dnd-kit)**:
-- Cada idea en la lista tendrá un handle de arrastre
-- Al soltar, se actualiza `display_order` en la base de datos
-- El orden se respeta al cargar (ORDER BY display_order ASC)
-
-**Marcar como "Done"**:
-- Botón/checkbox en cada idea de la lista para alternar `is_done`
-- Las ideas completadas aparecen con estilo tachado/opaco al final de la lista
-- Actualización optimista + persistencia en BD
-
-**Tag de antigüedad**:
-- Badge en cada idea mostrando cuántos días tiene desde su creación
-- Ejemplo: "hoy", "3d", "15d", "30d+"
-
-**Scroll propio**:
-- El contenedor principal usa `h-[calc(100vh-theme-spacing)]` con overflow
-- La lista de ideas y el detalle tienen scroll independiente
-
-**Responsive (móvil)**:
-- Layout de columna única en móvil
-- Touch-friendly drag handles
-- Botones y badges adaptados a pantallas pequeñas
-- El detalle ocupa pantalla completa en móvil
+Desaparecen: Roadmap (/roadmap), Beta Testing (/beta-testing), App for Testing (/public-beta-testing), Explore, Tools, BuildLog, Prompts.
 
 ---
 
-### Detalles Técnicos
+### Cambio 1: Base de Datos -- Menu Items
 
-#### Migración SQL
+**Migracion SQL:**
+- UPDATE las filas existentes para reflejar el nuevo menu
+- Desactivar (is_active = false) los items que desaparecen: roadmap, beta-testing, public-beta-testing
+- Agregar nuevo item "my-apps" con path=/my-apps, icon=Layers, section=maker
+- Actualizar secciones: "personal" para home/notifications, "maker" para profile/apps/ideas, "community" para connections/feedback
+- Reordenar display_order
 
-```sql
-ALTER TABLE public.user_ideas 
-  ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0,
-  ADD COLUMN is_done BOOLEAN NOT NULL DEFAULT false;
+---
+
+### Cambio 2: Nueva Ruta /my-apps y Hub de App
+
+**Nueva pagina `src/pages/MyApps.tsx`:**
+- Listado de apps del usuario (reutiliza logica de AppsTab actual)
+- Al hacer click en una app, navega a `/my-apps/:appId`
+
+**Nueva pagina `src/pages/MyAppHub.tsx`:**
+- Header con logo, nombre, status, boton "Ver pagina"
+- 4 tabs internos con pills: Info | Roadmap | Feedback | Squad
+- Rutas: `/my-apps/:appId`, `/my-apps/:appId/roadmap`, `/my-apps/:appId/feedback`, `/my-apps/:appId/squad`
+
+**Tab Info:**
+- Reutiliza todo el contenido actual de AppEditor (nombre, URL, tagline, descripcion, categoria, tags, tech stack, screenshots, verificacion, horas)
+- Sin perder ningun campo
+
+**Tab Roadmap:**
+- Reutiliza el componente RoadmapEditor actual integro
+- Solo se muestra si la app esta verificada (igual que hoy)
+
+**Tab Feedback (UNIFICADO):**
+- Combina feedback publico del roadmap + feedback de beta testers
+- Cada item tiene un tag visible: "Publico", "Beta", "Bug"
+- Filtros por tipo
+- Reutiliza los componentes existentes de feedback
+
+**Tab Squad:**
+- Reutiliza BetaManagement actual (testers, toggle beta activo, configuracion de acceso)
+
+---
+
+### Cambio 3: Mi Perfil Simplificado
+
+**`/me/profile` y `/me/branding` se mantienen**, pero se elimina el tab "Mis Apps".
+
+**MeTabs.tsx:** Solo 2 tabs -- Datos (User) | Branding (Palette)
+
+**Me.tsx:** Se elimina el caso `activeTab === 'apps'` y la importacion de AppsTab.
+
+---
+
+### Cambio 4: Actualizacion de Rutas (App.tsx)
+
+```text
+Nuevas rutas dentro de DashboardLayout:
+  /my-apps              -> MyApps (listado)
+  /my-apps/:appId       -> MyAppHub (tab Info por defecto)
+  /my-apps/:appId/roadmap  -> MyAppHub (tab Roadmap)
+  /my-apps/:appId/feedback -> MyAppHub (tab Feedback)
+  /my-apps/:appId/squad    -> MyAppHub (tab Squad)
+
+Rutas que se mantienen (legacy redirects):
+  /me/apps         -> Redirect a /my-apps
+  /roadmap         -> Redirect a /my-apps (o /home)
+  /beta-testing    -> Redirect a /my-apps
+  /beta-testing/:id -> Redirect a /my-apps/:id/squad
+
+Rutas que se mantienen sin cambios:
+  /me/profile, /me/branding, /ideas, /connections, /feedback
+  /roadmap-editor/:appId -> Redirect a /my-apps/:appId/roadmap
 ```
 
-#### Archivos a Modificar/Crear
+---
 
-| Archivo | Acción |
+### Cambio 5: Traducciones (4 idiomas)
+
+Agregar claves en `common.json` de es/en/fr/pt:
+- `navigation.myApps`: "Mis Apps" / "My Apps" / "Mes Apps" / "Meus Apps"
+
+Agregar claves en `apps.json` de es/en/fr/pt:
+- `hub.info`, `hub.roadmap`, `hub.feedback`, `hub.squad`
+- `hub.backToApps`
+
+---
+
+### Cambio 6: MenuRouteGuard
+
+Actualizar para que las nuevas rutas `/my-apps` y sub-rutas esten protegidas por el item "my-apps" del menu.
+
+---
+
+### Archivos a Crear
+
+| Archivo | Descripcion |
+|---------|-------------|
+| `src/pages/MyApps.tsx` | Listado de apps del usuario |
+| `src/pages/MyAppHub.tsx` | Hub de app con 4 tabs |
+| Migracion SQL | Actualizar sidebar_menu_items |
+
+### Archivos a Modificar
+
+| Archivo | Cambio |
 |---------|--------|
-| Migración SQL | Crear -- agregar columnas |
-| `src/pages/Ideas.tsx` | Modificar -- usar traducciones |
-| `src/components/me/IdeasTab.tsx` | Modificar -- drag & drop, done, tags, scroll |
-| `src/components/me/ideas/IdeaDetail.tsx` | Modificar -- actualizar interfaz Idea |
-| `src/i18n/es/profile.json` | Modificar -- agregar claves nuevas |
-| `src/i18n/en/profile.json` | Modificar -- agregar claves nuevas |
-| `src/i18n/fr/profile.json` | Modificar -- agregar claves nuevas |
-| `src/i18n/pt/profile.json` | Modificar -- agregar claves nuevas |
+| `src/App.tsx` | Nuevas rutas + redirects legacy |
+| `src/components/me/MeTabs.tsx` | Eliminar tab "Apps" (solo Datos + Branding) |
+| `src/pages/Me.tsx` | Eliminar caso apps tab |
+| `src/i18n/*/common.json` | Nueva clave navigation.myApps |
+| `src/i18n/*/apps.json` | Claves del hub |
+| `src/hooks/useSidebarMenu.ts` | Agregar icono Layers al mapa |
 
-#### Lógica de Drag and Drop
+### Archivos que NO se tocan (se reutilizan)
 
-Se reutilizará `@dnd-kit` (ya instalado) con `SortableContext` y `verticalListSortingStrategy`. Al finalizar el drag:
+- `AppEditor.tsx` -- se usa integro en tab Info
+- `RoadmapEditor.tsx` -- se usa integro en tab Roadmap
+- `BetaManagement.tsx` -- se usa integro en tab Squad
+- `ProfileTab.tsx`, `BrandingTab.tsx` -- se mantienen iguales
+- Todos los hooks existentes (useApps, useRoadmap, useBetaSquad, etc.)
 
-```typescript
-// Recalcular display_order para todos los items visibles
-const reorderedIds = arrayMove(ideaIds, oldIndex, newIndex);
-// Actualizar en batch: UPDATE user_ideas SET display_order = X WHERE id = Y
+---
+
+### Detalles Tecnicos
+
+**MyAppHub.tsx -- Estructura de tabs:**
+```text
+/my-apps/:appId         -> Tab Info (default)
+/my-apps/:appId/roadmap -> Tab Roadmap
+/my-apps/:appId/feedback -> Tab Feedback
+/my-apps/:appId/squad   -> Tab Squad
 ```
 
-#### Tag de Antigüedad
+Cada tab se activa con base en la URL (useLocation). Los tabs se renderizan como pills responsivas similares a MeTabs.
 
-```typescript
-const getDaysTag = (createdAt: string): string => {
-  const days = differenceInDays(new Date(), new Date(createdAt));
-  if (days === 0) return t('ideas.today');
-  return `${days}d`;
-};
-```
+**Tab Feedback unificado:**
+- Combina datos de `roadmap_feedback` (publico) + `beta_feedback` (beta/bugs)
+- Un nuevo componente `UnifiedFeedbackList` que consulta ambas tablas
+- Tag visual: badge de color diferente segun origen (Publico=azul, Beta=verde, Bug=rojo)
+- Filtro por tipo en la parte superior
 
-#### Consulta Ordenada
+**Responsive:**
+- MyApps listado: grid de cards en desktop, lista vertical en movil
+- MyAppHub: tabs con scroll horizontal en movil, header compacto
+- Todos los sub-tabs (Info, Roadmap, etc.) mantienen su responsive actual
 
-```typescript
-const { data } = await supabase
-  .from('user_ideas')
-  .select('*')
-  .order('is_done', { ascending: true })    // Activas primero
-  .order('display_order', { ascending: true }) // Luego por orden manual
-  .order('created_at', { ascending: false });  // Fallback por fecha
-```
