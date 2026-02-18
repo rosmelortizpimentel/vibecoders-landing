@@ -1,56 +1,82 @@
 
 
-# Roadmap Page Enhancement + Subdomain Architecture
+# Roadmap Board UI/UX Redesign + Roadmap Listing Fixes
 
-## 1. Bold "apps verificadas" + Unverified Apps Section
+## Overview
+UI-only changes across two files: `RoadmapEditor.tsx` (board + configuration modal) and `Roadmap.tsx` (app listing page). No logic, data, or functionality changes.
 
-**File:** `src/pages/Roadmap.tsx`
+---
 
-- Change the description text so "apps verificadas" appears in bold (`<strong>`)
-- Fetch ALL user apps (not just verified), split into two lists: `verifiedApps` and `unverifiedApps`
-- Render verified apps first with the current card design
-- Below, render unverified apps with `opacity-50` styling and a colored "Verificar" button instead of the green "Verified" badge
-- Clicking "Verificar" opens the existing `VerifyDomainModal` component (reused from `src/components/me/VerifyDomainModal.tsx`)
-- Need to import `useApps` hook to get `verifyApp` function and verification tokens
-- On successful verification, refetch the apps list so the card moves to the verified section
+## 1. Roadmap Board (`RoadmapEditor.tsx`)
 
-## 2. Subdomain Architecture (appname.vibecoders.la)
+### Header Changes
+- **Remove** the "Agregar Carril" (`Plus` + `addLane`) button from the top header bar (lines 497-508)
+- The top bar keeps: Back, Title, Preview, Feedback, Settings only
 
-Each app will be accessible at `appname.vibecoders.la` instead of `vibecoders.la/roadmap/appname`.
+### Add Lane Button -- Inline at End of Columns
+- After the last `SortableLaneWrapper` in the horizontal desktop lane list (line 594), add a **circular icon button** with:
+  - `Plus` icon (already imported)
+  - Dashed border (`border-dashed border-2`)
+  - Same height alignment as columns (aligned to top)
+  - `w-10 h-10 rounded-full` sizing
+  - Clicking opens the lane creation modal (same existing handler)
 
-**Implementation approach:**
+### Add Card Button in Column Headers
+- In each desktop lane header (line 533-557), add a small `Plus` icon button (`h-6 w-6`) to the right side of the header row, between the card count and the `MoreVertical` menu
+- This button triggers `setAddingCardToLane(lane.id)` with empty form
+- The existing "Agregar Tarjeta" button at the bottom of each lane (line 580-590) stays but changes to **dashed border style**: `variant="outline"` with added `border-dashed` class
 
-Since this is a Vite SPA deployed on Vercel, subdomain routing requires:
+### Mobile lanes -- Same pattern
+- Add a `Plus` icon in each collapsible lane header for adding cards
+- Bottom "Add Card" button gets dashed border style
+- Add a dashed circular add-lane button at the bottom of the stacked lanes list
 
-### a) Vercel Configuration (`vercel.json`)
-- No changes needed -- Vercel wildcard domains handle this at the DNS/hosting level. The user needs to add a wildcard subdomain `*.vibecoders.la` in Vercel dashboard pointing to this project.
+---
 
-### b) App-level subdomain detection (`src/App.tsx`)
-- At the top level, detect if the current hostname is a subdomain of `vibecoders.la` (e.g., `scalein.vibecoders.la`)
-- Extract the subdomain name (e.g., `scalein`)
-- If a subdomain is detected (and it's not `www` or the root), render a dedicated `SubdomainApp` component that shows the public roadmap + feedback for that app
-- Otherwise, render the normal app routes
+## 2. Configuration Modal Redesign (`RoadmapEditor.tsx`)
 
-### c) New component: `src/components/SubdomainApp.tsx`
-- Receives the subdomain slug
-- Looks up the app by name slug in the database
-- If found and has a public roadmap, renders `PublicRoadmap` directly
-- If not found, shows a 404 page
-- This is a clean page with no header/footer (same as current PublicRoadmap behavior)
+### Move "Publico" toggle to top
+- Currently at line 806-809, move it to be the **first element** in the modal content
+- Give it a visually distinct row with conditional background:
+  - `bg-green-50 dark:bg-green-950/30` when enabled
+  - `bg-muted/50` when disabled
+  - Rounded container with padding
+- Add a subtitle below the label:
+  - When ON: "Cualquiera con el link puede verlo"
+  - When OFF: "Solo tu puedes verlo"
 
-### d) Keep the `/roadmap/:appName` route as fallback
-- The existing path-based route stays for backward compatibility and for local development where subdomains aren't available
+### Uppercase small labels
+- All field labels (`Label` components) in the settings modal get `text-xs uppercase tracking-wider font-medium text-muted-foreground` styling
+- Applies to: Titulo Personalizado, Fuente, URL del Favicon
+
+### Field order after toggle
+1. Publico toggle (with colored row)
+2. Titulo Personalizado
+3. Fuente
+4. URL del Favicon
+
+---
+
+## 3. Roadmap Listing Page (`Roadmap.tsx`)
+
+### Unverified apps -- Active verify button
+- Remove `opacity-50` from unverified app cards (line 39) -- the cards should look active/clickable
+- Keep the visual distinction via the section header and lack of "Verificada" badge
+
+### Public profile link
+- Add a small link/button on each verified app card to view the public roadmap page (`/roadmap/:appSlug`)
+- Use the `ExternalLink` icon (already imported as `ArrowRight`) or add `Eye` icon
+- This opens in a new tab
+
+---
 
 ## Technical Details
 
-### Files to create:
-1. **`src/components/SubdomainApp.tsx`** -- Subdomain detection and routing wrapper
-
 ### Files to modify:
-1. **`src/pages/Roadmap.tsx`** -- Bold text, fetch all apps, show unverified section with VerifyDomainModal
-2. **`src/App.tsx`** -- Add subdomain detection logic before main Routes
-3. **`src/i18n/{en,es,fr,pt}/roadmap.json`** -- Add keys for "verify" button label and section headers
+1. **`src/pages/RoadmapEditor.tsx`** -- Board layout changes, modal restructure
+2. **`src/pages/Roadmap.tsx`** -- Remove opacity, add public link
+3. **`src/i18n/en/roadmap.json`** (and es/fr/pt) -- Add subtitle keys for public toggle
 
-### Infrastructure note:
-The subdomain setup requires a DNS wildcard record (`*.vibecoders.la` -> Vercel) and adding `*.vibecoders.la` as a wildcard domain in the Vercel project settings. This is a one-time manual step outside of code.
+### No new dependencies or components needed
+All icons (`Plus`, `Eye`, `ExternalLink`) are already imported. All UI components already in use.
 
