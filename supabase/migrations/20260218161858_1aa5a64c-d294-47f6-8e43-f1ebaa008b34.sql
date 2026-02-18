@@ -1,0 +1,1 @@
+ALTER TABLE public.roadmap_cards ADD COLUMN completed_at date;

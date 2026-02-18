@@ -1033,6 +1033,7 @@ export type Database = {
       roadmap_cards: {
         Row: {
           app_id: string
+          completed_at: string | null
           created_at: string
           description: string | null
           display_order: number
@@ -1043,6 +1044,7 @@ export type Database = {
         }
         Insert: {
           app_id: string
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           display_order?: number
@@ -1053,6 +1055,7 @@ export type Database = {
         }
         Update: {
           app_id?: string
+          completed_at?: string | null
           created_at?: string
           description?: string | null
           display_order?: number

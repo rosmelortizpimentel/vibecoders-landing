@@ -35,7 +35,9 @@
     "errorMovingCard": "Erreur lors du déplacement",
     "preview": "Aperçu",
     "publicOnHint": "N'importe qui avec le lien peut le voir",
-    "publicOffHint": "Seulement vous pouvez le voir"
+    "publicOffHint": "Seulement vous pouvez le voir",
+    "columnColors": "Couleurs des Colonnes",
+    "completedAtOptional": "Date d'achèvement (optionnel)"
   },
   "listDescriptionPre": "Gérez le roadmap public de vos",
   "listDescriptionBold": "apps vérifiées",
