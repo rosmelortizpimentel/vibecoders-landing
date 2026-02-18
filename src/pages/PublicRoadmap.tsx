@@ -46,6 +46,7 @@ const UI_LABELS: Record<string, Record<string, string>> = {
     send: 'Submit', success: 'Thank you for your feedback!', error: 'Error submitting feedback',
     noFeedback: 'No suggestions yet. Be the first!', likes: 'likes', reply: 'Developer Response',
     empty: 'This roadmap is empty for now', notFound: 'Roadmap not found', poweredBy: 'Powered by',
+    addFile: 'Add file', cancel: 'Cancel',
   },
   es: {
     feedback: 'Feedback y Sugerencias', submit: 'Enviar Sugerencia', title: 'Título', titlePh: 'Resumen breve de tu idea',
@@ -54,6 +55,7 @@ const UI_LABELS: Record<string, Record<string, string>> = {
     send: 'Enviar', success: '¡Gracias por tu feedback!', error: 'Error al enviar el feedback',
     noFeedback: 'No hay sugerencias aún. ¡Sé el primero!', likes: 'me gusta', reply: 'Respuesta del Desarrollador',
     empty: 'Este roadmap está vacío por ahora', notFound: 'Roadmap no encontrado', poweredBy: 'Potenciado por',
+    addFile: 'Agregar archivo', cancel: 'Cancelar',
   },
   fr: {
     feedback: 'Commentaires et Suggestions', submit: 'Soumettre une Suggestion', title: 'Titre', titlePh: 'Résumé bref',
@@ -62,6 +64,7 @@ const UI_LABELS: Record<string, Record<string, string>> = {
     send: 'Envoyer', success: 'Merci pour votre retour !', error: "Erreur lors de l'envoi",
     noFeedback: 'Pas encore de suggestions.', likes: "j'aime", reply: 'Réponse du Développeur',
     empty: 'Ce roadmap est vide', notFound: 'Roadmap non trouvé', poweredBy: 'Propulsé par',
+    addFile: 'Ajouter un fichier', cancel: 'Annuler',
   },
   pt: {
     feedback: 'Feedback e Sugestões', submit: 'Enviar Sugestão', title: 'Título', titlePh: 'Resumo breve',
@@ -70,6 +73,7 @@ const UI_LABELS: Record<string, Record<string, string>> = {
     send: 'Enviar', success: 'Obrigado pelo seu feedback!', error: 'Erro ao enviar feedback',
     noFeedback: 'Nenhuma sugestão ainda.', likes: 'curtidas', reply: 'Resposta do Desenvolvedor',
     empty: 'Este roadmap está vazio', notFound: 'Roadmap não encontrado', poweredBy: 'Desenvolvido com',
+    addFile: 'Adicionar arquivo', cancel: 'Cancelar',
   },
 };
 
@@ -157,7 +161,10 @@ export default function PublicRoadmap() {
     })();
   }, [feedback.length]);
 
-  // Set page title & favicon
+  // Apply favicon
+  useFavicon(settings?.favicon_url ?? undefined);
+
+  // Set page title
   useEffect(() => {
     if (app) {
       document.title = settings?.custom_title || app.name || 'Roadmap';
@@ -167,15 +174,19 @@ export default function PublicRoadmap() {
     return () => { document.title = 'Vibecoders.la'; };
   }, [app, settings]);
 
-  // Load custom font
+  // Load custom fonts (global + lane-specific)
   useEffect(() => {
-    if (settings?.font_family && settings.font_family !== 'Inter') {
-      const link = document.createElement('link');
-      link.href = `https://fonts.googleapis.com/css2?family=${settings.font_family.replace(/ /g, '+')}&display=swap`;
-      link.rel = 'stylesheet';
-      document.head.appendChild(link);
-    }
-  }, [settings?.font_family]);
+    const fonts = new Set<string>();
+    if (settings?.font_family && settings.font_family !== 'Inter') fonts.add(settings.font_family);
+    lanes.forEach(lane => { if (lane.font && lane.font !== 'Inter') fonts.add(lane.font); });
+    if (fonts.size === 0) return;
+    const families = Array.from(fonts).map(f => f.replace(/ /g, '+')).join('&family=');
+    const link = document.createElement('link');
+    link.href = `https://fonts.googleapis.com/css2?family=${families}&display=swap`;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    return () => { document.head.removeChild(link); };
+  }, [settings?.font_family, lanes]);
 
   const handleToggleLike = async (feedbackId: string) => {
     if (!fingerprint) return;
@@ -483,7 +494,7 @@ export default function PublicRoadmap() {
                 ))}
                 {fbFiles.length < 5 && (
                   <button onClick={() => fileInputRef.current?.click()} className="px-2 py-1 border border-dashed rounded text-xs text-gray-500 hover:text-gray-700 hover:border-gray-400">
-                    <Paperclip className="w-3 h-3 inline mr-1" /> Add file
+                    <Paperclip className="w-3 h-3 inline mr-1" /> {l.addFile}
                   </button>
                 )}
               </div>
@@ -491,7 +502,7 @@ export default function PublicRoadmap() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowFeedbackForm(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowFeedbackForm(false)}>{l.cancel}</Button>
             <Button onClick={handleSubmitFeedback} disabled={submitting || !fbTitle.trim() || !fbDesc.trim()}>
               {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
               {l.send}

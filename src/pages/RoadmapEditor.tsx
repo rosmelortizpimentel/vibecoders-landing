@@ -36,7 +36,9 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
+  arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDroppable } from '@dnd-kit/core';
@@ -109,6 +111,35 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
   );
 }
 
+// Sortable lane wrapper (for lane reordering)
+function SortableLaneWrapper({ lane, children }: { lane: RoadmapLane; children: React.ReactNode }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: `sortable-lane-${lane.id}`, data: { type: 'sortable-lane', lane } });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex-shrink-0 w-72">
+      <div className="flex items-center gap-1 mb-3 px-1">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5">
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // Droppable lane container
 function DroppableLane({ laneId, children }: { laneId: string; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: `lane-${laneId}`, data: { type: 'lane', laneId } });
@@ -148,13 +179,14 @@ export default function RoadmapEditor() {
   // Form states
   const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: 'Inter' });
   const [cardForm, setCardForm] = useState({ title: '', description: '' });
-  const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', is_public: true });
+  const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', is_public: true, favicon_url: '' });
 
   // Feedback management
   const [showFeedbackPanel, setShowFeedbackPanel] = useState(false);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
   const [linkingFeedback, setLinkingFeedback] = useState<string | null>(null);
+  const [deletingFeedback, setDeletingFeedback] = useState<string | null>(null);
 
   // DnD state
   const [activeCard, setActiveCard] = useState<RoadmapCard | null>(null);
@@ -201,18 +233,31 @@ export default function RoadmapEditor() {
     const { active, over } = event;
     if (!over) return;
 
-    const activeCardId = active.id as string;
-    const overId = over.id as string;
     const activeData = active.data.current;
     const overData = over.data.current;
 
+    // Lane reordering
+    if (activeData?.type === 'sortable-lane') {
+      if (overData?.type !== 'sortable-lane') return;
+      const activeLane = activeData.lane as RoadmapLane;
+      const overLane = overData.lane as RoadmapLane;
+      if (activeLane.id === overLane.id) return;
+      const oldIndex = roadmap.lanes.findIndex(l => l.id === activeLane.id);
+      const newIndex = roadmap.lanes.findIndex(l => l.id === overLane.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+      const reordered = arrayMove([...roadmap.lanes], oldIndex, newIndex);
+      await roadmap.reorderLanes(reordered);
+      return;
+    }
+
+    // Card reordering
+    const activeCardId = active.id as string;
     const sourceLaneId = activeData?.laneId as string;
     let targetLaneId: string;
     let targetIndex: number;
 
     if (overData?.type === 'lane') {
       targetLaneId = overData.laneId as string;
-      // Dropped on empty lane area → append to end
       const laneCards = roadmap.cards.filter(c => c.lane_id === targetLaneId);
       targetIndex = laneCards.length;
     } else if (overData?.type === 'card') {
@@ -239,7 +284,7 @@ export default function RoadmapEditor() {
     try {
       await roadmap.moveCard(activeCardId, targetLaneId, targetIndex);
     } catch {
-      toast.error('Error moving card');
+      toast.error(t('editor.errorMovingCard'));
     }
   };
 
@@ -260,6 +305,7 @@ export default function RoadmapEditor() {
         custom_title: roadmap.settings.custom_title || '',
         font_family: roadmap.settings.font_family || 'Inter',
         is_public: roadmap.settings.is_public,
+        favicon_url: roadmap.settings.favicon_url || '',
       });
     }
   }, [roadmap.settings]);
@@ -412,6 +458,7 @@ export default function RoadmapEditor() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
+        <SortableContext items={roadmap.lanes.map(l => `sortable-lane-${l.id}`)} strategy={horizontalListSortingStrategy}>
         <div className="flex gap-4 overflow-x-auto pb-4 min-h-[60vh]">
           {roadmap.lanes.map(lane => {
             const laneCards = roadmap.cards
@@ -419,9 +466,9 @@ export default function RoadmapEditor() {
               .sort((a, b) => a.display_order - b.display_order);
 
             return (
-              <div key={lane.id} className="flex-shrink-0 w-72">
-                {/* Lane Header */}
-                <div className="flex items-center justify-between mb-3 px-1">
+              <SortableLaneWrapper key={lane.id} lane={lane}>
+                {/* Lane Header content (inside SortableLaneWrapper which provides the drag handle + outer div) */}
+                <div className="flex items-center justify-between flex-1">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
                     <h3 className="font-semibold text-sm">{lane.name}</h3>
@@ -482,10 +529,11 @@ export default function RoadmapEditor() {
                     <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
                   </Button>
                 </DroppableLane>
-              </div>
+              </SortableLaneWrapper>
             );
           })}
         </div>
+        </SortableContext>
 
         {/* Drag Overlay */}
         <DragOverlay>
@@ -556,6 +604,9 @@ export default function RoadmapEditor() {
                     <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setLinkingFeedback(fb.id)}>
                       <Link2 className="w-3 h-3" />
                     </Button>
+                    <Button variant="outline" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" onClick={() => setDeletingFeedback(fb.id)}>
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
                   </div>
                   {fb.linked_card_id && (
                     <p className="text-[10px] text-primary">
@@ -593,6 +644,14 @@ export default function RoadmapEditor() {
             <div className="flex items-center justify-between">
               <Label>{t('editor.isPublic')}</Label>
               <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('editor.faviconUrl')}</Label>
+              <Input
+                value={settingsForm.favicon_url}
+                onChange={e => setSettingsForm(prev => ({ ...prev, favicon_url: e.target.value }))}
+                placeholder="https://example.com/favicon.ico"
+              />
             </div>
           </div>
           <DialogFooter>
@@ -742,7 +801,7 @@ export default function RoadmapEditor() {
       <Dialog open={!!linkingFeedback} onOpenChange={() => setLinkingFeedback(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Link to Card</DialogTitle>
+            <DialogTitle>{t('editor.linkToCard')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             <Button variant="outline" className="w-full justify-start text-muted-foreground" onClick={async () => {
@@ -751,7 +810,7 @@ export default function RoadmapEditor() {
                 setLinkingFeedback(null);
               }
             }}>
-              Unlink
+              {t('editor.unlink')}
             </Button>
             {roadmap.cards.map(card => (
               <Button key={card.id} variant="outline" className="w-full justify-start" onClick={async () => {
@@ -766,6 +825,27 @@ export default function RoadmapEditor() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Feedback Confirm */}
+      <AlertDialog open={!!deletingFeedback} onOpenChange={() => setDeletingFeedback(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('delete.feedbackTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('delete.feedbackDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('delete.cancel')}</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={async () => {
+              if (deletingFeedback) {
+                await feedbackHook.deleteFeedback(deletingFeedback);
+                setDeletingFeedback(null);
+              }
+            }}>
+              {t('delete.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
