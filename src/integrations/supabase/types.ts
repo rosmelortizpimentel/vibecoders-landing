@@ -1030,6 +1030,35 @@ export type Database = {
           },
         ]
       }
+      roadmap_card_likes: {
+        Row: {
+          card_id: string
+          created_at: string
+          device_fingerprint: string
+          id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          device_fingerprint: string
+          id?: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          device_fingerprint?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_card_likes_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roadmap_cards: {
         Row: {
           app_id: string
@@ -1039,6 +1068,7 @@ export type Database = {
           display_order: number
           id: string
           lane_id: string
+          likes_count: number
           title: string
           updated_at: string
         }
@@ -1050,6 +1080,7 @@ export type Database = {
           display_order?: number
           id?: string
           lane_id: string
+          likes_count?: number
           title: string
           updated_at?: string
         }
@@ -1061,6 +1092,7 @@ export type Database = {
           display_order?: number
           id?: string
           lane_id?: string
+          likes_count?: number
           title?: string
           updated_at?: string
         }
