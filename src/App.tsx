@@ -55,6 +55,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import { NotificationsPage } from "./pages/Notifications";
 import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { DashboardLayout } from "./layouts/DashboardLayout";
+import { MenuRouteGuard } from "./components/layout/MenuRouteGuard";
 import { SurveyPopup } from "./components/beta/SurveyPopup";
 import { useAuth } from "./hooks/useAuth";
 import { Loader2 } from "lucide-react";
@@ -102,30 +103,32 @@ const App = () => (
 
           {/* Authenticated routes with shared layout (persistent header/footer) */}
           <Route element={<DashboardLayout />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/explore" element={<Projects />} />
-            <Route path="/public-beta-testing" element={<BetaSquads />} />
-            <Route path="/tools" element={<Tools />} />
-            <Route path="/buildlog" element={<BuildLog />} />
-            <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
-            <Route path="/feedback" element={<Feedback />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/connections" element={<Vibers />} />
-            <Route path="/me" element={<Navigate to="/me/profile" replace />} />
-            <Route path="/me/profile" element={<Me />} />
-            <Route path="/me/apps" element={<Me />} />
-            <Route path="/me/branding" element={<Me />} />
-            {/* Cleaner routes for Ideas and Beta Management */}
-            <Route path="/beta-testing" element={<Beta />} />
-            <Route path="/beta-testing/:appId" element={<Beta />} />
-            <Route path="/ideas" element={<Ideas />} />
-            <Route path="/roadmap" element={<Roadmap />} />
-            <Route path="/prompts" element={<Prompts />} />
-            <Route path="/prompts/new" element={<PromptStudio />} />
-            <Route path="/prompts/:id" element={<PromptViewer />} />
-            <Route path="/prompts/:id/edit" element={<PromptStudio />} />
-            <Route path="/app/:appId" element={<AppDetail />} />
-            <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
+            <Route element={<MenuRouteGuard />}>
+              <Route path="/home" element={<Home />} />
+              <Route path="/explore" element={<Projects />} />
+              <Route path="/public-beta-testing" element={<BetaSquads />} />
+              <Route path="/tools" element={<Tools />} />
+              <Route path="/buildlog" element={<BuildLog />} />
+              <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
+              <Route path="/feedback" element={<Feedback />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/connections" element={<Vibers />} />
+              <Route path="/me" element={<Navigate to="/me/profile" replace />} />
+              <Route path="/me/profile" element={<Me />} />
+              <Route path="/me/apps" element={<Me />} />
+              <Route path="/me/branding" element={<Me />} />
+              {/* Cleaner routes for Ideas and Beta Management */}
+              <Route path="/beta-testing" element={<Beta />} />
+              <Route path="/beta-testing/:appId" element={<Beta />} />
+              <Route path="/ideas" element={<Ideas />} />
+              <Route path="/roadmap" element={<Roadmap />} />
+              <Route path="/prompts" element={<Prompts />} />
+              <Route path="/prompts/new" element={<PromptStudio />} />
+              <Route path="/prompts/:id" element={<PromptViewer />} />
+              <Route path="/prompts/:id/edit" element={<PromptStudio />} />
+              <Route path="/app/:appId" element={<AppDetail />} />
+              <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
+            </Route>
           </Route>
           
           {/* Legacy redirects */}
