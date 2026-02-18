@@ -5,7 +5,6 @@ import { useApps } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
 import { MeTabs } from '@/components/me/MeTabs';
 import { ProfileTab } from '@/components/me/ProfileTab';
-import { AppsTab } from '@/components/me/AppsTab';
 import { BrandingTab } from '@/components/me/BrandingTab';
 import { ProfilePreview } from '@/components/me/ProfilePreview';
 import { Loader2, Eye, X, Smartphone } from 'lucide-react';
@@ -42,7 +41,6 @@ const Me = () => {
 
   // Determine active tab from URL
   const getActiveTab = () => {
-    if (location.pathname === '/me/apps') return 'apps';
     if (location.pathname === '/me/branding') return 'branding';
     return 'profile';
   };
@@ -80,9 +78,6 @@ const Me = () => {
                   isSaving={isSaving}
                   error={error}
                 />
-              )}
-              {activeTab === 'apps' && (
-                <AppsTab appsHook={appsHook} />
               )}
               {activeTab === 'branding' && (
                 <BrandingTab 

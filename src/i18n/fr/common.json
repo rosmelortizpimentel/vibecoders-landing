@@ -15,10 +15,11 @@
   "navigation": {
     "home": "Accueil",
     "myProfile": "Mon Profil",
+    "myApps": "Mes Apps",
     "myIdeas": "Mes Idées",
     "roadmap": "Roadmap",
     "prompts": "Prompt Vault",
-    "vibers": "Mes Connexions",
+    "vibers": "Mon Réseau",
     "startups": "Explorer",
     "betaTesting": "Beta Testing",
     "publicBetaTesting": "Défis Beta",

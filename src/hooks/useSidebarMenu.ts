@@ -3,12 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   LayoutDashboard, Bell, User, Lightbulb, Map, BookOpen,
   Users, FlaskConical, Rocket, Globe, Wrench, MessageSquare, Crown,
+  Layers,
   LucideIcon
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, LucideIcon> = {
   LayoutDashboard, Bell, User, Lightbulb, Map, BookOpen,
   Users, FlaskConical, Rocket, Globe, Wrench, MessageSquare, Crown,
+  Layers,
 };
 
 export interface SidebarMenuItem {

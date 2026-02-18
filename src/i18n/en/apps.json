@@ -13,5 +13,18 @@
   "visible": "Visible",
   "hidden": "Hidden",
   "none": "None",
-  "back": "Back"
+  "back": "Back",
+  "hub": {
+    "info": "Info",
+    "roadmap": "Roadmap",
+    "feedback": "Feedback",
+    "squad": "Squad",
+    "backToApps": "My Apps",
+    "viewPage": "View page",
+    "publicFeedback": "Public",
+    "betaFeedback": "Beta",
+    "bugFeedback": "Bug",
+    "allFeedback": "All",
+    "noFeedback": "No feedback yet"
+  }
 }
