@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,7 +23,7 @@ import { FontSelector } from '@/components/me/FontSelector';
 import { ColorPicker } from '@/components/me/ColorPicker';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Plus, Settings, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Eye, Upload, Calendar } from 'lucide-react';
+import { Loader2, ArrowLeft, Plus, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Eye, Upload, Calendar, Paintbrush } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
@@ -241,8 +242,10 @@ export default function RoadmapEditor() {
   const [faviconUploading, setFaviconUploading] = useState(false);
   const [moveCompletedAt, setMoveCompletedAt] = useState<string>('');
 
-  // Mobile lane accordion
   const [openLanes, setOpenLanes] = useState<Set<string>>(new Set());
+
+  // Owner username for public URL
+  const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
 
   // DnD state
   const [activeCard, setActiveCard] = useState<RoadmapCard | null>(null);
@@ -326,6 +329,15 @@ export default function RoadmapEditor() {
     })();
   }, [appId, user]);
 
+  // Fetch owner username for public URL
+  useEffect(() => {
+    if (!app?.user_id) return;
+    (async () => {
+      const { data } = await supabase.from('profiles').select('username').eq('id', app.user_id).maybeSingle();
+      if (data?.username) setOwnerUsername(data.username);
+    })();
+  }, [app?.user_id]);
+
   // Sync settings form
   useEffect(() => {
     if (roadmap.settings) {
@@ -399,7 +411,8 @@ export default function RoadmapEditor() {
     );
   }
 
-  const appSlug = (app.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const appSlug = (app?.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const publicPath = ownerUsername ? `/@${ownerUsername}/${appSlug}/roadmap` : `/roadmap/${appSlug}`;
 
   const handleSaveSettings = async () => {
     try {
@@ -485,12 +498,12 @@ export default function RoadmapEditor() {
             <h1 className="text-lg md:text-xl font-bold truncate">{app.name || 'App'} — {t('title')}</h1>
             {roadmap.settings.is_public && (
               <Link
-                to={`/roadmap/${appSlug}`}
+                to={publicPath}
                 target="_blank"
                 className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
               >
                 <ExternalLink className="w-3 h-3" />
-                <span className="truncate">/roadmap/{appSlug}</span>
+                <span className="truncate">{publicPath}</span>
               </Link>
             )}
           </div>
@@ -499,7 +512,7 @@ export default function RoadmapEditor() {
           {/* Preview button */}
           {roadmap.settings.is_public && (
             <Button variant="default" size="sm" asChild>
-              <a href={`/roadmap/${appSlug}`} target="_blank" rel="noopener noreferrer">
+              <a href={publicPath} target="_blank" rel="noopener noreferrer">
                 <Eye className="w-4 h-4 mr-1" />
                 <span className="hidden sm:inline">{t('editor.preview')}</span>
               </a>
@@ -518,11 +531,11 @@ export default function RoadmapEditor() {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-                <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">{t('editor.settings')}</span>
+                <Paintbrush className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1">{t('editor.branding')}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="sm:hidden">{t('editor.settings')}</TooltipContent>
+            <TooltipContent className="sm:hidden">{t('editor.branding')}</TooltipContent>
           </Tooltip>
         </div>
       </div>
@@ -850,75 +863,92 @@ export default function RoadmapEditor() {
 
       {/* ===== MODALS ===== */}
 
-      {/* Settings */}
-      <ResponsiveModal open={showSettings} onOpenChange={setShowSettings} title={t('editor.settings')} isMobile={isMobile}
-        footer={<>
-          <Button variant="outline" onClick={() => setShowSettings(false)}>{t('editor.cancel')}</Button>
-          <Button onClick={handleSaveSettings}>{t('editor.save')}</Button>
-        </>}
-      >
-        {/* Public toggle - prominent at top */}
-        <div className={cn(
-          "rounded-lg p-3 flex items-center justify-between transition-colors",
-          settingsForm.is_public ? "bg-green-50 dark:bg-green-950/30" : "bg-muted/50"
-        )}>
-          <div>
-            <Label className="text-xs uppercase tracking-wider font-medium">{t('editor.isPublic')}</Label>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              {settingsForm.is_public ? t('editor.publicOnHint') : t('editor.publicOffHint')}
-            </p>
-          </div>
-          <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.customTitle')}</Label>
-          <Input
-            value={settingsForm.custom_title}
-            onChange={e => setSettingsForm(prev => ({ ...prev, custom_title: e.target.value }))}
-            placeholder={t('editor.customTitlePlaceholder')}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.fontFamily')}</Label>
-          <FontSelector value={settingsForm.font_family} onChange={v => setSettingsForm(prev => ({ ...prev, font_family: v }))} />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Favicon</Label>
-          <div className="flex items-center gap-3">
-            {settingsForm.favicon_url && (
-              <img src={settingsForm.favicon_url} alt="Favicon" className="w-8 h-8 rounded object-contain border" />
-            )}
-            <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-md cursor-pointer hover:border-primary transition-colors text-sm text-muted-foreground">
-              {faviconUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-              {faviconUploading ? 'Uploading...' : 'Upload favicon'}
-              <input type="file" className="hidden" accept=".ico,.png,.svg,.webp" onChange={handleFaviconUpload} disabled={faviconUploading} />
-            </label>
-          </div>
-        </div>
+      {/* Branding Sidebar */}
+      <Sheet open={showSettings} onOpenChange={setShowSettings}>
+        <SheetContent side="right" className="w-full sm:w-[400px] sm:max-w-[400px] overflow-y-auto">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="flex items-center gap-2">
+              <Paintbrush className="w-4 h-4" />
+              {t('editor.branding')}
+            </SheetTitle>
+          </SheetHeader>
 
-        {/* Column Colors */}
-        <Separator />
-        <div className="space-y-3">
-          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.columnColors')}</Label>
-          {roadmap.lanes.map(lane => (
-            <div key={lane.id} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: lane.color }} />
-                <span className="text-sm truncate">{lane.name}</span>
+          <div className="space-y-6 pb-24">
+            {/* Public toggle - prominent at top */}
+            <div className={cn(
+              "rounded-lg p-3 flex items-center justify-between transition-colors",
+              settingsForm.is_public ? "bg-primary/10" : "bg-muted/50"
+            )}>
+              <div>
+                <Label className="text-xs uppercase tracking-wider font-medium">{t('editor.isPublic')}</Label>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {settingsForm.is_public ? t('editor.publicOnHint') : t('editor.publicOffHint')}
+                </p>
               </div>
-              <ColorPicker
-                label=""
-                value={lane.color}
-                onChange={async (color) => {
-                  try {
-                    await roadmap.updateLane(lane.id, { color });
-                  } catch { toast.error('Error updating color'); }
-                }}
-              />
+              <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
             </div>
-          ))}
-        </div>
-      </ResponsiveModal>
+
+            {/* Branding section */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.customTitle')}</Label>
+                <Input
+                  value={settingsForm.custom_title}
+                  onChange={e => setSettingsForm(prev => ({ ...prev, custom_title: e.target.value }))}
+                  placeholder={t('editor.customTitlePlaceholder')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.fontFamily')}</Label>
+                <FontSelector value={settingsForm.font_family} onChange={v => setSettingsForm(prev => ({ ...prev, font_family: v }))} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Favicon</Label>
+                <div className="flex items-center gap-3">
+                  {settingsForm.favicon_url && (
+                    <img src={settingsForm.favicon_url} alt="Favicon" className="w-8 h-8 rounded object-contain border" />
+                  )}
+                  <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-md cursor-pointer hover:border-primary transition-colors text-sm text-muted-foreground">
+                    {faviconUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    {faviconUploading ? 'Uploading...' : 'Upload favicon'}
+                    <input type="file" className="hidden" accept=".ico,.png,.svg,.webp" onChange={handleFaviconUpload} disabled={faviconUploading} />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Column Colors */}
+            <Separator />
+            <div className="space-y-3">
+              <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.columnColors')}</Label>
+              {roadmap.lanes.map(lane => (
+                <div key={lane.id} className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: lane.color }} />
+                    <span className="text-sm font-medium truncate">{lane.name}</span>
+                  </div>
+                  <ColorPicker
+                    label=""
+                    value={lane.color}
+                    onChange={async (color) => {
+                      try {
+                        await roadmap.updateLane(lane.id, { color });
+                      } catch { toast.error('Error updating color'); }
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <SheetFooter className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
+            <div className="flex gap-2 w-full">
+              <Button variant="outline" className="flex-1" onClick={() => setShowSettings(false)}>{t('editor.cancel')}</Button>
+              <Button className="flex-1" onClick={handleSaveSettings}>{t('editor.save')}</Button>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {/* Lane Dialog */}
       <ResponsiveModal open={!!editingLane} onOpenChange={() => setEditingLane(null)} title={editingLane?.id ? t('editor.editLane') : t('editor.addLane')} isMobile={isMobile}

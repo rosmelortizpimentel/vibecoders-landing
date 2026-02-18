@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useApps } from '@/hooks/useApps';
+import { useProfile } from '@/hooks/useProfile';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,7 @@ export default function Roadmap() {
   const { t } = useTranslation('common');
   const { t: tRoadmap } = useTranslation('roadmap');
   const { apps, loading, verifyApp, refetch } = useApps();
+  const { profile } = useProfile();
 
   const [verifyModal, setVerifyModal] = useState<{ open: boolean; appId: string; appName: string; appUrl: string; token: string }>({
     open: false, appId: '', appName: '', appUrl: '', token: '',
@@ -59,7 +61,7 @@ export default function Roadmap() {
                        {tRoadmap('verified')}
                      </Badge>
                      <a
-                       href={`/roadmap/${appSlug}`}
+                        href={profile?.username ? `/@${profile.username}/${appSlug}/roadmap` : `/roadmap/${appSlug}`}
                        target="_blank"
                        rel="noopener noreferrer"
                        className="ml-auto text-muted-foreground hover:text-primary transition-colors"

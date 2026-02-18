@@ -80,7 +80,7 @@ const UI_LABELS: Record<string, Record<string, string>> = {
 };
 
 export default function PublicRoadmap() {
-  const { appName } = useParams<{ appName: string }>();
+  const { appName, handle, appSlug: appSlugParam } = useParams<{ appName?: string; handle?: string; appSlug?: string }>();
   const [loading, setLoading] = useState(true);
   const [app, setApp] = useState<AppInfo | null>(null);
   const [settings, setSettings] = useState<RoadmapSettings | null>(null);
@@ -91,7 +91,11 @@ export default function PublicRoadmap() {
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
   const [fingerprint, setFingerprint] = useState('');
   const [lang, setLang] = useState<string>('en');
-  const [activeTab, setActiveTab] = useState<'roadmap' | 'feedback'>('roadmap');
+  const [activeTab, setActiveTab] = useState<'roadmap' | 'feedback'>(() => {
+    // Detect if we're on the feedback URL
+    if (window.location.pathname.endsWith('/feedback')) return 'feedback';
+    return 'roadmap';
+  });
 
   // Feedback form
   const [fbTitle, setFbTitle] = useState('');
@@ -113,17 +117,37 @@ export default function PublicRoadmap() {
 
   // Fetch data
   useEffect(() => {
-    if (!appName) return;
+    // Determine the slug to search for
+    const slugToSearch = appSlugParam || appName;
+    if (!slugToSearch) return;
+
+    // Extract username from handle if present
+    const username = handle?.startsWith('@') ? handle.slice(1) : handle;
+
     (async () => {
       try {
-        // Find app by slug (name lowercased and slugified)
-        const { data: apps } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('is_visible', true);
-        const found = apps?.find(a => {
-          const slug = (a.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-          return slug === appName;
-        });
+        let found: AppInfo | null = null;
+
+        if (username) {
+          // New URL: find by username + app slug
+          const { data: profileData } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
+          if (!profileData) { setLoading(false); return; }
+          const { data: apps } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('user_id', profileData.id).eq('is_visible', true);
+          found = (apps?.find(a => {
+            const slug = (a.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            return slug === slugToSearch;
+          }) as AppInfo) || null;
+        } else {
+          // Legacy URL: find by slug among all visible apps
+          const { data: apps } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('is_visible', true);
+          found = (apps?.find(a => {
+            const slug = (a.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+            return slug === slugToSearch;
+          }) as AppInfo) || null;
+        }
+
         if (!found) { setLoading(false); return; }
-        setApp(found as AppInfo);
+        setApp(found);
 
         const [settingsRes, lanesRes, cardsRes, feedbackRes] = await Promise.all([
           supabase.from('roadmap_settings').select('*').eq('app_id', found.id).eq('is_public', true).maybeSingle(),
@@ -144,7 +168,7 @@ export default function PublicRoadmap() {
         setLoading(false);
       }
     })();
-  }, [appName]);
+  }, [appName, handle, appSlugParam]);
 
   // Fingerprint & liked state
   useEffect(() => {
