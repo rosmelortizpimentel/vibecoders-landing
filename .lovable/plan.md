@@ -1,80 +1,73 @@
+# Roadmap & Feedback -- Audit and Completion Plan
 
-## Plan: Centro de Monitoreo de Apps + Correccion de Errores de Build
+## Status: ~90% implemented
 
-### Objetivo
-Crear una nueva seccion "Apps" en el panel de administracion que muestre todas las apps registradas (visibles e inactivas) en modo solo lectura, con filtros y ordenamiento. Ademas, corregir los errores de build existentes.
-
----
-
-### Parte 1: Corregir errores de build existentes
-
-**Edge Functions** - Corregir `error` is of type `unknown` en 5 archivos:
-- `check-founder-status/index.ts`
-- `create-checkout-session/index.ts`
-- `get-landing-stats/index.ts`
-- `set-free-tier/index.ts`
-- `stripe-webhook/index.ts`
-
-Solucion: cambiar `error.message` por `(error as Error).message` en cada catch.
-
-**SurveyManager.tsx y SurveyStats.tsx** - Errores de tipos con tablas `surveys`, `survey_options`, `survey_responses`. Estas tablas existen en la BD pero no estan en el archivo de tipos generado (`types.ts`). Se usaran queries con `.from()` casteados o se reescribiran las queries con `supabase.rpc` o raw fetch para evitar los errores de tipo.
+The core system (database, hooks, editor, public page, DnD, feedback, i18n) is already built. This plan addresses the gaps found during the audit.
 
 ---
 
-### Parte 2: Nuevo componente AppsMonitor
+## Gap 1: Favicon not applied on Public Roadmap
 
-**Archivo nuevo:** `src/components/admin/AppsMonitor.tsx`
+The `useFavicon` hook is imported but never called with `settings.favicon_url` in `PublicRoadmap.tsx`.
 
-Columnas de la tabla:
-| Columna | Fuente |
-|---|---|
-| Nombre de la app | `apps.name` |
-| Tech stacks (debajo del nombre) | JOIN `app_stacks` + `tech_stacks` |
-| Vistas (clics) | COUNT de `app_clicks` |
-| Autor (con link al perfil) | JOIN `profiles` via `user_id` |
-| Estado | JOIN `app_statuses` |
-| Horas planificacion | `apps.hours_ideation` |
-| Horas ejecucion | `apps.hours_building` |
-| Beta activo | `apps.beta_active` |
-| Visible/Inactiva | `apps.is_visible` |
+**Fix:** Add `useFavicon(settings?.favicon_url)` call inside the component.
 
-**Filtros:**
-- Busqueda por nombre de app o autor
-- Filtro por estado (Building, Live, etc.)
-- Filtro por visibilidad (todas, visibles, inactivas)
-- Filtro por beta activo (si/no)
-
-**Caracteristicas:**
-- Solo lectura, sin botones de editar/eliminar
-- Columnas ordenables usando el hook `useSortableData` existente
-- El nombre del autor sera un link a su perfil publico (`/@username`)
-- Mostrar badges para tech stacks debajo del nombre
-
-**Nota tecnica:** Como el admin tiene acceso RLS solo a apps visibles (`is_visible = true`), necesitamos una RLS policy adicional para que admins puedan ver TODAS las apps.
+Asegura que al registrar un app tanbien se pueda escrapear el favicon, OG imagen y logo y que se guarde.
 
 ---
 
-### Parte 3: Migracion de base de datos
+## Gap 2: No favicon URL field in Editor Settings
 
-Agregar una policy RLS para que admins puedan ver todas las apps:
-```sql
-CREATE POLICY "Admins can view all apps"
-ON apps FOR SELECT
-USING (has_role(auth.uid(), 'admin'));
-```
+The settings dialog only has Custom Title, Font, and Public toggle. There is no way for the owner to configure the favicon URL.
+
+**Fix:** Add a text input for `favicon_url` inside the Settings dialog in `RoadmapEditor.tsx`, and include it in the `settingsForm` state and save logic.
 
 ---
 
-### Parte 4: Registrar la ruta
+## Gap 3: No lane reordering (DnD for lanes)
 
-1. **AdminSidebar.tsx** - Agregar item "Apps" con icono `AppWindow` en el menu
-2. **Admin.tsx** - Agregar ruta `apps` apuntando a `AppsMonitor`
+Currently only cards can be dragged. Lanes have no mechanism to change their `display_order`.
+
+**Fix:** Add drag handles to lane headers with `@dnd-kit/sortable` horizontal sorting, calling `roadmap.reorderLanes()` on drag end.
 
 ---
 
-### Secuencia de implementacion
-1. Corregir errores de build en edge functions (cast `error as Error`)
-2. Corregir SurveyManager/SurveyStats usando cast a `any` para las tablas no tipadas
-3. Crear migracion RLS para acceso admin a todas las apps
-4. Crear componente `AppsMonitor.tsx`
-5. Registrar en sidebar y rutas
+## Gap 4: Delete Feedback missing from Editor
+
+The feedback panel in the editor shows status, reply, and link buttons, but no delete button. The `deleteFeedback` function exists in the hook but is unused.
+
+**Fix:** Add a delete button (Trash icon) to each feedback card in the editor panel, with an `AlertDialog` confirmation using existing i18n keys (`delete.feedbackTitle`, `delete.feedbackDescription`).
+
+---
+
+## Gap 5: Lane fonts not loaded on Public Page
+
+If a lane uses a custom font (e.g., "Playfair Display"), it is referenced via `style={{ fontFamily }}` but the Google Fonts stylesheet is never loaded for lane-specific fonts.
+
+**Fix:** Collect unique lane fonts, generate a single Google Fonts link for all of them alongside the global font.
+
+---
+
+## Gap 6: Hardcoded strings not translated
+
+Several UI strings are hardcoded in English:
+
+- "Unlink" and "Link to Card" in the link feedback dialog
+- "Cancel" and "Add file" in the public feedback form
+- "Error moving card" toast
+
+**Fix:** Add these keys to the i18n roadmap files (en/es/fr/pt) and use `t()` for the editor and localized labels `l` for the public page.
+
+---
+
+## Technical Details
+
+### Files to modify:
+
+1. `**src/pages/PublicRoadmap.tsx**` -- Call `useFavicon`, load lane fonts
+2. `**src/pages/RoadmapEditor.tsx**` -- Add favicon field in settings, lane DnD, feedback delete button + confirmation, translate hardcoded strings
+3. `**src/i18n/{en,es,fr,pt}/roadmap.json**` -- Add missing keys: `editor.faviconUrlPlaceholder`, `editor.unlink`, `editor.linkToCard`, `public.addFile`, `public.cancel`
+
+### No database changes needed
+
+All tables, RLS policies, triggers, and storage are already in place and correct.
