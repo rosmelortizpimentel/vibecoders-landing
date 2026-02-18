@@ -33,7 +33,9 @@
     "unlink": "Unlink",
     "linkToCard": "Link to Card",
     "errorMovingCard": "Error moving card",
-    "preview": "Preview"
+    "preview": "Preview",
+    "publicOnHint": "Anyone with the link can view it",
+    "publicOffHint": "Only you can see it"
   },
   "listDescriptionPre": "Manage the public roadmap for your",
   "listDescriptionBold": "verified apps",

@@ -33,7 +33,9 @@
     "unlink": "Desvincular",
     "linkToCard": "Vincular a Cartão",
     "errorMovingCard": "Erro ao mover o cartão",
-    "preview": "Visualizar"
+    "preview": "Visualizar",
+    "publicOnHint": "Qualquer pessoa com o link pode ver",
+    "publicOffHint": "Somente você pode ver"
   },
   "listDescriptionPre": "Gerencie o roadmap público dos seus",
   "listDescriptionBold": "apps verificados",

@@ -494,18 +494,6 @@ export default function RoadmapEditor() {
             </TooltipTrigger>
             <TooltipContent className="sm:hidden">{t('editor.settings')}</TooltipContent>
           </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="sm" onClick={() => {
-                setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
-                setEditingLane({} as RoadmapLane);
-              }}>
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">{t('editor.addLane')}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="sm:hidden">{t('editor.addLane')}</TooltipContent>
-          </Tooltip>
         </div>
       </div>
 
@@ -536,24 +524,37 @@ export default function RoadmapEditor() {
                           <h3 className="font-semibold text-sm">{lane.name}</h3>
                           <span className="text-xs text-muted-foreground">({laneCards.length})</span>
                         </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => {
-                              setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
-                              setEditingLane(lane);
-                            }}>
-                              <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
-                              <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-0.5">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => {
+                              setCardForm({ title: '', description: '' });
+                              setAddingCardToLane(lane.id);
+                            }}
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => {
+                                setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
+                                setEditingLane(lane);
+                              }}>
+                                <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
+                                <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </div>
                     }
                   >
@@ -578,9 +579,9 @@ export default function RoadmapEditor() {
                         <p className="text-xs text-muted-foreground text-center py-8">{t('editor.noCards')}</p>
                       )}
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="w-full text-xs text-muted-foreground"
+                        className="w-full text-xs text-muted-foreground border-dashed"
                         onClick={() => {
                           setCardForm({ title: '', description: '' });
                           setAddingCardToLane(lane.id);
@@ -592,6 +593,18 @@ export default function RoadmapEditor() {
                   </SortableLaneWrapper>
                 );
               })}
+              {/* Add Lane button at end of columns */}
+              <div className="flex-shrink-0 flex items-start pt-1">
+                <button
+                  className="w-10 h-10 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary hover:text-primary text-muted-foreground transition-colors"
+                  onClick={() => {
+                    setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
+                    setEditingLane({} as RoadmapLane);
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </SortableContext>
         </div>
@@ -614,6 +627,18 @@ export default function RoadmapEditor() {
                         <Badge variant="secondary" className="text-[10px] h-5">{laneCards.length}</Badge>
                       </div>
                       <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCardForm({ title: '', description: '' });
+                            setAddingCardToLane(lane.id);
+                          }}
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </Button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => e.stopPropagation()}>
@@ -679,9 +704,9 @@ export default function RoadmapEditor() {
                         <p className="text-xs text-muted-foreground text-center py-4">{t('editor.noCards')}</p>
                       )}
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        className="w-full text-xs text-muted-foreground"
+                        className="w-full text-xs text-muted-foreground border-dashed"
                         onClick={() => {
                           setCardForm({ title: '', description: '' });
                           setAddingCardToLane(lane.id);
@@ -695,6 +720,17 @@ export default function RoadmapEditor() {
               </Collapsible>
             );
           })}
+          {/* Mobile add lane button */}
+          <button
+            className="w-full h-10 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 hover:border-primary hover:text-primary text-muted-foreground transition-colors text-sm"
+            onClick={() => {
+              setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
+              setEditingLane({} as RoadmapLane);
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            {t('editor.addLane')}
+          </button>
         </div>
 
         {/* Drag Overlay */}
@@ -791,8 +827,21 @@ export default function RoadmapEditor() {
           <Button onClick={handleSaveSettings}>{t('editor.save')}</Button>
         </>}
       >
+        {/* Public toggle - prominent at top */}
+        <div className={cn(
+          "rounded-lg p-3 flex items-center justify-between transition-colors",
+          settingsForm.is_public ? "bg-green-50 dark:bg-green-950/30" : "bg-muted/50"
+        )}>
+          <div>
+            <Label className="text-xs uppercase tracking-wider font-medium">{t('editor.isPublic')}</Label>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {settingsForm.is_public ? t('editor.publicOnHint') : t('editor.publicOffHint')}
+            </p>
+          </div>
+          <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
+        </div>
         <div className="space-y-2">
-          <Label>{t('editor.customTitle')}</Label>
+          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.customTitle')}</Label>
           <Input
             value={settingsForm.custom_title}
             onChange={e => setSettingsForm(prev => ({ ...prev, custom_title: e.target.value }))}
@@ -800,15 +849,11 @@ export default function RoadmapEditor() {
           />
         </div>
         <div className="space-y-2">
-          <Label>{t('editor.fontFamily')}</Label>
+          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.fontFamily')}</Label>
           <FontSelector value={settingsForm.font_family} onChange={v => setSettingsForm(prev => ({ ...prev, font_family: v }))} />
         </div>
-        <div className="flex items-center justify-between">
-          <Label>{t('editor.isPublic')}</Label>
-          <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
-        </div>
         <div className="space-y-2">
-          <Label>{t('editor.faviconUrl')}</Label>
+          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.faviconUrl')}</Label>
           <Input
             value={settingsForm.favicon_url}
             onChange={e => setSettingsForm(prev => ({ ...prev, favicon_url: e.target.value }))}
