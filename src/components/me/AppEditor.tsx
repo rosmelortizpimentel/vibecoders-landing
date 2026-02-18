@@ -19,10 +19,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TechStackSelector } from './TechStackSelector';
-import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield } from 'lucide-react';
+import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield, Map } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { VerificationBadge } from './VerificationBadge';
 import { VerifyDomainModal } from './VerifyDomainModal';
+import { useNavigate } from 'react-router-dom';
 import { TagInput } from '@/components/ui/tag-input';
 import { MarkdownEditor } from '@/components/beta/MarkdownEditor';
 
@@ -38,8 +39,9 @@ interface AppEditorProps {
 
  export function AppEditor({ app, onUpdate, onUploadLogo, onUploadScreenshot, onDelete, onCollapse, onVerify }: AppEditorProps) {
   const { categories } = useCategories();
-  const { statuses } = useStatuses();
-  const { t } = useTranslation('apps');
+   const { statuses } = useStatuses();
+   const { t } = useTranslation('apps');
+   const navigate = useNavigate();
   const { groupedStacks, stacks } = useTechStacks();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const screenshotInputRef = useRef<HTMLInputElement>(null);
@@ -422,6 +424,27 @@ interface AppEditorProps {
               </Button>
             )}
           </div>
+
+          {/* Roadmap Button - Only for verified apps */}
+          {localApp.is_verified && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Map className="h-4 w-4 text-primary" />
+                <span className="text-sm text-muted-foreground">
+                  Gestiona el roadmap público de tu app
+                </span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(`/roadmap-editor/${app.id}`)}
+                className="border-primary text-primary hover:bg-primary/10"
+              >
+                <Map className="h-4 w-4 mr-2" />
+                Roadmap
+              </Button>
+            </div>
+          )}
 
           <Button
             variant="ghost"
