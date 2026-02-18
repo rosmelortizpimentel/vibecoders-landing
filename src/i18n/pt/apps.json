@@ -12,5 +12,18 @@
   "verified": "Verified",
   "visible": "Visible",
   "hidden": "Hidden",
-  "back": "Voltar"
+  "back": "Voltar",
+  "hub": {
+    "info": "Info",
+    "roadmap": "Roadmap",
+    "feedback": "Feedback",
+    "squad": "Squad",
+    "backToApps": "Meus Apps",
+    "viewPage": "Ver página",
+    "publicFeedback": "Público",
+    "betaFeedback": "Beta",
+    "bugFeedback": "Bug",
+    "allFeedback": "Todos",
+    "noFeedback": "Nenhum feedback ainda"
+  }
 }

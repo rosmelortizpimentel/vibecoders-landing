@@ -49,6 +49,8 @@ import Beta from "./pages/Beta";
 import Vibers from "./pages/Vibers";
 import RoadmapEditor from "./pages/RoadmapEditor";
 import PublicRoadmap from "./pages/PublicRoadmap";
+import MyApps from "./pages/MyApps";
+import MyAppHub from "./pages/MyAppHub";
 
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -115,19 +117,26 @@ const App = () => (
               <Route path="/connections" element={<Vibers />} />
               <Route path="/me" element={<Navigate to="/me/profile" replace />} />
               <Route path="/me/profile" element={<Me />} />
-              <Route path="/me/apps" element={<Me />} />
               <Route path="/me/branding" element={<Me />} />
-              {/* Cleaner routes for Ideas and Beta Management */}
-              <Route path="/beta-testing" element={<Beta />} />
-              <Route path="/beta-testing/:appId" element={<Beta />} />
+              {/* New: My Apps hub */}
+              <Route path="/my-apps" element={<MyApps />} />
+              <Route path="/my-apps/:appId" element={<MyAppHub />} />
+              <Route path="/my-apps/:appId/roadmap" element={<MyAppHub />} />
+              <Route path="/my-apps/:appId/feedback" element={<MyAppHub />} />
+              <Route path="/my-apps/:appId/squad" element={<MyAppHub />} />
+              {/* Legacy routes kept for backward compat */}
+              <Route path="/beta-testing" element={<Navigate to="/my-apps" replace />} />
+              <Route path="/beta-testing/:appId" element={<Navigate to="/my-apps" replace />} />
               <Route path="/ideas" element={<Ideas />} />
-              <Route path="/roadmap" element={<Roadmap />} />
+              <Route path="/roadmap" element={<Navigate to="/my-apps" replace />} />
               <Route path="/prompts" element={<Prompts />} />
               <Route path="/prompts/new" element={<PromptStudio />} />
               <Route path="/prompts/:id" element={<PromptViewer />} />
               <Route path="/prompts/:id/edit" element={<PromptStudio />} />
               <Route path="/app/:appId" element={<AppDetail />} />
               <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
+              {/* Legacy redirect */}
+              <Route path="/me/apps" element={<Navigate to="/my-apps" replace />} />
             </Route>
           </Route>
           
