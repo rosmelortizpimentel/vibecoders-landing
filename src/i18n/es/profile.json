@@ -51,6 +51,8 @@
   "required": "requerido",
   "ideas": {
     "title": "Mis Ideas",
+    "pageTitle": "Mis Ideas",
+    "pageDescription": "Captura tu próxima gran idea. Bloc de notas para tus destellos de genialidad.",
     "description": "Un espacio privado para guardar tus ideas.",
     "noIdeasTitle": "Sin ideas, aún",
     "noIdeasMessage": "No tienes ideas guardadas. ¡Empieza a crear algo increíble!",
@@ -70,7 +72,12 @@
     "unsavedChangesTitle": "Cambios sin guardar",
     "unsavedChangesMessage": "Tienes cambios sin guardar. ¿Quieres descartarlos o volver para guardar?",
     "discard": "Descartar cambios",
-    "keepEditing": "Seguir editando"
+    "keepEditing": "Seguir editando",
+    "today": "hoy",
+    "markDone": "Marcar como hecha",
+    "markPending": "Reactivar",
+    "done": "Hecha",
+    "search": "Buscar..."
   },
   "bannerCrop": {
     "title": "Ajustar Banner",
