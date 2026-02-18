@@ -37,6 +37,10 @@
     "preview": "Visualizar",
     "publicOnHint": "Qualquer pessoa com o link pode ver",
     "publicOffHint": "Somente você pode ver",
+    "feedbackPublic": "Feedback Público",
+    "feedbackPublicOnHint": "Qualquer pessoa pode enviar feedback",
+    "feedbackPublicOffHint": "O feedback está desativado",
+    "publicPage": "Página Pública",
     "columnColors": "Cores das Colunas",
     "completedAtOptional": "Data de conclusão (opcional)"
   },

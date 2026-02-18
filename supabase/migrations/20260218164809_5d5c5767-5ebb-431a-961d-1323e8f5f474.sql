@@ -1,0 +1,1 @@
+ALTER TABLE public.roadmap_settings ADD COLUMN is_feedback_public boolean NOT NULL DEFAULT false;

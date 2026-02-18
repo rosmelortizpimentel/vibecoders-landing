@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoadmap, useRoadmapFeedback, RoadmapLane, RoadmapCard } from '@/hooks/useRoadmap';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,7 +23,7 @@ import { FontSelector } from '@/components/me/FontSelector';
 import { ColorPicker } from '@/components/me/ColorPicker';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Plus, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Eye, Upload, Calendar, Paintbrush } from 'lucide-react';
+import { Loader2, ArrowLeft, Plus, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Upload, Calendar, Paintbrush } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
@@ -231,10 +231,12 @@ export default function RoadmapEditor() {
   // Form states
   const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: 'Inter' });
   const [cardForm, setCardForm] = useState({ title: '', description: '' });
-  const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', is_public: true, favicon_url: '' });
+  const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', is_public: false, is_feedback_public: false, favicon_url: '' });
+
+  // View mode: roadmap or feedback
+  const [viewMode, setViewMode] = useState<'roadmap' | 'feedback'>('roadmap');
 
   // Feedback management
-  const [showFeedbackPanel, setShowFeedbackPanel] = useState(false);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
   const [linkingFeedback, setLinkingFeedback] = useState<string | null>(null);
@@ -345,6 +347,7 @@ export default function RoadmapEditor() {
         custom_title: roadmap.settings.custom_title || '',
         font_family: roadmap.settings.font_family || 'Inter',
         is_public: roadmap.settings.is_public,
+        is_feedback_public: (roadmap.settings as any).is_feedback_public ?? false,
         favicon_url: roadmap.settings.favicon_url || '',
       });
     }
@@ -488,46 +491,59 @@ export default function RoadmapEditor() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header - Responsive */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/roadmap')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          {app.logo_url && <img src={app.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />}
           <div className="min-w-0">
-            <h1 className="text-lg md:text-xl font-bold truncate">{app.name || 'App'} — {t('title')}</h1>
-            {roadmap.settings.is_public && (
-              <Link
-                to={publicPath}
-                target="_blank"
-                className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
-              >
-                <ExternalLink className="w-3 h-3" />
-                <span className="truncate">{publicPath}</span>
-              </Link>
-            )}
+            <h1 className="text-lg md:text-xl font-bold truncate">{app.name || 'App'}</h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex items-center gap-1.5">
+                <Switch
+                  checked={settingsForm.is_public}
+                  onCheckedChange={async (v) => {
+                    setSettingsForm(prev => ({ ...prev, is_public: v }));
+                    try { await roadmap.updateSettings({ is_public: v }); } catch {}
+                  }}
+                  className="h-4 w-7 [&>span]:h-3 [&>span]:w-3"
+                />
+                <span className={cn("text-xs font-medium", settingsForm.is_public ? "text-primary" : "text-muted-foreground")}>
+                  {settingsForm.is_public ? t('editor.isPublic') : 'Privado'}
+                </span>
+              </div>
+              {settingsForm.is_public && ownerUsername && (
+                <a
+                  href={publicPath}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  {t('editor.publicPage')}
+                </a>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          {/* Preview button */}
-          {roadmap.settings.is_public && (
-            <Button variant="default" size="sm" asChild>
-              <a href={publicPath} target="_blank" rel="noopener noreferrer">
-                <Eye className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">{t('editor.preview')}</span>
-              </a>
-            </Button>
-          )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => setShowFeedbackPanel(!showFeedbackPanel)}>
-                <MessageSquare className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">Feedback ({feedbackHook.feedback.length})</span>
-                <span className="sm:hidden ml-1">{feedbackHook.feedback.length}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="sm:hidden">Feedback</TooltipContent>
-          </Tooltip>
+          {/* Roadmap / Feedback toggle */}
+          <div className="flex bg-muted rounded-lg p-0.5">
+            <button
+              onClick={() => setViewMode('roadmap')}
+              className={cn('px-3 py-1.5 text-xs font-medium rounded-md transition-all', viewMode === 'roadmap' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+            >
+              Roadmap
+            </button>
+            <button
+              onClick={() => setViewMode('feedback')}
+              className={cn('px-3 py-1.5 text-xs font-medium rounded-md transition-all', viewMode === 'feedback' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
+            >
+              Feedback ({feedbackHook.feedback.length})
+            </button>
+          </div>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
@@ -540,8 +556,8 @@ export default function RoadmapEditor() {
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <DndContext
+      {/* Kanban Board - only in roadmap mode */}
+      {viewMode === 'roadmap' && <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
@@ -787,11 +803,11 @@ export default function RoadmapEditor() {
             </Card>
           ) : null}
         </DragOverlay>
-      </DndContext>
+      </DndContext>}
 
-      {/* Feedback Panel */}
-      {showFeedbackPanel && (
-        <div className="border-t pt-6 space-y-4">
+      {/* Feedback Panel - only in feedback mode */}
+      {viewMode === 'feedback' && (
+        <div className="space-y-4">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />
             Feedback ({feedbackHook.feedback.length})
@@ -874,7 +890,7 @@ export default function RoadmapEditor() {
           </SheetHeader>
 
           <div className="space-y-6 pb-24">
-            {/* Public toggle - prominent at top */}
+            {/* Roadmap Public toggle */}
             <div className={cn(
               "rounded-lg p-3 flex items-center justify-between transition-colors",
               settingsForm.is_public ? "bg-primary/10" : "bg-muted/50"
@@ -886,6 +902,20 @@ export default function RoadmapEditor() {
                 </p>
               </div>
               <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
+            </div>
+
+            {/* Feedback Public toggle - independent */}
+            <div className={cn(
+              "rounded-lg p-3 flex items-center justify-between transition-colors",
+              settingsForm.is_feedback_public ? "bg-primary/10" : "bg-muted/50"
+            )}>
+              <div>
+                <Label className="text-xs uppercase tracking-wider font-medium">{t('editor.feedbackPublic')}</Label>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {settingsForm.is_feedback_public ? t('editor.feedbackPublicOnHint') : t('editor.feedbackPublicOffHint')}
+                </p>
+              </div>
+              <Switch checked={settingsForm.is_feedback_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_feedback_public: v }))} />
             </div>
 
             {/* Branding section */}
