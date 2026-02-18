@@ -35,7 +35,9 @@
     "errorMovingCard": "Error al mover la tarjeta",
     "preview": "Vista Previa",
     "publicOnHint": "Cualquiera con el link puede verlo",
-    "publicOffHint": "Solo tú puedes verlo"
+    "publicOffHint": "Solo tú puedes verlo",
+    "columnColors": "Colores de Columnas",
+    "completedAtOptional": "Fecha de completado (opcional)"
   },
   "listDescriptionPre": "Gestiona el roadmap público de tus",
   "listDescriptionBold": "apps verificadas",

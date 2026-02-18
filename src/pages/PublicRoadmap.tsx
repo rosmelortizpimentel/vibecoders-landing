@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useRoadmapFeedback, RoadmapLane, RoadmapCard, RoadmapSettings, RoadmapFeedback } from '@/hooks/useRoadmap';
@@ -11,8 +12,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Loader2, ThumbsUp, MessageSquare, Paperclip, X, Send } from 'lucide-react';
+import { Loader2, ThumbsUp, MessageSquare, Paperclip, X, Send, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { generateDeviceFingerprint } from '@/lib/deviceFingerprint';
 
 interface AppInfo {
@@ -274,7 +276,7 @@ export default function PublicRoadmap() {
   const title = settings.custom_title || app.name || 'Roadmap';
 
   return (
-    <div className="min-h-screen bg-gray-50" style={{ fontFamily }}>
+    <div className="min-h-screen flex flex-col bg-gray-50" style={{ fontFamily }}>
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -320,7 +322,7 @@ export default function PublicRoadmap() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1">
         {/* Roadmap View */}
         {activeTab === 'roadmap' && (
           <>
@@ -344,6 +346,12 @@ export default function PublicRoadmap() {
                             <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm border-l-[3px]" style={{ borderLeftColor: lane.color }}>
                               <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
                               {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
+                              {card.completed_at && (
+                                <Badge variant="secondary" className="text-[10px] mt-1.5 h-5 bg-gray-100 text-gray-600">
+                                  <Calendar className="w-3 h-3 mr-1" />
+                                  {format(new Date(card.completed_at), 'MMM d, yyyy')}
+                                </Badge>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -368,6 +376,12 @@ export default function PublicRoadmap() {
                             <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm border-l-[3px]" style={{ borderLeftColor: lane.color }}>
                               <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
                               {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
+                              {card.completed_at && (
+                                <Badge variant="secondary" className="text-[10px] mt-1.5 h-5 bg-gray-100 text-gray-600">
+                                  <Calendar className="w-3 h-3 mr-1" />
+                                  {format(new Date(card.completed_at), 'MMM d, yyyy')}
+                                </Badge>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -447,11 +461,13 @@ export default function PublicRoadmap() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t bg-white py-4 mt-8">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-xs text-gray-400">
-            {l.poweredBy} <a href="https://vibecoders.la" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-gray-700 font-medium">vibecoders.la</a>
-          </p>
+      <footer className="border-t bg-white py-4">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-center gap-1.5">
+          <p className="text-xs text-gray-400">{l.poweredBy}</p>
+          <a href="https://vibecoders.la" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors">
+            <img src={vibecodersLogo} alt="Vibecoders" className="w-4 h-4" />
+            <span className="text-xs font-medium">vibecoders.la</span>
+          </a>
         </div>
       </footer>
 

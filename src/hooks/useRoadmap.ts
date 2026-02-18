@@ -30,6 +30,7 @@ export interface RoadmapCard {
   title: string;
   description: string | null;
   display_order: number;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -64,8 +65,8 @@ export interface RoadmapFeedbackAttachment {
 
 const DEFAULT_LANES = [
   { name: 'Backlog', color: '#6B7280', display_order: 0 },
-  { name: 'Planned', color: '#3B82F6', display_order: 1 },
-  { name: 'In Progress', color: '#F59E0B', display_order: 2 },
+  { name: 'Planned', color: '#F59E0B', display_order: 1 },
+  { name: 'In Progress', color: '#3B82F6', display_order: 2 },
   { name: 'Done', color: '#10B981', display_order: 3 },
 ];
 
@@ -211,13 +212,15 @@ export function useRoadmap(appId: string | undefined) {
     setCards(prev => prev.filter(c => c.id !== cardId));
   }, []);
 
-  const moveCard = useCallback(async (cardId: string, newLaneId: string, newOrder: number) => {
+  const moveCard = useCallback(async (cardId: string, newLaneId: string, newOrder: number, completedAt?: string | null) => {
+    const updateData: any = { lane_id: newLaneId, display_order: newOrder, updated_at: new Date().toISOString() };
+    if (completedAt !== undefined) updateData.completed_at = completedAt;
     const { error } = await supabase
       .from('roadmap_cards')
-      .update({ lane_id: newLaneId, display_order: newOrder, updated_at: new Date().toISOString() })
+      .update(updateData)
       .eq('id', cardId);
     if (error) throw error;
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, lane_id: newLaneId, display_order: newOrder } : c));
+    setCards(prev => prev.map(c => c.id === cardId ? { ...c, lane_id: newLaneId, display_order: newOrder, ...(completedAt !== undefined ? { completed_at: completedAt } : {}) } : c));
   }, []);
 
   return {

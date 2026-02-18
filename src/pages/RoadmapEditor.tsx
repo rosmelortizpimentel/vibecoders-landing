@@ -22,8 +22,9 @@ import { FontSelector } from '@/components/me/FontSelector';
 import { ColorPicker } from '@/components/me/ColorPicker';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Plus, Settings, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Eye } from 'lucide-react';
+import { Loader2, ArrowLeft, Plus, Settings, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Eye, Upload, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import {
   DndContext,
   DragOverlay,
@@ -123,6 +124,12 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
                 </p>
                 {card.description && (
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                )}
+                {card.completed_at && (
+                  <Badge variant="secondary" className="text-[10px] mt-1.5 h-5">
+                    <Calendar className="w-3 h-3 mr-1" />
+                    {format(new Date(card.completed_at), 'MMM d, yyyy')}
+                  </Badge>
                 )}
               </div>
             </div>
@@ -231,6 +238,8 @@ export default function RoadmapEditor() {
   const [responseText, setResponseText] = useState('');
   const [linkingFeedback, setLinkingFeedback] = useState<string | null>(null);
   const [deletingFeedback, setDeletingFeedback] = useState<string | null>(null);
+  const [faviconUploading, setFaviconUploading] = useState(false);
+  const [moveCompletedAt, setMoveCompletedAt] = useState<string>('');
 
   // Mobile lane accordion
   const [openLanes, setOpenLanes] = useState<Set<string>>(new Set());
@@ -398,6 +407,27 @@ export default function RoadmapEditor() {
       setShowSettings(false);
       toast.success('Settings saved');
     } catch { toast.error('Error saving settings'); }
+  };
+
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !appId) return;
+    const allowedTypes = ['image/png', 'image/svg+xml', 'image/webp', 'image/x-icon', 'image/vnd.microsoft.icon'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only .ico, .png, .svg, .webp files');
+      return;
+    }
+    setFaviconUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `favicons/${appId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('roadmap-attachments').upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from('roadmap-attachments').getPublicUrl(path);
+      setSettingsForm(prev => ({ ...prev, favicon_url: urlData.publicUrl }));
+      toast.success('Favicon uploaded');
+    } catch { toast.error('Error uploading favicon'); }
+    finally { setFaviconUploading(false); }
   };
 
   const handleSaveLane = async () => {
@@ -853,12 +883,40 @@ export default function RoadmapEditor() {
           <FontSelector value={settingsForm.font_family} onChange={v => setSettingsForm(prev => ({ ...prev, font_family: v }))} />
         </div>
         <div className="space-y-2">
-          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.faviconUrl')}</Label>
-          <Input
-            value={settingsForm.favicon_url}
-            onChange={e => setSettingsForm(prev => ({ ...prev, favicon_url: e.target.value }))}
-            placeholder="https://example.com/favicon.ico"
-          />
+          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Favicon</Label>
+          <div className="flex items-center gap-3">
+            {settingsForm.favicon_url && (
+              <img src={settingsForm.favicon_url} alt="Favicon" className="w-8 h-8 rounded object-contain border" />
+            )}
+            <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-md cursor-pointer hover:border-primary transition-colors text-sm text-muted-foreground">
+              {faviconUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {faviconUploading ? 'Uploading...' : 'Upload favicon'}
+              <input type="file" className="hidden" accept=".ico,.png,.svg,.webp" onChange={handleFaviconUpload} disabled={faviconUploading} />
+            </label>
+          </div>
+        </div>
+
+        {/* Column Colors */}
+        <Separator />
+        <div className="space-y-3">
+          <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.columnColors')}</Label>
+          {roadmap.lanes.map(lane => (
+            <div key={lane.id} className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: lane.color }} />
+                <span className="text-sm truncate">{lane.name}</span>
+              </div>
+              <ColorPicker
+                label=""
+                value={lane.color}
+                onChange={async (color) => {
+                  try {
+                    await roadmap.updateLane(lane.id, { color });
+                  } catch { toast.error('Error updating color'); }
+                }}
+              />
+            </div>
+          ))}
         </div>
       </ResponsiveModal>
 
@@ -902,24 +960,41 @@ export default function RoadmapEditor() {
       </ResponsiveModal>
 
       {/* Move Card Dialog */}
-      <ResponsiveModal open={!!movingCard} onOpenChange={() => setMovingCard(null)} title={t('editor.moveCard')} isMobile={isMobile}>
+      <ResponsiveModal open={!!movingCard} onOpenChange={() => { setMovingCard(null); setMoveCompletedAt(''); }} title={t('editor.moveCard')} isMobile={isMobile}>
         <div className="space-y-2">
-          {roadmap.lanes.filter(l => l.id !== movingCard?.lane_id).map(lane => (
-            <Button
-              key={lane.id}
-              variant="outline"
-              className="w-full justify-start"
-              onClick={async () => {
-                if (movingCard) {
-                  await roadmap.moveCard(movingCard.id, lane.id, 0);
-                  setMovingCard(null);
-                }
-              }}
-            >
-              <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: lane.color }} />
-              {lane.name}
-            </Button>
-          ))}
+          {roadmap.lanes.filter(l => l.id !== movingCard?.lane_id).map(lane => {
+            const isDoneLane = lane.name.toLowerCase() === 'done';
+            return (
+              <div key={lane.id}>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={async () => {
+                    if (movingCard) {
+                      const completedAt = isDoneLane && moveCompletedAt ? moveCompletedAt : (isDoneLane ? null : null);
+                      await roadmap.moveCard(movingCard.id, lane.id, 0, isDoneLane ? (moveCompletedAt || null) : undefined);
+                      setMovingCard(null);
+                      setMoveCompletedAt('');
+                    }
+                  }}
+                >
+                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: lane.color }} />
+                  {lane.name}
+                </Button>
+                {isDoneLane && (
+                  <div className="ml-5 mt-1.5 mb-1">
+                    <Label className="text-[11px] text-muted-foreground">{t('editor.completedAtOptional')}</Label>
+                    <Input
+                      type="date"
+                      value={moveCompletedAt}
+                      onChange={e => setMoveCompletedAt(e.target.value)}
+                      className="h-8 text-xs mt-1 w-44"
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </ResponsiveModal>
 

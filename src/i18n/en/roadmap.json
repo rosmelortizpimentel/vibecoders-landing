@@ -35,7 +35,9 @@
     "errorMovingCard": "Error moving card",
     "preview": "Preview",
     "publicOnHint": "Anyone with the link can view it",
-    "publicOffHint": "Only you can see it"
+    "publicOffHint": "Only you can see it",
+    "columnColors": "Column Colors",
+    "completedAtOptional": "Completion date (optional)"
   },
   "listDescriptionPre": "Manage the public roadmap for your",
   "listDescriptionBold": "verified apps",
