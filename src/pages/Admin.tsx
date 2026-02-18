@@ -14,6 +14,7 @@ import { FeedbackManager } from '@/components/admin/FeedbackManager';
 import { NotificationManager } from '@/components/admin/NotificationManager';
 import { SurveyManager } from '@/components/admin/SurveyManager';
 import { AppsMonitor } from '@/components/admin/AppsMonitor';
+import { MenuManager } from '@/components/admin/MenuManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -83,6 +84,7 @@ const Admin = () => {
         <Route path="notifications" element={<NotificationManager />} />
         <Route path="surveys" element={<SurveyManager />} />
         <Route path="apps" element={<AppsMonitor />} />
+        <Route path="menu" element={<MenuManager />} />
       </Route>
     </Routes>
   );
