@@ -1,0 +1,1 @@
+UPDATE public.sidebar_menu_items SET path = '/apps' WHERE key = 'my-apps';

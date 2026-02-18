@@ -118,17 +118,19 @@ const App = () => (
               <Route path="/me" element={<Navigate to="/me/profile" replace />} />
               <Route path="/me/profile" element={<Me />} />
               <Route path="/me/branding" element={<Me />} />
-              {/* New: My Apps hub */}
-              <Route path="/my-apps" element={<MyApps />} />
-              <Route path="/my-apps/:appId" element={<MyAppHub />} />
-              <Route path="/my-apps/:appId/roadmap" element={<MyAppHub />} />
-              <Route path="/my-apps/:appId/feedback" element={<MyAppHub />} />
-              <Route path="/my-apps/:appId/squad" element={<MyAppHub />} />
+              {/* New: Apps hub */}
+              <Route path="/apps" element={<MyApps />} />
+              <Route path="/apps/:appId" element={<MyAppHub />} />
+              <Route path="/apps/:appId/roadmap" element={<MyAppHub />} />
+              <Route path="/apps/:appId/feedback" element={<MyAppHub />} />
+              <Route path="/apps/:appId/squad" element={<MyAppHub />} />
               {/* Legacy routes kept for backward compat */}
-              <Route path="/beta-testing" element={<Navigate to="/my-apps" replace />} />
-              <Route path="/beta-testing/:appId" element={<Navigate to="/my-apps" replace />} />
+              <Route path="/my-apps" element={<Navigate to="/apps" replace />} />
+              <Route path="/my-apps/:appId" element={<Navigate to="/apps" replace />} />
+              <Route path="/beta-testing" element={<Navigate to="/apps" replace />} />
+              <Route path="/beta-testing/:appId" element={<Navigate to="/apps" replace />} />
               <Route path="/ideas" element={<Ideas />} />
-              <Route path="/roadmap" element={<Navigate to="/my-apps" replace />} />
+              <Route path="/roadmap" element={<Navigate to="/apps" replace />} />
               <Route path="/prompts" element={<Prompts />} />
               <Route path="/prompts/new" element={<PromptStudio />} />
               <Route path="/prompts/:id" element={<PromptViewer />} />
@@ -136,7 +138,7 @@ const App = () => (
               <Route path="/app/:appId" element={<AppDetail />} />
               <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
               {/* Legacy redirect */}
-              <Route path="/me/apps" element={<Navigate to="/my-apps" replace />} />
+              <Route path="/me/apps" element={<Navigate to="/apps" replace />} />
             </Route>
           </Route>
           

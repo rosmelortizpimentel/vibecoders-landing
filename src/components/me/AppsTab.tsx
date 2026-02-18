@@ -166,7 +166,6 @@ export function AppsTab({ appsHook }: AppsTabProps) {
             onUploadLogo={uploadAppLogo}
             onUploadScreenshot={appsHook.uploadAppScreenshot}
             onDelete={() => setDeleteConfirmId(activeApp.id)}
-            onCollapse={() => setExpandedAppId(null)}
             onVerify={() => handleVerify(activeApp.id)}
           />
           
@@ -290,7 +289,6 @@ export function AppsTab({ appsHook }: AppsTabProps) {
                       onUploadLogo={uploadAppLogo}
                       onUploadScreenshot={appsHook.uploadAppScreenshot}
                       onDelete={() => setDeleteConfirmId(app.id)}
-                      onCollapse={() => setExpandedAppId(null)}
                       onVerify={() => handleVerify(app.id)}
                     />
                   ) : (
