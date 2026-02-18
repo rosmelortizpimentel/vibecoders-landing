@@ -1733,7 +1733,9 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          display_order: number
           id: string
+          is_done: boolean
           title: string
           updated_at: string
           user_id: string
@@ -1741,7 +1743,9 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          display_order?: number
           id?: string
+          is_done?: boolean
           title?: string
           updated_at?: string
           user_id: string
@@ -1749,7 +1753,9 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          display_order?: number
           id?: string
+          is_done?: boolean
           title?: string
           updated_at?: string
           user_id?: string

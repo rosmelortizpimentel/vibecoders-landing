@@ -1,15 +1,20 @@
 import { IdeasTab } from '@/components/me/IdeasTab';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export default function Ideas() {
+  const { t } = useTranslation('profile');
+
   return (
-    <div className="container px-4 py-6 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">My Ideas</h1>
-        <p className="text-muted-foreground mt-2">
-          Capture your next big thing. Scratchpad for your flashes of genius.
+    <div className="container px-4 py-6 max-w-5xl mx-auto h-[calc(100vh-80px)] flex flex-col">
+      <div className="mb-4 shrink-0">
+        <h1 className="text-2xl font-bold tracking-tight">{t('ideas.pageTitle')}</h1>
+        <p className="text-muted-foreground mt-1 text-sm">
+          {t('ideas.pageDescription')}
         </p>
       </div>
-      <IdeasTab />
+      <div className="flex-1 min-h-0">
+        <IdeasTab />
+      </div>
     </div>
   );
 }
