@@ -1,132 +1,116 @@
 
 
-## Dynamic Sidebar Menu from Database
+## Mejoras a la Sección "Mis Ideas"
 
-### Goal
-Replace the hardcoded navigation menu in the Sidebar (and mobile header) with items loaded from a new `sidebar_menu_items` database table, allowing admin activation/deactivation. Items with dynamic counters (badges) will keep their runtime values.
-
-### How It Works
-
-1. **New database table `sidebar_menu_items`** stores menu configuration:
-   - `key` (unique text, e.g. "home", "notifications", "beta-testing") -- maps to the icon and badge logic
-   - `label_key` (text) -- the i18n translation key (e.g. "navigation.home")
-   - `path` (text) -- the route path (e.g. "/home")
-   - `icon` (text) -- icon name from Lucide (e.g. "LayoutDashboard")
-   - `section` (text) -- grouping: "personal", "community", "utilities"
-   - `display_order` (integer) -- sort order
-   - `is_active` (boolean, default true) -- toggle visibility
-   - `requires_waitlist` (boolean, default false) -- only show for waitlist users
-   - `css_class` (text, nullable) -- optional extra class (e.g. "text-amber-500")
-
-2. **Seed the table** with all current menu items pre-populated.
-
-3. **New hook `useSidebarMenu`** fetches active items, sorted by section + display_order. Results are cached with React Query.
-
-4. **Sidebar.tsx and AuthenticatedHeader.tsx** will consume the hook, map `icon` string to the actual Lucide component, and apply badge logic based on the `key` field:
-   - `key === "notifications"` -> uses `unreadCount`
-   - `key === "beta-testing"` -> uses `ownedAppsCount`
-   - `key === "public-beta-testing"` -> uses `publicSquadsCount`
-
-5. **Admin panel** gets a new "Menu" section (or added to Settings) where admins can toggle `is_active` and reorder items using a simple table with switches.
+### Problemas Detectados
+- El encabezado de la página está en inglés hardcodeado ("My Ideas", "Capture your next big thing...")
+- No hay forma de reordenar las ideas (falta drag and drop)
+- No existe opción para marcar ideas como "Done"
+- No se muestra la antigüedad de cada idea (días)
+- Falta scroll propio en la sección
 
 ---
 
-### Technical Details
+### Cambios Propuestos
 
-#### Database Migration
+#### 1. Migración de Base de Datos
+Agregar dos columnas nuevas a la tabla `user_ideas`:
+- `display_order` (integer, default 0) -- para el orden drag and drop
+- `is_done` (boolean, default false) -- para marcar como completada
+
+#### 2. Traducciones en los 4 Idiomas
+Agregar claves nuevas al archivo `profile.json` de cada idioma (es, en, fr, pt):
+- `ideas.pageTitle` -- Título de la página
+- `ideas.pageDescription` -- Descripción de la página
+- `ideas.daysAgo` -- "hace X días" / "X days ago"
+- `ideas.today` -- "hoy" / "today"
+- `ideas.markDone` -- "Marcar como hecha"
+- `ideas.markPending` -- "Reactivar"
+- `ideas.done` -- "Hecha"
+- `ideas.search` -- "Buscar..."
+
+#### 3. Página Ideas.tsx
+- Reemplazar textos hardcodeados por traducciones usando `useTranslation('profile')`
+- La página ocupará el alto completo con scroll propio
+
+#### 4. Componente IdeasTab.tsx -- Mejoras Principales
+
+**Drag and Drop (con @dnd-kit)**:
+- Cada idea en la lista tendrá un handle de arrastre
+- Al soltar, se actualiza `display_order` en la base de datos
+- El orden se respeta al cargar (ORDER BY display_order ASC)
+
+**Marcar como "Done"**:
+- Botón/checkbox en cada idea de la lista para alternar `is_done`
+- Las ideas completadas aparecen con estilo tachado/opaco al final de la lista
+- Actualización optimista + persistencia en BD
+
+**Tag de antigüedad**:
+- Badge en cada idea mostrando cuántos días tiene desde su creación
+- Ejemplo: "hoy", "3d", "15d", "30d+"
+
+**Scroll propio**:
+- El contenedor principal usa `h-[calc(100vh-theme-spacing)]` con overflow
+- La lista de ideas y el detalle tienen scroll independiente
+
+**Responsive (móvil)**:
+- Layout de columna única en móvil
+- Touch-friendly drag handles
+- Botones y badges adaptados a pantallas pequeñas
+- El detalle ocupa pantalla completa en móvil
+
+---
+
+### Detalles Técnicos
+
+#### Migración SQL
 
 ```sql
-CREATE TABLE public.sidebar_menu_items (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  key TEXT UNIQUE NOT NULL,
-  label_key TEXT NOT NULL,
-  path TEXT NOT NULL,
-  icon TEXT NOT NULL,
-  section TEXT NOT NULL DEFAULT 'personal',
-  display_order INTEGER NOT NULL DEFAULT 0,
-  is_active BOOLEAN NOT NULL DEFAULT true,
-  requires_waitlist BOOLEAN NOT NULL DEFAULT false,
-  css_class TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.sidebar_menu_items ENABLE ROW LEVEL SECURITY;
-
--- Anyone can read (needed for sidebar rendering)
-CREATE POLICY "Anyone can view menu items"
-  ON public.sidebar_menu_items FOR SELECT
-  USING (true);
-
--- Only admins can modify
-CREATE POLICY "Admins can manage menu items"
-  ON public.sidebar_menu_items FOR ALL
-  USING (has_role(auth.uid(), 'admin'::app_role));
-
--- Seed with current items
-INSERT INTO public.sidebar_menu_items (key, label_key, path, icon, section, display_order, is_active, requires_waitlist, css_class) VALUES
-  ('home',                'navigation.home',              '/home',                'LayoutDashboard', 'personal',  1,  true, false, NULL),
-  ('notifications',       'notifications.title',          '/notifications',       'Bell',            'personal',  2,  true, false, NULL),
-  ('my-profile',          'navigation.myProfile',         '/me',                  'User',            'personal',  3,  true, false, NULL),
-  ('ideas',               'navigation.myIdeas',           '/ideas',               'Lightbulb',       'personal',  4,  true, false, NULL),
-  ('roadmap',             'navigation.roadmap',           '/roadmap',             'Map',             'personal',  5,  true, false, NULL),
-  ('prompts',             'navigation.prompts',           '/prompts',             'BookOpen',        'personal',  6,  true, false, NULL),
-  ('connections',         'navigation.vibers',            '/connections',         'Users',           'personal',  7,  true, false, NULL),
-  ('beta-testing',        'navigation.betaTesting',       '/beta-testing',        'FlaskConical',    'personal',  8,  true, false, NULL),
-  ('public-beta-testing', 'navigation.publicBetaTesting', '/public-beta-testing', 'Rocket',          'community', 10, true, false, NULL),
-  ('explore',             'navigation.startups',          '/explore',             'Globe',           'community', 11, true, false, NULL),
-  ('tools',               'navigation.tools',             '/tools',               'Wrench',          'utilities', 20, true, false, NULL),
-  ('feedback',            'navigation.feedback',          '/feedback',            'MessageSquare',   'utilities', 21, true, false, NULL),
-  ('buildlog',            'navigation.buildLog',          '/buildlog',            'Crown',           'utilities', 22, true, true,  'text-amber-500');
+ALTER TABLE public.user_ideas 
+  ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN is_done BOOLEAN NOT NULL DEFAULT false;
 ```
 
-#### New Hook: `src/hooks/useSidebarMenu.ts`
+#### Archivos a Modificar/Crear
 
-- Fetches from `sidebar_menu_items` where `is_active = true`, ordered by `display_order`
-- Filters `requires_waitlist` items based on user's waitlist status
-- Maps icon strings to Lucide components via a lookup object
-- Injects runtime badge counts based on `key`
+| Archivo | Acción |
+|---------|--------|
+| Migración SQL | Crear -- agregar columnas |
+| `src/pages/Ideas.tsx` | Modificar -- usar traducciones |
+| `src/components/me/IdeasTab.tsx` | Modificar -- drag & drop, done, tags, scroll |
+| `src/components/me/ideas/IdeaDetail.tsx` | Modificar -- actualizar interfaz Idea |
+| `src/i18n/es/profile.json` | Modificar -- agregar claves nuevas |
+| `src/i18n/en/profile.json` | Modificar -- agregar claves nuevas |
+| `src/i18n/fr/profile.json` | Modificar -- agregar claves nuevas |
+| `src/i18n/pt/profile.json` | Modificar -- agregar claves nuevas |
 
-#### Icon Mapping
+#### Lógica de Drag and Drop
 
-A simple object mapping string names to Lucide components:
+Se reutilizará `@dnd-kit` (ya instalado) con `SortableContext` y `verticalListSortingStrategy`. Al finalizar el drag:
 
 ```typescript
-const ICON_MAP: Record<string, LucideIcon> = {
-  LayoutDashboard, Bell, User, Lightbulb, Map, BookOpen,
-  Users, FlaskConical, Rocket, Globe, Wrench, MessageSquare, Crown
+// Recalcular display_order para todos los items visibles
+const reorderedIds = arrayMove(ideaIds, oldIndex, newIndex);
+// Actualizar en batch: UPDATE user_ideas SET display_order = X WHERE id = Y
+```
+
+#### Tag de Antigüedad
+
+```typescript
+const getDaysTag = (createdAt: string): string => {
+  const days = differenceInDays(new Date(), new Date(createdAt));
+  if (days === 0) return t('ideas.today');
+  return `${days}d`;
 };
 ```
 
-#### Badge Mapping
-
-Counters remain dynamic and are resolved at render time:
+#### Consulta Ordenada
 
 ```typescript
-const badgeMap: Record<string, number> = {
-  'notifications': unreadCount,
-  'beta-testing': ownedAppsCount,
-  'public-beta-testing': publicSquadsCount,
-};
+const { data } = await supabase
+  .from('user_ideas')
+  .select('*')
+  .order('is_done', { ascending: true })    // Activas primero
+  .order('display_order', { ascending: true }) // Luego por orden manual
+  .order('created_at', { ascending: false });  // Fallback por fecha
 ```
-
-#### Admin UI
-
-A new sub-section in the admin panel (or under Settings) with:
-- Table listing all menu items: Name, Path, Section, Active toggle
-- Toggle switch to activate/deactivate each item
-- Changes saved immediately via Supabase update
-
-#### Files to Create/Modify
-
-| File | Action |
-|------|--------|
-| Database migration | Create table + seed |
-| `src/hooks/useSidebarMenu.ts` | Create -- fetch + transform |
-| `src/components/layout/Sidebar.tsx` | Modify -- use hook instead of hardcoded array |
-| `src/components/AuthenticatedHeader.tsx` | Modify -- use same hook for mobile nav |
-| `src/components/admin/MenuManager.tsx` | Create -- admin toggle UI |
-| `src/pages/Admin.tsx` | Modify -- add Menu route |
-| `src/components/admin/AdminSidebar.tsx` | Modify -- add Menu link |
-| `src/integrations/supabase/types.ts` | Auto-updated by migration |
-
