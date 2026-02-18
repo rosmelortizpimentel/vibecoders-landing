@@ -33,11 +33,10 @@ interface AppEditorProps {
   onUploadLogo: (appId: string, file: File) => Promise<string>;
   onUploadScreenshot: (appId: string, file: File) => Promise<string>;
   onDelete: () => void;
-  onCollapse: () => void;
-   onVerify: () => Promise<{ success: boolean; message?: string; error?: string }>;
+  onVerify: () => Promise<{ success: boolean; message?: string; error?: string }>;
 }
 
- export function AppEditor({ app, onUpdate, onUploadLogo, onUploadScreenshot, onDelete, onCollapse, onVerify }: AppEditorProps) {
+ export function AppEditor({ app, onUpdate, onUploadLogo, onUploadScreenshot, onDelete, onVerify }: AppEditorProps) {
   const { categories } = useCategories();
    const { statuses } = useStatuses();
    const { t } = useTranslation('apps');
@@ -143,51 +142,34 @@ interface AppEditorProps {
   const descriptionLength = localApp.description?.length || 0;
 
   return (
-    <div className="w-full max-w-full border border-[#3D5AFE] rounded-lg bg-white overflow-hidden shadow-sm">
-      {/* Header */}
-      <div className="flex items-center justify-between p-3 sm:p-4 bg-[#3D5AFE]/5 border-b border-[#3D5AFE]/20">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          {/* Logo */}
+    <div className="w-full max-w-full">
+      {/* Hidden file inputs */}
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+
+      {/* Saving indicator */}
+      {isSaving && (
+        <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+          <Clock className="h-3 w-3 animate-pulse" />
+          Guardando...
+        </div>
+      )}
+
+      {/* Form */}
+      <div className="space-y-6">
+        {/* Logo */}
+        <div className="space-y-2">
+          <Label className="text-foreground">Logo</Label>
           <div 
-            className="relative group w-12 h-12 rounded-lg bg-gray-100 flex-shrink-0 flex items-center justify-center overflow-hidden cursor-pointer"
+            className="relative group w-16 h-16 rounded-lg bg-muted flex-shrink-0 flex items-center justify-center overflow-hidden cursor-pointer border border-border hover:border-primary/50 transition-colors"
             onClick={handleLogoClick}
           >
             {localApp.logo_url ? (
               <img src={localApp.logo_url} alt="Logo" className="w-full h-full object-cover" />
             ) : (
-              <Camera className="h-5 w-5 text-gray-400 group-hover:text-[#3D5AFE] transition-colors" />
+              <Camera className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </div>
-          
-          <div className="min-w-0 flex-1">
-            <h3 className="font-medium text-[#1c1c1c] truncate">{localApp.name || 'Nueva App'}</h3>
-            <p className="text-xs text-gray-500 truncate">{localApp.url}</p>
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          {isSaving && (
-            <span className="text-xs text-gray-500 flex items-center gap-1">
-              <Clock className="h-3 w-3 animate-pulse" />
-              Guardando...
-            </span>
-          )}
-          <Button variant="ghost" size="icon" onClick={onCollapse} className="text-gray-500 hover:text-[#1c1c1c]">
-            <ChevronUp className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Form */}
-      <div className="p-3 sm:p-4 space-y-6">
-        {/* Basic Info */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-[#1c1c1c]">Nombre</Label>

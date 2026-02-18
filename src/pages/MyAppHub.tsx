@@ -36,10 +36,10 @@ export default function MyAppHub() {
   }, [location.pathname]);
 
   const tabs: { id: TabId; label: string; icon: typeof Info; path: string }[] = [
-    { id: 'info', label: t.t('hub.info'), icon: Info, path: `/my-apps/${appId}` },
-    { id: 'roadmap', label: t.t('hub.roadmap'), icon: Map, path: `/my-apps/${appId}/roadmap` },
-    { id: 'feedback', label: t.t('hub.feedback'), icon: MessageSquare, path: `/my-apps/${appId}/feedback` },
-    { id: 'squad', label: t.t('hub.squad'), icon: Users, path: `/my-apps/${appId}/squad` },
+    { id: 'info', label: t.t('hub.info'), icon: Info, path: `/apps/${appId}` },
+    { id: 'roadmap', label: t.t('hub.roadmap'), icon: Map, path: `/apps/${appId}/roadmap` },
+    { id: 'feedback', label: t.t('hub.feedback'), icon: MessageSquare, path: `/apps/${appId}/feedback` },
+    { id: 'squad', label: t.t('hub.squad'), icon: Users, path: `/apps/${appId}/squad` },
   ];
 
   const [betaConfig, setBetaConfig] = useState({
@@ -85,7 +85,7 @@ export default function MyAppHub() {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">App not found</p>
-        <Button variant="ghost" onClick={() => navigate('/my-apps')} className="mt-4">
+        <Button variant="ghost" onClick={() => navigate('/apps')} className="mt-4">
           <ArrowLeft className="w-4 h-4 mr-2" /> {t.t('hub.backToApps')}
         </Button>
       </div>
@@ -96,7 +96,7 @@ export default function MyAppHub() {
     <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-4xl mx-auto">
       {/* Compact Header */}
       <div className="flex items-center gap-3 mb-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/my-apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         {app.logo_url ? (
@@ -124,7 +124,7 @@ export default function MyAppHub() {
       </div>
 
       {/* Tabs */}
-      <div className="flex w-full overflow-x-auto gap-1 p-1.5 bg-muted/50 rounded-full scrollbar-hide mb-6">
+      <div className="flex w-full max-w-[90%] mx-auto overflow-x-auto gap-1 p-1.5 bg-muted/50 rounded-full scrollbar-hide mb-6">
         {tabs.map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -143,7 +143,7 @@ export default function MyAppHub() {
       {/* Content */}
       <div>
         {activeTab === 'info' && (
-          <AppEditor app={app} onUpdate={updateApp} onUploadLogo={uploadAppLogo} onUploadScreenshot={appsHook.uploadAppScreenshot} onDelete={() => navigate('/my-apps')} onCollapse={() => navigate('/my-apps')} onVerify={handleVerify} />
+          <AppEditor app={app} onUpdate={updateApp} onUploadLogo={uploadAppLogo} onUploadScreenshot={appsHook.uploadAppScreenshot} onDelete={() => navigate('/apps')} onVerify={handleVerify} />
         )}
         {activeTab === 'roadmap' && <RoadmapEditor />}
         {activeTab === 'feedback' && <UnifiedFeedbackList appId={appId!} />}

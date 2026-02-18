@@ -24,8 +24,8 @@ export function MenuRouteGuard() {
     if (item.path === '/me') {
       return currentPath === '/me' || currentPath.startsWith('/me/');
     }
-    if (item.path === '/my-apps') {
-      return currentPath === '/my-apps' || currentPath.startsWith('/my-apps/');
+    if (item.path === '/apps') {
+      return currentPath === '/apps' || currentPath.startsWith('/apps/');
     }
     return currentPath === item.path || currentPath.startsWith(item.path + '/');
   });

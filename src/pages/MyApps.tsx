@@ -84,10 +84,10 @@ export default function MyApps() {
           toast.success("App creada y analizada");
           await refetch();
         } catch { toast.error("App creada, error al analizar"); }
-        finally { setScrapingAppId(null); navigate(`/my-apps/${app.id}`); }
+        finally { setScrapingAppId(null); navigate(`/apps/${app.id}`); }
       } else {
         toast.success("App creada");
-        navigate(`/my-apps/${app.id}`);
+        navigate(`/apps/${app.id}`);
       }
       setIsUrlInputOpen(false);
       setNewUrl('');
@@ -145,7 +145,7 @@ export default function MyApps() {
           <SortableContext items={apps.map(app => app.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2">
               {apps.map(app => (
-                <SortableAppCard key={app.id} app={app} onExpand={() => navigate(`/my-apps/${app.id}`)} onToggleVisibility={() => updateApp(app.id, { is_visible: !app.is_visible })} onVerify={() => setVerifyingApp(app)} />
+                <SortableAppCard key={app.id} app={app} onExpand={() => navigate(`/apps/${app.id}`)} onToggleVisibility={() => updateApp(app.id, { is_visible: !app.is_visible })} onVerify={() => setVerifyingApp(app)} />
               ))}
             </div>
           </SortableContext>
