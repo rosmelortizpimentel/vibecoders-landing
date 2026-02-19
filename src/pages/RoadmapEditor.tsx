@@ -114,13 +114,13 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
   return (
     <div ref={setNodeRef} style={style}>
       <Card
-        className="cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow border"
+        className="cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow border group"
         style={{ borderLeftColor: lane.color, borderLeftWidth: 3 }}
       >
         <CardContent className="p-3">
           <div className="flex justify-between items-start gap-2">
             <div className="flex items-start gap-2 flex-1 min-w-0" {...attributes} {...listeners}>
-              <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+              <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
                   {card.title}
@@ -136,24 +136,14 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
                 )}
               </div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                  <MoreVertical className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onEdit}>
-                  <Pencil className="w-4 h-4 mr-2" /> {t('editor.editCard')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onMove}>
-                  <MoveRight className="w-4 h-4 mr-2" /> {t('editor.moveCard')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                  <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteCard')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit}>
+                <Pencil className="w-3 h-3" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={onDelete}>
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -495,7 +485,7 @@ export default function RoadmapEditor() {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 md:space-y-6 md:-mx-4">
       {/* Kanban Board */}
       <DndContext
         sensors={sensors}
