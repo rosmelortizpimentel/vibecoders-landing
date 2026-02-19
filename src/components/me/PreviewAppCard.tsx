@@ -93,7 +93,7 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
                 className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors.bg} ${statusColors.text}`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
-                {status.name}
+                {status.name.toUpperCase()}
               </span>
             )}
           </div>
