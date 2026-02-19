@@ -180,60 +180,60 @@ interface AppEditorProps {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-[#1c1c1c]">Nombre</Label>
+            <Label className="text-foreground">Nombre</Label>
             <DebouncedInput
               value={localApp.name || ''}
               onValueChange={value => handleChange('name', value)}
               placeholder="Nombre de la app"
-              className="text-sm border-gray-300 bg-white placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-sm border-border bg-background placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-[#1c1c1c]">URL *</Label>
+            <Label className="text-foreground">URL *</Label>
             <DebouncedInput
               value={localApp.url}
               onValueChange={value => handleChange('url', value)}
               placeholder="https://tu-app.com"
               type="url"
-              className="text-sm border-gray-300 bg-white placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-sm border-border bg-background placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
             />
           </div>
         </div>
 
         {/* Tagline */}
         <div className="space-y-2">
-          <Label className="text-[#1c1c1c]">Tagline</Label>
+          <Label className="text-foreground">Tagline</Label>
           <DebouncedInput
             value={localApp.tagline || ''}
             onValueChange={value => handleChange('tagline', value.slice(0, 100))}
             placeholder="Una frase corta que describa tu app"
             maxLength={100}
-            className="text-sm border-gray-300 bg-white placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE] w-full max-w-full"
+            className="text-sm border-border bg-background placeholder:text-muted-foreground focus:border-primary focus:ring-primary w-full max-w-full"
           />
-          <p className="text-xs text-gray-500 text-right">{localApp.tagline?.length || 0}/100</p>
+          <p className="text-xs text-muted-foreground text-right">{localApp.tagline?.length || 0}/100</p>
         </div>
 
         {/* Description */}
         <div className="space-y-2">
-          <Label className="text-[#1c1c1c]">Descripción</Label>
+          <Label className="text-foreground">Descripción</Label>
           <MarkdownEditor
             value={localApp.description || ''}
             onChange={value => handleChange('description', value.slice(0, 500))}
             placeholder="Describe qué hace tu app, para quién es, qué problema resuelve..."
             className="text-sm"
           />
-          <p className="text-xs text-gray-500 text-right">{descriptionLength}/500</p>
+          <p className="text-xs text-muted-foreground text-right">{descriptionLength}/500</p>
         </div>
 
         {/* Category & Status */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-[#1c1c1c]">Categoría</Label>
+            <Label className="text-foreground">Categoría</Label>
             <Select
               value={localApp.category_id || ''}
               onValueChange={value => handleChange('category_id', value || null)}
             >
-              <SelectTrigger className="text-sm border-gray-300 bg-white text-[#1c1c1c]">
+              <SelectTrigger className="text-sm border-border bg-background text-foreground">
                 <SelectValue placeholder="Selecciona una categoría" />
               </SelectTrigger>
               <SelectContent>
@@ -253,18 +253,18 @@ interface AppEditorProps {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#1c1c1c]">Estado</Label>
+            <Label className="text-foreground">Estado</Label>
             <Select
               value={localApp.status_id || 'none'}
               onValueChange={value => handleChange('status_id', value === 'none' ? null : value)}
             >
-              <SelectTrigger className="text-sm border-gray-300 bg-white text-[#1c1c1c]">
+              <SelectTrigger className="text-sm border-border bg-background text-foreground">
                 <SelectValue placeholder="Selecciona un estado" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">
                   <span className="flex items-center gap-2">
-                    <div className="h-4 w-4 rounded-full border border-gray-200 bg-gray-50" />
+                    <div className="h-4 w-4 rounded-full border border-border bg-muted" />
                     {t('none')}
                   </span>
                 </SelectItem>
@@ -287,8 +287,8 @@ interface AppEditorProps {
         {/* Hours */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-[#1c1c1c]">
-              <Lightbulb className="h-4 w-4 text-gray-500" />
+            <Label className="flex items-center gap-2 text-foreground">
+              <Lightbulb className="h-4 w-4 text-muted-foreground" />
               Horas ideación
             </Label>
             <Input
@@ -297,12 +297,12 @@ interface AppEditorProps {
               value={localApp.hours_ideation || ''}
               onChange={e => handleChange('hours_ideation', parseInt(e.target.value) || 0)}
               placeholder="0"
-              className="text-sm border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-sm border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
             />
           </div>
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-[#1c1c1c]">
-              <Hammer className="h-4 w-4 text-gray-500" />
+            <Label className="flex items-center gap-2 text-foreground">
+              <Hammer className="h-4 w-4 text-muted-foreground" />
               Horas construcción
             </Label>
             <Input
@@ -311,14 +311,14 @@ interface AppEditorProps {
               value={localApp.hours_building || ''}
               onChange={e => handleChange('hours_building', parseInt(e.target.value) || 0)}
               placeholder="0"
-              className="text-sm border-gray-300 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:ring-[#3D5AFE]"
+              className="text-sm border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
             />
           </div>
         </div>
 
         {/* Tags */}
         <div className="space-y-2">
-          <Label className="text-[#1c1c1c]">Tags</Label>
+          <Label className="text-foreground">Tags</Label>
           <TagInput
             tags={localApp.tags || []}
             maxTags={5}
@@ -344,13 +344,13 @@ interface AppEditorProps {
         {/* Screenshots */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label className="text-[#1c1c1c]">Screenshots ({localApp.screenshots?.length || 0}/5)</Label>
+            <Label className="text-foreground">Screenshots ({localApp.screenshots?.length || 0}/5)</Label>
             {(localApp.screenshots?.length || 0) < 5 && (
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={handleScreenshotClick}
-                className="text-[#3D5AFE] hover:bg-[#3D5AFE]/5"
+                className="text-primary hover:bg-primary/5"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Subir captura
@@ -366,13 +366,13 @@ interface AppEditorProps {
           </div>
           
           {localApp.screenshots && localApp.screenshots.length > 0 ? (
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide touch-pan-x">
               {localApp.screenshots.map((url, idx) => (
-                <div key={idx} className="relative flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 group">
+                <div key={idx} className="relative flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden border border-border bg-muted group">
                   <img src={url} alt={`Screenshot ${idx + 1}`} className="w-full h-full object-cover" />
                   <button
                     onClick={() => handleDeleteScreenshot(url)}
-                    className="absolute top-1 right-1 p-1 bg-white/80 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 p-1 bg-background/80 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="h-3 w-3 text-destructive" />
                   </button>
@@ -380,9 +380,9 @@ interface AppEditorProps {
               ))}
             </div>
           ) : (
-            <div className="border border-dashed border-gray-200 rounded-lg p-6 flex flex-col items-center justify-center gap-2 bg-gray-50/50">
-              <Camera className="h-6 w-6 text-gray-300" />
-              <p className="text-xs text-gray-400">Sin capturas opcionales</p>
+            <div className="border border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center gap-2 bg-muted/50">
+              <Camera className="h-6 w-6 text-muted-foreground/50" />
+              <p className="text-xs text-muted-foreground">Sin capturas opcionales</p>
             </div>
           )}
         </div>
@@ -392,7 +392,7 @@ interface AppEditorProps {
         {/* Delete */}
         <div className="pt-4 space-y-4">
           {/* Verification Section */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <VerificationBadge isVerified={localApp.is_verified} />
               <span className="text-sm text-muted-foreground">

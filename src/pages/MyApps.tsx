@@ -118,7 +118,7 @@ export default function MyApps() {
   }
 
   return (
-    <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-3xl mx-auto">
+    <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-4xl mx-auto">
       
 
       <div className="mb-6">

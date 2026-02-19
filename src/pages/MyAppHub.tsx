@@ -165,8 +165,8 @@ export default function MyAppHub() {
     )}>
 
       {/* Tabs */}
-      <div className="flex items-center w-full max-w-[90%] mx-auto gap-2 mb-6">
-        <div className="flex overflow-x-auto gap-1 p-1.5 bg-muted/50 rounded-full scrollbar-hide flex-1">
+      <div className="flex items-center w-full md:max-w-[90%] mx-auto gap-2 mb-6">
+        <div className="flex overflow-x-auto gap-1 p-1 sm:p-1.5 bg-muted/50 rounded-full scrollbar-hide flex-1">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
