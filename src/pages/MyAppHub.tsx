@@ -230,8 +230,8 @@ export default function MyAppHub() {
             <span className="hidden sm:inline">{tR.t('editor.settings')}</span>
           </Button>
 
-          {/* Independent preview links */}
-          {publicRoadmapPath && (
+          {/* Context-aware preview link */}
+          {isRoadmapTab && publicRoadmapPath && (
             <a href={publicRoadmapPath} target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
                 <Map className="w-3.5 h-3.5" />
@@ -240,7 +240,7 @@ export default function MyAppHub() {
               </Button>
             </a>
           )}
-          {publicFeedbackPath && (
+          {isFeedbackTab && publicFeedbackPath && (
             <a href={publicFeedbackPath} target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
                 <MessageSquare className="w-3.5 h-3.5" />
