@@ -377,6 +377,7 @@ export default function PublicRoadmap() {
   };
 
   const handleOAuthLogin = async (provider: 'google' | 'linkedin_oidc') => {
+    localStorage.setItem('authReturnUrl', window.location.href);
     await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.href } });
   };
 
