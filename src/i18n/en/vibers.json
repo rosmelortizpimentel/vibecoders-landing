@@ -20,6 +20,7 @@
   "following": "Following",
   "viewProfile": "View Profile",
   "mutualContactsTab": "Mutual contacts",
+  "communityTab": "Community",
   "confirmUnfollow": {
     "title": "Unfollow",
     "message": "Are you sure you want to unfollow {{name}}?",
