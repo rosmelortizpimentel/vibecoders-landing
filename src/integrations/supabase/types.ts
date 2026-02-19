@@ -1289,7 +1289,9 @@ export type Database = {
           app_id: string
           created_at: string
           custom_title: string | null
+          default_language: string | null
           favicon_url: string | null
+          feedback_auth_mode: string
           font_family: string | null
           id: string
           is_feedback_public: boolean
@@ -1300,7 +1302,9 @@ export type Database = {
           app_id: string
           created_at?: string
           custom_title?: string | null
+          default_language?: string | null
           favicon_url?: string | null
+          feedback_auth_mode?: string
           font_family?: string | null
           id?: string
           is_feedback_public?: boolean
@@ -1311,7 +1315,9 @@ export type Database = {
           app_id?: string
           created_at?: string
           custom_title?: string | null
+          default_language?: string | null
           favicon_url?: string | null
+          feedback_auth_mode?: string
           font_family?: string | null
           id?: string
           is_feedback_public?: boolean

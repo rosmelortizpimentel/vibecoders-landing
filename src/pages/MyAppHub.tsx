@@ -9,10 +9,15 @@ import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users, Paintbrush, Eye } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users, Paintbrush, Eye, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VerificationBadge } from '@/components/me/VerificationBadge';
 import { getStatusColors } from '@/lib/appStatusColors';
+import { toast } from 'sonner';
 
 import { AppEditor } from '@/components/me/AppEditor';
 import RoadmapEditor from '@/pages/RoadmapEditor';
@@ -21,18 +26,39 @@ import { UnifiedFeedbackList } from '@/components/beta/UnifiedFeedbackList';
 
 type TabId = 'info' | 'roadmap' | 'feedback' | 'squad';
 
+const LANGUAGE_OPTIONS = [
+  { value: 'es', label: 'Español' },
+  { value: 'en', label: 'English' },
+  { value: 'fr', label: 'Français' },
+  { value: 'pt', label: 'Português' },
+];
+
 export default function MyAppHub() {
   const { appId } = useParams<{ appId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
   const t = useTranslation('apps');
+  const tR = useTranslation('roadmap');
   const appsHook = useApps();
   const { apps, loading: appsLoading, updateApp, uploadAppLogo, verifyApp } = appsHook;
 
   const app = apps.find(a => a.id === appId);
   const roadmap = useRoadmap(appId);
   const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+
+  // Settings form for the dialog
+  const [settingsAuthMode, setSettingsAuthMode] = useState<'anonymous' | 'authenticated'>('anonymous');
+  const [settingsLanguage, setSettingsLanguage] = useState<string>('');
+
+  // Sync settings dialog form when opening
+  useEffect(() => {
+    if (showSettingsDialog && roadmap.settings) {
+      setSettingsAuthMode((roadmap.settings as any).feedback_auth_mode || 'anonymous');
+      setSettingsLanguage((roadmap.settings as any).default_language || '');
+    }
+  }, [showSettingsDialog, roadmap.settings]);
 
   // Fetch owner username for public URL
   useEffect(() => {
@@ -44,7 +70,8 @@ export default function MyAppHub() {
   }, [app?.user_id]);
 
   const appSlug = (app?.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const publicPath = ownerUsername ? `/@${ownerUsername}/${appSlug}/roadmap` : null;
+  const publicRoadmapPath = ownerUsername ? `/@${ownerUsername}/${appSlug}/roadmap` : null;
+  const publicFeedbackPath = ownerUsername ? `/@${ownerUsername}/${appSlug}/feedback` : null;
 
   const activeTab: TabId = useMemo(() => {
     if (location.pathname.endsWith('/roadmap')) return 'roadmap';
@@ -55,7 +82,6 @@ export default function MyAppHub() {
 
   // Auto-collapse sidebar when entering roadmap, restore on leave
   const prevTabRef = useRef<TabId>(activeTab);
-  const wasCollapsedRef = useRef<boolean>(false);
 
   useEffect(() => {
     const prev = prevTabRef.current;
@@ -65,7 +91,6 @@ export default function MyAppHub() {
       localStorage.setItem('sidebarCollapsed', 'true');
       window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { isCollapsed: true, external: true } }));
     }
-    // No restore on leave — keep sidebar collapsed
   }, [activeTab]);
 
   const tabs: { id: TabId; label: string; icon: typeof Info; path: string }[] = [
@@ -106,9 +131,19 @@ export default function MyAppHub() {
     return await verifyApp(appId);
   };
 
+  const handleSaveSettings = async () => {
+    try {
+      await roadmap.updateSettings({
+        feedback_auth_mode: settingsAuthMode,
+        default_language: settingsLanguage || null,
+      } as any);
+      setShowSettingsDialog(false);
+      toast.success('Settings saved');
+    } catch { toast.error('Error saving settings'); }
+  };
+
   const { statuses } = useStatuses();
   const status = app ? statuses.find(s => s.id === app.status_id) : undefined;
-  const statusColors = getStatusColors(status?.slug);
   const { setHeaderContent } = usePageHeader();
 
   // Set header content with app detail
@@ -168,6 +203,101 @@ export default function MyAppHub() {
     );
   }
 
+  // Shared toolbar for roadmap & feedback tabs
+  const renderToolbar = () => {
+    if (!roadmap.settings) return null;
+    const isRoadmapTab = activeTab === 'roadmap';
+    const isFeedbackTab = activeTab === 'feedback';
+    if (!isRoadmapTab && !isFeedbackTab) return null;
+
+    return (
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full md:max-w-[90%] mx-auto mb-4 px-1 gap-3">
+        {/* Left: Switches */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Roadmap public switch */}
+          <div className="flex items-center gap-1.5">
+            <Switch
+              checked={roadmap.settings.is_public}
+              onCheckedChange={async (v) => {
+                try { await roadmap.updateSettings({ is_public: v }); } catch {}
+              }}
+              className="h-5 w-9 [&>span]:h-4 [&>span]:w-4"
+            />
+            <span className={cn("text-xs font-medium", roadmap.settings.is_public ? "text-primary" : "text-muted-foreground")}>
+              Roadmap
+            </span>
+          </div>
+
+          <Separator orientation="vertical" className="h-4 hidden sm:block" />
+
+          {/* Feedback public switch */}
+          <div className="flex items-center gap-1.5">
+            <Switch
+              checked={roadmap.settings.is_feedback_public}
+              onCheckedChange={async (v) => {
+                try { await roadmap.updateSettings({ is_feedback_public: v }); } catch {}
+              }}
+              className="h-5 w-9 [&>span]:h-4 [&>span]:w-4"
+            />
+            <span className={cn("text-xs font-medium", roadmap.settings.is_feedback_public ? "text-primary" : "text-muted-foreground")}>
+              Feedback
+            </span>
+          </div>
+
+          {/* Auth mode inline indicator when feedback is public */}
+          {roadmap.settings.is_feedback_public && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
+              {(roadmap.settings as any).feedback_auth_mode === 'authenticated' ? '🔒 Login' : '👤 Anon'}
+            </span>
+          )}
+        </div>
+
+        {/* Right: Action buttons */}
+        <div className="flex items-center gap-2">
+          {isRoadmapTab && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 h-8 text-xs"
+              onClick={() => window.dispatchEvent(new CustomEvent('roadmap-open-branding'))}
+            >
+              <Paintbrush className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Branding</span>
+            </Button>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 h-8 text-xs"
+            onClick={() => setShowSettingsDialog(true)}
+          >
+            <Settings className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{tR.t('editor.settings')}</span>
+          </Button>
+
+          {/* View Public links */}
+          {isRoadmapTab && roadmap.settings.is_public && publicRoadmapPath && (
+            <a href={publicRoadmapPath} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
+                <Eye className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{tR.t('editor.viewPublic')}</span>
+              </Button>
+            </a>
+          )}
+          {isFeedbackTab && roadmap.settings.is_feedback_public && publicFeedbackPath && (
+            <a href={publicFeedbackPath} target="_blank" rel="noopener noreferrer">
+              <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
+                <Eye className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{tR.t('editor.viewPublic')}</span>
+              </Button>
+            </a>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={cn(
       "container px-3 sm:px-4 py-4 sm:py-6 flex-1 mx-auto transition-all",
@@ -193,47 +323,8 @@ export default function MyAppHub() {
         </div>
       </div>
 
-      {/* Roadmap Toolbar */}
-      {activeTab === 'roadmap' && roadmap.settings && (
-        <div className="flex items-center justify-between w-full md:max-w-[90%] mx-auto mb-4 px-1">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 h-8 text-xs"
-              onClick={() => {
-                // Dispatch event to open branding sheet in RoadmapEditor
-                window.dispatchEvent(new CustomEvent('roadmap-open-branding'));
-              }}
-            >
-              <Paintbrush className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Branding</span>
-            </Button>
-          </div>
-          <div className="flex items-center gap-3">
-            {roadmap.settings.is_public && publicPath && (
-              <a href={publicPath} target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
-                  <Eye className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Ver público</span>
-                </Button>
-              </a>
-            )}
-            <div className="flex items-center gap-1.5">
-              <Switch
-                checked={roadmap.settings.is_public}
-                onCheckedChange={async (v) => {
-                  try { await roadmap.updateSettings({ is_public: v }); } catch {}
-                }}
-                className="h-5 w-9 [&>span]:h-4 [&>span]:w-4"
-              />
-              <span className={cn("text-xs font-medium", roadmap.settings.is_public ? "text-primary" : "text-muted-foreground")}>
-                {roadmap.settings.is_public ? 'Público' : 'Privado'}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Unified Toolbar */}
+      {renderToolbar()}
 
       {/* Content */}
       <div>
@@ -244,6 +335,83 @@ export default function MyAppHub() {
         {activeTab === 'feedback' && <UnifiedFeedbackList appId={appId!} />}
         {activeTab === 'squad' && <BetaManagement appId={appId!} config={betaConfig} onConfigChange={handleBetaConfigChange} />}
       </div>
+
+      {/* Settings Dialog */}
+      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              {tR.t('editor.settings')}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 py-2">
+            {/* Participation Mode */}
+            <div className="space-y-3">
+              <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                {tR.t('editor.participationMode')}
+              </Label>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setSettingsAuthMode('anonymous')}
+                  className={cn(
+                    "w-full text-left p-3 rounded-lg border-2 transition-all",
+                    settingsAuthMode === 'anonymous' ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", settingsAuthMode === 'anonymous' ? "border-primary" : "border-muted-foreground/40")}>
+                      {settingsAuthMode === 'anonymous' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
+                    <span className="text-sm font-medium">👤 {tR.t('editor.anonymous')}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 ml-6">{tR.t('editor.anonymousDesc')}</p>
+                </button>
+                <button
+                  onClick={() => setSettingsAuthMode('authenticated')}
+                  className={cn(
+                    "w-full text-left p-3 rounded-lg border-2 transition-all",
+                    settingsAuthMode === 'authenticated' ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", settingsAuthMode === 'authenticated' ? "border-primary" : "border-muted-foreground/40")}>
+                      {settingsAuthMode === 'authenticated' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                    </div>
+                    <span className="text-sm font-medium">🔒 {tR.t('editor.authenticated')}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 ml-6">{tR.t('editor.authenticatedDesc')}</p>
+                </button>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Default Language */}
+            <div className="space-y-2">
+              <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                {tR.t('editor.defaultLanguage')}
+              </Label>
+              <p className="text-xs text-muted-foreground">{tR.t('editor.defaultLanguageDesc')}</p>
+              <Select value={settingsLanguage || 'auto'} onValueChange={v => setSettingsLanguage(v === 'auto' ? '' : v)}>
+                <SelectTrigger className="h-9">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">🌐 Auto (Browser)</SelectItem>
+                  {LANGUAGE_OPTIONS.map(lang => (
+                    <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>{tR.t('editor.cancel')}</Button>
+            <Button onClick={handleSaveSettings}>{tR.t('editor.save')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
