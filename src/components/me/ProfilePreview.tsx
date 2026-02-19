@@ -117,13 +117,12 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
     <div className="space-y-3">
       {/* Preview Header - hide in mobile sheet */}
       {!isMobileSheet && (
-        <div className="flex items-center justify-between px-1">
-          <span className="text-sm font-medium text-slate-500">{t.preview}</span>
+        <div className="flex items-center justify-end px-1">
           <a 
             href={`${window.location.origin}/@${username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
             title={t.viewLive}
           >
             <ExternalLink className="h-4 w-4" />
