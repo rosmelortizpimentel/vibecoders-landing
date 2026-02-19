@@ -178,7 +178,7 @@ export default function MyAppHub() {
       {/* Content */}
       <div>
         {activeTab === 'info' && (
-          <AppEditor app={app} onUpdate={updateApp} onUploadLogo={uploadAppLogo} onUploadScreenshot={appsHook.uploadAppScreenshot} onDelete={() => navigate('/apps')} onVerify={handleVerify} />
+          <AppEditor app={app} onUpdate={updateApp} onUploadLogo={uploadAppLogo} onUploadScreenshot={appsHook.uploadAppScreenshot} onDelete={async () => { await appsHook.deleteApp(app.id); navigate('/apps'); }} onVerify={handleVerify} />
         )}
         {activeTab === 'roadmap' && <RoadmapEditor />}
         {activeTab === 'feedback' && <UnifiedFeedbackList appId={appId!} />}

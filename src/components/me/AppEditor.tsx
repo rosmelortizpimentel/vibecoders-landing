@@ -19,13 +19,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { TechStackSelector } from './TechStackSelector';
-import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield, Map } from 'lucide-react';
+import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield } from 'lucide-react';
 import * as LucideIcons from 'lucide-react';
 import { VerificationBadge } from './VerificationBadge';
 import { VerifyDomainModal } from './VerifyDomainModal';
 import { useNavigate } from 'react-router-dom';
 import { TagInput } from '@/components/ui/tag-input';
 import { MarkdownEditor } from '@/components/beta/MarkdownEditor';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface AppEditorProps {
   app: AppData;
@@ -47,6 +54,7 @@ interface AppEditorProps {
   
   const [localApp, setLocalApp] = useState(app);
    const [showVerifyModal, setShowVerifyModal] = useState(false);
+   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const saveApp = useCallback(async (data: Partial<AppData>) => {
     await onUpdate(app.id, data);
@@ -407,31 +415,10 @@ interface AppEditorProps {
             )}
           </div>
 
-          {/* Roadmap Button - Only for verified apps */}
-          {localApp.is_verified && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Map className="h-4 w-4 text-primary" />
-                <span className="text-sm text-muted-foreground">
-                  Gestiona el roadmap público de tu app
-                </span>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate(`/roadmap-editor/${app.id}`)}
-                className="border-primary text-primary hover:bg-primary/10"
-              >
-                <Map className="h-4 w-4 mr-2" />
-                Roadmap
-              </Button>
-            </div>
-          )}
-
           <Button
             variant="ghost"
             className="text-destructive hover:text-destructive hover:bg-destructive/10"
-            onClick={onDelete}
+            onClick={() => setShowDeleteConfirm(true)}
           >
             <Trash2 className="h-4 w-4 mr-2" />
             Eliminar app
@@ -449,6 +436,20 @@ interface AppEditorProps {
          onVerify={onVerify}
          onSuccess={handleVerificationSuccess}
        />
+
+       {/* Delete Confirm Dialog */}
+       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+         <DialogContent>
+           <DialogHeader>
+             <DialogTitle>{t('deleteConfirmTitle')}</DialogTitle>
+             <DialogDescription>{t('deleteConfirmDescription')}</DialogDescription>
+           </DialogHeader>
+           <div className="flex justify-end gap-3 mt-4">
+             <Button variant="ghost" onClick={() => setShowDeleteConfirm(false)}>{t('cancel')}</Button>
+             <Button variant="destructive" onClick={() => { setShowDeleteConfirm(false); onDelete(); }}>{t('delete')}</Button>
+           </div>
+         </DialogContent>
+       </Dialog>
     </div>
   );
 }
