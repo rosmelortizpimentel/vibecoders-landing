@@ -223,7 +223,7 @@ export default function RoadmapEditor() {
   // Form states
   const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: 'Inter' });
   const [cardForm, setCardForm] = useState({ title: '', description: '' });
-  const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', is_public: false, is_feedback_public: false, favicon_url: '' });
+  const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', favicon_url: '' });
 
   // Feedback management
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
@@ -350,8 +350,6 @@ export default function RoadmapEditor() {
       setSettingsForm({
         custom_title: roadmap.settings.custom_title || '',
         font_family: roadmap.settings.font_family || 'Inter',
-        is_public: roadmap.settings.is_public,
-        is_feedback_public: (roadmap.settings as any).is_feedback_public ?? false,
         favicon_url: roadmap.settings.favicon_url || '',
       });
     }
@@ -762,34 +760,6 @@ export default function RoadmapEditor() {
           </SheetHeader>
 
           <div className="space-y-6 pb-24">
-            {/* Roadmap Public toggle */}
-            <div className={cn(
-              "rounded-lg p-3 flex items-center justify-between transition-colors",
-              settingsForm.is_public ? "bg-primary/10" : "bg-muted/50"
-            )}>
-              <div>
-                <Label className="text-xs uppercase tracking-wider font-medium">{t('editor.isPublic')}</Label>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {settingsForm.is_public ? t('editor.publicOnHint') : t('editor.publicOffHint')}
-                </p>
-              </div>
-              <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
-            </div>
-
-            {/* Feedback Public toggle - independent */}
-            <div className={cn(
-              "rounded-lg p-3 flex items-center justify-between transition-colors",
-              settingsForm.is_feedback_public ? "bg-primary/10" : "bg-muted/50"
-            )}>
-              <div>
-                <Label className="text-xs uppercase tracking-wider font-medium">{t('editor.feedbackPublic')}</Label>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {settingsForm.is_feedback_public ? t('editor.feedbackPublicOnHint') : t('editor.feedbackPublicOffHint')}
-                </p>
-              </div>
-              <Switch checked={settingsForm.is_feedback_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_feedback_public: v }))} />
-            </div>
-
             {/* Branding section */}
             <div className="space-y-4">
               <div className="space-y-2">

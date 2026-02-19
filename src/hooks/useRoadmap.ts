@@ -10,6 +10,8 @@ export interface RoadmapSettings {
   favicon_url: string | null;
   is_public: boolean;
   is_feedback_public: boolean;
+  feedback_auth_mode: 'anonymous' | 'authenticated';
+  default_language: string | null;
   created_at: string;
   updated_at: string;
 }
