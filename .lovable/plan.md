@@ -1,64 +1,82 @@
 
 
-## Cambios en App Hub y Mi Red
+## Mejoras en la pagina de Ideas
 
-### 1. App Hub -- Eliminar header redundante del RoadmapEditor
+### Cambios solicitados
 
-**Problema**: Dentro del tab Roadmap, el `RoadmapEditor` muestra su propio header con back arrow, logo, nombre de app, switch Publico/Privado, toggle Roadmap/Feedback y boton Branding. Esto es redundante porque el header global ya muestra el detalle de la app y los tabs del Hub ya controlan la navegacion.
-
-**Solucion**:
-- Eliminar el bloque header interno del `RoadmapEditor` (lineas 495-557: back button, logo, nombre, switch publico/privado, toggle roadmap/feedback, boton branding)
-- Mover el switch **Privado/Publico** al nivel del Hub, colocandolo al lado derecho del boton "Branding" en la fila de tabs (o justo despues)
-- El toggle Roadmap/Feedback y el boton Branding ya no seran necesarios en ese header porque la navegacion se hace por tabs del Hub
-
-**Nuevo layout de tabs en MyAppHub**:
-```
-[Info] [Roadmap] [Feedback] [Squad] ............ [Privado/Publico switch]
-```
-
-El switch controlara `roadmap_settings.is_public` y se mostrara solo cuando el tab activo sea `roadmap`.
-
-### 2. Mi Red -- Layout compacto y tab Comunidad
-
-**Problema**: El subtitulo "Tu circulo de codigo y colaboracion" ocupa espacio innecesario. Los tabs Seguidores/Siguiendo estan separados de la barra de busqueda.
-
-**Cambios**:
-- Eliminar el subtitulo descriptivo
-- Poner tabs (Seguidores, Siguiendo, Comunidad) y la barra de busqueda en la misma fila
-- Agregar un tercer tab **Comunidad** que muestre usuarios registrados que el usuario actual NO sigue, para descubrir nuevas conexiones
-
-**Layout propuesto**:
-```
-[Seguidores 16] [Siguiendo 65] [Comunidad] .............. [Buscar conexion...]
-```
-
-### 3. Tab Comunidad -- Implementacion
-
-- Crear una nueva query en `useDashboardStats` (o un hook separado) que traiga perfiles publicos que el usuario no sigue
-- Query: `SELECT profiles WHERE id NOT IN (following_ids) AND id != current_user_id LIMIT 50`
-- Reutilizar el mismo componente `ViberCard` que ya existe para mostrar cada perfil
-- Incluir filtrado por el mismo campo de busqueda
+1. **Vista por defecto = solo lista** (sin detalle abierto). Al entrar a `/ideas`, se muestra solo la lista. Al seleccionar una idea, la URL cambia a `/ideas/:id`. Al crear nueva, `/ideas/new`.
+2. **Lista mas compacta**: reducir padding, tamanio de fuente y espaciado entre items.
+3. **Tabs "Pendientes" y "Completadas"**: separar ideas en dos tabs en vez de mezclarlas en una sola lista.
+4. **Confirmacion al marcar como completada**: al hacer clic en el circulo, mostrar un dialogo de confirmacion antes de cambiar el estado.
 
 ---
 
 ### Archivos a modificar
 
-| Archivo | Cambio |
-|---------|--------|
-| `src/pages/RoadmapEditor.tsx` | Eliminar header interno (back, logo, nombre, switch, toggles, branding) |
-| `src/pages/MyAppHub.tsx` | Agregar switch Privado/Publico junto a los tabs, pasar roadmap settings |
-| `src/pages/Vibers.tsx` | Eliminar subtitulo, reorganizar tabs + busqueda en una fila, agregar tab Comunidad |
-| `src/hooks/useDashboardStats.ts` | Agregar query para obtener perfiles de la comunidad (no seguidos) |
-| `src/i18n/en/vibers.json` | Agregar clave `communityTab` |
-| `src/i18n/es/vibers.json` | Agregar clave `communityTab` |
-| `src/i18n/fr/vibers.json` | Agregar clave `communityTab` |
-| `src/i18n/pt/vibers.json` | Agregar clave `communityTab` |
+#### 1. `src/App.tsx`
+- Agregar ruta `/ideas/:ideaId` que apunte al mismo componente `Ideas`.
+- La ruta `/ideas` sigue existiendo (muestra lista sin detalle seleccionado).
 
-### Detalles tecnicos
+#### 2. `src/pages/Ideas.tsx`
+- Leer `ideaId` de `useParams()` y pasarlo como prop a `IdeasTab`.
+- Si no hay `ideaId`, no se selecciona ninguna idea por defecto.
 
-**RoadmapEditor.tsx**: Se eliminara todo el bloque del header (lineas 493-557). El componente empezara directamente con el contenido del Kanban/Feedback. El `viewMode` toggle (roadmap vs feedback) se eliminara ya que la navegacion entre Roadmap y Feedback se hace via los tabs del Hub.
+#### 3. `src/components/me/IdeasTab.tsx`
 
-**MyAppHub.tsx**: Se agregara el hook `useRoadmap(appId)` para acceder a `roadmap.settings.is_public` y `roadmap.updateSettings()`. El switch se renderizara condicionalmente solo en el tab `roadmap`, alineado a la derecha de la barra de tabs.
+**Routing del detalle**:
+- Recibir prop `initialIdeaId?: string` desde Ideas.tsx.
+- Usar `useNavigate()` para cambiar la URL al seleccionar/deseleccionar una idea:
+  - Seleccionar idea: `navigate(/ideas/${id})`
+  - Nueva idea: `navigate(/ideas/new)`
+  - Volver a lista: `navigate(/ideas)`
+- En desktop, no auto-seleccionar la primera idea. Mostrar el placeholder "Selecciona una idea" por defecto.
 
-**Vibers.tsx -- Tab Comunidad**: Se creara un nuevo estado `community` dentro de `useDashboardStats` con una query que seleccione perfiles con `id NOT IN (seguidos + yo)`. Los resultados usaran el mismo `ViberCard` existente.
+**Lista mas compacta**:
+- Reducir padding de los items de `p-2.5 md:p-3` a `p-1.5 md:p-2`.
+- Reducir la fuente del titulo de `text-sm` a `text-xs`.
+- Reducir el espaciado entre items de `space-y-1.5` a `space-y-1`.
+- Reducir el badge de dias de `text-[10px]` a `text-[9px]` y la altura.
+
+**Tabs Pendientes/Completadas**:
+- Agregar un estado `activeTab: 'pending' | 'done'` con valor inicial `'pending'`.
+- Renderizar dos tabs debajo del buscador: "Pendientes (N)" y "Completadas (N)".
+- Cuando el tab es `pending`, mostrar solo ideas sin `is_done`. Cuando es `done`, mostrar solo las completadas.
+- Las ideas completadas no son drag-and-drop (ya es asi).
+
+**Confirmacion al marcar completada**:
+- Al hacer clic en el circulo (toggle done), abrir un `AlertDialog` pidiendo confirmacion.
+- Guardar en estado temporal `pendingToggle: { id, newDone }` y mostrar el dialogo.
+- Al confirmar, ejecutar `handleToggleDone`. Al cancelar, cerrar sin cambios.
+
+#### 4. `src/i18n/*/profile.json` (es, en, fr, pt)
+- Agregar claves:
+  - `ideas.tabPending`: "Pendientes"
+  - `ideas.tabCompleted`: "Completadas"
+  - `ideas.confirmCompleteTitle`: "Marcar como completada?"
+  - `ideas.confirmCompleteMessage`: "Esta idea se movera a la lista de completadas."
+  - `ideas.confirmReactivateTitle`: "Reactivar idea?"
+  - `ideas.confirmReactivateMessage`: "Esta idea volvera a la lista de pendientes."
+
+### Detalle tecnico del flujo de URLs
+
+```text
+/ideas          -> Lista visible, sin detalle seleccionado
+/ideas/new      -> Lista visible + formulario de nueva idea (detalle vacio)
+/ideas/:ideaId  -> Lista visible + detalle de la idea seleccionada
+```
+
+En mobile:
+- `/ideas` muestra solo la lista
+- `/ideas/:id` o `/ideas/new` muestra solo el detalle con boton "Volver"
+- Al presionar "Volver", navega a `/ideas`
+
+### Flujo de confirmacion al completar
+
+```text
+Usuario clickea circulo -> AlertDialog "Marcar como completada?"
+  -> Confirmar -> handleToggleDone(id, true) -> idea se mueve al tab "Completadas"
+  -> Cancelar -> nada cambia
+```
+
+Lo mismo al reactivar desde el tab de completadas, pero con mensaje "Reactivar idea?".
 
