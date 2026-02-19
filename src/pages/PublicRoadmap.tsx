@@ -106,6 +106,15 @@ export default function PublicRoadmap() {
     if (window.location.pathname.endsWith('/feedback')) return 'feedback';
     return 'roadmap';
   });
+
+  // Navigate to correct URL when switching tabs
+  const switchTab = (tab: 'roadmap' | 'feedback') => {
+    setActiveTab(tab);
+    const currentPath = window.location.pathname;
+    const basePath = currentPath.replace(/\/(roadmap|feedback)$/, '');
+    const newPath = `${basePath}/${tab}`;
+    window.history.replaceState(null, '', newPath);
+  };
   const [isFeedbackPublic, setIsFeedbackPublic] = useState(false);
   const [authMode, setAuthMode] = useState<'anonymous' | 'authenticated'>('anonymous');
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -235,8 +244,20 @@ export default function PublicRoadmap() {
   useEffect(() => {
     if (app) {
       document.title = settings?.custom_title || app.name || 'Roadmap';
-      const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute('content', app.tagline || '');
+      // Meta description
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) { metaDesc = document.createElement('meta'); metaDesc.setAttribute('name', 'description'); document.head.appendChild(metaDesc); }
+      metaDesc.setAttribute('content', app.tagline || '');
+      // OG tags
+      const setOg = (prop: string, content: string) => {
+        let el = document.querySelector(`meta[property="${prop}"]`);
+        if (!el) { el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
+        el.setAttribute('content', content);
+      };
+      setOg('og:title', settings?.custom_title || app.name || 'Roadmap');
+      setOg('og:description', app.tagline || '');
+      if (app.logo_url) setOg('og:image', app.logo_url);
+      setOg('og:type', 'website');
     }
     return () => { document.title = 'Vibecoders.la'; };
   }, [app, settings]);
@@ -393,14 +414,14 @@ export default function PublicRoadmap() {
             {/* Tab switcher */}
             <div className="hidden sm:flex bg-gray-100 rounded-lg p-0.5">
               <button
-                onClick={() => setActiveTab('roadmap')}
+                onClick={() => switchTab('roadmap')}
                 className={cn('px-3 py-1.5 text-sm font-medium rounded-md transition-all', activeTab === 'roadmap' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700')}
               >
                 Roadmap
               </button>
               {isFeedbackPublic && (
                 <button
-                  onClick={() => setActiveTab('feedback')}
+                  onClick={() => switchTab('feedback')}
                   className={cn('px-3 py-1.5 text-sm font-medium rounded-md transition-all', activeTab === 'feedback' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700')}
                 >
                   {l.feedback} ({feedback.length})
@@ -417,11 +438,11 @@ export default function PublicRoadmap() {
         </div>
         {/* Mobile tabs */}
         <div className="sm:hidden flex border-t">
-          <button onClick={() => setActiveTab('roadmap')} className={cn('flex-1 py-2.5 text-sm font-medium text-center border-b-2 transition-all', activeTab === 'roadmap' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500')}>
+          <button onClick={() => switchTab('roadmap')} className={cn('flex-1 py-2.5 text-sm font-medium text-center border-b-2 transition-all', activeTab === 'roadmap' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500')}>
             Roadmap
           </button>
           {isFeedbackPublic && (
-            <button onClick={() => setActiveTab('feedback')} className={cn('flex-1 py-2.5 text-sm font-medium text-center border-b-2 transition-all', activeTab === 'feedback' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500')}>
+            <button onClick={() => switchTab('feedback')} className={cn('flex-1 py-2.5 text-sm font-medium text-center border-b-2 transition-all', activeTab === 'feedback' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-500')}>
               {l.feedback} ({feedback.length})
             </button>
           )}
@@ -437,43 +458,45 @@ export default function PublicRoadmap() {
             ) : (
               <>
                 {/* Desktop: horizontal scroll */}
-                <div className="hidden md:flex gap-4 overflow-x-auto pb-4">
+                <div className="hidden md:flex gap-5 overflow-x-auto pb-4">
                   {lanes.map(lane => {
                     const laneCards = cards.filter(c => c.lane_id === lane.id).sort((a, b) => a.display_order - b.display_order);
                     return (
                       <div key={lane.id} className="flex-shrink-0 w-72">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
-                          <h3 className="font-semibold text-sm text-gray-700">{lane.name}</h3>
-                          <span className="text-xs text-gray-400">({laneCards.length})</span>
-                        </div>
-                        <div className="space-y-2 bg-gray-100/60 rounded-lg p-2 min-h-[200px]">
-                          {laneCards.map(card => (
-                            <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm border-l-[3px]" style={{ borderLeftColor: lane.color }}>
-                              <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
-                              {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
-                              <div className="flex items-center justify-between mt-2">
-                                <div className="flex items-center gap-1.5">
-                                  {card.completed_at && (
-                                    <Badge variant="secondary" className="text-[10px] h-5 bg-gray-100 text-gray-600">
-                                      <Calendar className="w-3 h-3 mr-1" />
-                                      {format(new Date(card.completed_at), 'MMM d, yyyy')}
-                                    </Badge>
-                                  )}
+                        <div className="bg-gray-100 rounded-xl p-3">
+                          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
+                            <h3 className="font-semibold text-sm text-gray-700">{lane.name}</h3>
+                            <span className="text-xs text-gray-400">({laneCards.length})</span>
+                          </div>
+                          <div className="space-y-3 min-h-[200px]">
+                            {laneCards.map(card => (
+                              <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border-l-[3px]" style={{ borderLeftColor: lane.color }}>
+                                <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
+                                {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
+                                <div className="flex items-center justify-between mt-2">
+                                  <div className="flex items-center gap-1.5">
+                                    {card.completed_at && (
+                                      <Badge variant="secondary" className="text-[10px] h-5 bg-gray-100 text-gray-600">
+                                        <Calendar className="w-3 h-3 mr-1" />
+                                        {format(new Date(card.completed_at), 'MMM d, yyyy')}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={() => handleToggleCardLike(card.id)}
+                                    className={cn(
+                                      'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all',
+                                      likedCardIds.has(card.id) ? 'bg-rose-50 text-rose-600' : 'text-gray-400 hover:text-rose-500'
+                                    )}
+                                  >
+                                    <Heart className={cn('w-3.5 h-3.5', likedCardIds.has(card.id) && 'fill-current')} />
+                                    {(card as any).likes_count > 0 && (card as any).likes_count}
+                                  </button>
                                 </div>
-                                <button
-                                  onClick={() => handleToggleCardLike(card.id)}
-                                  className={cn(
-                                    'flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all',
-                                    likedCardIds.has(card.id) ? 'bg-rose-50 text-rose-600' : 'text-gray-400 hover:text-rose-500'
-                                  )}
-                                >
-                                  <Heart className={cn('w-3.5 h-3.5', likedCardIds.has(card.id) && 'fill-current')} />
-                                  {(card as any).likes_count > 0 && (card as any).likes_count}
-                                </button>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     );
@@ -485,15 +508,15 @@ export default function PublicRoadmap() {
                   {lanes.map(lane => {
                     const laneCards = cards.filter(c => c.lane_id === lane.id).sort((a, b) => a.display_order - b.display_order);
                     return (
-                      <div key={lane.id}>
-                        <div className="flex items-center gap-2 mb-2">
+                      <div key={lane.id} className="bg-gray-100 rounded-xl p-3">
+                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
                           <h3 className="font-semibold text-sm text-gray-700">{lane.name}</h3>
                           <span className="text-xs text-gray-400">({laneCards.length})</span>
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {laneCards.map(card => (
-                            <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm border-l-[3px]" style={{ borderLeftColor: lane.color }}>
+                            <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border-l-[3px]" style={{ borderLeftColor: lane.color }}>
                               <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
                               {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
                               <div className="flex items-center justify-between mt-2">
