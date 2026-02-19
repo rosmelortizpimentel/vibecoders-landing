@@ -1,79 +1,95 @@
 
 
-## Compactar Header del Hub y Homologar Badges
+## Mover titulo de pagina al Header y eliminar redundancia
 
-### Problemas Detectados
+### Problema
+Las paginas siguen mostrando titulos redundantes en el contenido (ej. "Mis Ideas" como h1) cuando el header ya muestra la ubicacion. El `MyAppHub` ya inyecta su detalle en el header via `usePageHeader()`, pero las demas paginas no lo hacen. Ademas, `navLinks` en el header tiene un bug: notifications usa `t.navigation.home` como label en vez de su propio label.
 
-1. **MyApps.tsx**: El titulo usa `hub.backToApps` ("Mis Apps") pero la descripcion dice "Agrega tu primer proyecto..." incluso cuando YA tienes apps. Debe decir algo como "Gestiona todas tus Apps".
-2. **MyAppHub.tsx**: El header del detalle de app muestra badges genéricos (`Badge variant="outline"` para status y `Badge variant="secondary"` para verificado) en lugar de reutilizar los mismos componentes de la lista (`VerificationBadge` y `getStatusColors`).
-3. **Header redundante**: El header del hub repite info (logo + nombre) que ya aparece en el AppEditor debajo. Se puede hacer mas compacto fusionando el back button con el branding en una sola linea.
+### Solucion
 
----
-
-### Cambios
-
-#### 1. MyApps.tsx -- Corregir descripcion
-
-Cambiar la descripcion `noAppsHint` para que sea contextual:
-- Si hay apps: mostrar nueva clave `appsHint` = "Gestiona todas tus Apps" / "Manage all your Apps" / etc.
-- Si no hay apps: mantener `noAppsHint` actual
-
-Actualizar `apps.json` en los 4 idiomas con la nueva clave `appsHint`.
-
-#### 2. MyAppHub.tsx -- Header compacto + badges homologados
-
-**Hacer el header mas compacto:**
-- Poner back arrow + nombre de app + badges + boton "Ver pagina" todo en una sola fila
-- Eliminar la separacion vertical entre el back button y el branding
-- Usar `VerificationBadge` (el mismo componente de la lista) en lugar de `Badge variant="secondary"`
-- Usar `getStatusColors` con el slug del status (el mismo estilo de AppCard) en lugar de `Badge variant="outline"` con color inline
-
-**Layout propuesto (una sola linea):**
-```
-[<-] [Logo] App Name [Building] [Verificado] .............. [Ver pagina ->]
-```
-
-#### 3. Traducciones (4 idiomas)
-
-Agregar clave `appsHint` en `apps.json`:
-- ES: "Gestiona todas tus Apps"
-- EN: "Manage all your Apps"  
-- FR: "Gérez toutes vos Apps"
-- PT: "Gerencie todos os seus Apps"
+Cada pagina que use el `DashboardLayout` debe inyectar su contenido en el header via `usePageHeader()` y eliminar titulos h1 redundantes de su contenido.
 
 ---
 
-### Archivos a Modificar
+### Cambios por archivo
+
+#### 1. `src/components/AuthenticatedHeader.tsx`
+- Corregir bug en navLinks: notifications label debe ser `t.navigation.notifications` (o el key correcto)
+- Agregar entry para `/apps/:appId` match (actualmente `/apps/xyz` no matchea nada en navLinks porque usa exact match)
+- En mobile, cuando NO hay `header.element` custom, mostrar el nombre de pagina actual (icon + label) en vez del logo de vibecoders, para que siempre se sepa donde estas
+
+#### 2. `src/pages/Ideas.tsx`
+- Agregar `usePageHeader()` + `useEffect` para inyectar icono + "Mis Ideas" en el header
+- Eliminar el `<p>` de descripcion redundante (o moverlo debajo del contenido si se quiere conservar)
+
+#### 3. `src/pages/Notifications.tsx` (NotificationsPage)
+- Agregar `usePageHeader()` para inyectar icono + titulo + boton "Marcar todo como leido"
+- Eliminar el bloque `<div className="mb-8">` con titulo/subtitulo redundante
+
+#### 4. `src/pages/MyApps.tsx`
+- Agregar `usePageHeader()` para inyectar icono + "Mis Apps"
+- Eliminar la `<p>` de hint redundante
+
+#### 5. `src/pages/Feedback.tsx`
+- Agregar `usePageHeader()` para inyectar icono + "Hablemos"
+- Eliminar el header interno con subtitle redundante
+
+#### 6. `src/pages/Vibers.tsx`
+- Agregar `usePageHeader()` para inyectar icono + "Mi Red"
+- Eliminar el `<p>` de subtitle redundante
+
+#### 7. `src/pages/Home.tsx`
+- Agregar `usePageHeader()` para inyectar icono + "Inicio"
+
+#### 8. `src/pages/Me.tsx`
+- Agregar `usePageHeader()` para inyectar icono + "Mi Perfil"
+
+#### 9. `src/pages/Tools.tsx`
+- Agregar `usePageHeader()` para inyectar icono + "Tools"
+- Eliminar el h1 + subtitle redundante
+
+---
+
+### Patron de implementacion para cada pagina
+
+Cada pagina seguira este patron (mismo que ya usa `MyAppHub.tsx`):
+
+```typescript
+import { usePageHeader } from '@/contexts/PageHeaderContext';
+import { useEffect } from 'react';
+import { Lightbulb } from 'lucide-react'; // icono de la pagina
+
+// Dentro del componente:
+const { setHeaderContent } = usePageHeader();
+
+useEffect(() => {
+  setHeaderContent(
+    <div className="flex items-center gap-2 min-w-0">
+      <Lightbulb className="h-4 w-4 text-primary shrink-0" />
+      <span className="font-semibold text-foreground truncate">Mis Ideas</span>
+    </div>
+  );
+  return () => setHeaderContent(null);
+}, [setHeaderContent]);
+```
+
+### Responsive
+- En desktop: el header muestra "Home | [icono] Nombre de Pagina" (ya funciona con el breadcrumb existente cuando `header.element` esta presente)
+- En mobile: el header muestra directamente el contenido custom (icono + nombre) en lugar del logo de vibecoders, asi siempre se sabe en que pagina estas
+- En el caso de MyAppHub, se muestra el logo de la app + nombre + badges + boton "Ver pagina" (ya implementado)
+
+### Archivos a modificar (10 archivos)
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/pages/MyAppHub.tsx` | Header compacto en 1 fila, usar VerificationBadge + getStatusColors |
-| `src/pages/MyApps.tsx` | Descripcion contextual (appsHint vs noAppsHint) |
-| `src/i18n/es/apps.json` | Agregar `appsHint` |
-| `src/i18n/en/apps.json` | Agregar `appsHint` |
-| `src/i18n/fr/apps.json` | Agregar `appsHint` |
-| `src/i18n/pt/apps.json` | Agregar `appsHint` |
-
-### Detalles Tecnicos
-
-**MyAppHub.tsx** -- Importar y usar los mismos componentes:
-```typescript
-import { VerificationBadge } from '@/components/me/VerificationBadge';
-import { getStatusColors } from '@/lib/appStatusColors';
-import { useStatuses } from '@/hooks/useStatuses';
-```
-
-El status badge usara exactamente el mismo markup que `AppCard.tsx`:
-```typescript
-const status = statuses.find(s => s.id === app.status_id);
-const statusColors = getStatusColors(status?.slug);
-// Renderizar con las mismas clases de AppCard
-```
-
-Se elimina el `useEffect` que consulta `app_statuses` directamente ya que `useStatuses()` ya proporciona esa informacion.
-
-**MyApps.tsx** -- Logica de descripcion:
-```typescript
-<p>{apps.length > 0 ? t.t('appsHint') : t.noAppsHint}</p>
-```
+| `AuthenticatedHeader.tsx` | Fix notifications label bug, mejorar mobile fallback |
+| `Ideas.tsx` | Inyectar header, eliminar titulo redundante |
+| `Notifications.tsx` | Inyectar header, eliminar titulo redundante |
+| `MyApps.tsx` | Inyectar header, eliminar hint redundante |
+| `Feedback.tsx` | Inyectar header, eliminar header interno |
+| `Vibers.tsx` | Inyectar header, eliminar subtitle |
+| `Home.tsx` | Inyectar header |
+| `Me.tsx` | Inyectar header |
+| `Tools.tsx` | Inyectar header, eliminar h1 |
+| `MyAppHub.tsx` | Ya implementado - sin cambios |
 
