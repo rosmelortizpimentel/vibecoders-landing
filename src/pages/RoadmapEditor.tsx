@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { HexColorPicker } from 'react-colorful';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoadmap, useRoadmapFeedback, RoadmapLane, RoadmapCard } from '@/hooks/useRoadmap';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -19,6 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FontSelector } from '@/components/me/FontSelector';
 import { ColorPicker } from '@/components/me/ColorPicker';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -112,19 +114,19 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
   return (
     <div ref={setNodeRef} style={style}>
       <Card
-        className="cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow border"
+        className="cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow border group bg-background"
         style={{ borderLeftColor: lane.color, borderLeftWidth: 3 }}
       >
         <CardContent className="p-3">
           <div className="flex justify-between items-start gap-2">
             <div className="flex items-start gap-2 flex-1 min-w-0" {...attributes} {...listeners}>
-              <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+              <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
+                <p className="font-bold text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
                   {card.title}
                 </p>
                 {card.description && (
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-5">{card.description}</p>
                 )}
                 {card.completed_at && (
                   <Badge variant="secondary" className="text-[10px] mt-1.5 h-5">
@@ -134,24 +136,14 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
                 )}
               </div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
-                  <MoreVertical className="w-3 h-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onEdit}>
-                  <Pencil className="w-4 h-4 mr-2" /> {t('editor.editCard')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onMove}>
-                  <MoveRight className="w-4 h-4 mr-2" /> {t('editor.moveCard')}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                  <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteCard')}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit}>
+                <Pencil className="w-3 h-3" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={onDelete}>
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -177,15 +169,17 @@ function SortableLaneWrapper({ lane, header, children }: { lane: RoadmapLane; he
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex-shrink-0 w-72 flex flex-col">
-      <div className="flex items-center gap-1 mb-3 px-1">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5">
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
+    <div ref={setNodeRef} style={style} className="flex-shrink-0 w-72 flex flex-col group">
+      <div className="bg-muted/60 rounded-xl p-3 flex flex-col flex-1">
+        <div className="flex items-center gap-1 mb-2 pb-2 border-b border-border/60">
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </div>
+          {header}
         </div>
-        {header}
-      </div>
-      <div className="flex-1">
-        {children}
+        <div className="flex-1">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -198,8 +192,8 @@ function DroppableLane({ laneId, children }: { laneId: string; children: React.R
     <div
       ref={setNodeRef}
       className={cn(
-        'space-y-2 min-h-[200px] rounded-lg p-2 transition-colors',
-        isOver ? 'bg-primary/10 ring-2 ring-primary/20' : 'bg-muted/30'
+        'space-y-3 min-h-[200px] rounded-lg transition-colors',
+        isOver ? 'bg-primary/10 ring-2 ring-primary/20' : ''
       )}
     >
       {children}
@@ -231,10 +225,8 @@ export default function RoadmapEditor() {
   // Form states
   const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: 'Inter' });
   const [cardForm, setCardForm] = useState({ title: '', description: '' });
-  const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', is_public: false, is_feedback_public: false, favicon_url: '' });
-
-  // View mode: roadmap or feedback
-  const [viewMode, setViewMode] = useState<'roadmap' | 'feedback'>('roadmap');
+  const [settingsForm, setSettingsForm] = useState({ default_language: '', font_family: 'Inter', favicon_url: '' });
+  const [userProfileLanguage, setUserProfileLanguage] = useState<string>('es');
 
   // Feedback management
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
@@ -248,6 +240,15 @@ export default function RoadmapEditor() {
 
   // Owner username for public URL
   const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
+
+  // Listen for branding open event from parent (MyAppHub toolbar)
+  useEffect(() => {
+    const handler = () => setShowSettings(true);
+    window.addEventListener('roadmap-open-branding', handler);
+    return () => window.removeEventListener('roadmap-open-branding', handler);
+  }, []);
+
+  const canAddLane = roadmap.lanes.length < 4;
 
   // DnD state
   const [activeCard, setActiveCard] = useState<RoadmapCard | null>(null);
@@ -306,12 +307,18 @@ export default function RoadmapEditor() {
       return;
     }
 
-    if (sourceLaneId === targetLaneId && overData?.type === 'card') {
-      const laneCards = roadmap.cards
-        .filter(c => c.lane_id === sourceLaneId)
-        .sort((a, b) => a.display_order - b.display_order);
-      const oldIndex = laneCards.findIndex(c => c.id === activeCardId);
-      if (oldIndex === targetIndex) return;
+    if (sourceLaneId === targetLaneId) {
+      if (overData?.type === 'card') {
+        const laneCards = roadmap.cards
+          .filter(c => c.lane_id === sourceLaneId)
+          .sort((a, b) => a.display_order - b.display_order);
+        const oldIndex = laneCards.findIndex(c => c.id === activeCardId);
+        if (oldIndex === targetIndex) return;
+      }
+      try {
+        await roadmap.moveCard(activeCardId, targetLaneId, targetIndex);
+      } catch { toast.error(t('editor.errorMovingCard')); }
+      return;
     }
 
     try {
@@ -340,14 +347,21 @@ export default function RoadmapEditor() {
     })();
   }, [app?.user_id]);
 
+  // Fetch user profile language
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase.from('profiles').select('language').eq('id', user.id).maybeSingle();
+      if (data?.language) setUserProfileLanguage(data.language);
+    })();
+  }, [user]);
+
   // Sync settings form
   useEffect(() => {
     if (roadmap.settings) {
       setSettingsForm({
-        custom_title: roadmap.settings.custom_title || '',
+        default_language: (roadmap.settings as any).default_language || '',
         font_family: roadmap.settings.font_family || 'Inter',
-        is_public: roadmap.settings.is_public,
-        is_feedback_public: (roadmap.settings as any).is_feedback_public ?? false,
         favicon_url: roadmap.settings.favicon_url || '',
       });
     }
@@ -359,6 +373,13 @@ export default function RoadmapEditor() {
       setOpenLanes(new Set(roadmap.lanes.map(l => l.id)));
     }
   }, [isMobile, roadmap.lanes.length]);
+
+  // Auto-initialize roadmap if no settings exist
+  useEffect(() => {
+    if (!roadmap.settings && !roadmap.loading && app?.is_verified) {
+      roadmap.initializeRoadmap().catch(() => {});
+    }
+  }, [roadmap.settings, roadmap.loading, app?.is_verified]);
 
   if (authLoading || appLoading || roadmap.loading) {
     return (
@@ -392,24 +413,8 @@ export default function RoadmapEditor() {
 
   if (!roadmap.settings) {
     return (
-      <div className="text-center py-20 space-y-4">
-        <h2 className="text-xl font-semibold">{t('editor.initialize')}</h2>
-        <p className="text-muted-foreground text-sm">{t('editor.initializeDesc')}</p>
-        <Button onClick={async () => {
-          try {
-            await roadmap.initializeRoadmap();
-            toast.success('Roadmap initialized!');
-          } catch (err) {
-            toast.error('Error initializing roadmap');
-          }
-        }}>
-          {t('editor.initialize')}
-        </Button>
-        <div>
-          <Button variant="ghost" onClick={() => navigate('/me/apps')}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> {t('editor.backToApps')}
-          </Button>
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -490,74 +495,9 @@ export default function RoadmapEditor() {
   };
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/roadmap')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          {app.logo_url && <img src={app.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />}
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-xl font-bold truncate">{app.name || 'App'}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <div className="flex items-center gap-1.5">
-                <Switch
-                  checked={settingsForm.is_public}
-                  onCheckedChange={async (v) => {
-                    setSettingsForm(prev => ({ ...prev, is_public: v }));
-                    try { await roadmap.updateSettings({ is_public: v }); } catch {}
-                  }}
-                  className="h-4 w-7 [&>span]:h-3 [&>span]:w-3"
-                />
-                <span className={cn("text-xs font-medium", settingsForm.is_public ? "text-primary" : "text-muted-foreground")}>
-                  {settingsForm.is_public ? t('editor.isPublic') : 'Privado'}
-                </span>
-              </div>
-              {settingsForm.is_public && ownerUsername && (
-                <a
-                  href={publicPath}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-primary hover:underline flex items-center gap-1"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  {t('editor.publicPage')}
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {/* Roadmap / Feedback toggle */}
-          <div className="flex bg-muted rounded-lg p-0.5">
-            <button
-              onClick={() => setViewMode('roadmap')}
-              className={cn('px-3 py-1.5 text-xs font-medium rounded-md transition-all', viewMode === 'roadmap' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
-            >
-              Roadmap
-            </button>
-            <button
-              onClick={() => setViewMode('feedback')}
-              className={cn('px-3 py-1.5 text-xs font-medium rounded-md transition-all', viewMode === 'feedback' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
-            >
-              Feedback ({feedbackHook.feedback.length})
-            </button>
-          </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-                <Paintbrush className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">{t('editor.branding')}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="sm:hidden">{t('editor.branding')}</TooltipContent>
-          </Tooltip>
-        </div>
-      </div>
-
-      {/* Kanban Board - only in roadmap mode */}
-      {viewMode === 'roadmap' && <DndContext
+    <div className="space-y-4 md:space-y-6 md:-mx-4">
+      {/* Kanban Board */}
+      <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
@@ -566,7 +506,7 @@ export default function RoadmapEditor() {
         {/* Desktop: horizontal scroll with DnD */}
         <div className="hidden md:block">
           <SortableContext items={roadmap.lanes.map(l => `sortable-lane-${l.id}`)} strategy={horizontalListSortingStrategy}>
-            <div className="flex gap-4 overflow-x-auto pb-4 min-h-[60vh]">
+            <div className="flex gap-5 overflow-x-auto pb-2 min-h-[40vh]">
               {roadmap.lanes.map(lane => {
                 const laneCards = roadmap.cards
                   .filter(c => c.lane_id === lane.id)
@@ -579,8 +519,25 @@ export default function RoadmapEditor() {
                     header={
                       <div className="flex items-center justify-between flex-1">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
-                          <h3 className="font-semibold text-sm">{lane.name}</h3>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="w-4 h-4 rounded-md border border-border shrink-0 cursor-pointer" style={{ backgroundColor: lane.color }} />
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-3" align="start">
+                              <HexColorPicker color={lane.color} onChange={(c) => roadmap.updateLane(lane.id, { color: c })} />
+                              <input
+                                className="mt-2 w-full text-xs bg-transparent border border-border rounded px-2 py-1 text-center font-mono"
+                                value={lane.color}
+                                onChange={(e) => roadmap.updateLane(lane.id, { color: e.target.value })}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <input
+                            className="font-semibold text-sm bg-transparent border-none outline-none focus:ring-1 focus:ring-primary rounded px-1 w-24"
+                            defaultValue={lane.name}
+                            onBlur={(e) => roadmap.updateLane(lane.id, { name: e.target.value })}
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                          />
                           <span className="text-xs text-muted-foreground">({laneCards.length})</span>
                         </div>
                         <div className="flex items-center gap-0.5">
@@ -595,24 +552,14 @@ export default function RoadmapEditor() {
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => {
-                                setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
-                                setEditingLane(lane);
-                              }}>
-                                <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
-                                <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            onClick={() => setDeletingLane(lane.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
                       </div>
                     }
@@ -634,36 +581,35 @@ export default function RoadmapEditor() {
                           />
                         ))}
                       </SortableContext>
-                      {laneCards.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-8">{t('editor.noCards')}</p>
-                      )}
                       <Button
                         variant="outline"
-                        size="sm"
-                        className="w-full text-xs text-muted-foreground border-dashed"
+                        size="icon"
+                        className="w-full h-7 text-muted-foreground border-dashed"
                         onClick={() => {
                           setCardForm({ title: '', description: '' });
                           setAddingCardToLane(lane.id);
                         }}
                       >
-                        <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
+                        <Plus className="w-3.5 h-3.5" />
                       </Button>
                     </DroppableLane>
                   </SortableLaneWrapper>
                 );
               })}
               {/* Add Lane button at end of columns */}
-              <div className="flex-shrink-0 flex items-start pt-1">
-                <button
-                  className="w-10 h-10 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary hover:text-primary text-muted-foreground transition-colors"
-                  onClick={() => {
-                    setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
-                    setEditingLane({} as RoadmapLane);
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              {canAddLane && (
+                <div className="flex-shrink-0 flex items-start pt-1">
+                  <button
+                    className="w-10 h-10 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary hover:text-primary text-muted-foreground transition-colors"
+                    onClick={() => {
+                      setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
+                      setEditingLane({} as RoadmapLane);
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </SortableContext>
         </div>
@@ -727,11 +673,11 @@ export default function RoadmapEditor() {
                           <CardContent className="p-3">
                             <div className="flex justify-between items-start gap-2">
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
+                                <p className="font-bold text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
                                   {card.title}
                                 </p>
                                 {card.description && (
-                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-5">{card.description}</p>
                                 )}
                               </div>
                               <DropdownMenu>
@@ -759,19 +705,16 @@ export default function RoadmapEditor() {
                           </CardContent>
                         </Card>
                       ))}
-                      {laneCards.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-4">{t('editor.noCards')}</p>
-                      )}
                       <Button
                         variant="outline"
-                        size="sm"
-                        className="w-full text-xs text-muted-foreground border-dashed"
+                        size="icon"
+                        className="w-full h-7 text-muted-foreground border-dashed"
                         onClick={() => {
                           setCardForm({ title: '', description: '' });
                           setAddingCardToLane(lane.id);
                         }}
                       >
-                        <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
+                        <Plus className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </CollapsibleContent>
@@ -780,16 +723,18 @@ export default function RoadmapEditor() {
             );
           })}
           {/* Mobile add lane button */}
-          <button
-            className="w-full h-10 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 hover:border-primary hover:text-primary text-muted-foreground transition-colors text-sm"
-            onClick={() => {
-              setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
-              setEditingLane({} as RoadmapLane);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            {t('editor.addLane')}
-          </button>
+          {canAddLane && (
+            <button
+              className="w-full h-10 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 hover:border-primary hover:text-primary text-muted-foreground transition-colors text-sm"
+              onClick={() => {
+                setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
+                setEditingLane({} as RoadmapLane);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              {t('editor.addLane')}
+            </button>
+          )}
         </div>
 
         {/* Drag Overlay */}
@@ -798,84 +743,12 @@ export default function RoadmapEditor() {
             <Card className="shadow-lg border w-72 rotate-2 opacity-90" style={{ borderLeftWidth: 3, borderLeftColor: roadmap.lanes.find(l => l.id === activeCard.lane_id)?.color }}>
               <CardContent className="p-3">
                 <p className="font-medium text-sm">{activeCard.title}</p>
-                {activeCard.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{activeCard.description}</p>}
+                {activeCard.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-5">{activeCard.description}</p>}
               </CardContent>
             </Card>
           ) : null}
         </DragOverlay>
-      </DndContext>}
-
-      {/* Feedback Panel - only in feedback mode */}
-      {viewMode === 'feedback' && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
-            Feedback ({feedbackHook.feedback.length})
-          </h2>
-          {feedbackHook.feedback.length === 0 && (
-            <p className="text-sm text-muted-foreground">{t('public.noFeedback')}</p>
-          )}
-          <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
-            {feedbackHook.feedback.map(fb => (
-              <Card key={fb.id} className="border">
-                <CardContent className="p-3 md:p-4 space-y-2">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm">{fb.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{fb.description}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Badge variant="outline" className="text-[10px]">
-                        {t(`public.status.${fb.status}`)}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">❤️ {fb.likes_count}</span>
-                    </div>
-                  </div>
-                  {fb.owner_response && (
-                    <div className="bg-muted/50 rounded p-2 text-xs">
-                      <span className="font-medium">{t('public.ownerResponse')}:</span> {fb.owner_response}
-                    </div>
-                  )}
-                  <div className="flex gap-1.5 flex-wrap pt-1">
-                    <Select
-                      value={fb.status}
-                      onValueChange={(v) => feedbackHook.updateFeedbackStatus(fb.id, v)}
-                    >
-                      <SelectTrigger className="h-7 text-xs w-24 sm:w-28">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {['new', 'reviewed', 'planned', 'in_progress', 'done', 'declined'].map(s => (
-                          <SelectItem key={s} value={s} className="text-xs">
-                            {t(`public.status.${s}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
-                      setRespondingTo(fb.id);
-                      setResponseText(fb.owner_response || '');
-                    }}>
-                      {t('public.reply')}
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => setLinkingFeedback(fb.id)}>
-                      <Link2 className="w-3 h-3" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs px-2 text-destructive hover:text-destructive" onClick={() => setDeletingFeedback(fb.id)}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                  {fb.linked_card_id && (
-                    <p className="text-[10px] text-primary">
-                      🔗 {roadmap.cards.find(c => c.id === fb.linked_card_id)?.title || 'Linked card'}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+      </DndContext>
 
       {/* ===== MODALS ===== */}
 
@@ -890,43 +763,21 @@ export default function RoadmapEditor() {
           </SheetHeader>
 
           <div className="space-y-6 pb-24">
-            {/* Roadmap Public toggle */}
-            <div className={cn(
-              "rounded-lg p-3 flex items-center justify-between transition-colors",
-              settingsForm.is_public ? "bg-primary/10" : "bg-muted/50"
-            )}>
-              <div>
-                <Label className="text-xs uppercase tracking-wider font-medium">{t('editor.isPublic')}</Label>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {settingsForm.is_public ? t('editor.publicOnHint') : t('editor.publicOffHint')}
-                </p>
-              </div>
-              <Switch checked={settingsForm.is_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_public: v }))} />
-            </div>
-
-            {/* Feedback Public toggle - independent */}
-            <div className={cn(
-              "rounded-lg p-3 flex items-center justify-between transition-colors",
-              settingsForm.is_feedback_public ? "bg-primary/10" : "bg-muted/50"
-            )}>
-              <div>
-                <Label className="text-xs uppercase tracking-wider font-medium">{t('editor.feedbackPublic')}</Label>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {settingsForm.is_feedback_public ? t('editor.feedbackPublicOnHint') : t('editor.feedbackPublicOffHint')}
-                </p>
-              </div>
-              <Switch checked={settingsForm.is_feedback_public} onCheckedChange={v => setSettingsForm(prev => ({ ...prev, is_feedback_public: v }))} />
-            </div>
-
             {/* Branding section */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.customTitle')}</Label>
-                <Input
-                  value={settingsForm.custom_title}
-                  onChange={e => setSettingsForm(prev => ({ ...prev, custom_title: e.target.value }))}
-                  placeholder={t('editor.customTitlePlaceholder')}
-                />
+                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.defaultLanguage')}</Label>
+                <Select value={settingsForm.default_language || userProfileLanguage} onValueChange={v => setSettingsForm(prev => ({ ...prev, default_language: v }))}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="es">Español</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="pt">Português</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.fontFamily')}</Label>

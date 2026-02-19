@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MarkdownEditor } from '@/components/beta/MarkdownEditor';
-import { Loader2, Trash2, Save } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2, Trash2, Save, ChevronLeft } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,6 +77,18 @@ export function IdeaDetail({
 
   return (
     <div className="h-full flex flex-col bg-card rounded-lg border border-border overflow-hidden">
+      {/* Back button */}
+      <div className="p-3 border-b border-border">
+        <Button 
+          variant="ghost" 
+          className="-ml-2 gap-1 text-muted-foreground text-xs"
+          onClick={onCancel}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          {t('ideas.backToList')}
+        </Button>
+      </div>
+
       <div className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6 overflow-y-auto">
         <div className="space-y-2">
           <label htmlFor="title" className="text-sm font-medium leading-none">
@@ -95,14 +107,15 @@ export function IdeaDetail({
           <label htmlFor="description" className="text-sm font-medium leading-none">
             {t('ideas.descriptionLabel')}
           </label>
-          <MarkdownEditor
+          <Textarea
+            id="description"
             value={description}
-            onChange={(val) => {
-              setDescription(val);
+            onChange={(e) => {
+              setDescription(e.target.value);
               onDirtyChange(true);
             }}
             placeholder={t('ideas.descriptionPlaceholder')}
-            className="min-h-[200px]"
+            className="min-h-[200px] resize-y"
           />
         </div>
       </div>

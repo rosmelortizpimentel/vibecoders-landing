@@ -72,7 +72,15 @@
     "markDone": "Marquer comme terminée",
     "markPending": "Réactiver",
     "done": "Terminée",
-    "search": "Rechercher..."
+    "search": "Rechercher...",
+    "tabPending": "En attente",
+    "tabCompleted": "Terminées",
+    "confirmCompleteTitle": "Marquer comme terminée ?",
+    "confirmCompleteMessage": "Cette idée sera déplacée dans la liste des terminées.",
+    "confirmReactivateTitle": "Réactiver l'idée ?",
+    "confirmReactivateMessage": "Cette idée sera remise dans la liste des en attente.",
+    "edit": "Modifier",
+    "daysAgo": "Il y a"
   },
   "bannerCrop": {
     "title": "Ajuster la bannière",

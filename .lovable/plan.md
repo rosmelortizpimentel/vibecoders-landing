@@ -1,116 +1,77 @@
 
 
-## Mejoras a la Sección "Mis Ideas"
+## Mejoras en Feedback Publico y Panel de Mantenimiento
 
-### Problemas Detectados
-- El encabezado de la página está en inglés hardcodeado ("My Ideas", "Capture your next big thing...")
-- No hay forma de reordenar las ideas (falta drag and drop)
-- No existe opción para marcar ideas como "Done"
-- No se muestra la antigüedad de cada idea (días)
-- Falta scroll propio en la sección
+### 1. Idioma en pagina publica de feedback (PublicRoadmap.tsx)
 
----
+**Problema**: El idioma del browser se aplica antes de que carguen los settings, pisando el `default_language` configurado.
 
-### Cambios Propuestos
+**Solucion**: Inicializar `lang` como `'en'` sin aplicar browser language, y solo setear el idioma final cuando `default_language` llega de la DB. Si no hay `default_language`, entonces usar browser language como fallback. Actualmente el `useEffect` de browser language corre aunque `langResolved` sea false al inicio, y se aplica antes de que el fetch de settings complete.
 
-#### 1. Migración de Base de Datos
-Agregar dos columnas nuevas a la tabla `user_ideas`:
-- `display_order` (integer, default 0) -- para el orden drag and drop
-- `is_done` (boolean, default false) -- para marcar como completada
-
-#### 2. Traducciones en los 4 Idiomas
-Agregar claves nuevas al archivo `profile.json` de cada idioma (es, en, fr, pt):
-- `ideas.pageTitle` -- Título de la página
-- `ideas.pageDescription` -- Descripción de la página
-- `ideas.daysAgo` -- "hace X días" / "X days ago"
-- `ideas.today` -- "hoy" / "today"
-- `ideas.markDone` -- "Marcar como hecha"
-- `ideas.markPending` -- "Reactivar"
-- `ideas.done` -- "Hecha"
-- `ideas.search` -- "Buscar..."
-
-#### 3. Página Ideas.tsx
-- Reemplazar textos hardcodeados por traducciones usando `useTranslation('profile')`
-- La página ocupará el alto completo con scroll propio
-
-#### 4. Componente IdeasTab.tsx -- Mejoras Principales
-
-**Drag and Drop (con @dnd-kit)**:
-- Cada idea en la lista tendrá un handle de arrastre
-- Al soltar, se actualiza `display_order` en la base de datos
-- El orden se respeta al cargar (ORDER BY display_order ASC)
-
-**Marcar como "Done"**:
-- Botón/checkbox en cada idea de la lista para alternar `is_done`
-- Las ideas completadas aparecen con estilo tachado/opaco al final de la lista
-- Actualización optimista + persistencia en BD
-
-**Tag de antigüedad**:
-- Badge en cada idea mostrando cuántos días tiene desde su creación
-- Ejemplo: "hoy", "3d", "15d", "30d+"
-
-**Scroll propio**:
-- El contenedor principal usa `h-[calc(100vh-theme-spacing)]` con overflow
-- La lista de ideas y el detalle tienen scroll independiente
-
-**Responsive (móvil)**:
-- Layout de columna única en móvil
-- Touch-friendly drag handles
-- Botones y badges adaptados a pantallas pequeñas
-- El detalle ocupa pantalla completa en móvil
+**Archivo**: `src/pages/PublicRoadmap.tsx`
+- Mover la deteccion del browser language al bloque del fetch de settings como fallback (solo si `default_language` no esta definido).
+- Eliminar el `useEffect` separado de deteccion de browser language.
 
 ---
 
-### Detalles Técnicos
+### 2. Attachments: imagenes como miniaturas, PDFs como icono de descarga (PublicRoadmap.tsx)
 
-#### Migración SQL
+**Problema actual**: Todos los attachments se muestran como links de texto con icono de clip.
 
+**Solucion**:
+- **Imagenes** (file_type starts with `image/`): Mostrar como miniaturas (thumbnails) de ~80px debajo de la descripcion.
+- **PDFs** (file_type = `application/pdf`): Mostrar con icono de descarga/PDF.
+- **Al hacer click en imagen**: Abrir un dialog/drawer fullscreen (mobile) o modal (desktop) con navegacion izquierda/derecha entre todas las imagenes del feedback item.
+
+**Componente nuevo**: `ImageGalleryDialog` dentro de `src/pages/PublicRoadmap.tsx` (inline, no necesita archivo separado).
+- Estado: `selectedFeedbackImages` (array de attachments de imagen) y `currentImageIndex`.
+- En mobile: usar `DialogContent` con `className="max-w-full h-full"` para fullscreen.
+- Botones de navegacion (ChevronLeft/ChevronRight) para recorrer imagenes.
+- Soporte de swipe en mobile via touch events.
+
+---
+
+### 3. Panel de mantenimiento: filtro de estado + cambio de estado + bugs + switch de visibilidad (UnifiedFeedbackList.tsx)
+
+**3a. Filtro adicional de Estado**
+- Agregar un segundo `Select` para filtrar por status: `all`, `new`, `reviewed`, `planned`, `in_progress`, `done`, `declined`, `open`, `closed`.
+
+**3b. Cambio de estado desde el panel**
+- Cada item tendra un dropdown para cambiar su status.
+- Para items `public` (roadmap_feedback): actualizar `roadmap_feedback.status`.
+- Para items `beta`/`bug` (beta_feedback): actualizar `beta_feedback.status`.
+- Refrescar la lista despues del cambio.
+
+**3c. Registrar Bugs**
+- Agregar boton "Reportar Bug" que abre un dialog simple con titulo + descripcion.
+- Inserta en `beta_feedback` con `type: 'bug'` y el `app_id` actual.
+
+**3d. Switch de visibilidad publica**
+- Agregar columna `is_hidden` a `roadmap_feedback` (nueva migracion SQL).
+- Cada item publico tendra un switch (Eye/EyeOff) para ocultarlo del roadmap publico.
+- En `PublicRoadmap.tsx`, filtrar los feedback con `is_hidden = true`.
+
+**Nota sobre la columna `is_hidden`**: Se necesita agregar esta columna a la tabla `roadmap_feedback` via migracion SQL:
 ```sql
-ALTER TABLE public.user_ideas 
-  ADD COLUMN display_order INTEGER NOT NULL DEFAULT 0,
-  ADD COLUMN is_done BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE roadmap_feedback ADD COLUMN is_hidden boolean NOT NULL DEFAULT false;
 ```
 
-#### Archivos a Modificar/Crear
+---
 
-| Archivo | Acción |
-|---------|--------|
-| Migración SQL | Crear -- agregar columnas |
-| `src/pages/Ideas.tsx` | Modificar -- usar traducciones |
-| `src/components/me/IdeasTab.tsx` | Modificar -- drag & drop, done, tags, scroll |
-| `src/components/me/ideas/IdeaDetail.tsx` | Modificar -- actualizar interfaz Idea |
-| `src/i18n/es/profile.json` | Modificar -- agregar claves nuevas |
-| `src/i18n/en/profile.json` | Modificar -- agregar claves nuevas |
-| `src/i18n/fr/profile.json` | Modificar -- agregar claves nuevas |
-| `src/i18n/pt/profile.json` | Modificar -- agregar claves nuevas |
+### 4. Traducciones
 
-#### Lógica de Drag and Drop
+Agregar keys nuevas a los archivos de traduccion `src/i18n/{es,en}/apps.json`:
+- `hub.statusFilter`, `hub.allStatuses`, `hub.reportBug`, `hub.bugTitle`, `hub.bugDescription`, `hub.visibility`, `hub.hidden`, `hub.visible`
 
-Se reutilizará `@dnd-kit` (ya instalado) con `SortableContext` y `verticalListSortingStrategy`. Al finalizar el drag:
+---
 
-```typescript
-// Recalcular display_order para todos los items visibles
-const reorderedIds = arrayMove(ideaIds, oldIndex, newIndex);
-// Actualizar en batch: UPDATE user_ideas SET display_order = X WHERE id = Y
-```
+### Archivos a modificar
 
-#### Tag de Antigüedad
+| Archivo | Cambios |
+|---------|---------|
+| `src/pages/PublicRoadmap.tsx` | Fix idioma, attachments como thumbnails/PDF icons, galeria de imagenes fullscreen |
+| `src/components/beta/UnifiedFeedbackList.tsx` | Filtro de estado, cambio de estado, boton de bugs, switch de visibilidad |
+| `src/i18n/es/apps.json` | Nuevas traducciones para feedback management |
+| `src/i18n/en/apps.json` | Nuevas traducciones para feedback management |
+| Migracion SQL | Agregar columna `is_hidden` a `roadmap_feedback` |
 
-```typescript
-const getDaysTag = (createdAt: string): string => {
-  const days = differenceInDays(new Date(), new Date(createdAt));
-  if (days === 0) return t('ideas.today');
-  return `${days}d`;
-};
-```
-
-#### Consulta Ordenada
-
-```typescript
-const { data } = await supabase
-  .from('user_ideas')
-  .select('*')
-  .order('is_done', { ascending: true })    // Activas primero
-  .order('display_order', { ascending: true }) // Luego por orden manual
-  .order('created_at', { ascending: false });  // Fallback por fecha
-```

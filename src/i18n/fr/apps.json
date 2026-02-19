@@ -4,7 +4,8 @@
   "cancel": "Cancel",
   "delete": "Delete",
   "noApps": "You don't have any apps yet",
-  "noAppsHint": "Add your first project to show it on your profile",
+  "noAppsHint": "Ajoutez votre premier projet pour l'afficher sur votre profil",
+  "appsHint": "Gérez toutes vos Apps",
   "urlPlaceholder": "https://your-app.com",
   "deleteConfirmTitle": "Delete this app?",
   "deleteConfirmDescription": "This action cannot be undone. The app will be permanently deleted from your profile.",
@@ -12,5 +13,27 @@
   "verified": "Verified",
   "visible": "Visible",
   "hidden": "Hidden",
-  "back": "Retour"
+  "back": "Retour",
+  "hub": {
+    "info": "Info",
+    "roadmap": "Roadmap",
+    "feedback": "Feedback",
+    "squad": "Squad",
+    "backToApps": "Mes Apps",
+    "viewPage": "Voir la page",
+    "publicFeedback": "Public",
+    "betaFeedback": "Bêta",
+    "bugFeedback": "Bug",
+    "allFeedback": "Tous",
+    "noFeedback": "Pas encore de feedback",
+    "statusFilter": "Statut",
+    "allStatuses": "Tous les statuts",
+    "reportBug": "Signaler un Bug",
+    "bugDescription": "Description du Bug",
+    "bugDescriptionPh": "Décrivez le bug en détail...",
+    "bugReported": "Bug signalé avec succès",
+    "hidden": "Masqué",
+    "visible": "Visible",
+    "cancel": "Annuler"
+  }
 }

@@ -1121,6 +1121,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          is_hidden: boolean
           likes_count: number
           linked_card_id: string | null
           owner_response: string | null
@@ -1136,6 +1137,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          is_hidden?: boolean
           likes_count?: number
           linked_card_id?: string | null
           owner_response?: string | null
@@ -1151,6 +1153,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          is_hidden?: boolean
           likes_count?: number
           linked_card_id?: string | null
           owner_response?: string | null
@@ -1289,7 +1292,9 @@ export type Database = {
           app_id: string
           created_at: string
           custom_title: string | null
+          default_language: string | null
           favicon_url: string | null
+          feedback_auth_mode: string
           font_family: string | null
           id: string
           is_feedback_public: boolean
@@ -1300,7 +1305,9 @@ export type Database = {
           app_id: string
           created_at?: string
           custom_title?: string | null
+          default_language?: string | null
           favicon_url?: string | null
+          feedback_auth_mode?: string
           font_family?: string | null
           id?: string
           is_feedback_public?: boolean
@@ -1311,7 +1318,9 @@ export type Database = {
           app_id?: string
           created_at?: string
           custom_title?: string | null
+          default_language?: string | null
           favicon_url?: string | null
+          feedback_auth_mode?: string
           font_family?: string | null
           id?: string
           is_feedback_public?: boolean

@@ -20,6 +20,7 @@
   "following": "Abonné",
   "viewProfile": "Voir le profil",
   "mutualContactsTab": "Contacts mutuels",
+  "communityTab": "Communauté",
   "confirmUnfollow": {
     "title": "Ne plus suivre",
     "message": "Êtes-vous sûr de vouloir ne plus suivre {{name}} ?",

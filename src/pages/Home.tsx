@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { Activity, Heart, Users, ShieldCheck, Rocket, Loader2, User, AppWindow, Trophy } from 'lucide-react';
-import { useState } from 'react';
+import { Activity, Heart, Users, ShieldCheck, Rocket, Loader2, User, AppWindow, Trophy, LayoutDashboard } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useFreshDrops } from '@/hooks/useFreshDrops';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,7 +24,19 @@ export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const t = useTranslation('home');
+  const tCommon = useTranslation('common');
   const { stats, isLoading, acceptTester, rejectTester } = useDashboardStats();
+  const { setHeaderContent } = usePageHeader();
+
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex items-center gap-2 min-w-0">
+        <LayoutDashboard className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground truncate">{tCommon.navigation.home}</span>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
   const { data: freshDrops = [], isLoading: freshDropsLoading } = useFreshDrops();
   const { isFounder, isFree, founderNumber } = useSubscription();
 

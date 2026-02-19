@@ -5,6 +5,7 @@
   "delete": "Eliminar",
   "noApps": "No tienes apps todavía",
   "noAppsHint": "Agrega tu primer proyecto para mostrarlo en tu perfil",
+  "appsHint": "Gestiona todas tus Apps",
   "urlPlaceholder": "https://tu-app.com",
   "deleteConfirmTitle": "¿Eliminar esta app?",
   "deleteConfirmDescription": "Esta acción no se puede deshacer. La app será eliminada permanentemente de tu perfil.",
@@ -13,5 +14,27 @@
   "visible": "Visible",
   "hidden": "Oculto",
   "none": "Ninguno",
-  "back": "Volver"
+  "back": "Volver",
+  "hub": {
+    "info": "Info",
+    "roadmap": "Roadmap",
+    "feedback": "Feedback",
+    "squad": "Squad",
+    "backToApps": "Mis Apps",
+    "viewPage": "Ver página",
+    "publicFeedback": "Público",
+    "betaFeedback": "Beta",
+    "bugFeedback": "Bug",
+    "allFeedback": "Todos",
+    "noFeedback": "No hay feedback todavía",
+    "statusFilter": "Estado",
+    "allStatuses": "Todos los estados",
+    "reportBug": "Reportar Bug",
+    "bugDescription": "Descripción del Bug",
+    "bugDescriptionPh": "Describe el bug en detalle...",
+    "bugReported": "Bug reportado exitosamente",
+    "hidden": "Oculto",
+    "visible": "Visible",
+    "cancel": "Cancelar"
+  }
 }
