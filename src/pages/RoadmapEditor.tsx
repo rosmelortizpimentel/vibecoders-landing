@@ -126,7 +126,7 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
                   {card.title}
                 </p>
                 {card.description && (
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-5">{card.description}</p>
                 )}
                 {card.completed_at && (
                   <Badge variant="secondary" className="text-[10px] mt-1.5 h-5">
@@ -677,7 +677,7 @@ export default function RoadmapEditor() {
                                   {card.title}
                                 </p>
                                 {card.description && (
-                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-5">{card.description}</p>
                                 )}
                               </div>
                               <DropdownMenu>
@@ -743,7 +743,7 @@ export default function RoadmapEditor() {
             <Card className="shadow-lg border w-72 rotate-2 opacity-90" style={{ borderLeftWidth: 3, borderLeftColor: roadmap.lanes.find(l => l.id === activeCard.lane_id)?.color }}>
               <CardContent className="p-3">
                 <p className="font-medium text-sm">{activeCard.title}</p>
-                {activeCard.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{activeCard.description}</p>}
+                {activeCard.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-5">{activeCard.description}</p>}
               </CardContent>
             </Card>
           ) : null}
