@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap, Linkedin } from 'lucide-react';
+import { useSidebarMenu } from '@/hooks/useSidebarMenu';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
@@ -30,6 +31,10 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { GlobalShareButton } from './GlobalShareButton';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
+import { useBetaBadges } from '@/hooks/useBetaBadges';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface AuthenticatedHeaderProps {
   profile: {
@@ -79,6 +84,28 @@ export function AuthenticatedHeader({
   const [sheetOpen, setSheetOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const { header } = usePageHeader();
+  const { items: sidebarMenuItems } = useSidebarMenu();
+  const { ownedAppsCount, publicSquadsCount } = useBetaBadges();
+  const { unreadCount } = useNotifications();
+  const { t: tNotif } = useTranslation('notifications');
+
+  const badgeMap: Record<string, number> = {
+    'notifications': unreadCount,
+    'beta-testing': ownedAppsCount,
+    'public-beta-testing': publicSquadsCount,
+  };
+
+  const resolveLabel = (labelKey: string): string => {
+    const parts = labelKey.split('.');
+    if (parts.length === 2 && parts[0] === 'notifications') {
+      return tNotif(parts[1]);
+    }
+    return t.t(labelKey);
+  };
+
+  // Build mobile menu from dynamic sidebar items
+  const mobileMenuItems = sidebarMenuItems
+    .filter(item => !item.requiresWaitlist || isInWaitlist);
 
   const isActive = (path: string) => {
     // For /me, match any /me/* route
@@ -242,104 +269,50 @@ export function AuthenticatedHeader({
                 <SheetTitle className="text-left text-base font-medium text-foreground">{tAuth.menu}</SheetTitle>
               </SheetHeader>
               
-                {/* Navigation Links - Clean list */}
+                {/* Navigation Links - Dynamic from sidebar menu */}
                 <nav className="flex flex-col px-5 py-6 flex-1 overflow-y-auto">
-                  {/* Home and Personal */}
-                  {[
-                    navLinks.find(l => l.path === '/home'),
-                    navLinks.find(l => l.path === '/me'),
-                    navLinks.find(l => l.path === '/ideas'),
-                    navLinks.find(l => l.path === '/beta-testing')
-                  ].filter(Boolean).map((link) => {
-                    const l = link!;
-                    const Icon = l.icon;
-                    return (
-                      <Link
-                        key={l.path}
-                        to={l.path}
-                        onClick={handleNavClick}
-                        className={cn(
-                          "flex items-center gap-3 text-base py-3 transition-colors",
-                          isActive(l.path)
-                            ? "text-foreground font-semibold"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {l.label}
-                      </Link>
-                    );
-                  })}
-
-                  <div className="my-2 border-t border-border/50" />
-
-                  {/* Public and Explore */}
-                  {[
-                    navLinks.find(l => l.path === '/public-beta-testing'),
-                    navLinks.find(l => l.path === '/explore')
-                  ].filter(Boolean).map((link) => {
-                    const l = link!;
-                    const Icon = l.icon;
-                    return (
-                      <Link
-                        key={l.path}
-                        to={l.path}
-                        onClick={handleNavClick}
-                        className={cn(
-                          "flex items-center gap-3 text-base py-3 transition-colors",
-                          isActive(l.path)
-                            ? "text-foreground font-semibold"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {l.label}
-                      </Link>
-                    );
-                  })}
-
-                  <div className="my-2 border-t border-border/50" />
-
-                  {/* Tools and Others */}
-                  {[
-                    navLinks.find(l => l.path === '/tools'),
-                    navLinks.find(l => l.path === '/hablemos'),
-                    ...(isInWaitlist ? [navLinks.find(l => l.path === '/buildlog')] : [])
-                  ].filter(Boolean).map((link) => {
-                    const l = link!;
-                    const Icon = l.icon;
-                    return (
-                      <Link
-                        key={l.path}
-                        to={l.path}
-                        onClick={handleNavClick}
-                        className={cn(
-                          "flex items-center gap-3 text-base py-3 transition-colors",
-                          isActive(l.path)
-                            ? "text-foreground font-semibold"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {l.label}
-                        {l.isNew && (
-                          <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold bg-primary text-primary-foreground rounded-full">
-                            New
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
+                  {(() => {
+                    let lastSection = '';
+                    return mobileMenuItems.map((item) => {
+                      const showSeparator = lastSection && item.section !== lastSection;
+                      lastSection = item.section;
+                      const Icon = item.icon;
+                      const badge = badgeMap[item.key] || 0;
+                      return (
+                        <div key={item.path}>
+                          {showSeparator && <Separator className="my-2 bg-border/50" />}
+                          <Link
+                            to={item.path}
+                            onClick={handleNavClick}
+                            className={cn(
+                              "flex items-center gap-3 text-base py-3 transition-colors",
+                              isActive(item.path)
+                                ? "text-foreground font-semibold"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            <Icon className="h-4 w-4" />
+                            <span className="flex-1">{resolveLabel(item.labelKey)}</span>
+                            {badge > 0 && (
+                              <Badge variant="secondary" className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-[10px] font-bold border-none">
+                                {badge}
+                              </Badge>
+                            )}
+                          </Link>
+                        </div>
+                      );
+                    });
+                  })()}
 
                   {/* Admin Link - Only visible for admins */}
                   {isAdmin && (
                     <>
-                      <div className="my-2 border-t border-border/50" />
+                      <Separator className="my-2 bg-border/50" />
                       <Link
                         to="/admin"
                         onClick={handleNavClick}
                         className={cn(
-                          "flex items-center gap-2 text-base py-3 transition-colors",
+                          "flex items-center gap-3 text-base py-3 transition-colors",
                           isActive('/admin')
                             ? "text-foreground font-semibold"
                             : "text-muted-foreground hover:text-foreground"
