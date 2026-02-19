@@ -92,7 +92,7 @@ export function AuthenticatedHeader({
   // Include all Sidebar links here so the header can resolve the title/icon
   const navLinks: { path: string; label: string; icon: typeof User; premium: boolean; isNew?: boolean }[] = [
     { path: '/home', label: t.navigation.home, icon: LayoutDashboard, premium: false },
-    { path: '/notifications', label: t.navigation.home, icon: Menu, premium: false },
+    { path: '/notifications', label: (t.navigation as any).notifications || 'Notifications', icon: Menu, premium: false },
     { path: '/me', label: t.navigation.myProfile, icon: User, premium: false },
     { path: '/apps', label: t.navigation.myApps, icon: Rocket, premium: false },
     { path: '/ideas', label: t.navigation.myIdeas, icon: Lightbulb, premium: false },
@@ -148,16 +148,32 @@ export function AuthenticatedHeader({
             </div>
           ) : (
             <>
-              <Link to="/home" className="flex items-center shrink-0">
-                <img 
-                  src={vibecodersLogo} 
-                  alt="Vibecoders" 
-                  className="h-10 w-10 rounded-full border-2 border-border hover:border-primary transition-colors"
-                />
-              </Link>
-              <div className="flex ml-2">
-                <GlobalShareButton showText={false} className="h-8 w-8" />
-              </div>
+           {(() => {
+                const activeLink = navLinks.find(link => isActive(link.path));
+                const Icon = activeLink?.icon;
+                if (activeLink && location.pathname !== '/home') {
+                  return (
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {Icon && <Icon className="h-4 w-4 text-primary shrink-0" />}
+                      <span className="font-semibold text-foreground truncate text-sm">{activeLink.label}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <>
+                    <Link to="/home" className="flex items-center shrink-0">
+                      <img 
+                        src={vibecodersLogo} 
+                        alt="Vibecoders" 
+                        className="h-10 w-10 rounded-full border-2 border-border hover:border-primary transition-colors"
+                      />
+                    </Link>
+                    <div className="flex ml-2">
+                      <GlobalShareButton showText={false} className="h-8 w-8" />
+                    </div>
+                  </>
+                );
+              })()}
             </>
           )}
         </div>

@@ -1,15 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToolsStack, getCategories } from '@/hooks/useToolsStack';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ToolCard } from '@/components/stack/ToolCard';
 import { ToolCardSkeleton } from '@/components/stack/ToolCardSkeleton';
 import { cn } from '@/lib/utils';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
+import { Wrench } from 'lucide-react';
 
 export default function Tools() {
   const { data: tools, isLoading, error } = useToolsStack();
   const t = useTranslation('tools');
+  const tCommon = useTranslation('common');
   const tErrors = useTranslation('errors');
   const [activeCategory, setActiveCategory] = useState('Todos');
+  const { setHeaderContent } = usePageHeader();
+
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex items-center gap-2 min-w-0">
+        <Wrench className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground truncate">{tCommon.navigation.tools}</span>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
 
   // Filter only active tools for public view
   const activeTools = tools?.filter(t => t.is_active) || [];
@@ -21,20 +35,8 @@ export default function Tools() {
 
   return (
     <main className="flex-1">
-      {/* Header */}
-      <section className="py-16 md:py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
-            {t.title}
-          </h1>
-          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t.subtitle}
-          </p>
-        </div>
-      </section>
-
       {/* Category Filters */}
-      <section className="px-4 pb-8">
+      <section className="px-4 pt-6 pb-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-wrap gap-2 justify-center">
             {categories.map((category) => (

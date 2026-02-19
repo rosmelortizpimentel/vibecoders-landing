@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { MessageCircle, ExternalLink, ChevronLeft } from 'lucide-react';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { ChatMessage } from '@/components/feedback/ChatMessage';
 import { ChatInput } from '@/components/feedback/ChatInput';
 import { useFeedback } from '@/hooks/useFeedback';
@@ -30,6 +31,18 @@ export default function Feedback() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const t = useTranslation('feedback');
+  const tCommon = useTranslation('common');
+  const { setHeaderContent } = usePageHeader();
+
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex items-center gap-2 min-w-0">
+        <MessageCircle className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground truncate">{tCommon.navigation.feedback}</span>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
 
   const isLoading = threadLoading || messagesLoading;
 
@@ -70,30 +83,6 @@ export default function Feedback() {
 
       
       <main className="flex-1 flex flex-col min-h-0 max-w-4xl mx-auto w-full md:p-4">
-        {/* Header */}
-        <div className="p-4 border-b border-border bg-background/50 backdrop-blur-sm flex items-center gap-3">
-          {isMobile && (
-            <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-              <Link to="/me">
-                <ChevronLeft className="h-5 w-5" />
-              </Link>
-            </Button>
-          )}
-          <div className="flex-1">
-            <p className="text-sm text-muted-foreground">{t.subtitle || 'Danos tu opinión o solicita ayuda'}</p>
-          </div>
-          {profile?.username && (
-            <a
-              href={`/@${profile.username}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {t.t('viewProfile')}
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          )}
-        </div>
 
         {/* Messages */}
         <div className="flex-1 min-h-0 overflow-y-auto p-4" ref={scrollRef}>

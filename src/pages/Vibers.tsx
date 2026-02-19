@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   Search, 
@@ -7,6 +7,7 @@ import {
   Rocket,
   ShieldAlert
 } from 'lucide-react';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFollowAction } from '@/hooks/useFollowAction';
@@ -53,9 +54,21 @@ interface ProfileSummary {
 export default function Vibers() {
   const { stats, isLoading } = useDashboardStats();
   const { t } = useTranslation('vibers');
+  const tCommon = useTranslation('common');
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'followers' | 'following'>('followers');
+  const { setHeaderContent } = usePageHeader();
+
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex items-center gap-2 min-w-0">
+        <Users className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground truncate">{tCommon.navigation.vibers}</span>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
 
   // Removed filterUsers function to use direct filtering in useMemo
 
@@ -81,13 +94,8 @@ export default function Vibers() {
 
   return (
     <div className="flex-1 space-y-8 w-full max-w-5xl mx-auto pb-24 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-muted-foreground text-sm">
-            {t('subtitle')}
-          </p>
-        </div>
+      {/* Search */}
+      <div className="flex justify-end">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
@@ -98,6 +106,7 @@ export default function Vibers() {
           />
         </div>
       </div>
+
 
       {/* Grid Content */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'followers' | 'following')} className="w-full">

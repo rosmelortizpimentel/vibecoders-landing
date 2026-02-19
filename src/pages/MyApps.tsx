@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApps } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -7,7 +7,8 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Loader2, Sparkles } from 'lucide-react';
+import { Plus, Loader2, Sparkles, Rocket } from 'lucide-react';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { ProUpgradeModal } from '@/components/pro/ProUpgradeModal';
 import { toast } from 'sonner';
 import {
@@ -41,8 +42,20 @@ export default function MyApps() {
   const appsHook = useApps();
   const { apps, loading, createApp, updateApp, deleteApp, reorderApps, verifyApp, refetch } = appsHook;
   const t = useTranslation('apps');
+  const tCommon = useTranslation('common');
   const { getFlag } = useFeatureFlags();
   const { tier } = useSubscription();
+  const { setHeaderContent } = usePageHeader();
+
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex items-center gap-2 min-w-0">
+        <Rocket className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground truncate">{tCommon.navigation.myApps}</span>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
 
   const [isUrlInputOpen, setIsUrlInputOpen] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
@@ -106,7 +119,7 @@ export default function MyApps() {
 
   return (
     <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-3xl mx-auto">
-      <p className="text-sm text-muted-foreground mb-6">{apps.length > 0 ? t.t('appsHint') : t.noAppsHint}</p>
+      
 
       <div className="mb-6">
         {!isUrlInputOpen ? (
