@@ -1121,6 +1121,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          is_hidden: boolean
           likes_count: number
           linked_card_id: string | null
           owner_response: string | null
@@ -1136,6 +1137,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          is_hidden?: boolean
           likes_count?: number
           linked_card_id?: string | null
           owner_response?: string | null
@@ -1151,6 +1153,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          is_hidden?: boolean
           likes_count?: number
           linked_card_id?: string | null
           owner_response?: string | null
