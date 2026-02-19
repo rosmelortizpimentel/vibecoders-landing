@@ -374,6 +374,13 @@ export default function RoadmapEditor() {
     }
   }, [isMobile, roadmap.lanes.length]);
 
+  // Auto-initialize roadmap if no settings exist
+  useEffect(() => {
+    if (!roadmap.settings && !roadmap.loading && app?.is_verified) {
+      roadmap.initializeRoadmap().catch(() => {});
+    }
+  }, [roadmap.settings, roadmap.loading, app?.is_verified]);
+
   if (authLoading || appLoading || roadmap.loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -406,24 +413,8 @@ export default function RoadmapEditor() {
 
   if (!roadmap.settings) {
     return (
-      <div className="text-center py-20 space-y-4">
-        <h2 className="text-xl font-semibold">{t('editor.initialize')}</h2>
-        <p className="text-muted-foreground text-sm">{t('editor.initializeDesc')}</p>
-        <Button onClick={async () => {
-          try {
-            await roadmap.initializeRoadmap();
-            toast.success('Roadmap initialized!');
-          } catch (err) {
-            toast.error('Error initializing roadmap');
-          }
-        }}>
-          {t('editor.initialize')}
-        </Button>
-        <div>
-          <Button variant="ghost" onClick={() => navigate('/me/apps')}>
-            <ArrowLeft className="w-4 h-4 mr-2" /> {t('editor.backToApps')}
-          </Button>
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
