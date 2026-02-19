@@ -64,8 +64,9 @@ export default function MyAppHub() {
   }, [app?.user_id]);
 
   const appSlug = (app?.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const publicRoadmapPath = ownerUsername ? `/@${ownerUsername}/${appSlug}/roadmap` : null;
-  const publicFeedbackPath = ownerUsername ? `/@${ownerUsername}/${appSlug}/feedback` : null;
+  const publicBasePath = `https://${appSlug}.vibecoders.la`;
+  const publicRoadmapPath = roadmap.settings?.is_public ? `${publicBasePath}/roadmap` : null;
+  const publicFeedbackPath = roadmap.settings?.is_feedback_public ? `${publicBasePath}/feedback` : null;
 
   const activeTab: TabId = useMemo(() => {
     if (location.pathname.endsWith('/roadmap')) return 'roadmap';
@@ -206,36 +207,7 @@ export default function MyAppHub() {
     if (!isRoadmapTab && !isFeedbackTab) return null;
 
     return (
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full md:max-w-[90%] mx-auto mb-4 px-1 gap-3">
-        {/* Left: Status indicators */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Roadmap visibility indicator */}
-          <span className={cn("text-xs font-medium flex items-center gap-1.5", roadmap.settings.is_public ? "text-primary" : "text-muted-foreground")}>
-            <span className={cn("w-2 h-2 rounded-full", roadmap.settings.is_public ? "bg-primary" : "bg-muted-foreground/40")} />
-            Roadmap {roadmap.settings.is_public ? '' : '(off)'}
-          </span>
-
-          <Separator orientation="vertical" className="h-4 hidden sm:block" />
-
-          {/* Feedback visibility indicator */}
-          <span className={cn("text-xs font-medium flex items-center gap-1.5", roadmap.settings.is_feedback_public ? "text-primary" : "text-muted-foreground")}>
-            <span className={cn("w-2 h-2 rounded-full", roadmap.settings.is_feedback_public ? "bg-primary" : "bg-muted-foreground/40")} />
-            Feedback {roadmap.settings.is_feedback_public ? '' : '(off)'}
-          </span>
-
-          {/* Auth mode inline indicator when feedback is public */}
-          {roadmap.settings.is_feedback_public && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium flex items-center gap-1">
-              {(roadmap.settings as any).feedback_auth_mode === 'authenticated' 
-                ? <><Lock className="w-3 h-3" /> Login</>
-                : <><User className="w-3 h-3" /> Anon</>
-              }
-            </span>
-          )}
-        </div>
-
-        {/* Right: Action buttons */}
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end w-full md:max-w-[90%] mx-auto mb-4 px-1 gap-2">
           {isRoadmapTab && (
             <Button
               variant="outline"
@@ -258,24 +230,25 @@ export default function MyAppHub() {
             <span className="hidden sm:inline">{tR.t('editor.settings')}</span>
           </Button>
 
-          {/* View Public links */}
-          {isRoadmapTab && roadmap.settings.is_public && publicRoadmapPath && (
+          {/* Independent preview links */}
+          {publicRoadmapPath && (
             <a href={publicRoadmapPath} target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
-                <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{tR.t('editor.viewPublic')}</span>
+                <Map className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Roadmap</span>
+                <ExternalLink className="w-3 h-3" />
               </Button>
             </a>
           )}
-          {isFeedbackTab && roadmap.settings.is_feedback_public && publicFeedbackPath && (
+          {publicFeedbackPath && (
             <a href={publicFeedbackPath} target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
-                <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{tR.t('editor.viewPublic')}</span>
+                <MessageSquare className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Feedback</span>
+                <ExternalLink className="w-3 h-3" />
               </Button>
             </a>
           )}
-        </div>
       </div>
     );
   };
