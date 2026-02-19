@@ -78,7 +78,9 @@
     "confirmCompleteTitle": "Marcar como concluída?",
     "confirmCompleteMessage": "Esta ideia será movida para a lista de concluídas.",
     "confirmReactivateTitle": "Reativar ideia?",
-    "confirmReactivateMessage": "Esta ideia voltará para a lista de pendentes."
+    "confirmReactivateMessage": "Esta ideia voltará para a lista de pendentes.",
+    "edit": "Editar",
+    "daysAgo": "Há"
   },
   "bannerCrop": {
     "title": "Ajustar Banner",

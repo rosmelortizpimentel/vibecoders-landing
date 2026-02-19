@@ -7,15 +7,14 @@ import {
   Lightbulb, 
   Search, 
   Loader2, 
-  ChevronLeft,
-  GripVertical,
   CheckCircle2,
-  Circle
+  Circle,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { IdeaDetail, Idea } from './ideas/IdeaDetail';
@@ -32,157 +31,20 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { differenceInDays } from 'date-fns';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 
-// Sortable idea item component
-function SortableIdeaItem({ 
-  idea, 
-  isSelected, 
-  onSelect, 
-  onDelete, 
-  onToggleDone,
-  getDaysTag 
-}: {
-  idea: Idea;
-  isSelected: boolean;
-  onSelect: (id: string) => void;
-  onDelete: (id: string) => void;
-  onToggleDone: (id: string, done: boolean) => void;
-  getDaysTag: (createdAt: string) => string;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: idea.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-
-  const isDone = idea.is_done || false;
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "group flex items-center gap-1 p-1.5 md:p-2 rounded-lg cursor-pointer transition-all",
-        isDragging && "opacity-50 z-50 shadow-lg",
-        isSelected 
-          ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90" 
-          : isDone
-            ? "bg-muted/40 border border-border/50 hover:bg-muted/60"
-            : "bg-background border border-border hover:bg-accent/50"
-      )}
-    >
-      {/* Drag handle - only for pending */}
-      {!isDone && (
-        <button
-          className={cn(
-            "touch-none shrink-0 cursor-grab active:cursor-grabbing p-0.5",
-            isSelected ? "text-primary-foreground/50" : "text-muted-foreground/50"
-          )}
-          {...attributes}
-          {...listeners}
-        >
-          <GripVertical className="h-3.5 w-3.5" />
-        </button>
-      )}
-
-      {/* Done toggle */}
-      <button
-        className={cn(
-          "shrink-0 p-0.5",
-          isSelected ? "text-primary-foreground/70 hover:text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleDone(idea.id, !isDone);
-        }}
-      >
-        {isDone ? (
-          <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-        ) : (
-          <Circle className="h-3.5 w-3.5" />
-        )}
-      </button>
-
-      {/* Title + click area */}
-      <div className="flex-1 min-w-0 flex items-center gap-1.5" onClick={() => onSelect(idea.id)}>
-        <h4 className={cn(
-          "font-medium line-clamp-1 text-xs flex-1",
-          isDone && !isSelected && "line-through opacity-60"
-        )}>
-          {idea.title}
-        </h4>
-
-        {/* Age tag */}
-        {idea.created_at && (
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "shrink-0 text-[9px] px-1 py-0 h-4 font-normal",
-              isSelected ? "border-primary-foreground/30 text-primary-foreground/70" : "border-border text-muted-foreground"
-            )}
-          >
-            {getDaysTag(idea.created_at)}
-          </Badge>
-        )}
-
-        {isDone && (
-          <Badge 
-            variant="secondary" 
-            className={cn(
-              "shrink-0 text-[9px] px-1 py-0 h-4 bg-primary/10 text-primary border-0",
-              isSelected && "bg-primary-foreground/20 text-primary-foreground/70"
-            )}
-          >
-            ✓
-          </Badge>
-        )}
-      </div>
-
-      {/* Delete */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn(
-          "h-5 w-5 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity",
-          isSelected 
-            ? "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/20" 
-            : "text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(idea.id);
-        }}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-      </Button>
-    </div>
-  );
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/#{1,6}\s+/g, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    .replace(/!\[.*?\]\(.+?\)/g, '');
 }
 
 interface IdeasTabProps {
@@ -208,14 +70,7 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
 
-  // Confirmation for toggle done
   const [pendingToggle, setPendingToggle] = useState<{ id: string; newDone: boolean } | null>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
 
   const getDaysTag = useCallback((createdAt: string): string => {
     const days = differenceInDays(new Date(), new Date(createdAt));
@@ -223,7 +78,6 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
     return `${days}d`;
   }, [t]);
 
-  // Fetch ideas
   useEffect(() => {
     const fetchIdeas = async () => {
       try {
@@ -279,9 +133,10 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
   const pendingFilteredIdeas = filteredIdeas.filter(i => !i.is_done);
   const doneFilteredIdeas = filteredIdeas.filter(i => i.is_done);
 
-  // Count totals (unfiltered)
   const pendingCount = ideas.filter(i => !i.is_done).length;
   const doneCount = ideas.filter(i => i.is_done).length;
+
+  const showDetail = selectedID !== null;
 
   const handleSelectIdea = (id: string | null) => {
     if (selectedID === id) return;
@@ -290,7 +145,6 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
       setShowUnsavedDialog(true);
     } else {
       setSelectedID(id);
-      // Update URL
       if (id === null) {
         navigate('/ideas', { replace: true });
       } else if (id === 'new') {
@@ -305,7 +159,6 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
     setSelectedID(pendingID);
     setIsDetailDirty(false);
     setShowUnsavedDialog(false);
-    // Update URL
     if (pendingID === null) {
       navigate('/ideas', { replace: true });
     } else if (pendingID === 'new') {
@@ -349,38 +202,6 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
       console.error('Error toggling done:', error);
       setIdeas(prev => prev.map(i => i.id === id ? { ...i, is_done: !done } : i));
       toast.error(t('error'));
-    }
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const pendingIdeas = filteredIdeas.filter(i => !i.is_done);
-    const oldIndex = pendingIdeas.findIndex(i => i.id === active.id);
-    const newIndex = pendingIdeas.findIndex(i => i.id === over.id);
-    
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    const reordered = arrayMove(pendingIdeas, oldIndex, newIndex);
-    
-    const updatedIdeas = ideas.map(idea => {
-      const idx = reordered.findIndex(r => r.id === idea.id);
-      if (idx !== -1) return { ...idea, display_order: idx };
-      return idea;
-    });
-    setIdeas(updatedIdeas);
-
-    try {
-      for (let i = 0; i < reordered.length; i++) {
-        await supabase
-          .from('user_ideas')
-          .update({ display_order: i } as Record<string, unknown>)
-          .eq('id', reordered[i].id);
-      }
-    } catch (error) {
-      console.error('Error updating order:', error);
-      await refetchIdeas();
     }
   };
 
@@ -481,8 +302,40 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
 
   const displayedIdeas = activeTab === 'pending' ? pendingFilteredIdeas : doneFilteredIdeas;
 
+  // If detail view is active (editing an idea or creating new)
+  if (showDetail) {
+    return (
+      <div className="h-full">
+        {/* Unsaved changes dialog */}
+        <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('ideas.unsavedChangesTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('ideas.unsavedChangesMessage')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={cancelNavigation}>{t('ideas.keepEditing')}</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmNavigation}>{t('ideas.discard')}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <IdeaDetail 
+          key={selectedID}
+          idea={selectedIdea} 
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onCancel={() => handleSelectIdea(null)}
+          onDirtyChange={setIsDetailDirty}
+          isSaving={isSaving}
+        />
+      </div>
+    );
+  }
+
+  // Grid view
   return (
-    <div className="h-full">
+    <div className="h-full space-y-3">
       {/* Unsaved changes dialog */}
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <AlertDialogContent>
@@ -538,140 +391,121 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="grid md:grid-cols-12 gap-4 md:gap-6 h-full">
-        {/* LEFT COLUMN: List */}
-        <div className={cn(
-          "md:col-span-4 lg:col-span-3 flex flex-col gap-2 h-full",
-          isMobile && selectedID ? "hidden" : "flex"
-        )}>
-          {/* Search + Create */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('ideas.search')} 
-                className="pl-9 h-9 text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Button size="icon" onClick={handleCreateNew} className="h-9 w-9 shrink-0 rounded-full">
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pending' | 'done')} className="shrink-0">
-            <TabsList className="w-full h-8">
-              <TabsTrigger value="pending" className="flex-1 text-xs h-7">
-                {t('ideas.tabPending')} ({pendingCount})
-              </TabsTrigger>
-              <TabsTrigger value="done" className="flex-1 text-xs h-7">
-                {t('ideas.tabCompleted')} ({doneCount})
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-
-          <ScrollArea className="flex-1 -mx-1 px-1">
-            <div className="space-y-1">
-              {selectedID === 'new' && activeTab === 'pending' && (
-                <div className="p-1.5 md:p-2 rounded-lg border cursor-pointer bg-primary/5 border-primary">
-                  <div className="font-medium text-primary text-xs">{t('ideas.newIdeaTitle')}</div>
-                </div>
-              )}
-              
-              {displayedIdeas.length === 0 && searchQuery && (
-                <div className="text-center py-6 text-muted-foreground text-xs">
-                  {t('ideas.noIdeasMessage')}
-                </div>
-              )}
-
-              {activeTab === 'pending' ? (
-                <DndContext
-                  sensors={sensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleDragEnd}
-                >
-                  <SortableContext
-                    items={pendingFilteredIdeas.map(i => i.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {pendingFilteredIdeas.map(idea => (
-                      <SortableIdeaItem
-                        key={idea.id}
-                        idea={idea}
-                        isSelected={selectedID === idea.id}
-                        onSelect={handleSelectIdea}
-                        onDelete={openDeleteDialog}
-                        onToggleDone={requestToggleDone}
-                        getDaysTag={getDaysTag}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
-              ) : (
-                doneFilteredIdeas.map(idea => (
-                  <SortableIdeaItem
-                    key={idea.id}
-                    idea={idea}
-                    isSelected={selectedID === idea.id}
-                    onSelect={handleSelectIdea}
-                    onDelete={openDeleteDialog}
-                    onToggleDone={requestToggleDone}
-                    getDaysTag={getDaysTag}
-                  />
-                ))
-              )}
-
-              {displayedIdeas.length === 0 && !searchQuery && ideas.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-8 text-center space-y-2 opacity-60">
-                  <Lightbulb className="h-8 w-8 text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground">{t('ideas.noIdeasMessage')}</p>
-                  <Button variant="outline" size="sm" onClick={handleCreateNew} className="text-xs h-7">
-                    {t('ideas.createNew')}
-                  </Button>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+      {/* Header: Search + Tabs + Create */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-xs">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t('ideas.search')} 
+            className="pl-9 h-9 text-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pending' | 'done')}>
+          <TabsList className="h-9">
+            <TabsTrigger value="pending" className="text-xs px-3">
+              {t('ideas.tabPending')} ({pendingCount})
+            </TabsTrigger>
+            <TabsTrigger value="done" className="text-xs px-3">
+              {t('ideas.tabCompleted')} ({doneCount})
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <Button size="icon" onClick={handleCreateNew} className="h-9 w-9 shrink-0 rounded-full">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
 
-        {/* RIGHT COLUMN: Detail */}
-        <div className={cn(
-          "md:col-span-8 lg:col-span-9 h-full",
-          isMobile && !selectedID ? "hidden" : "block"
-        )}>
-          {(selectedID || selectedIdea) ? (
-            <div className="h-full flex flex-col">
-              {isMobile && (
-                <Button 
-                  variant="ghost" 
-                  className="self-start mb-2 -ml-2 gap-1 text-muted-foreground text-xs"
-                  onClick={() => handleSelectIdea(null)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  {t('ideas.backToList')}
-                </Button>
-              )}
-              
-              <IdeaDetail 
-                key={selectedID}
-                idea={selectedIdea} 
-                onSave={handleSave}
-                onDelete={handleDelete}
-                onCancel={() => handleSelectIdea(null)}
-                onDirtyChange={setIsDetailDirty}
-                isSaving={isSaving}
-              />
-            </div>
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center text-muted-foreground border rounded-lg border-dashed bg-muted/20">
-              <Lightbulb className="h-12 w-12 mb-4 opacity-20" />
-              <p className="text-sm">{t('ideas.selectIdea')}</p>
-            </div>
+      {/* Grid */}
+      {displayedIdeas.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center space-y-3 opacity-60">
+          <Lightbulb className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">
+            {ideas.length === 0 ? t('ideas.noIdeasMessage') : t('ideas.noIdeasMessage')}
+          </p>
+          {ideas.length === 0 && (
+            <Button variant="outline" size="sm" onClick={handleCreateNew} className="text-xs h-7">
+              {t('ideas.createNew')}
+            </Button>
           )}
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {displayedIdeas.map(idea => {
+            const isDone = idea.is_done || false;
+            return (
+              <div
+                key={idea.id}
+                className={cn(
+                  "group relative rounded-xl border p-3 transition-all",
+                  isDone
+                    ? "bg-muted/30 border-border/50"
+                    : "bg-amber-50/50 dark:bg-amber-950/20 border-border hover:shadow-md"
+                )}
+              >
+                {/* Top row: toggle + title + days badge */}
+                <div className="flex items-start gap-1.5 mb-1.5">
+                  <button
+                    className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => requestToggleDone(idea.id, !isDone)}
+                  >
+                    {isDone ? (
+                      <CheckCircle2 className="h-4 w-4 text-primary" />
+                    ) : (
+                      <Circle className="h-4 w-4" />
+                    )}
+                  </button>
+                  <h3 className={cn(
+                    "flex-1 font-semibold text-sm leading-tight line-clamp-1",
+                    isDone && "line-through opacity-60"
+                  )}>
+                    {idea.title}
+                  </h3>
+                  {idea.created_at && (
+                    <Badge 
+                      variant="outline" 
+                      className="shrink-0 text-[9px] px-1.5 py-0 h-4 font-normal text-muted-foreground border-border"
+                    >
+                      {getDaysTag(idea.created_at)}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Description */}
+                {idea.description && (
+                  <p className={cn(
+                    "text-xs text-muted-foreground whitespace-pre-line line-clamp-5 leading-relaxed",
+                    isDone && "opacity-50"
+                  )}>
+                    {stripMarkdown(idea.description)}
+                  </p>
+                )}
+
+                {/* Hover actions */}
+                <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-accent"
+                    onClick={() => handleSelectIdea(idea.id)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 bg-background/80 backdrop-blur-sm border border-border shadow-sm hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => openDeleteDialog(idea.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

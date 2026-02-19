@@ -83,7 +83,9 @@
     "confirmCompleteTitle": "Mark as completed?",
     "confirmCompleteMessage": "This idea will be moved to the completed list.",
     "confirmReactivateTitle": "Reactivate idea?",
-    "confirmReactivateMessage": "This idea will be moved back to the pending list."
+    "confirmReactivateMessage": "This idea will be moved back to the pending list.",
+    "edit": "Edit",
+    "daysAgo": "ago"
   },
   "bannerCrop": {
     "title": "Adjust Banner",
