@@ -18,10 +18,11 @@ function getSubdomain(): string | null {
   return null;
 }
 
-// On load, if subdomain detected, rewrite URL to /roadmap/:slug
-const detectedSubdomain = getSubdomain();
-if (detectedSubdomain && !window.location.pathname.startsWith('/roadmap/')) {
-  window.history.replaceState(null, '', `/roadmap/${detectedSubdomain}`);
+// Export detected subdomain so PublicRoadmap can use it
+export const detectedSubdomain = getSubdomain();
+// On load, if subdomain detected and at root, redirect to /roadmap
+if (detectedSubdomain && window.location.pathname === '/') {
+  window.history.replaceState(null, '', '/roadmap');
 }
 // import Index from "./pages/Index";
 import NewLanding from "./pages/NewLanding";
@@ -77,8 +78,15 @@ const App = () => (
         <BrowserRouter>
         <Routes>
           {/* Public routes */}
+          {/* Subdomain mode: clean /roadmap and /feedback routes (no slug in URL) */}
+          {detectedSubdomain && (
+            <>
+              <Route path="/roadmap" element={<PublicRoadmap />} />
+              <Route path="/feedback" element={<PublicRoadmap />} />
+            </>
+          )}
           {/* Public routes - New Landing is now Official */}
-          <Route path="/" element={<NewLanding />} />
+          <Route path="/" element={detectedSubdomain ? <Navigate to="/roadmap" replace /> : <NewLanding />} />
           {/* Public roadmap & feedback: /@username/app-slug/roadmap */}
           <Route path="/:handle/:appSlug/roadmap" element={<PublicRoadmap />} />
           <Route path="/:handle/:appSlug/feedback" element={<PublicRoadmap />} />
