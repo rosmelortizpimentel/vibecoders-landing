@@ -1,38 +1,38 @@
 
-# Clean Subdomain URLs for Public Roadmap/Feedback
+
+# Fix: Stay on Public Roadmap After Login
 
 ## Problem
-When visiting `blanquiazul.vibecoders.la`, the current logic rewrites the URL to `/roadmap/blanquiazul`, and then tab switching appends more segments, resulting in ugly URLs like `/roadmap/blanquiazul/roadmap` or `/roadmap/blanquiazul/feedback`.
+When a user clicks "Continue with Google/LinkedIn" from the public roadmap (to like or submit feedback), after authentication they get redirected to `/me/profile` instead of staying on the roadmap page.
+
+## Root Cause
+The `useAuth` hook has a `SIGNED_IN` handler that checks for `localStorage.getItem('authReturnUrl')`. If not set, it defaults to redirecting to `/me/profile`. The `PublicRoadmap` component calls OAuth but never saves the return URL.
 
 ## Solution
-Make subdomain URLs clean and short:
-- `blanquiazul.vibecoders.la/` --> shows roadmap (default)
-- `blanquiazul.vibecoders.la/roadmap` --> roadmap tab
-- `blanquiazul.vibecoders.la/feedback` --> feedback tab
+In `PublicRoadmap.tsx`, save `window.location.href` to `localStorage` as `authReturnUrl` before initiating OAuth. The existing `useAuth` logic will then redirect back to the roadmap automatically.
 
-## Technical Steps
+---
 
-### 1. App.tsx - Change subdomain rewrite logic
-- Instead of rewriting to `/roadmap/blanquiazul`, rewrite to just `/roadmap` (or keep `/` as-is and let new routes handle it).
-- Export a global helper or use a simple global variable so `PublicRoadmap` can access the detected subdomain.
-- Add new routes for subdomain mode: `/roadmap` and `/feedback` (without slug param) that render `PublicRoadmap`.
-- On subdomain root (`/`), redirect to `/roadmap`.
+## Technical Details
 
-### 2. PublicRoadmap.tsx - Use subdomain as slug
-- Import/access the detected subdomain.
-- In the data-fetching logic, use the subdomain value as the app slug when no URL param is present.
-- Update `switchTab` to use clean paths (`/roadmap`, `/feedback`) when on a subdomain, instead of appending to a base path.
-- Update the initial `activeTab` detection to work with these clean paths.
+### File: `src/pages/PublicRoadmap.tsx`
 
-### Summary of URL behavior
+**Change the `handleOAuthLogin` function** (line ~379):
 
-| Access | URL shown |
-|---|---|
-| `blanquiazul.vibecoders.la` | Redirects to `blanquiazul.vibecoders.la/roadmap` |
-| Click "Feedback" tab | `blanquiazul.vibecoders.la/feedback` |
-| Click "Roadmap" tab | `blanquiazul.vibecoders.la/roadmap` |
-| Invalid subdomain | Redirects to `vibecoders.la` (existing logic) |
+Before:
+```tsx
+const handleOAuthLogin = async (provider: 'google' | 'linkedin_oidc') => {
+  await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.href } });
+};
+```
 
-### Files to modify
-- `src/App.tsx` -- subdomain rewrite + new routes
-- `src/pages/PublicRoadmap.tsx` -- subdomain-aware slug resolution + clean tab switching
+After:
+```tsx
+const handleOAuthLogin = async (provider: 'google' | 'linkedin_oidc') => {
+  localStorage.setItem('authReturnUrl', window.location.href);
+  await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.href } });
+};
+```
+
+This single line addition ensures the `useAuth` hook picks up the return URL and redirects the user back to the exact roadmap/feedback page they were on.
+
