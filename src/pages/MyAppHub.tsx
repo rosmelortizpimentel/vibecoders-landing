@@ -4,8 +4,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { useApps } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useStatuses } from '@/hooks/useStatuses';
+import { useRoadmap } from '@/hooks/useRoadmap';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VerificationBadge } from '@/components/me/VerificationBadge';
@@ -28,6 +30,7 @@ export default function MyAppHub() {
   const { apps, loading: appsLoading, updateApp, uploadAppLogo, verifyApp } = appsHook;
 
   const app = apps.find(a => a.id === appId);
+  const roadmap = useRoadmap(appId);
 
   const activeTab: TabId = useMemo(() => {
     if (location.pathname.endsWith('/roadmap')) return 'roadmap';
@@ -140,20 +143,36 @@ export default function MyAppHub() {
     <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-4xl mx-auto">
 
       {/* Tabs */}
-      <div className="flex w-full max-w-[90%] mx-auto overflow-x-auto gap-1 p-1.5 bg-muted/50 rounded-full scrollbar-hide mb-6">
-        {tabs.map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button key={tab.id} onClick={() => navigate(tab.path)} className={cn(
-              'flex items-center justify-center gap-2 px-3 sm:px-5 py-2 rounded-full text-sm transition-all duration-200 flex-1 sm:flex-none whitespace-nowrap',
-              isActive ? 'bg-background text-foreground shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'
-            )}>
-              <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
-              <span className="hidden min-[420px]:inline">{tab.label}</span>
-            </button>
-          );
-        })}
+      <div className="flex items-center w-full max-w-[90%] mx-auto gap-2 mb-6">
+        <div className="flex overflow-x-auto gap-1 p-1.5 bg-muted/50 rounded-full scrollbar-hide flex-1">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button key={tab.id} onClick={() => navigate(tab.path)} className={cn(
+                'flex items-center justify-center gap-2 px-3 sm:px-5 py-2 rounded-full text-sm transition-all duration-200 flex-1 sm:flex-none whitespace-nowrap',
+                isActive ? 'bg-background text-foreground shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'
+              )}>
+                <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
+                <span className="hidden min-[420px]:inline">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {activeTab === 'roadmap' && roadmap.settings && (
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Switch
+              checked={roadmap.settings.is_public}
+              onCheckedChange={async (v) => {
+                try { await roadmap.updateSettings({ is_public: v }); } catch {}
+              }}
+              className="h-5 w-9 [&>span]:h-4 [&>span]:w-4"
+            />
+            <span className={cn("text-xs font-medium hidden sm:inline", roadmap.settings.is_public ? "text-primary" : "text-muted-foreground")}>
+              {roadmap.settings.is_public ? 'Público' : 'Privado'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Content */}

@@ -233,9 +233,6 @@ export default function RoadmapEditor() {
   const [cardForm, setCardForm] = useState({ title: '', description: '' });
   const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', is_public: false, is_feedback_public: false, favicon_url: '' });
 
-  // View mode: roadmap or feedback
-  const [viewMode, setViewMode] = useState<'roadmap' | 'feedback'>('roadmap');
-
   // Feedback management
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
@@ -491,73 +488,8 @@ export default function RoadmapEditor() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate('/roadmap')}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          {app.logo_url && <img src={app.logo_url} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />}
-          <div className="min-w-0">
-            <h1 className="text-lg md:text-xl font-bold truncate">{app.name || 'App'}</h1>
-            <div className="flex items-center gap-2 mt-0.5">
-              <div className="flex items-center gap-1.5">
-                <Switch
-                  checked={settingsForm.is_public}
-                  onCheckedChange={async (v) => {
-                    setSettingsForm(prev => ({ ...prev, is_public: v }));
-                    try { await roadmap.updateSettings({ is_public: v }); } catch {}
-                  }}
-                  className="h-4 w-7 [&>span]:h-3 [&>span]:w-3"
-                />
-                <span className={cn("text-xs font-medium", settingsForm.is_public ? "text-primary" : "text-muted-foreground")}>
-                  {settingsForm.is_public ? t('editor.isPublic') : 'Privado'}
-                </span>
-              </div>
-              {settingsForm.is_public && ownerUsername && (
-                <a
-                  href={publicPath}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-primary hover:underline flex items-center gap-1"
-                >
-                  <ExternalLink className="w-3 h-3" />
-                  {t('editor.publicPage')}
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {/* Roadmap / Feedback toggle */}
-          <div className="flex bg-muted rounded-lg p-0.5">
-            <button
-              onClick={() => setViewMode('roadmap')}
-              className={cn('px-3 py-1.5 text-xs font-medium rounded-md transition-all', viewMode === 'roadmap' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
-            >
-              Roadmap
-            </button>
-            <button
-              onClick={() => setViewMode('feedback')}
-              className={cn('px-3 py-1.5 text-xs font-medium rounded-md transition-all', viewMode === 'feedback' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground')}
-            >
-              Feedback ({feedbackHook.feedback.length})
-            </button>
-          </div>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
-                <Paintbrush className="w-4 h-4" />
-                <span className="hidden sm:inline ml-1">{t('editor.branding')}</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="sm:hidden">{t('editor.branding')}</TooltipContent>
-          </Tooltip>
-        </div>
-      </div>
-
-      {/* Kanban Board - only in roadmap mode */}
-      {viewMode === 'roadmap' && <DndContext
+      {/* Kanban Board */}
+      <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
@@ -803,79 +735,7 @@ export default function RoadmapEditor() {
             </Card>
           ) : null}
         </DragOverlay>
-      </DndContext>}
-
-      {/* Feedback Panel - only in feedback mode */}
-      {viewMode === 'feedback' && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <MessageSquare className="w-5 h-5" />
-            Feedback ({feedbackHook.feedback.length})
-          </h2>
-          {feedbackHook.feedback.length === 0 && (
-            <p className="text-sm text-muted-foreground">{t('public.noFeedback')}</p>
-          )}
-          <div className="grid gap-3 grid-cols-1 md:grid-cols-2">
-            {feedbackHook.feedback.map(fb => (
-              <Card key={fb.id} className="border">
-                <CardContent className="p-3 md:p-4 space-y-2">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm">{fb.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{fb.description}</p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <Badge variant="outline" className="text-[10px]">
-                        {t(`public.status.${fb.status}`)}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">❤️ {fb.likes_count}</span>
-                    </div>
-                  </div>
-                  {fb.owner_response && (
-                    <div className="bg-muted/50 rounded p-2 text-xs">
-                      <span className="font-medium">{t('public.ownerResponse')}:</span> {fb.owner_response}
-                    </div>
-                  )}
-                  <div className="flex gap-1.5 flex-wrap pt-1">
-                    <Select
-                      value={fb.status}
-                      onValueChange={(v) => feedbackHook.updateFeedbackStatus(fb.id, v)}
-                    >
-                      <SelectTrigger className="h-7 text-xs w-24 sm:w-28">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {['new', 'reviewed', 'planned', 'in_progress', 'done', 'declined'].map(s => (
-                          <SelectItem key={s} value={s} className="text-xs">
-                            {t(`public.status.${s}`)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => {
-                      setRespondingTo(fb.id);
-                      setResponseText(fb.owner_response || '');
-                    }}>
-                      {t('public.reply')}
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => setLinkingFeedback(fb.id)}>
-                      <Link2 className="w-3 h-3" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="h-7 text-xs px-2 text-destructive hover:text-destructive" onClick={() => setDeletingFeedback(fb.id)}>
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                  {fb.linked_card_id && (
-                    <p className="text-[10px] text-primary">
-                      🔗 {roadmap.cards.find(c => c.id === fb.linked_card_id)?.title || 'Linked card'}
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      )}
+      </DndContext>
 
       {/* ===== MODALS ===== */}
 

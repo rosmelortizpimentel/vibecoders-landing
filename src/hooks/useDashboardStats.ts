@@ -31,6 +31,7 @@ interface DashboardStats {
   likesByApp: Record<string, { name: string, count: number }>;
   followers: ProfileSummary[];
   following: ProfileSummary[];
+  community: ProfileSummary[];
 }
 
 interface ProfileSummary {
@@ -150,9 +151,31 @@ export function useDashboardStats() {
       }));
 
       // Set isFollowing for followers (check if they are also in the following list)
+      const followingIds = new Set(following.map(f => f.id));
       followers.forEach(f => {
-        f.isFollowing = following.some(fg => fg.id === f.id);
+        f.isFollowing = followingIds.has(f.id);
       });
+
+      // Fetch community profiles (users not followed by current user)
+      const excludeIds = [user.id, ...followingIds];
+      const { data: communityData } = await supabase
+        .from('profiles')
+        .select('id, name, username, avatar_url, banner_url, tagline, apps(count)')
+        .not('id', 'in', `(${excludeIds.join(',')})`)
+        .not('username', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      const community: ProfileSummary[] = (communityData || []).map((p: any) => ({
+        id: p.id,
+        name: p.name || 'User',
+        username: p.username || 'unknown',
+        avatarUrl: p.avatar_url || undefined,
+        bannerUrl: p.banner_url || undefined,
+        tagline: p.tagline || undefined,
+        activeAppsCount: p.apps?.[0]?.count || 0,
+        isFollowing: false,
+      }));
 
       // Fetch user's apps
       const { data: userApps } = await supabase
@@ -263,6 +286,7 @@ export function useDashboardStats() {
         followingCount: following.length,
         followers,
         following,
+        community,
         clicksByApp,
         likesByApp,
         profileStrength: 0, // Will be set from profileCompletion
