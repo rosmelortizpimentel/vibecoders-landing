@@ -489,6 +489,13 @@ export default function PublicRoadmap() {
   }
 
   if (!app || !settings) {
+    // If accessed via subdomain and app doesn't exist, redirect to main domain
+    const hostname = window.location.hostname;
+    const isSubdomain = hostname.endsWith('vibecoders.la') && hostname !== 'vibecoders.la' && hostname !== 'www.vibecoders.la';
+    if (isSubdomain) {
+      window.location.href = 'https://vibecoders.la';
+      return null;
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <p className="text-gray-500">{l.notFound}</p>
