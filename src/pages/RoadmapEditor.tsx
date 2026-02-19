@@ -114,7 +114,7 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
   return (
     <div ref={setNodeRef} style={style}>
       <Card
-        className="cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow border group"
+        className="cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow border group bg-background"
         style={{ borderLeftColor: lane.color, borderLeftWidth: 3 }}
       >
         <CardContent className="p-3">
@@ -170,14 +170,16 @@ function SortableLaneWrapper({ lane, header, children }: { lane: RoadmapLane; he
 
   return (
     <div ref={setNodeRef} style={style} className="flex-shrink-0 w-72 flex flex-col group">
-      <div className="flex items-center gap-1 mb-3 px-1">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-          <GripVertical className="w-4 h-4 text-muted-foreground" />
+      <div className="bg-muted/60 rounded-xl p-3 flex flex-col flex-1">
+        <div className="flex items-center gap-1 mb-2 pb-2 border-b border-border/60">
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </div>
+          {header}
         </div>
-        {header}
-      </div>
-      <div className="flex-1">
-        {children}
+        <div className="flex-1">
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -190,8 +192,8 @@ function DroppableLane({ laneId, children }: { laneId: string; children: React.R
     <div
       ref={setNodeRef}
       className={cn(
-        'space-y-2 min-h-[200px] rounded-lg p-2 transition-colors',
-        isOver ? 'bg-primary/10 ring-2 ring-primary/20' : 'bg-muted/30'
+        'space-y-3 min-h-[200px] rounded-lg transition-colors',
+        isOver ? 'bg-primary/10 ring-2 ring-primary/20' : ''
       )}
     >
       {children}
@@ -503,7 +505,7 @@ export default function RoadmapEditor() {
         {/* Desktop: horizontal scroll with DnD */}
         <div className="hidden md:block">
           <SortableContext items={roadmap.lanes.map(l => `sortable-lane-${l.id}`)} strategy={horizontalListSortingStrategy}>
-            <div className="flex gap-4 overflow-x-auto pb-2 min-h-[40vh]">
+            <div className="flex gap-5 overflow-x-auto pb-2 min-h-[40vh]">
               {roadmap.lanes.map(lane => {
                 const laneCards = roadmap.cards
                   .filter(c => c.lane_id === lane.id)
