@@ -1,77 +1,38 @@
 
+# Clean Subdomain URLs for Public Roadmap/Feedback
 
-## Mejoras en Feedback Publico y Panel de Mantenimiento
+## Problem
+When visiting `blanquiazul.vibecoders.la`, the current logic rewrites the URL to `/roadmap/blanquiazul`, and then tab switching appends more segments, resulting in ugly URLs like `/roadmap/blanquiazul/roadmap` or `/roadmap/blanquiazul/feedback`.
 
-### 1. Idioma en pagina publica de feedback (PublicRoadmap.tsx)
+## Solution
+Make subdomain URLs clean and short:
+- `blanquiazul.vibecoders.la/` --> shows roadmap (default)
+- `blanquiazul.vibecoders.la/roadmap` --> roadmap tab
+- `blanquiazul.vibecoders.la/feedback` --> feedback tab
 
-**Problema**: El idioma del browser se aplica antes de que carguen los settings, pisando el `default_language` configurado.
+## Technical Steps
 
-**Solucion**: Inicializar `lang` como `'en'` sin aplicar browser language, y solo setear el idioma final cuando `default_language` llega de la DB. Si no hay `default_language`, entonces usar browser language como fallback. Actualmente el `useEffect` de browser language corre aunque `langResolved` sea false al inicio, y se aplica antes de que el fetch de settings complete.
+### 1. App.tsx - Change subdomain rewrite logic
+- Instead of rewriting to `/roadmap/blanquiazul`, rewrite to just `/roadmap` (or keep `/` as-is and let new routes handle it).
+- Export a global helper or use a simple global variable so `PublicRoadmap` can access the detected subdomain.
+- Add new routes for subdomain mode: `/roadmap` and `/feedback` (without slug param) that render `PublicRoadmap`.
+- On subdomain root (`/`), redirect to `/roadmap`.
 
-**Archivo**: `src/pages/PublicRoadmap.tsx`
-- Mover la deteccion del browser language al bloque del fetch de settings como fallback (solo si `default_language` no esta definido).
-- Eliminar el `useEffect` separado de deteccion de browser language.
+### 2. PublicRoadmap.tsx - Use subdomain as slug
+- Import/access the detected subdomain.
+- In the data-fetching logic, use the subdomain value as the app slug when no URL param is present.
+- Update `switchTab` to use clean paths (`/roadmap`, `/feedback`) when on a subdomain, instead of appending to a base path.
+- Update the initial `activeTab` detection to work with these clean paths.
 
----
+### Summary of URL behavior
 
-### 2. Attachments: imagenes como miniaturas, PDFs como icono de descarga (PublicRoadmap.tsx)
+| Access | URL shown |
+|---|---|
+| `blanquiazul.vibecoders.la` | Redirects to `blanquiazul.vibecoders.la/roadmap` |
+| Click "Feedback" tab | `blanquiazul.vibecoders.la/feedback` |
+| Click "Roadmap" tab | `blanquiazul.vibecoders.la/roadmap` |
+| Invalid subdomain | Redirects to `vibecoders.la` (existing logic) |
 
-**Problema actual**: Todos los attachments se muestran como links de texto con icono de clip.
-
-**Solucion**:
-- **Imagenes** (file_type starts with `image/`): Mostrar como miniaturas (thumbnails) de ~80px debajo de la descripcion.
-- **PDFs** (file_type = `application/pdf`): Mostrar con icono de descarga/PDF.
-- **Al hacer click en imagen**: Abrir un dialog/drawer fullscreen (mobile) o modal (desktop) con navegacion izquierda/derecha entre todas las imagenes del feedback item.
-
-**Componente nuevo**: `ImageGalleryDialog` dentro de `src/pages/PublicRoadmap.tsx` (inline, no necesita archivo separado).
-- Estado: `selectedFeedbackImages` (array de attachments de imagen) y `currentImageIndex`.
-- En mobile: usar `DialogContent` con `className="max-w-full h-full"` para fullscreen.
-- Botones de navegacion (ChevronLeft/ChevronRight) para recorrer imagenes.
-- Soporte de swipe en mobile via touch events.
-
----
-
-### 3. Panel de mantenimiento: filtro de estado + cambio de estado + bugs + switch de visibilidad (UnifiedFeedbackList.tsx)
-
-**3a. Filtro adicional de Estado**
-- Agregar un segundo `Select` para filtrar por status: `all`, `new`, `reviewed`, `planned`, `in_progress`, `done`, `declined`, `open`, `closed`.
-
-**3b. Cambio de estado desde el panel**
-- Cada item tendra un dropdown para cambiar su status.
-- Para items `public` (roadmap_feedback): actualizar `roadmap_feedback.status`.
-- Para items `beta`/`bug` (beta_feedback): actualizar `beta_feedback.status`.
-- Refrescar la lista despues del cambio.
-
-**3c. Registrar Bugs**
-- Agregar boton "Reportar Bug" que abre un dialog simple con titulo + descripcion.
-- Inserta en `beta_feedback` con `type: 'bug'` y el `app_id` actual.
-
-**3d. Switch de visibilidad publica**
-- Agregar columna `is_hidden` a `roadmap_feedback` (nueva migracion SQL).
-- Cada item publico tendra un switch (Eye/EyeOff) para ocultarlo del roadmap publico.
-- En `PublicRoadmap.tsx`, filtrar los feedback con `is_hidden = true`.
-
-**Nota sobre la columna `is_hidden`**: Se necesita agregar esta columna a la tabla `roadmap_feedback` via migracion SQL:
-```sql
-ALTER TABLE roadmap_feedback ADD COLUMN is_hidden boolean NOT NULL DEFAULT false;
-```
-
----
-
-### 4. Traducciones
-
-Agregar keys nuevas a los archivos de traduccion `src/i18n/{es,en}/apps.json`:
-- `hub.statusFilter`, `hub.allStatuses`, `hub.reportBug`, `hub.bugTitle`, `hub.bugDescription`, `hub.visibility`, `hub.hidden`, `hub.visible`
-
----
-
-### Archivos a modificar
-
-| Archivo | Cambios |
-|---------|---------|
-| `src/pages/PublicRoadmap.tsx` | Fix idioma, attachments como thumbnails/PDF icons, galeria de imagenes fullscreen |
-| `src/components/beta/UnifiedFeedbackList.tsx` | Filtro de estado, cambio de estado, boton de bugs, switch de visibilidad |
-| `src/i18n/es/apps.json` | Nuevas traducciones para feedback management |
-| `src/i18n/en/apps.json` | Nuevas traducciones para feedback management |
-| Migracion SQL | Agregar columna `is_hidden` a `roadmap_feedback` |
-
+### Files to modify
+- `src/App.tsx` -- subdomain rewrite + new routes
+- `src/pages/PublicRoadmap.tsx` -- subdomain-aware slug resolution + clean tab switching

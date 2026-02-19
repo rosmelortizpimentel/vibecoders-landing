@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { detectedSubdomain } from '@/App';
 import { useRoadmapFeedback, RoadmapLane, RoadmapCard, RoadmapSettings, RoadmapFeedback } from '@/hooks/useRoadmap';
 import { useFavicon } from '@/hooks/useFavicon';
 import { Button } from '@/components/ui/button';
@@ -198,10 +199,15 @@ export default function PublicRoadmap() {
   // Navigate to correct URL when switching tabs
   const switchTab = (tab: 'roadmap' | 'feedback') => {
     setActiveTab(tab);
-    const currentPath = window.location.pathname;
-    const basePath = currentPath.replace(/\/(roadmap|feedback)$/, '');
-    const newPath = `${basePath}/${tab}`;
-    window.history.replaceState(null, '', newPath);
+    if (detectedSubdomain) {
+      // Clean subdomain URLs: /roadmap or /feedback
+      window.history.replaceState(null, '', `/${tab}`);
+    } else {
+      const currentPath = window.location.pathname;
+      const basePath = currentPath.replace(/\/(roadmap|feedback)$/, '');
+      const newPath = `${basePath}/${tab}`;
+      window.history.replaceState(null, '', newPath);
+    }
   };
   const [isFeedbackPublic, setIsFeedbackPublic] = useState(false);
   const [authMode, setAuthMode] = useState<'anonymous' | 'authenticated'>('anonymous');
@@ -240,7 +246,7 @@ export default function PublicRoadmap() {
 
   // Fetch data
   useEffect(() => {
-    const slugToSearch = appSlugParam || appName;
+    const slugToSearch = appSlugParam || appName || detectedSubdomain;
     if (!slugToSearch) return;
     const username = handle?.startsWith('@') ? handle.slice(1) : handle;
 
