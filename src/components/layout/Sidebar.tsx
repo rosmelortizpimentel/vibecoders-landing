@@ -51,9 +51,20 @@ export function Sidebar() {
 
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', String(isCollapsed));
-    // Dispatch a custom event so layouts can adjust padding
     window.dispatchEvent(new CustomEvent('sidebar-resize', { detail: { isCollapsed } }));
   }, [isCollapsed]);
+
+  // Listen for external sidebar-collapse commands (e.g. from roadmap auto-collapse)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.external && typeof detail.isCollapsed === 'boolean') {
+        setIsCollapsed(detail.isCollapsed);
+      }
+    };
+    window.addEventListener('sidebar-collapse', handler);
+    return () => window.removeEventListener('sidebar-collapse', handler);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/me') {

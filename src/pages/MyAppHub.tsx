@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useApps } from '@/hooks/useApps';
@@ -38,6 +38,25 @@ export default function MyAppHub() {
     if (location.pathname.endsWith('/squad')) return 'squad';
     return 'info';
   }, [location.pathname]);
+
+  // Auto-collapse sidebar when entering roadmap, restore on leave
+  const prevTabRef = useRef<TabId>(activeTab);
+  const wasCollapsedRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const prev = prevTabRef.current;
+    prevTabRef.current = activeTab;
+
+    if (activeTab === 'roadmap' && prev !== 'roadmap') {
+      wasCollapsedRef.current = localStorage.getItem('sidebarCollapsed') === 'true';
+      localStorage.setItem('sidebarCollapsed', 'true');
+      window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { isCollapsed: true, external: true } }));
+    } else if (activeTab !== 'roadmap' && prev === 'roadmap') {
+      const restore = wasCollapsedRef.current;
+      localStorage.setItem('sidebarCollapsed', String(restore));
+      window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { isCollapsed: restore, external: true } }));
+    }
+  }, [activeTab]);
 
   const tabs: { id: TabId; label: string; icon: typeof Info; path: string }[] = [
     { id: 'info', label: t.t('hub.info'), icon: Info, path: `/apps/${appId}` },
@@ -140,7 +159,10 @@ export default function MyAppHub() {
   }
 
   return (
-    <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-4xl mx-auto">
+    <div className={cn(
+      "container px-3 sm:px-4 py-4 sm:py-6 flex-1 mx-auto transition-all",
+      activeTab === 'roadmap' ? "max-w-full" : "max-w-5xl"
+    )}>
 
       {/* Tabs */}
       <div className="flex items-center w-full max-w-[90%] mx-auto gap-2 mb-6">
