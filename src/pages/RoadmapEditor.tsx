@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { HexColorPicker } from 'react-colorful';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoadmap, useRoadmapFeedback, RoadmapLane, RoadmapCard } from '@/hooks/useRoadmap';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -19,6 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { FontSelector } from '@/components/me/FontSelector';
 import { ColorPicker } from '@/components/me/ColorPicker';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
@@ -120,11 +122,11 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
             <div className="flex items-start gap-2 flex-1 min-w-0" {...attributes} {...listeners}>
               <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
+                <p className="font-bold text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
                   {card.title}
                 </p>
                 {card.description && (
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
                 )}
                 {card.completed_at && (
                   <Badge variant="secondary" className="text-[10px] mt-1.5 h-5">
@@ -177,9 +179,9 @@ function SortableLaneWrapper({ lane, header, children }: { lane: RoadmapLane; he
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="flex-shrink-0 w-72 flex flex-col">
+    <div ref={setNodeRef} style={style} className="flex-shrink-0 w-72 flex flex-col group">
       <div className="flex items-center gap-1 mb-3 px-1">
-        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5">
+        <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
         {header}
@@ -303,12 +305,18 @@ export default function RoadmapEditor() {
       return;
     }
 
-    if (sourceLaneId === targetLaneId && overData?.type === 'card') {
-      const laneCards = roadmap.cards
-        .filter(c => c.lane_id === sourceLaneId)
-        .sort((a, b) => a.display_order - b.display_order);
-      const oldIndex = laneCards.findIndex(c => c.id === activeCardId);
-      if (oldIndex === targetIndex) return;
+    if (sourceLaneId === targetLaneId) {
+      if (overData?.type === 'card') {
+        const laneCards = roadmap.cards
+          .filter(c => c.lane_id === sourceLaneId)
+          .sort((a, b) => a.display_order - b.display_order);
+        const oldIndex = laneCards.findIndex(c => c.id === activeCardId);
+        if (oldIndex === targetIndex) return;
+      }
+      try {
+        await roadmap.moveCard(activeCardId, targetLaneId, targetIndex);
+      } catch { toast.error(t('editor.errorMovingCard')); }
+      return;
     }
 
     try {
@@ -511,8 +519,25 @@ export default function RoadmapEditor() {
                     header={
                       <div className="flex items-center justify-between flex-1">
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
-                          <h3 className="font-semibold text-sm">{lane.name}</h3>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="w-4 h-4 rounded-md border border-border shrink-0 cursor-pointer" style={{ backgroundColor: lane.color }} />
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-3" align="start">
+                              <HexColorPicker color={lane.color} onChange={(c) => roadmap.updateLane(lane.id, { color: c })} />
+                              <input
+                                className="mt-2 w-full text-xs bg-transparent border border-border rounded px-2 py-1 text-center font-mono"
+                                value={lane.color}
+                                onChange={(e) => roadmap.updateLane(lane.id, { color: e.target.value })}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <input
+                            className="font-semibold text-sm bg-transparent border-none outline-none focus:ring-1 focus:ring-primary rounded px-1 w-24"
+                            defaultValue={lane.name}
+                            onBlur={(e) => roadmap.updateLane(lane.id, { name: e.target.value })}
+                            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                          />
                           <span className="text-xs text-muted-foreground">({laneCards.length})</span>
                         </div>
                         <div className="flex items-center gap-0.5">
@@ -527,24 +552,14 @@ export default function RoadmapEditor() {
                           >
                             <Plus className="w-3.5 h-3.5" />
                           </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-7 w-7">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => {
-                                setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
-                                setEditingLane(lane);
-                              }}>
-                                <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
-                                <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            onClick={() => setDeletingLane(lane.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
                         </div>
                       </div>
                     }
@@ -566,19 +581,16 @@ export default function RoadmapEditor() {
                           />
                         ))}
                       </SortableContext>
-                      {laneCards.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-8">{t('editor.noCards')}</p>
-                      )}
                       <Button
                         variant="outline"
-                        size="sm"
-                        className="w-full text-xs text-muted-foreground border-dashed"
+                        size="icon"
+                        className="w-full h-7 text-muted-foreground border-dashed"
                         onClick={() => {
                           setCardForm({ title: '', description: '' });
                           setAddingCardToLane(lane.id);
                         }}
                       >
-                        <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
+                        <Plus className="w-3.5 h-3.5" />
                       </Button>
                     </DroppableLane>
                   </SortableLaneWrapper>
@@ -659,11 +671,11 @@ export default function RoadmapEditor() {
                           <CardContent className="p-3">
                             <div className="flex justify-between items-start gap-2">
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
+                                <p className="font-bold text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
                                   {card.title}
                                 </p>
                                 {card.description && (
-                                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
+                                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{card.description}</p>
                                 )}
                               </div>
                               <DropdownMenu>
@@ -691,19 +703,16 @@ export default function RoadmapEditor() {
                           </CardContent>
                         </Card>
                       ))}
-                      {laneCards.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-4">{t('editor.noCards')}</p>
-                      )}
                       <Button
                         variant="outline"
-                        size="sm"
-                        className="w-full text-xs text-muted-foreground border-dashed"
+                        size="icon"
+                        className="w-full h-7 text-muted-foreground border-dashed"
                         onClick={() => {
                           setCardForm({ title: '', description: '' });
                           setAddingCardToLane(lane.id);
                         }}
                       >
-                        <Plus className="w-3 h-3 mr-1" /> {t('editor.addCard')}
+                        <Plus className="w-3.5 h-3.5" />
                       </Button>
                     </div>
                   </CollapsibleContent>
