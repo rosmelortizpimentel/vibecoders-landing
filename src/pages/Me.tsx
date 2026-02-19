@@ -78,7 +78,7 @@ const Me = () => {
         <div className="flex gap-4 sm:gap-6">
           {/* Main content */}
           <div className={showPreview ? 'w-[60%]' : 'w-full max-w-full overflow-x-hidden'}>
-            <MeTabs />
+            <MeTabs onPreviewClick={() => setPreviewOpen(true)} username={profile?.username} />
             
             <div className={`mt-4 sm:mt-6 ${showMobilePreview ? 'pb-20' : ''}`}>
               {activeTab === 'profile' && (

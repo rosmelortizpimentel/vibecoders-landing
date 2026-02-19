@@ -139,15 +139,6 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
         )}
         style={{ fontFamily }}
       >
-      {/* App-style Header - Logo on the left */}
-      <div className="flex items-center justify-start px-4 py-2 bg-white border-b border-gray-100">
-        <img 
-          src={vibecodersLogo} 
-          alt="Vibecoders" 
-          className="h-10 w-10 rounded-full border-2 border-gray-200"
-        />
-      </div>
-
       {/* Banner + Avatar */}
       <div className="relative">
         {profile.banner_url ? (
