@@ -1,88 +1,86 @@
 
-
-## Refactorizar Ideas: Vista de Sticky Notes en Grid
+## Ideas: Drag-and-Drop en Grid + Header Responsivo Profesional
 
 ### Resumen
 
-Reemplazar el layout actual (lista lateral + detalle a la derecha) por un grid de cards estilo "sticky notes" que muestren titulo, descripcion (max 5 lineas, solo texto plano con saltos de linea), y un tag de antiguedad. Al pasar el mouse sobre cada card, aparecen botones de editar y eliminar. Al hacer clic en editar (o crear nueva), se navega a `/ideas/:id` donde se muestra el formulario de edicion. La vista por defecto `/ideas` muestra solo el grid.
+Tres mejoras principales en la seccion de Ideas:
+
+1. **Drag-and-drop en el grid de cards**: Las cards se pueden reordenar arrastrando. El cursor de arrastre (GripVertical) aparece al pasar el mouse.
+2. **Tabs con iconos profesionales**: Agregar iconos `Circle` y `CheckCircle2` a los tabs de Pendientes y Completadas, con color primario.
+3. **Busqueda responsiva en mobile**: En mobile, solo se muestra un icono de lupa. Al hacer clic, se expande el input de busqueda ocultando los tabs. Al cerrar (X), vuelve a los tabs.
 
 ---
 
-### Cambios por archivo
+### Cambios en `src/components/me/IdeasTab.tsx`
 
-#### 1. `src/components/me/IdeasTab.tsx` -- Refactorizacion completa
+#### 1. Drag-and-drop con @dnd-kit
 
-**Layout**: Reemplazar el grid de 2 columnas (lista + detalle) por una unica vista que alterna entre:
-- **Grid view** (ruta `/ideas`): Cards en grid responsive (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`)
-- **Detail view** (ruta `/ideas/:id` o `/ideas/new`): Formulario de edicion (componente `IdeaDetail` existente)
+- Importar `DndContext`, `closestCenter`, `PointerSensor`, `KeyboardSensor`, `useSensors`, `useSensor`, `DragEndEvent` de `@dnd-kit/core`.
+- Importar `SortableContext`, `rectSortingStrategy`, `useSortable`, `arrayMove` de `@dnd-kit/sortable`.
+- Importar `CSS` de `@dnd-kit/utilities`.
+- Importar `GripVertical` de `lucide-react`.
 
-**Card sticky note**:
-- Fondo suave tipo nota (`bg-amber-50/50 dark:bg-amber-950/20` o similar, sutil)
-- Borde fino `border border-border`
-- Rounded `rounded-xl`
-- Padding compacto `p-3`
-- Titulo en `font-semibold text-sm line-clamp-1`
-- Descripcion en `text-xs text-muted-foreground line-clamp-5 whitespace-pre-line` -- solo texto plano, se eliminan tags markdown/HTML
-- Tag de dias como `Badge` en la esquina superior derecha: "Hace 2d", "hoy"
-- Al hover: se muestran dos iconos (Pencil y Trash2) en la esquina inferior derecha con transicion de opacidad
-- El circulo de completar (CheckCircle2/Circle) se mantiene visible en la esquina superior izquierda
-- Cards completadas: fondo mas apagado, titulo con `line-through opacity-60`
+**Sensor config**: PointerSensor con `activationConstraint: { distance: 8 }` para evitar conflictos con clics.
 
-**Tabs y busqueda**: Se mantienen arriba del grid (Pendientes/Completadas tabs + search + boton crear).
+**Cada card** se envuelve con `useSortable` usando el `id` de la idea. El drag handle (GripVertical) aparece solo en hover, posicionado en la esquina superior izquierda, reemplazando el checkbox que se mueve ligeramente.
 
-**Drag and drop**: Se elimina el drag-and-drop para simplificar la vista de cards en grid (no tiene sentido visual arrastrar cards en un grid 2D).
+**onDragEnd**: Reordena el array local con `arrayMove` y persiste el nuevo `display_order` en Supabase para cada idea afectada.
 
-**Navegacion**:
-- Click en card -> no hace nada (solo hover muestra acciones)
-- Click en boton editar -> `navigate(/ideas/${id})`
-- Click en boton eliminar -> abre dialog de confirmacion (ya existente)
-- Click en boton "+" -> `navigate(/ideas/new)`
+**Nota**: Solo el tab "Pendientes" soporta drag-and-drop (las completadas no necesitan orden).
 
-#### 2. `src/components/me/ideas/IdeaDetail.tsx` -- Ajustes menores
+#### 2. Tabs con iconos
 
-- Reemplazar `MarkdownEditor` por un `Textarea` simple (solo texto plano con saltos de linea)
-- Agregar boton "Volver" arriba del formulario para regresar al grid (`navigate('/ideas')`)
+- Tab "Pendientes": icono `Circle` (tamano 14px) con `text-primary` antes del texto.
+- Tab "Completadas": icono `CheckCircle2` (tamano 14px) con `text-primary` antes del texto.
 
-#### 3. `src/i18n/es/profile.json`, `en/profile.json`, `fr/profile.json`, `pt/profile.json`
-- Agregar clave `ideas.edit`: "Editar" / "Edit" / "Modifier" / "Editar"
-- Agregar clave `ideas.daysAgo`: "Hace" (para el tag "Hace 2d")
-- Opcional: `ideas.noPendingIdeas`, `ideas.noCompletedIdeas` para estados vacios por tab
+#### 3. Header responsivo (mobile)
 
----
+Agregar estado `isSearchOpen: boolean`.
 
-### Detalle tecnico
+**En mobile** (`isMobile === true`):
+- Por defecto: se muestran los Tabs + boton de busqueda (icono Search) + boton crear (+).
+- Al hacer clic en el icono Search: los tabs se ocultan y aparece el Input de busqueda expandido con un boton X para cerrar.
+- Al hacer clic en X: se cierra el input, se limpia el query, y vuelven los tabs.
 
-**Estructura del card**:
+**En desktop**: Se mantiene el layout actual (input de busqueda siempre visible + tabs + boton crear).
+
+**Orden de elementos en el header**:
 
 ```text
-+-----------------------------+
-| [O] Titulo...     [Hace 2d] |
-|                              |
-| Descripcion en texto plano   |
-| con saltos de linea, maximo  |
-| 5 lineas visibles antes de   |
-| truncar con line-clamp-5     |
-|                              |
-|              [edit] [delete]  |  <-- solo visible en hover
-+-----------------------------+
+Desktop: [Tabs con iconos] [------Search input------] [+]
+Mobile default: [Tabs con iconos] [Search icon] [+]  
+Mobile search open: [X] [------Search input------] [+]
 ```
 
-**Limpieza de descripcion**: Para mostrar solo texto plano, se usara una funcion `stripMarkdown(text)` que elimine sintaxis markdown (`**`, `#`, `- `, etc.) y solo deje el texto con saltos de linea.
+#### 4. Card con drag handle
 
-**Grid responsive**:
-- Mobile: 1 columna
-- sm: 2 columnas
-- lg: 3 columnas
-- xl: 4 columnas
+Estructura actualizada de cada card:
 
-### Archivos a modificar (6 archivos)
+```text
++------------------------------------------+
+| [drag handle on hover] Titulo... [Xd tag] |
+|                                            |
+| Descripcion texto plano...                 |
+| max 5 lineas                               |
+|                                            |
+|   [checkbox]        [edit] [delete]        |  <-- hover
++------------------------------------------+
+```
+
+- El `GripVertical` aparece a la izquierda del titulo solo en hover, con `cursor-grab`.
+- El checkbox (toggle done) se mueve a la esquina inferior izquierda, visible en hover junto con edit/delete.
+
+### Persistencia del reorden
+
+Al soltar una card en nueva posicion:
+1. `arrayMove` en el estado local para feedback instantaneo.
+2. Loop por las ideas reordenadas y actualizar `display_order` en Supabase.
+3. En caso de error, revertir al estado anterior.
+
+---
+
+### Archivos a modificar (1 archivo)
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/me/IdeasTab.tsx` | Refactorizar a grid de cards sticky notes, eliminar drag-and-drop |
-| `src/components/me/ideas/IdeaDetail.tsx` | Textarea simple en vez de MarkdownEditor, boton volver |
-| `src/i18n/es/profile.json` | Agregar claves `ideas.edit`, `ideas.daysAgo` |
-| `src/i18n/en/profile.json` | Agregar claves `ideas.edit`, `ideas.daysAgo` |
-| `src/i18n/fr/profile.json` | Agregar claves `ideas.edit`, `ideas.daysAgo` |
-| `src/i18n/pt/profile.json` | Agregar claves `ideas.edit`, `ideas.daysAgo` |
-
+| `src/components/me/IdeasTab.tsx` | Drag-and-drop, header responsivo, tabs con iconos, drag handle en hover |
