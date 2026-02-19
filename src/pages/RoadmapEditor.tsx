@@ -238,6 +238,15 @@ export default function RoadmapEditor() {
   // Owner username for public URL
   const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
 
+  // Listen for branding open event from parent (MyAppHub toolbar)
+  useEffect(() => {
+    const handler = () => setShowSettings(true);
+    window.addEventListener('roadmap-open-branding', handler);
+    return () => window.removeEventListener('roadmap-open-branding', handler);
+  }, []);
+
+  const canAddLane = roadmap.lanes.length < 4;
+
   // DnD state
   const [activeCard, setActiveCard] = useState<RoadmapCard | null>(null);
   const sensors = useSensors(
@@ -587,17 +596,19 @@ export default function RoadmapEditor() {
                 );
               })}
               {/* Add Lane button at end of columns */}
-              <div className="flex-shrink-0 flex items-start pt-1">
-                <button
-                  className="w-10 h-10 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary hover:text-primary text-muted-foreground transition-colors"
-                  onClick={() => {
-                    setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
-                    setEditingLane({} as RoadmapLane);
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              {canAddLane && (
+                <div className="flex-shrink-0 flex items-start pt-1">
+                  <button
+                    className="w-10 h-10 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary hover:text-primary text-muted-foreground transition-colors"
+                    onClick={() => {
+                      setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
+                      setEditingLane({} as RoadmapLane);
+                    }}
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </SortableContext>
         </div>
@@ -711,16 +722,18 @@ export default function RoadmapEditor() {
             );
           })}
           {/* Mobile add lane button */}
-          <button
-            className="w-full h-10 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 hover:border-primary hover:text-primary text-muted-foreground transition-colors text-sm"
-            onClick={() => {
-              setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
-              setEditingLane({} as RoadmapLane);
-            }}
-          >
-            <Plus className="w-4 h-4" />
-            {t('editor.addLane')}
-          </button>
+          {canAddLane && (
+            <button
+              className="w-full h-10 rounded-xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center gap-2 hover:border-primary hover:text-primary text-muted-foreground transition-colors text-sm"
+              onClick={() => {
+                setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
+                setEditingLane({} as RoadmapLane);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              {t('editor.addLane')}
+            </button>
+          )}
         </div>
 
         {/* Drag Overlay */}
