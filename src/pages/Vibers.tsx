@@ -105,21 +105,21 @@ export default function Vibers() {
       {/* Tabs + Search in one row */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <TabsList className="bg-muted/50 p-1 rounded-xl border border-border/50 shrink-0">
-            <TabsTrigger value="followers" className="rounded-lg px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+          <TabsList className="bg-muted/50 p-1 rounded-xl border border-border/50 shrink-0 w-full sm:w-auto">
+            <TabsTrigger value="followers" className="rounded-lg px-2 sm:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none">
               {t('followersTab')}
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-none pointer-events-none px-1.5 py-0 h-5 text-[10px] font-bold">
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-none pointer-events-none px-1 sm:px-1.5 py-0 h-4 sm:h-5 text-[9px] sm:text-[10px] font-bold">
                 {isLoading ? '...' : (stats?.followersCount ?? 0)}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="following" className="rounded-lg px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
+            <TabsTrigger value="following" className="rounded-lg px-2 sm:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none">
               {t('followingTab')}
-              <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-500 border-none pointer-events-none px-1.5 py-0 h-5 text-[10px] font-bold">
+              <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-500 border-none pointer-events-none px-1 sm:px-1.5 py-0 h-4 sm:h-5 text-[9px] sm:text-[10px] font-bold">
                 {isLoading ? '...' : (stats?.followingCount ?? 0)}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="community" className="rounded-lg px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
-              {t('communityTab')}
+            <TabsTrigger value="community" className="rounded-lg px-2 sm:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1 sm:gap-2 text-xs sm:text-sm flex-1 sm:flex-none">
+              {t('allTab') || 'Todos'}
             </TabsTrigger>
           </TabsList>
           <div className="relative w-full sm:w-64 sm:ml-auto">
