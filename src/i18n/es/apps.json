@@ -26,6 +26,15 @@
     "betaFeedback": "Beta",
     "bugFeedback": "Bug",
     "allFeedback": "Todos",
-    "noFeedback": "No hay feedback todavía"
+    "noFeedback": "No hay feedback todavía",
+    "statusFilter": "Estado",
+    "allStatuses": "Todos los estados",
+    "reportBug": "Reportar Bug",
+    "bugDescription": "Descripción del Bug",
+    "bugDescriptionPh": "Describe el bug en detalle...",
+    "bugReported": "Bug reportado exitosamente",
+    "hidden": "Oculto",
+    "visible": "Visible",
+    "cancel": "Cancelar"
   }
 }
