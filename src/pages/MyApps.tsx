@@ -125,10 +125,12 @@ export default function MyApps() {
         {!isUrlInputOpen ? (
           <button
             onClick={() => {
+              if (scrapingAppId) return;
               if (tier === 'free' && apps.length >= 1) setShowProModal(true);
               else setIsUrlInputOpen(true);
             }}
-            className="w-full border border-dashed border-border rounded-lg h-14 hover:border-muted-foreground hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm font-medium"
+            disabled={!!scrapingAppId}
+            className="w-full border border-dashed border-border rounded-lg h-14 hover:border-muted-foreground hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50 disabled:pointer-events-none"
           >
             <Plus className="h-4 w-4" /> {t.addApp}
           </button>
@@ -136,7 +138,7 @@ export default function MyApps() {
           <div className="flex flex-col sm:flex-row gap-2 p-4 border border-border rounded-lg bg-background">
             <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={t.urlPlaceholder} className="flex-1" autoFocus onKeyDown={e => e.key === 'Enter' && handleCreate()} />
             <div className="flex gap-2">
-              <Button onClick={handleCreate} disabled={!newUrl.trim()} className="flex-1 sm:flex-none">{t.add}</Button>
+              <Button onClick={handleCreate} disabled={!newUrl.trim() || !!scrapingAppId} className="flex-1 sm:flex-none">{t.add}</Button>
               <Button variant="ghost" onClick={() => { setIsUrlInputOpen(false); setNewUrl(''); }} className="flex-1 sm:flex-none">{t.cancel}</Button>
             </div>
           </div>
@@ -145,7 +147,7 @@ export default function MyApps() {
 
       {scrapingAppId && (
         <div className="mb-6 p-4 bg-muted/50 border border-border rounded-xl flex items-center gap-4 animate-in fade-in">
-          <Sparkles className="w-5 h-5 text-muted-foreground animate-pulse" />
+          <Loader2 className="w-4 h-4 text-primary animate-spin" />
           <span className="text-sm text-muted-foreground">Analizando...</span>
         </div>
       )}
