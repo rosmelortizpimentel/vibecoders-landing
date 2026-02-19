@@ -64,9 +64,12 @@ export default function MyAppHub() {
   }, [app?.user_id]);
 
   const appSlug = (app?.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const publicBasePath = `https://${appSlug}.vibecoders.la`;
-  const publicRoadmapPath = roadmap.settings?.is_public ? `${publicBasePath}/roadmap` : null;
-  const publicFeedbackPath = roadmap.settings?.is_feedback_public ? `${publicBasePath}/feedback` : null;
+  const isProduction = window.location.hostname.endsWith('vibecoders.la');
+  const publicBasePath = isProduction
+    ? `https://${appSlug}.vibecoders.la`
+    : (ownerUsername ? `/@${ownerUsername}/${appSlug}` : null);
+  const publicRoadmapPath = roadmap.settings?.is_public && publicBasePath ? `${publicBasePath}/roadmap` : null;
+  const publicFeedbackPath = roadmap.settings?.is_feedback_public && publicBasePath ? `${publicBasePath}/feedback` : null;
 
   const activeTab: TabId = useMemo(() => {
     if (location.pathname.endsWith('/roadmap')) return 'roadmap';
