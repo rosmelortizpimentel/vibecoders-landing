@@ -445,24 +445,28 @@ export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
                 )}
               >
                 {/* Top row: toggle + title + days badge */}
-                <div className="flex items-start gap-1.5 mb-1.5">
+                <div className="flex items-start gap-2 mb-1.5">
                   <button
-                    className="shrink-0 mt-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                    className={cn(
+                      "shrink-0 mt-0.5 rounded-full border-2 w-5 h-5 flex items-center justify-center transition-all",
+                      isDone
+                        ? "border-primary bg-primary text-primary-foreground hover:bg-primary/80"
+                        : "border-muted-foreground/40 hover:border-primary hover:bg-primary/10"
+                    )}
                     onClick={() => requestToggleDone(idea.id, !isDone)}
+                    title={isDone ? t('ideas.markPending') : t('ideas.markDone')}
                   >
-                    {isDone ? (
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                    ) : (
-                      <Circle className="h-4 w-4" />
+                    {isDone && (
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="20 6 9 17 4 12"/></svg>
                     )}
                   </button>
                   <h3 className={cn(
-                    "flex-1 font-semibold text-sm leading-tight line-clamp-1",
+                    "flex-1 font-bold text-xs leading-tight line-clamp-1",
                     isDone && "line-through opacity-60"
                   )}>
                     {idea.title}
                   </h3>
-                  {idea.created_at && (
+                  {idea.created_at && !isDone && (
                     <Badge 
                       variant="outline" 
                       className="shrink-0 text-[9px] px-1.5 py-0 h-4 font-normal text-muted-foreground border-border"
