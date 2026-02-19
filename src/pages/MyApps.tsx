@@ -106,7 +106,6 @@ export default function MyApps() {
 
   return (
     <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-3xl mx-auto">
-      <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">{t.t('hub.backToApps')}</h1>
       <p className="text-sm text-muted-foreground mb-6">{apps.length > 0 ? t.t('appsHint') : t.noAppsHint}</p>
 
       <div className="mb-6">

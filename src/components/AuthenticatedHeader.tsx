@@ -29,6 +29,7 @@ import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { GlobalShareButton } from './GlobalShareButton';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 
 interface AuthenticatedHeaderProps {
   profile: {
@@ -77,6 +78,7 @@ export function AuthenticatedHeader({
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [open, setOpen] = useState(false);
+  const { header } = usePageHeader();
 
   const isActive = (path: string) => {
     // For /me, match any /me/* route
@@ -90,13 +92,16 @@ export function AuthenticatedHeader({
   // Include all Sidebar links here so the header can resolve the title/icon
   const navLinks: { path: string; label: string; icon: typeof User; premium: boolean; isNew?: boolean }[] = [
     { path: '/home', label: t.navigation.home, icon: LayoutDashboard, premium: false },
+    { path: '/notifications', label: t.navigation.home, icon: Menu, premium: false },
     { path: '/me', label: t.navigation.myProfile, icon: User, premium: false },
+    { path: '/apps', label: t.navigation.myApps, icon: Rocket, premium: false },
     { path: '/ideas', label: t.navigation.myIdeas, icon: Lightbulb, premium: false },
+    { path: '/connections', label: t.navigation.vibers, icon: User, premium: false },
+    { path: '/feedback', label: t.navigation.feedback, icon: MessageCircle, premium: false },
     { path: '/beta-testing', label: t.navigation.betaTesting, icon: FlaskConical, premium: false },
     { path: '/public-beta-testing', label: t.navigation.publicBetaTesting, icon: Rocket, premium: false },
     { path: '/explore', label: t.navigation.startups, icon: Rocket, premium: false },
     { path: '/tools', label: t.navigation.tools, icon: Wrench, premium: false },
-    { path: '/feedback', label: t.navigation.feedback, icon: MessageCircle, premium: false },
     ...(isInWaitlist ? [{ path: '/buildlog', label: t.navigation.buildLog, icon: Crown, premium: true }] : []),
   ];
 
@@ -107,34 +112,52 @@ export function AuthenticatedHeader({
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between px-4">
-        {/* Mobile Logo - hidden on desktop (moved to sidebar) */}
-        <Link to="/home" className="flex md:hidden items-center shrink-0">
-          <img 
-            src={vibecodersLogo} 
-            alt="Vibecoders" 
-            className="h-10 w-10 rounded-full border-2 border-border hover:border-primary transition-colors"
-          />
-        </Link>
-        {/* Mobile Share Button */}
-        <div className="flex md:hidden ml-2">
-          <GlobalShareButton showText={false} className="h-8 w-8" />
-        </div>
-        <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-          <Link to="/home" className="hover:text-foreground font-medium transition-colors">Home</Link>
-          {location.pathname !== '/home' && (
+        <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground min-w-0 flex-1">
+          {header.element ? (
+            // Custom page header content (e.g., app detail with logo + badges)
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {header.element}
+            </div>
+          ) : (
             <>
-              <span className="text-border/60">|</span>
-              {(() => {
-                 const activeLink = navLinks.find(link => isActive(link.path));
-                 const Icon = activeLink?.icon;
-                 
-                 return (
-                  <span className="text-foreground font-medium flex items-center gap-2">
-                    {Icon && <Icon className="h-4 w-4" />}
-                    {activeLink?.label || displayName}
-                  </span>
-                 );
-              })()}
+              <Link to="/home" className="hover:text-foreground font-medium transition-colors shrink-0">Home</Link>
+              {location.pathname !== '/home' && (
+                <>
+                  <span className="text-border/60">|</span>
+                  {(() => {
+                     const activeLink = navLinks.find(link => isActive(link.path));
+                     const Icon = activeLink?.icon;
+                     
+                     return (
+                      <span className="text-foreground font-medium flex items-center gap-2 truncate">
+                        {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                        {activeLink?.label || displayName}
+                      </span>
+                     );
+                  })()}
+                </>
+              )}
+            </>
+          )}
+        </div>
+        {/* Mobile: show custom header or logo */}
+        <div className="flex md:hidden items-center min-w-0 flex-1">
+          {header.element ? (
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {header.element}
+            </div>
+          ) : (
+            <>
+              <Link to="/home" className="flex items-center shrink-0">
+                <img 
+                  src={vibecodersLogo} 
+                  alt="Vibecoders" 
+                  className="h-10 w-10 rounded-full border-2 border-border hover:border-primary transition-colors"
+                />
+              </Link>
+              <div className="flex ml-2">
+                <GlobalShareButton showText={false} className="h-8 w-8" />
+              </div>
             </>
           )}
         </div>
