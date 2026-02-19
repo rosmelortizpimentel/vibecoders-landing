@@ -21,6 +21,7 @@
   "viewProfile": "View Profile",
   "mutualContactsTab": "Mutual contacts",
   "communityTab": "Community",
+  "allTab": "All",
   "confirmUnfollow": {
     "title": "Unfollow",
     "message": "Are you sure you want to unfollow {{name}}?",
