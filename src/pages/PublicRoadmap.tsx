@@ -43,7 +43,7 @@ const STATUS_LABELS: Record<string, Record<string, string>> = {
 
 const UI_LABELS: Record<string, Record<string, string>> = {
   en: {
-    feedback: 'Feedback & Suggestions', submit: 'Submit Suggestion', title: 'Title', titlePh: 'Brief summary of your idea',
+    feedback: 'Feedback', submit: 'Submit Suggestion', title: 'Title', titlePh: 'Brief summary of your idea',
     desc: 'Description', descPh: 'Describe your suggestion in detail...', name: 'Your Name', namePh: 'Optional',
     email: 'Your Email', emailPh: 'Optional', attachments: 'Attachments', attachHint: 'Max 5 files, 5MB each (images or PDFs)',
     send: 'Submit', success: 'Thank you for your feedback!', error: 'Error submitting feedback',
@@ -54,7 +54,7 @@ const UI_LABELS: Record<string, Record<string, string>> = {
     continueGoogle: 'Continue with Google', continueLinkedin: 'Continue with LinkedIn',
   },
   es: {
-    feedback: 'Feedback y Sugerencias', submit: 'Enviar Sugerencia', title: 'Título', titlePh: 'Resumen breve de tu idea',
+    feedback: 'Feedback', submit: 'Enviar Sugerencia', title: 'Título', titlePh: 'Resumen breve de tu idea',
     desc: 'Descripción', descPh: 'Describe tu sugerencia en detalle...', name: 'Tu Nombre', namePh: 'Opcional',
     email: 'Tu Email', emailPh: 'Opcional', attachments: 'Adjuntos', attachHint: 'Máximo 5 archivos, 5MB cada uno',
     send: 'Enviar', success: '¡Gracias por tu feedback!', error: 'Error al enviar el feedback',
@@ -65,7 +65,7 @@ const UI_LABELS: Record<string, Record<string, string>> = {
     continueGoogle: 'Continuar con Google', continueLinkedin: 'Continuar con LinkedIn',
   },
   fr: {
-    feedback: 'Commentaires et Suggestions', submit: 'Soumettre une Suggestion', title: 'Titre', titlePh: 'Résumé bref',
+    feedback: 'Feedback', submit: 'Soumettre une Suggestion', title: 'Titre', titlePh: 'Résumé bref',
     desc: 'Description', descPh: 'Décrivez votre suggestion...', name: 'Votre Nom', namePh: 'Optionnel',
     email: 'Votre Email', emailPh: 'Optionnel', attachments: 'Pièces Jointes', attachHint: 'Max 5 fichiers, 5 Mo chacun',
     send: 'Envoyer', success: 'Merci pour votre retour !', error: "Erreur lors de l'envoi",
@@ -76,7 +76,7 @@ const UI_LABELS: Record<string, Record<string, string>> = {
     continueGoogle: 'Continuer avec Google', continueLinkedin: 'Continuer avec LinkedIn',
   },
   pt: {
-    feedback: 'Feedback e Sugestões', submit: 'Enviar Sugestão', title: 'Título', titlePh: 'Resumo breve',
+    feedback: 'Feedback', submit: 'Enviar Sugestão', title: 'Título', titlePh: 'Resumo breve',
     desc: 'Descrição', descPh: 'Descreva sua sugestão...', name: 'Seu Nome', namePh: 'Opcional',
     email: 'Seu Email', emailPh: 'Opcional', attachments: 'Anexos', attachHint: 'Máximo 5 arquivos, 5MB cada',
     send: 'Enviar', success: 'Obrigado pelo seu feedback!', error: 'Erro ao enviar feedback',
@@ -147,8 +147,10 @@ export default function PublicRoadmap() {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Detect language
+  // Detect language: settings default_language takes priority, then browser
+  const langResolved = useRef(false);
   useEffect(() => {
+    if (langResolved.current) return;
     const browserLang = navigator.language?.substring(0, 2);
     if (['es', 'en', 'fr', 'pt'].includes(browserLang)) setLang(browserLang);
   }, []);
@@ -196,10 +198,11 @@ export default function PublicRoadmap() {
           setSettings(settingsRes.data as RoadmapSettings);
           setIsFeedbackPublic((settingsRes.data as any).is_feedback_public ?? false);
           setAuthMode((settingsRes.data as any).feedback_auth_mode || 'anonymous');
-          // Apply default language if set
+          // Apply default language from settings (takes priority over browser)
           const defaultLang = (settingsRes.data as any).default_language;
           if (defaultLang && ['es', 'en', 'fr', 'pt'].includes(defaultLang)) {
             setLang(defaultLang);
+            langResolved.current = true;
           }
         }
         setLanes((lanesRes.data || []) as RoadmapLane[]);
