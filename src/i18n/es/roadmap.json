@@ -47,6 +47,8 @@
     "visibility": "Visibilidad",
     "roadmapPublic": "Roadmap Público",
     "feedbackPublicLabel": "Feedback Público",
+    "viewPublicRoadmap": "Ver Roadmap Público",
+    "viewPublicFeedback": "Ver Feedback Público",
     "participationMode": "Modo de Participación",
     "anonymous": "Usuarios Anónimos",
     "anonymousDesc": "Cualquiera puede votar y enviar feedback sin iniciar sesión",

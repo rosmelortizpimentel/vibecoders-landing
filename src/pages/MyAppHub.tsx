@@ -211,17 +211,15 @@ export default function MyAppHub() {
 
     return (
       <div className="flex items-center justify-end w-full md:max-w-[90%] mx-auto mb-4 px-1 gap-2">
-          {isRoadmapTab && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 h-8 text-xs"
-              onClick={() => window.dispatchEvent(new CustomEvent('roadmap-open-branding'))}
-            >
-              <Paintbrush className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Branding</span>
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 h-8 text-xs"
+            onClick={() => window.dispatchEvent(new CustomEvent('roadmap-open-branding'))}
+          >
+            <Paintbrush className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Branding</span>
+          </Button>
 
           <Button
             variant="outline"
@@ -232,26 +230,6 @@ export default function MyAppHub() {
             <Settings className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">{tR.t('editor.settings')}</span>
           </Button>
-
-          {/* Context-aware preview link */}
-          {isRoadmapTab && publicRoadmapPath && (
-            <a href={publicRoadmapPath} target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
-                <Map className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Roadmap</span>
-                <ExternalLink className="w-3 h-3" />
-              </Button>
-            </a>
-          )}
-          {isFeedbackTab && publicFeedbackPath && (
-            <a href={publicFeedbackPath} target="_blank" rel="noopener noreferrer">
-              <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
-                <MessageSquare className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Feedback</span>
-                <ExternalLink className="w-3 h-3" />
-              </Button>
-            </a>
-          )}
       </div>
     );
   };
@@ -311,25 +289,41 @@ export default function MyAppHub() {
                 {tR.t('editor.visibility') || 'Visibility'}
               </Label>
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="space-y-0.5">
-                    <span className="text-sm font-medium">{tR.t('editor.roadmapPublic') || 'Public Roadmap'}</span>
-                    <p className="text-xs text-muted-foreground">{tR.t('editor.publicOnHint')}</p>
+                <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <span className="text-sm font-medium">{tR.t('editor.roadmapPublic') || 'Public Roadmap'}</span>
+                      <p className="text-xs text-muted-foreground">{tR.t('editor.publicOnHint')}</p>
+                    </div>
+                    <Switch
+                      checked={settingsIsPublic}
+                      onCheckedChange={setSettingsIsPublic}
+                    />
                   </div>
-                  <Switch
-                    checked={settingsIsPublic}
-                    onCheckedChange={setSettingsIsPublic}
-                  />
+                  {settingsIsPublic && publicRoadmapPath && (
+                    <a href={publicRoadmapPath} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-primary hover:underline">
+                      <ExternalLink className="w-3 h-3" />
+                      {tR.t('editor.viewPublicRoadmap') || 'Ver Roadmap Público'}
+                    </a>
+                  )}
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="space-y-0.5">
-                    <span className="text-sm font-medium">{tR.t('editor.feedbackPublicLabel') || 'Public Feedback'}</span>
-                    <p className="text-xs text-muted-foreground">{tR.t('editor.feedbackPublicOnHint')}</p>
+                <div className="p-3 rounded-lg bg-muted/50 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <span className="text-sm font-medium">{tR.t('editor.feedbackPublicLabel') || 'Public Feedback'}</span>
+                      <p className="text-xs text-muted-foreground">{tR.t('editor.feedbackPublicOnHint')}</p>
+                    </div>
+                    <Switch
+                      checked={settingsIsFeedbackPublic}
+                      onCheckedChange={setSettingsIsFeedbackPublic}
+                    />
                   </div>
-                  <Switch
-                    checked={settingsIsFeedbackPublic}
-                    onCheckedChange={setSettingsIsFeedbackPublic}
-                  />
+                  {settingsIsFeedbackPublic && publicFeedbackPath && (
+                    <a href={publicFeedbackPath} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-xs text-primary hover:underline">
+                      <ExternalLink className="w-3 h-3" />
+                      {tR.t('editor.viewPublicFeedback') || 'Ver Feedback Público'}
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
