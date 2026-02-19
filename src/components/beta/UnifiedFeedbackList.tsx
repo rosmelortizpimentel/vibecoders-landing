@@ -10,12 +10,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { MessageSquare, Loader2, Eye, EyeOff, Bug, Plus } from 'lucide-react';
+import { MessageSquare, Loader2, Eye, EyeOff, Bug, Plus, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, fr, pt } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+
+interface FeedbackAttachment {
+  file_url: string;
+  file_name: string;
+  file_type: string;
+}
 
 interface UnifiedFeedbackItem {
   id: string;
@@ -28,6 +34,7 @@ interface UnifiedFeedbackItem {
   author_name: string | null;
   author_avatar: string | null;
   is_hidden?: boolean;
+  attachments: FeedbackAttachment[];
 }
 
 interface UnifiedFeedbackListProps {
@@ -66,19 +73,20 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
     try {
       const { data: publicFeedback } = await supabase
         .from('roadmap_feedback')
-        .select('id, title, description, status, created_at, author_name, is_hidden')
+        .select('id, title, description, status, created_at, author_name, is_hidden, roadmap_feedback_attachments(file_url, file_name, file_type)')
         .eq('app_id', appId)
         .order('created_at', { ascending: false });
 
       const { data: betaFeedback } = await supabase
         .from('beta_feedback')
-        .select(`id, type, content, status, created_at, tester:profiles!beta_feedback_tester_id_fkey(name, username, avatar_url)`)
+        .select(`id, type, content, status, created_at, tester:profiles!beta_feedback_tester_id_fkey(name, username, avatar_url), beta_feedback_attachments(file_url, file_name, file_type)`)
         .eq('app_id', appId)
         .order('created_at', { ascending: false });
 
       const unified: UnifiedFeedbackItem[] = [];
 
       (publicFeedback || []).forEach(f => {
+        const atts = (f as any).roadmap_feedback_attachments || [];
         unified.push({
           id: `public-${f.id}`,
           realId: f.id,
@@ -90,11 +98,13 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
           author_name: f.author_name,
           author_avatar: null,
           is_hidden: f.is_hidden ?? false,
+          attachments: atts,
         });
       });
 
       (betaFeedback || []).forEach(f => {
         const tester = f.tester as unknown as { name: string | null; username: string | null; avatar_url: string | null } | null;
+        const atts = (f as any).beta_feedback_attachments || [];
         unified.push({
           id: `beta-${f.id}`,
           realId: f.id,
@@ -104,6 +114,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
           created_at: f.created_at,
           author_name: tester?.name || tester?.username || null,
           author_avatar: tester?.avatar_url || null,
+          attachments: atts,
         });
       });
 
@@ -234,6 +245,37 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
                   </button>
                 )}
               </div>
+              {/* Attachments */}
+              {item.attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {item.attachments.map((att, idx) => {
+                    const isImage = att.file_type?.startsWith('image/');
+                    const isPdf = att.file_type === 'application/pdf';
+                    if (isImage) {
+                      return (
+                        <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer">
+                          <img src={att.file_url} alt={att.file_name} className="w-20 h-20 object-cover rounded-md border hover:opacity-80 transition-opacity" />
+                        </a>
+                      );
+                    }
+                    if (isPdf) {
+                      return (
+                        <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border bg-muted/50 hover:bg-muted transition-colors text-xs text-muted-foreground">
+                          <FileText className="w-4 h-4 text-red-500" />
+                          <span className="max-w-[100px] truncate">{att.file_name}</span>
+                          <Download className="w-3 h-3" />
+                        </a>
+                      );
+                    }
+                    return (
+                      <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1.5 rounded-md border bg-muted/50 text-xs text-muted-foreground hover:bg-muted">
+                        <Download className="w-3 h-3" />
+                        <span className="max-w-[100px] truncate">{att.file_name}</span>
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
               <div className="flex items-center justify-between mt-3">
                 <div className="flex items-center gap-2">
                   {item.author_avatar && (
@@ -267,7 +309,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
 
       {/* Report Bug Dialog */}
       <Dialog open={showBugDialog} onOpenChange={setShowBugDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md [&>button.absolute]:hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bug className="w-4 h-4" />
