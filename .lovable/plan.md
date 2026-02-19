@@ -1,56 +1,47 @@
 
 
-## Mejoras en Vista Previa del Perfil
+## Fix: Nombre centrado + Book a Call en la misma fila
 
-### 1. Nuevo tab "Vista Previa" en MeTabs
+### Problema
 
-Agregar un tercer tab a la derecha en `MeTabs.tsx` con el icono `ExternalLink` y el label traducido (`t.preview`). Este tab no navega a una ruta nueva, sino que hace scroll hacia la vista previa en desktop o abre el Sheet en mobile/tablet.
+Cuando el avatar esta en posicion "center", el contenedor del nombre usa `justify-between` lo que empuja el boton "Book a Call" al extremo derecho. Visualmente se ve desalineado y en pantallas pequenas el boton baja debajo del nombre.
 
-**Comportamiento**:
-- En pantallas grandes (>=1280px): es un enlace que abre el perfil publico en nueva pestana (`/@username`), actuando como acceso directo visual.
-- En pantallas pequenas (<1280px): abre el Sheet de vista previa (reutiliza la logica existente).
+### Solucion
 
-Para lograr esto, `MeTabs` recibira dos nuevas props opcionales:
-- `onPreviewClick`: callback para abrir el Sheet en mobile
-- `username`: para construir la URL del perfil publico
+Cambiar el layout del contenedor nombre + boton para que cuando la posicion sea "center", ambos elementos se agrupen juntos centrados en vez de usar `justify-between`.
 
-### 2. Quitar header con logo de Vibecoders en ProfilePreview
+### Cambios
 
-Eliminar el bloque del "App-style Header" (lineas 142-149 en `ProfilePreview.tsx`) que muestra el logo de vibecoders.la. La vista previa comenzara directamente con el banner + avatar.
+#### 1. `src/components/me/ProfilePreview.tsx` (lineas 173)
 
-### 3. Status en mayusculas en PreviewAppCard
+Cambiar la clase del contenedor de nombre + booking:
+- Cuando `avatarPosition === 'center'`: usar `justify-center` en vez de `justify-between`
+- Cuando `left` o `right`: mantener `justify-between`
 
-En `PreviewAppCard.tsx`, cambiar `{status.name}` a `{status.name.toUpperCase()}` para que el texto del status se muestre en mayusculas, consistente con el estilo de la pagina `/apps`.
+```tsx
+// Antes:
+<div className="w-full flex items-center justify-between gap-4">
 
----
+// Despues:
+<div className={`w-full flex items-center gap-4 ${avatarPosition === 'center' ? 'justify-center' : 'justify-between'}`}>
+```
 
-### Archivos a modificar (4 archivos)
+#### 2. `src/components/PublicProfileCard.tsx` (linea 358)
+
+Mismo cambio exacto:
+
+```tsx
+// Antes:
+<div className="w-full flex items-center justify-between gap-4">
+
+// Despues:
+<div className={`w-full flex items-center gap-4 ${avatarPosition === 'center' ? 'justify-center' : 'justify-between'}`}>
+```
+
+### Archivos a modificar (2)
 
 | Archivo | Cambio |
 |---------|--------|
-| `src/components/me/MeTabs.tsx` | Agregar tab "Vista Previa" con icono ExternalLink, recibir props `onPreviewClick` y `username` |
-| `src/pages/Me.tsx` | Pasar `onPreviewClick` y `username` a MeTabs |
-| `src/components/me/ProfilePreview.tsx` | Eliminar header con logo vibecoders |
-| `src/components/me/PreviewAppCard.tsx` | Status text en uppercase |
+| `src/components/me/ProfilePreview.tsx` | justify-center cuando avatar centrado |
+| `src/components/PublicProfileCard.tsx` | justify-center cuando avatar centrado |
 
-### Detalle tecnico
-
-**MeTabs - nuevo tab**:
-```tsx
-// Despues de los tabs normales, agregar un tab especial "Vista Previa"
-<button
-  onClick={isLargeScreen ? () => window.open(`/@${username}`, '_blank') : onPreviewClick}
-  className="flex items-center gap-2 px-3 sm:px-5 py-2 rounded-full text-sm text-slate-500 hover:text-slate-700 ml-auto"
->
-  <ExternalLink className="h-4 w-4 text-slate-400" />
-  <span className="hidden min-[420px]:inline">{t.preview}</span>
-</button>
-```
-
-**PreviewAppCard - status uppercase**:
-```tsx
-{status.name.toUpperCase()}
-```
-
-**ProfilePreview - eliminar header**:
-Se elimina el bloque `<div className="flex items-center justify-start px-4 py-2 bg-white border-b border-gray-100">...</div>` que contiene el logo.
