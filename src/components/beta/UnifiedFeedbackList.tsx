@@ -5,12 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { MessageSquare, Loader2, Eye, EyeOff, Bug, Plus, FileText, Download } from 'lucide-react';
+import { MessageSquare, Loader2, Eye, EyeOff, Bug, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, fr, pt } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -21,6 +19,13 @@ interface FeedbackAttachment {
   file_url: string;
   file_name: string;
   file_type: string;
+}
+
+interface RoadmapLane {
+  id: string;
+  name: string;
+  color: string;
+  display_order: number;
 }
 
 interface UnifiedFeedbackItem {
@@ -35,13 +40,12 @@ interface UnifiedFeedbackItem {
   author_avatar: string | null;
   is_hidden?: boolean;
   attachments: FeedbackAttachment[];
+  linked_card_id?: string | null;
 }
 
 interface UnifiedFeedbackListProps {
   appId: string;
 }
-
-const ALL_STATUSES = ['new', 'reviewed', 'planned', 'in_progress', 'done', 'declined', 'open', 'closed'];
 
 export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
   const t = useTranslation('apps');
@@ -51,6 +55,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'public' | 'beta' | 'bug'>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [lanes, setLanes] = useState<RoadmapLane[]>([]);
   const [showBugDialog, setShowBugDialog] = useState(false);
   const [bugContent, setBugContent] = useState('');
   const [bugSubmitting, setBugSubmitting] = useState(false);
@@ -66,14 +71,24 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
 
   useEffect(() => {
     fetchAll();
+    fetchLanes();
   }, [appId]);
+
+  const fetchLanes = async () => {
+    const { data } = await supabase
+      .from('roadmap_lanes')
+      .select('id, name, color, display_order')
+      .eq('app_id', appId)
+      .order('display_order');
+    setLanes(data || []);
+  };
 
   const fetchAll = async () => {
     setLoading(true);
     try {
       const { data: publicFeedback } = await supabase
         .from('roadmap_feedback')
-        .select('id, title, description, status, created_at, author_name, is_hidden, roadmap_feedback_attachments(file_url, file_name, file_type)')
+        .select('id, title, description, status, created_at, author_name, is_hidden, linked_card_id, roadmap_feedback_attachments(file_url, file_name, file_type)')
         .eq('app_id', appId)
         .order('created_at', { ascending: false });
 
@@ -99,6 +114,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
           author_avatar: null,
           is_hidden: f.is_hidden ?? false,
           attachments: atts,
+          linked_card_id: f.linked_card_id,
         });
       });
 
@@ -127,11 +143,68 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
     }
   };
 
-  const handleStatusChange = async (item: UnifiedFeedbackItem, newStatus: string) => {
-    const table = item.source === 'public' ? 'roadmap_feedback' : 'beta_feedback';
-    const { error } = await supabase.from(table).update({ status: newStatus }).eq('id', item.realId);
-    if (error) { toast.error('Error updating status'); return; }
-    setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i));
+  const handleLaneChange = async (item: UnifiedFeedbackItem, value: string) => {
+    // Only public feedback can be linked to roadmap lanes
+    if (item.source !== 'public') {
+      // For beta/bug feedback, just update the status field
+      const { error } = await supabase.from('beta_feedback').update({ status: value }).eq('id', item.realId);
+      if (error) { toast.error('Error updating status'); return; }
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: value } : i));
+      return;
+    }
+
+    if (value === 'new') {
+      // Remove linked card if exists
+      if (item.linked_card_id) {
+        await supabase.from('roadmap_cards').delete().eq('id', item.linked_card_id);
+      }
+      const { error } = await supabase.from('roadmap_feedback').update({ status: 'new', linked_card_id: null }).eq('id', item.realId);
+      if (error) { toast.error('Error updating status'); return; }
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'new', linked_card_id: null } : i));
+    } else {
+      // value is a lane_id — create a roadmap card and link it
+      const lane = lanes.find(l => l.id === value);
+      if (!lane) return;
+
+      // Get max display_order in that lane
+      const { data: maxCard } = await supabase
+        .from('roadmap_cards')
+        .select('display_order')
+        .eq('lane_id', value)
+        .eq('app_id', appId)
+        .order('display_order', { ascending: false })
+        .limit(1);
+      const nextOrder = (maxCard?.[0]?.display_order ?? -1) + 1;
+
+      // If already linked to a card, move it; otherwise create new
+      if (item.linked_card_id) {
+        const { error } = await supabase.from('roadmap_cards').update({ lane_id: value, display_order: nextOrder }).eq('id', item.linked_card_id);
+        if (error) { toast.error('Error moving card'); return; }
+      } else {
+        const { data: newCard, error: cardError } = await supabase.from('roadmap_cards').insert({
+          app_id: appId,
+          lane_id: value,
+          title: item.title || item.content.substring(0, 100),
+          description: item.content,
+          display_order: nextOrder,
+        }).select('id').single();
+        if (cardError || !newCard) { toast.error('Error creating card'); return; }
+
+        const { error: linkError } = await supabase.from('roadmap_feedback').update({
+          status: lane.name.toLowerCase(),
+          linked_card_id: newCard.id,
+        }).eq('id', item.realId);
+        if (linkError) { toast.error('Error linking feedback'); return; }
+
+        setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: lane.name.toLowerCase(), linked_card_id: newCard.id } : i));
+        return;
+      }
+
+      // Update feedback status
+      const { error } = await supabase.from('roadmap_feedback').update({ status: lane.name.toLowerCase() }).eq('id', item.realId);
+      if (error) { toast.error('Error updating status'); return; }
+      setItems(prev => prev.map(i => i.id === item.id ? { ...i, status: lane.name.toLowerCase() } : i));
+    }
   };
 
   const handleToggleVisibility = async (item: UnifiedFeedbackItem) => {
@@ -167,7 +240,13 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
 
   const filteredItems = items.filter(i => {
     if (filter !== 'all' && i.source !== filter) return false;
-    if (statusFilter !== 'all' && i.status !== statusFilter) return false;
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'new' && i.status !== 'new') return false;
+      if (statusFilter !== 'new') {
+        const lane = lanes.find(l => l.id === statusFilter);
+        if (lane && i.status !== lane.name.toLowerCase()) return false;
+      }
+    }
     return true;
   });
 
@@ -180,6 +259,23 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
       case 'bug':
         return <Badge variant="outline" className="text-[10px] border-red-300 text-red-600 bg-red-50">{t.t('hub.bugFeedback')}</Badge>;
     }
+  };
+
+  /** Get the current lane for an item based on its status */
+  const getItemLaneValue = (item: UnifiedFeedbackItem): string => {
+    if (item.source !== 'public') return item.status;
+    const lane = lanes.find(l => l.name.toLowerCase() === item.status);
+    return lane ? lane.id : 'new';
+  };
+
+  /** Get display info for current status */
+  const getStatusDisplay = (item: UnifiedFeedbackItem) => {
+    if (item.source !== 'public') {
+      return { name: item.status.replace('_', ' '), color: undefined };
+    }
+    const lane = lanes.find(l => l.name.toLowerCase() === item.status);
+    if (lane) return { name: lane.name, color: lane.color };
+    return { name: 'new', color: undefined };
   };
 
   if (loading) {
@@ -201,11 +297,22 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-32 h-8"><SelectValue placeholder={t.t('hub.statusFilter')} /></SelectTrigger>
+            <SelectTrigger className="w-36 h-8"><SelectValue placeholder={t.t('hub.statusFilter')} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t.t('hub.allStatuses')}</SelectItem>
-              {ALL_STATUSES.map(s => (
-                <SelectItem key={s} value={s}>{s.replace('_', ' ')}</SelectItem>
+              <SelectItem value="new">
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40 shrink-0" />
+                  new
+                </span>
+              </SelectItem>
+              {lanes.map(lane => (
+                <SelectItem key={lane.id} value={lane.id}>
+                  <span className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: lane.color }} />
+                    {lane.name}
+                  </span>
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -223,87 +330,114 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredItems.map(item => (
-            <div key={item.id} className="p-4 rounded-lg border bg-card hover:border-primary/20 transition-colors">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  {item.title && <h4 className="font-medium text-sm text-foreground mb-1">{item.title}</h4>}
-                  <p className="text-sm text-foreground">{item.content}</p>
-                </div>
-                {/* Visibility toggle for public items */}
-                {item.source === 'public' && (
-                  <button
-                    onClick={() => handleToggleVisibility(item)}
-                    className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
-                    title={item.is_hidden ? t.t('hub.hidden') : t.t('hub.visible')}
-                  >
-                    {item.is_hidden ? (
-                      <EyeOff className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <Eye className="w-4 h-4 text-green-600" />
-                    )}
-                  </button>
-                )}
-              </div>
-              {/* Attachments */}
-              {item.attachments.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {item.attachments.map((att, idx) => {
-                    const isImage = att.file_type?.startsWith('image/');
-                    const isPdf = att.file_type === 'application/pdf';
-                    if (isImage) {
-                      return (
-                        <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer">
-                          <img src={att.file_url} alt={att.file_name} className="w-20 h-20 object-cover rounded-md border hover:opacity-80 transition-opacity" />
-                        </a>
-                      );
-                    }
-                    if (isPdf) {
-                      return (
-                        <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border bg-muted/50 hover:bg-muted transition-colors text-xs text-muted-foreground">
-                          <FileText className="w-4 h-4 text-red-500" />
-                          <span className="max-w-[100px] truncate">{att.file_name}</span>
-                          <Download className="w-3 h-3" />
-                        </a>
-                      );
-                    }
-                    return (
-                      <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1.5 rounded-md border bg-muted/50 text-xs text-muted-foreground hover:bg-muted">
-                        <Download className="w-3 h-3" />
-                        <span className="max-w-[100px] truncate">{att.file_name}</span>
-                      </a>
-                    );
-                  })}
-                </div>
-              )}
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-2">
-                  {item.author_avatar && (
-                    <Avatar className="w-5 h-5">
-                      <AvatarImage src={item.author_avatar} />
-                      <AvatarFallback className="text-[9px]">{item.author_name?.charAt(0) || '?'}</AvatarFallback>
-                    </Avatar>
+          {filteredItems.map(item => {
+            const statusInfo = getStatusDisplay(item);
+            const currentValue = getItemLaneValue(item);
+
+            return (
+              <div key={item.id} className="p-4 rounded-lg border bg-card hover:border-primary/20 transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    {item.title && <h4 className="font-medium text-sm text-foreground mb-1">{item.title}</h4>}
+                    <p className="text-sm text-foreground">{item.content}</p>
+                  </div>
+                  {item.source === 'public' && (
+                    <button
+                      onClick={() => handleToggleVisibility(item)}
+                      className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
+                      title={item.is_hidden ? t.t('hub.hidden') : t.t('hub.visible')}
+                    >
+                      {item.is_hidden ? (
+                        <EyeOff className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="w-4 h-4 text-green-600" />
+                      )}
+                    </button>
                   )}
-                  <span className="text-xs text-muted-foreground">{item.author_name || 'Anónimo'}</span>
-                  <span className="text-muted-foreground/40 text-[10px]">•</span>
-                  <span className="text-xs text-muted-foreground/60">{format(new Date(item.created_at), 'dd MMM', { locale: getDateLocale() })}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  {getSourceBadge(item.source)}
-                  <Select value={item.status} onValueChange={(v) => handleStatusChange(item, v)}>
-                    <SelectTrigger className="h-6 text-[10px] w-auto min-w-[80px] border-none bg-secondary px-2">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ALL_STATUSES.map(s => (
-                        <SelectItem key={s} value={s} className="text-xs">{s.replace('_', ' ')}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                {/* Attachments */}
+                {item.attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {item.attachments.map((att, idx) => {
+                      const isImage = att.file_type?.startsWith('image/');
+                      const isPdf = att.file_type === 'application/pdf';
+                      if (isImage) {
+                        return (
+                          <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer">
+                            <img src={att.file_url} alt={att.file_name} className="w-20 h-20 object-cover rounded-md border hover:opacity-80 transition-opacity" />
+                          </a>
+                        );
+                      }
+                      if (isPdf) {
+                        return (
+                          <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-2 py-1.5 rounded-md border bg-muted/50 hover:bg-muted transition-colors text-xs text-muted-foreground">
+                            <FileText className="w-4 h-4 text-red-500" />
+                            <span className="max-w-[100px] truncate">{att.file_name}</span>
+                            <Download className="w-3 h-3" />
+                          </a>
+                        );
+                      }
+                      return (
+                        <a key={idx} href={att.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 px-2 py-1.5 rounded-md border bg-muted/50 text-xs text-muted-foreground hover:bg-muted">
+                          <Download className="w-3 h-3" />
+                          <span className="max-w-[100px] truncate">{att.file_name}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center gap-2">
+                    {item.author_avatar && (
+                      <Avatar className="w-5 h-5">
+                        <AvatarImage src={item.author_avatar} />
+                        <AvatarFallback className="text-[9px]">{item.author_name?.charAt(0) || '?'}</AvatarFallback>
+                      </Avatar>
+                    )}
+                    <span className="text-xs text-muted-foreground">{item.author_name || 'Anónimo'}</span>
+                    <span className="text-muted-foreground/40 text-[10px]">•</span>
+                    <span className="text-xs text-muted-foreground/60">{format(new Date(item.created_at), 'dd MMM', { locale: getDateLocale() })}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {getSourceBadge(item.source)}
+                    {item.source === 'public' ? (
+                      <Select value={currentValue} onValueChange={(v) => handleLaneChange(item, v)}>
+                        <SelectTrigger className="h-6 text-[10px] w-auto min-w-[90px] border-none bg-secondary px-2">
+                          <span className="flex items-center gap-1.5">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: statusInfo.color || 'hsl(var(--muted-foreground) / 0.4)' }}
+                            />
+                            <span>{statusInfo.name}</span>
+                          </span>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">
+                            <span className="flex items-center gap-2 text-xs">
+                              <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40 shrink-0" />
+                              new
+                            </span>
+                          </SelectItem>
+                          {lanes.map(lane => (
+                            <SelectItem key={lane.id} value={lane.id}>
+                              <span className="flex items-center gap-2 text-xs">
+                                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: lane.color }} />
+                                {lane.name}
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <Badge variant="secondary" className="text-[10px] px-2">
+                        {item.status.replace('_', ' ')}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
