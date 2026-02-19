@@ -496,7 +496,7 @@ export default function RoadmapEditor() {
         {/* Desktop: horizontal scroll with DnD */}
         <div className="hidden md:block">
           <SortableContext items={roadmap.lanes.map(l => `sortable-lane-${l.id}`)} strategy={horizontalListSortingStrategy}>
-            <div className="flex gap-4 overflow-x-auto pb-4 min-h-[60vh]">
+            <div className="flex gap-4 overflow-x-auto pb-2 min-h-[40vh]">
               {roadmap.lanes.map(lane => {
                 const laneCards = roadmap.cards
                   .filter(c => c.lane_id === lane.id)
