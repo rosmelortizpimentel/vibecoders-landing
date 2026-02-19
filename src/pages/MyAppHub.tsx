@@ -6,9 +6,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useRoadmap } from '@/hooks/useRoadmap';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users } from 'lucide-react';
+import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users, Paintbrush, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VerificationBadge } from '@/components/me/VerificationBadge';
 import { getStatusColors } from '@/lib/appStatusColors';
@@ -31,6 +32,19 @@ export default function MyAppHub() {
 
   const app = apps.find(a => a.id === appId);
   const roadmap = useRoadmap(appId);
+  const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
+
+  // Fetch owner username for public URL
+  useEffect(() => {
+    if (!app?.user_id) return;
+    (async () => {
+      const { data } = await supabase.from('profiles').select('username').eq('id', app.user_id).maybeSingle();
+      if (data?.username) setOwnerUsername(data.username);
+    })();
+  }, [app?.user_id]);
+
+  const appSlug = (app?.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const publicPath = ownerUsername ? `/@${ownerUsername}/${appSlug}/roadmap` : null;
 
   const activeTab: TabId = useMemo(() => {
     if (location.pathname.endsWith('/roadmap')) return 'roadmap';
@@ -161,7 +175,7 @@ export default function MyAppHub() {
     )}>
 
       {/* Tabs */}
-      <div className="flex items-center w-full md:max-w-[90%] mx-auto gap-2 mb-6">
+      <div className="flex items-center w-full md:max-w-[90%] mx-auto gap-2 mb-4">
         <div className="flex overflow-x-auto gap-1 p-1 sm:p-1.5 bg-muted/50 rounded-full scrollbar-hide flex-1">
           {tabs.map(tab => {
             const Icon = tab.icon;
@@ -177,21 +191,49 @@ export default function MyAppHub() {
             );
           })}
         </div>
-        {activeTab === 'roadmap' && roadmap.settings && (
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Switch
-              checked={roadmap.settings.is_public}
-              onCheckedChange={async (v) => {
-                try { await roadmap.updateSettings({ is_public: v }); } catch {}
-              }}
-              className="h-5 w-9 [&>span]:h-4 [&>span]:w-4"
-            />
-            <span className={cn("text-xs font-medium hidden sm:inline", roadmap.settings.is_public ? "text-primary" : "text-muted-foreground")}>
-              {roadmap.settings.is_public ? 'Público' : 'Privado'}
-            </span>
-          </div>
-        )}
       </div>
+
+      {/* Roadmap Toolbar */}
+      {activeTab === 'roadmap' && roadmap.settings && (
+        <div className="flex items-center justify-between w-full md:max-w-[90%] mx-auto mb-4 px-1">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 h-8 text-xs"
+              onClick={() => {
+                // Dispatch event to open branding sheet in RoadmapEditor
+                window.dispatchEvent(new CustomEvent('roadmap-open-branding'));
+              }}
+            >
+              <Paintbrush className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Branding</span>
+            </Button>
+          </div>
+          <div className="flex items-center gap-3">
+            {roadmap.settings.is_public && publicPath && (
+              <a href={publicPath} target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-xs text-muted-foreground hover:text-foreground">
+                  <Eye className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Ver público</span>
+                </Button>
+              </a>
+            )}
+            <div className="flex items-center gap-1.5">
+              <Switch
+                checked={roadmap.settings.is_public}
+                onCheckedChange={async (v) => {
+                  try { await roadmap.updateSettings({ is_public: v }); } catch {}
+                }}
+                className="h-5 w-9 [&>span]:h-4 [&>span]:w-4"
+              />
+              <span className={cn("text-xs font-medium", roadmap.settings.is_public ? "text-primary" : "text-muted-foreground")}>
+                {roadmap.settings.is_public ? 'Público' : 'Privado'}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div>
