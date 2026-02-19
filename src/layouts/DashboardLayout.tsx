@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useSubscription } from '@/hooks/useSubscription';
 import { FounderWelcome } from '@/components/home/FounderWelcome';
 import { useQueryClient } from '@tanstack/react-query';
+import { PageHeaderProvider } from '@/contexts/PageHeaderContext';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,6 +66,7 @@ export function DashboardLayout() {
   }
 
   return (
+    <PageHeaderProvider>
     <div className="min-h-screen bg-card flex">
       {/* Founder Welcome Popup - shows on any page */}
       {isFounder && founderNumber && (
@@ -104,5 +106,6 @@ export function DashboardLayout() {
         </main>
       </div>
     </div>
+    </PageHeaderProvider>
   );
 }

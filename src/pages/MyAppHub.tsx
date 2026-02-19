@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useApps } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useStatuses } from '@/hooks/useStatuses';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -76,6 +77,49 @@ export default function MyAppHub() {
   const { statuses } = useStatuses();
   const status = app ? statuses.find(s => s.id === app.status_id) : undefined;
   const statusColors = getStatusColors(status?.slug);
+  const { setHeaderContent } = usePageHeader();
+
+  // Set header content with app detail
+  useEffect(() => {
+    if (!app) {
+      setHeaderContent(null);
+      return;
+    }
+    const colors = getStatusColors(status?.slug);
+    setHeaderContent(
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-7 w-7">
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+        {app.logo_url ? (
+          <img src={app.logo_url} alt={app.name || ''} className="w-7 h-7 rounded-lg object-cover border shrink-0" />
+        ) : (
+          <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xs font-bold shrink-0">
+            {(app.name || 'A').charAt(0)}
+          </div>
+        )}
+        <span className="text-sm sm:text-base font-bold text-foreground truncate">{app.name || app.url}</span>
+        {status && (
+          <span className={cn('hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-tight border shrink-0', colors.bg, colors.text, colors.border)}>
+            <span className={cn('w-1.5 h-1.5 rounded-full', colors.dot)} />
+            {status.name}
+          </span>
+        )}
+        <span className="hidden sm:inline-flex shrink-0">
+          <VerificationBadge isVerified={app.is_verified} />
+        </span>
+        <div className="flex-1" />
+        <a href={app.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+          <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs">
+            <ExternalLink className="w-3 h-3" />
+            <span className="hidden sm:inline">{t.t('hub.viewPage')}</span>
+          </Button>
+        </a>
+      </div>
+    );
+    return () => setHeaderContent(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [app?.id, app?.name, app?.logo_url, app?.url, app?.is_verified, app?.status_id, status?.slug, status?.name]);
 
   if (authLoading || appsLoading) {
     return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -94,34 +138,6 @@ export default function MyAppHub() {
 
   return (
     <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1 max-w-4xl mx-auto">
-      {/* Compact Header */}
-      <div className="flex items-center gap-3 mb-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8">
-          <ArrowLeft className="w-4 h-4" />
-        </Button>
-        {app.logo_url ? (
-          <img src={app.logo_url} alt={app.name || ''} className="w-8 h-8 rounded-lg object-cover border shrink-0" />
-        ) : (
-          <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-sm font-bold shrink-0">
-            {(app.name || 'A').charAt(0)}
-          </div>
-        )}
-        <h1 className="text-base sm:text-lg font-bold text-foreground truncate">{app.name || app.url}</h1>
-        {status && (
-          <span className={cn('inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-tight border shrink-0', statusColors.bg, statusColors.text, statusColors.border)}>
-            <span className={cn('w-1.5 h-1.5 rounded-full', statusColors.dot)} />
-            {status.name}
-          </span>
-        )}
-        <VerificationBadge isVerified={app.is_verified} className="shrink-0" />
-        <div className="flex-1" />
-        <a href={app.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{t.t('hub.viewPage')}</span>
-          </Button>
-        </a>
-      </div>
 
       {/* Tabs */}
       <div className="flex w-full max-w-[90%] mx-auto overflow-x-auto gap-1 p-1.5 bg-muted/50 rounded-full scrollbar-hide mb-6">

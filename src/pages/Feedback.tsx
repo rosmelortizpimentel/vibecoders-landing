@@ -71,7 +71,7 @@ export default function Feedback() {
       
       <main className="flex-1 flex flex-col min-h-0 max-w-4xl mx-auto w-full md:p-4">
         {/* Header */}
-        <div className="p-4 border-b border-border bg-white/50 backdrop-blur-sm flex items-center gap-3">
+        <div className="p-4 border-b border-border bg-background/50 backdrop-blur-sm flex items-center gap-3">
           {isMobile && (
             <Button variant="ghost" size="icon" asChild className="h-8 w-8">
               <Link to="/me">
@@ -80,10 +80,6 @@ export default function Feedback() {
             </Button>
           )}
           <div className="flex-1">
-            <h1 className="text-xl font-bold flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-primary" />
-              {t.title || 'Hablemos'}
-            </h1>
             <p className="text-sm text-muted-foreground">{t.subtitle || 'Danos tu opinión o solicita ayuda'}</p>
           </div>
           {profile?.username && (
