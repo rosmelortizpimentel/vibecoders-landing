@@ -1,69 +1,140 @@
 
 
-## Mejoras UX en Tarjetas y Espaciado del Roadmap
+## Mejoras en Toolbar de Roadmap y Feedback + Settings de Pagina Publica
 
-### Cambios (3 items)
+### Resumen
+
+Se reorganizan los controles de visibilidad y configuracion del Roadmap y Feedback en el Hub de la app, y se agrega un sistema de Settings para la pagina publica que permite configurar el modo de autenticacion de los visitantes (anonimo o logueado) y el idioma.
 
 ---
 
-### 1. Reducir padding lateral a la mitad
+### Cambios detallados (6 bloques)
 
-El layout principal (`DashboardLayout.tsx`) aplica `md:px-8` (32px). Para el roadmap, necesitamos compensar esto. Se agregara un margen negativo al contenedor del editor para reducir el espacio lateral a la mitad.
+---
 
-En `RoadmapEditor.tsx`, cambiar el contenedor raiz:
-```tsx
-// Antes:
-<div className="space-y-4 md:space-y-6">
+### 1. Toolbar del tab Feedback: switch publico/privado + link
 
-// Despues:
-<div className="space-y-4 md:space-y-6 md:-mx-4">
+En `MyAppHub.tsx`, agregar un toolbar similar al del tab Roadmap cuando `activeTab === 'feedback'`. Incluira:
+- Boton "Settings" (icono Settings/Cog) que abre la nueva configuracion
+- Switch Publico/Privado para `is_feedback_public`
+- Link "Ver publico" si feedback esta activo y publico (ruta `/@username/app-slug/feedback`)
+
+Requiere que `MyAppHub` tenga acceso a `roadmap.settings` y `roadmap.updateSettings`, lo cual ya tiene.
+
+---
+
+### 2. Quitar switches de visibilidad del sidebar Branding
+
+En `RoadmapEditor.tsx`, eliminar los dos bloques de switches (Publico y Feedback Publico) del Sheet de Branding (lineas 764-791). Solo queda la seccion de branding (titulo, fuente, favicon, colores de columnas). Tambien quitar `is_public` y `is_feedback_public` del `settingsForm` y de `handleSaveSettings`.
+
+---
+
+### 3. Toolbar del tab Roadmap: agregar boton Settings
+
+En `MyAppHub.tsx`, reemplazar el boton "Branding" existente en el toolbar de Roadmap por dos botones:
+- **Branding** (icono Paintbrush) - ya existe
+- **Settings** (icono Settings) - abre el popup de settings
+
+El toolbar mostrara al inicio los switches:
+- Switch Roadmap Publico
+- Switch Feedback Publico (si se activa, mostrar selector anonimo/logueado inline)
+
+Luego los botones Branding, Settings, y Ver Publico.
+
+---
+
+### 4. Popup de Settings (nuevo componente)
+
+Crear un popup/dialog con las siguientes opciones:
+
+**Seccion: Modo de Participacion**
+- Radio/Select: "Usuarios anonimos" o "Usuarios logueados"
+  - Anonimo: internamente usa device fingerprint (ya implementado) para evitar spam
+  - Logueado: requiere login con Google o LinkedIn antes de poder enviar feedback o votar
+
+**Seccion: Idioma por defecto**
+- Selector de idioma (ES, EN, FR, PT) - por defecto el idioma del usuario actual
+
+Esto requiere nuevas columnas en `roadmap_settings`:
+- `feedback_auth_mode` (text, default 'anonymous') - valores: 'anonymous' | 'authenticated'
+- `default_language` (text, default null) - valores: 'es' | 'en' | 'fr' | 'pt'
+
+---
+
+### 5. Pagina Publica: Soporte para login obligatorio
+
+En `PublicRoadmap.tsx`:
+- Si `feedback_auth_mode === 'authenticated'`, mostrar boton de login (Google/LinkedIn) antes de permitir enviar feedback o votar
+- Usar Supabase Auth con redirect de vuelta a la misma URL publica
+- Si el usuario ya esta logueado, permitir enviar feedback normalmente
+- El login usa `supabase.auth.signInWithOAuth` con `redirectTo` apuntando a la URL actual
+
+Asegurar que la pagina de feedback sea 100% responsive (ya lo es en gran medida, pero verificar y mejorar el formulario en mobile).
+
+---
+
+### 6. Migracion de base de datos
+
+Agregar nuevas columnas a `roadmap_settings`:
+
+```sql
+ALTER TABLE roadmap_settings 
+ADD COLUMN IF NOT EXISTS feedback_auth_mode text NOT NULL DEFAULT 'anonymous',
+ADD COLUMN IF NOT EXISTS default_language text DEFAULT NULL;
 ```
 
-Esto reduce el padding efectivo de 32px a 16px en cada lado.
-
 ---
 
-### 2. Icono de arrastre de tarjetas solo visible al hover
-
-En el componente `SortableCard`, agregar `group` al Card y `opacity-0 group-hover:opacity-100 transition-opacity` al `GripVertical`.
-
----
-
-### 3. Reemplazar menu 3 puntos de tarjetas por iconos directos al hover
-
-Eliminar el `DropdownMenu` completo de las tarjetas. En su lugar, mostrar iconos de `Pencil` y `Trash2` que solo aparecen al hover (usando `opacity-0 group-hover:opacity-100`). Se elimina la opcion "Mover" ya que el drag-and-drop ya cumple esa funcion.
-
----
-
-### Archivos a modificar (1 archivo)
+### Archivos a modificar
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/pages/RoadmapEditor.tsx` | Padding negativo, drag icon hover en cards, reemplazar 3-dot menu por iconos directos |
+| `src/pages/MyAppHub.tsx` | Toolbar unificado con switches al inicio, botones Branding/Settings/Ver Publico. Toolbar para feedback con switch y link |
+| `src/pages/RoadmapEditor.tsx` | Quitar switches del sidebar Branding. Agregar listener para evento settings. Actualizar settingsForm |
+| `src/pages/PublicRoadmap.tsx` | Soporte auth mode, login con Google/LinkedIn, responsive feedback, idioma por defecto |
+| `src/hooks/useRoadmap.ts` | Agregar `feedback_auth_mode` y `default_language` a interfaz RoadmapSettings |
+| `supabase/migrations/` | Nueva migracion para columnas feedback_auth_mode y default_language |
+| `src/i18n/en/roadmap.json` | Nuevas claves para settings |
+| `src/i18n/es/roadmap.json` | Nuevas claves para settings |
+| `src/i18n/fr/roadmap.json` | Nuevas claves para settings |
+| `src/i18n/pt/roadmap.json` | Nuevas claves para settings |
 
-### Detalle tecnico
+---
 
-**SortableCard actualizado**:
-```tsx
-<Card className="cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md transition-shadow border group" ...>
-  <CardContent className="p-3">
-    <div className="flex justify-between items-start gap-2">
-      <div className="flex items-start gap-2 flex-1 min-w-0" {...attributes} {...listeners}>
-        <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
-        <div className="flex-1 min-w-0">
-          {/* titulo, descripcion, fecha */}
-        </div>
-      </div>
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onEdit}>
-          <Pencil className="w-3 h-3" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive" onClick={onDelete}>
-          <Trash2 className="w-3 h-3" />
-        </Button>
-      </div>
-    </div>
-  </CardContent>
-</Card>
+### Detalle tecnico: Toolbar unificado en MyAppHub
+
+```text
++----------------------------------------------------------+
+| [Branding] [Settings]     [Switch Roadmap] [Switch FB]   |
+|                           [Ver Publico]                  |
++----------------------------------------------------------+
 ```
+
+El toolbar se muestra tanto en el tab Roadmap como en Feedback (con variaciones contextuales).
+
+### Detalle tecnico: Settings Popup
+
+```text
++----------------------------------+
+| Settings                    [X]  |
+|                                  |
+| MODO DE PARTICIPACION            |
+| ( ) Usuarios anonimos           |
+| ( ) Usuarios logueados          |
+|     (Google / LinkedIn)          |
+|                                  |
+| IDIOMA POR DEFECTO              |
+| [Espanol v]                     |
+|                                  |
+| [Cancelar]  [Guardar]           |
++----------------------------------+
+```
+
+### Detalle tecnico: Login en pagina publica
+
+Cuando `feedback_auth_mode === 'authenticated'`:
+- El boton "Enviar sugerencia" muestra un dialogo de login si el usuario no esta autenticado
+- Opciones: "Continuar con Google" / "Continuar con LinkedIn"
+- `redirectTo` usa `window.location.href` para volver a la misma pagina
+- Una vez logueado, se auto-rellena el nombre y email del usuario
 
