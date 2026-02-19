@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { IdeasTab } from '@/components/me/IdeasTab';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
@@ -8,6 +9,7 @@ export default function Ideas() {
   const { t } = useTranslation('profile');
   const tCommon = useTranslation('common');
   const { setHeaderContent } = usePageHeader();
+  const { ideaId } = useParams<{ ideaId?: string }>();
 
   useEffect(() => {
     setHeaderContent(
@@ -22,7 +24,7 @@ export default function Ideas() {
   return (
     <div className="container px-4 py-6 max-w-5xl mx-auto h-[calc(100vh-80px)] flex flex-col">
       <div className="flex-1 min-h-0">
-        <IdeasTab />
+        <IdeasTab initialIdeaId={ideaId} />
       </div>
     </div>
   );

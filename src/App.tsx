@@ -130,6 +130,8 @@ const App = () => (
               <Route path="/beta-testing" element={<Navigate to="/apps" replace />} />
               <Route path="/beta-testing/:appId" element={<Navigate to="/apps" replace />} />
               <Route path="/ideas" element={<Ideas />} />
+              <Route path="/ideas/new" element={<Ideas />} />
+              <Route path="/ideas/:ideaId" element={<Ideas />} />
               <Route path="/roadmap" element={<Navigate to="/apps" replace />} />
               <Route path="/prompts" element={<Prompts />} />
               <Route path="/prompts/new" element={<PromptStudio />} />

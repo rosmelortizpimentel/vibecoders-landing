@@ -72,7 +72,13 @@
     "markDone": "Marcar como concluída",
     "markPending": "Reativar",
     "done": "Concluída",
-    "search": "Buscar..."
+    "search": "Buscar...",
+    "tabPending": "Pendentes",
+    "tabCompleted": "Concluídas",
+    "confirmCompleteTitle": "Marcar como concluída?",
+    "confirmCompleteMessage": "Esta ideia será movida para a lista de concluídas.",
+    "confirmReactivateTitle": "Reativar ideia?",
+    "confirmReactivateMessage": "Esta ideia voltará para a lista de pendentes."
   },
   "bannerCrop": {
     "title": "Ajustar Banner",
