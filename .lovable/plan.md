@@ -1,56 +1,43 @@
 
+## Cambios en Cards del Roadmap y Links Inteligentes de Vista Previa
 
-## Limpieza del Toolbar y Links de Vista Previa con Subdominio
+### 1. Descripcion de cards: 5 lineas max y letra mas pequena
 
-### Resumen
+**Archivo**: `src/pages/RoadmapEditor.tsx`
 
-Se eliminan los indicadores de estado (puntos verdes de Roadmap/Feedback y badge de modo auth) y el boton "Ver Pagina Publica" del toolbar. Los links de vista previa pasan a usar el formato de subdominio (`appname.vibecoders.la/roadmap` y `appname.vibecoders.la/feedback`) y son independientes segun los switches de visibilidad.
+En las 3 ubicaciones donde se muestra `card.description` con `line-clamp-2`, cambiar a:
+- `line-clamp-5` (maximo 5 lineas)
+- `text-xs` en lugar de `text-sm` (1px mas pequeno)
+
+Esto aplica a:
+- Linea 129: Card del Kanban desktop (SortableCard)
+- Linea 680: Card del listado mobile (Collapsible)
+- Linea 746: Card del overlay de drag (ya usa `text-xs`, solo cambiar `line-clamp-2` a `line-clamp-5`)
+
+En la pagina publica (`PublicRoadmap.tsx`) y en los formularios de edicion, la descripcion se mantiene completa sin truncar.
 
 ---
 
-### 1. Eliminar indicadores de estado del toolbar
+### 2. Links inteligentes segun entorno
 
 **Archivo**: `src/pages/MyAppHub.tsx`
 
-Quitar del toolbar (lineas 211-234):
-- El indicador verde "Roadmap" / "Roadmap (off)"
-- El separador vertical
-- El indicador verde "Feedback" / "Feedback (off)"
-- El badge de auth mode (Lock Login / User Anon)
-
-Todo el bloque `{/* Left: Status indicators */}` se elimina.
-
----
-
-### 2. Eliminar boton "Ver Pagina Publica"
-
-**Archivo**: `src/pages/MyAppHub.tsx`
-
-Quitar los dos bloques de links "Ver Pagina Publica" (lineas 261-277) que condicionaban la visibilidad al tab activo.
-
----
-
-### 3. Links de subdominio independientes
-
-Reemplazar la generacion de `publicRoadmapPath` y `publicFeedbackPath` (lineas 66-68) para usar el formato de subdominio:
+Reemplazar la logica de generacion de URLs (lineas 66-69) con deteccion del hostname actual:
 
 ```
-const publicBasePath = `https://${appSlug}.vibecoders.la`;
-const publicRoadmapPath = roadmap.settings?.is_public ? `${publicBasePath}/roadmap` : null;
-const publicFeedbackPath = roadmap.settings?.is_feedback_public ? `${publicBasePath}/feedback` : null;
+const isProduction = window.location.hostname.endsWith('vibecoders.la');
+
+if (isProduction) {
+  // Subdominio: appslug.vibecoders.la/roadmap
+  publicPath = `https://${appSlug}.vibecoders.la`
+} else {
+  // Entorno de pruebas: /@username/appslug/roadmap
+  publicPath = `/@${ownerUsername}/${appSlug}/roadmap`
+  // Como URL relativa, se abre en el mismo host de preview
+}
 ```
 
-Ya no depende de `ownerUsername` para construir la URL.
-
----
-
-### 4. Toolbar simplificado
-
-El toolbar quedara solo con los botones a la derecha:
-- **Branding** (solo en tab Roadmap)
-- **Configuracion**
-
-Sin indicadores de estado, sin link de vista previa. Los links de subdominio quedan disponibles en otro lugar si se necesitan (por ejemplo, dentro del Sheet de Configuracion).
+La logica construye URLs relativas en entorno de pruebas (usando el preview host actual) y absolutas con subdominio solo en produccion. Ambos links (Roadmap y Feedback) siguen siendo independientes segun sus switches de visibilidad.
 
 ---
 
@@ -58,5 +45,5 @@ Sin indicadores de estado, sin link de vista previa. Los links de subdominio que
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/pages/MyAppHub.tsx` | Eliminar indicadores de estado, eliminar boton Ver Pagina Publica, actualizar URLs a formato subdominio, simplificar toolbar |
-
+| `src/pages/RoadmapEditor.tsx` | `line-clamp-2` a `line-clamp-5`, `text-sm` a `text-xs` en descriptions de cards (3 ubicaciones) |
+| `src/pages/MyAppHub.tsx` | Logica inteligente de URLs segun hostname (subdominio en prod, path en pruebas) |
