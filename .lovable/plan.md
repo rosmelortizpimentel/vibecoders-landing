@@ -1,82 +1,88 @@
 
 
-## Mejoras en la pagina de Ideas
+## Refactorizar Ideas: Vista de Sticky Notes en Grid
 
-### Cambios solicitados
+### Resumen
 
-1. **Vista por defecto = solo lista** (sin detalle abierto). Al entrar a `/ideas`, se muestra solo la lista. Al seleccionar una idea, la URL cambia a `/ideas/:id`. Al crear nueva, `/ideas/new`.
-2. **Lista mas compacta**: reducir padding, tamanio de fuente y espaciado entre items.
-3. **Tabs "Pendientes" y "Completadas"**: separar ideas en dos tabs en vez de mezclarlas en una sola lista.
-4. **Confirmacion al marcar como completada**: al hacer clic en el circulo, mostrar un dialogo de confirmacion antes de cambiar el estado.
+Reemplazar el layout actual (lista lateral + detalle a la derecha) por un grid de cards estilo "sticky notes" que muestren titulo, descripcion (max 5 lineas, solo texto plano con saltos de linea), y un tag de antiguedad. Al pasar el mouse sobre cada card, aparecen botones de editar y eliminar. Al hacer clic en editar (o crear nueva), se navega a `/ideas/:id` donde se muestra el formulario de edicion. La vista por defecto `/ideas` muestra solo el grid.
 
 ---
 
-### Archivos a modificar
+### Cambios por archivo
 
-#### 1. `src/App.tsx`
-- Agregar ruta `/ideas/:ideaId` que apunte al mismo componente `Ideas`.
-- La ruta `/ideas` sigue existiendo (muestra lista sin detalle seleccionado).
+#### 1. `src/components/me/IdeasTab.tsx` -- Refactorizacion completa
 
-#### 2. `src/pages/Ideas.tsx`
-- Leer `ideaId` de `useParams()` y pasarlo como prop a `IdeasTab`.
-- Si no hay `ideaId`, no se selecciona ninguna idea por defecto.
+**Layout**: Reemplazar el grid de 2 columnas (lista + detalle) por una unica vista que alterna entre:
+- **Grid view** (ruta `/ideas`): Cards en grid responsive (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`)
+- **Detail view** (ruta `/ideas/:id` o `/ideas/new`): Formulario de edicion (componente `IdeaDetail` existente)
 
-#### 3. `src/components/me/IdeasTab.tsx`
+**Card sticky note**:
+- Fondo suave tipo nota (`bg-amber-50/50 dark:bg-amber-950/20` o similar, sutil)
+- Borde fino `border border-border`
+- Rounded `rounded-xl`
+- Padding compacto `p-3`
+- Titulo en `font-semibold text-sm line-clamp-1`
+- Descripcion en `text-xs text-muted-foreground line-clamp-5 whitespace-pre-line` -- solo texto plano, se eliminan tags markdown/HTML
+- Tag de dias como `Badge` en la esquina superior derecha: "Hace 2d", "hoy"
+- Al hover: se muestran dos iconos (Pencil y Trash2) en la esquina inferior derecha con transicion de opacidad
+- El circulo de completar (CheckCircle2/Circle) se mantiene visible en la esquina superior izquierda
+- Cards completadas: fondo mas apagado, titulo con `line-through opacity-60`
 
-**Routing del detalle**:
-- Recibir prop `initialIdeaId?: string` desde Ideas.tsx.
-- Usar `useNavigate()` para cambiar la URL al seleccionar/deseleccionar una idea:
-  - Seleccionar idea: `navigate(/ideas/${id})`
-  - Nueva idea: `navigate(/ideas/new)`
-  - Volver a lista: `navigate(/ideas)`
-- En desktop, no auto-seleccionar la primera idea. Mostrar el placeholder "Selecciona una idea" por defecto.
+**Tabs y busqueda**: Se mantienen arriba del grid (Pendientes/Completadas tabs + search + boton crear).
 
-**Lista mas compacta**:
-- Reducir padding de los items de `p-2.5 md:p-3` a `p-1.5 md:p-2`.
-- Reducir la fuente del titulo de `text-sm` a `text-xs`.
-- Reducir el espaciado entre items de `space-y-1.5` a `space-y-1`.
-- Reducir el badge de dias de `text-[10px]` a `text-[9px]` y la altura.
+**Drag and drop**: Se elimina el drag-and-drop para simplificar la vista de cards en grid (no tiene sentido visual arrastrar cards en un grid 2D).
 
-**Tabs Pendientes/Completadas**:
-- Agregar un estado `activeTab: 'pending' | 'done'` con valor inicial `'pending'`.
-- Renderizar dos tabs debajo del buscador: "Pendientes (N)" y "Completadas (N)".
-- Cuando el tab es `pending`, mostrar solo ideas sin `is_done`. Cuando es `done`, mostrar solo las completadas.
-- Las ideas completadas no son drag-and-drop (ya es asi).
+**Navegacion**:
+- Click en card -> no hace nada (solo hover muestra acciones)
+- Click en boton editar -> `navigate(/ideas/${id})`
+- Click en boton eliminar -> abre dialog de confirmacion (ya existente)
+- Click en boton "+" -> `navigate(/ideas/new)`
 
-**Confirmacion al marcar completada**:
-- Al hacer clic en el circulo (toggle done), abrir un `AlertDialog` pidiendo confirmacion.
-- Guardar en estado temporal `pendingToggle: { id, newDone }` y mostrar el dialogo.
-- Al confirmar, ejecutar `handleToggleDone`. Al cancelar, cerrar sin cambios.
+#### 2. `src/components/me/ideas/IdeaDetail.tsx` -- Ajustes menores
 
-#### 4. `src/i18n/*/profile.json` (es, en, fr, pt)
-- Agregar claves:
-  - `ideas.tabPending`: "Pendientes"
-  - `ideas.tabCompleted`: "Completadas"
-  - `ideas.confirmCompleteTitle`: "Marcar como completada?"
-  - `ideas.confirmCompleteMessage`: "Esta idea se movera a la lista de completadas."
-  - `ideas.confirmReactivateTitle`: "Reactivar idea?"
-  - `ideas.confirmReactivateMessage`: "Esta idea volvera a la lista de pendientes."
+- Reemplazar `MarkdownEditor` por un `Textarea` simple (solo texto plano con saltos de linea)
+- Agregar boton "Volver" arriba del formulario para regresar al grid (`navigate('/ideas')`)
 
-### Detalle tecnico del flujo de URLs
+#### 3. `src/i18n/es/profile.json`, `en/profile.json`, `fr/profile.json`, `pt/profile.json`
+- Agregar clave `ideas.edit`: "Editar" / "Edit" / "Modifier" / "Editar"
+- Agregar clave `ideas.daysAgo`: "Hace" (para el tag "Hace 2d")
+- Opcional: `ideas.noPendingIdeas`, `ideas.noCompletedIdeas` para estados vacios por tab
+
+---
+
+### Detalle tecnico
+
+**Estructura del card**:
 
 ```text
-/ideas          -> Lista visible, sin detalle seleccionado
-/ideas/new      -> Lista visible + formulario de nueva idea (detalle vacio)
-/ideas/:ideaId  -> Lista visible + detalle de la idea seleccionada
++-----------------------------+
+| [O] Titulo...     [Hace 2d] |
+|                              |
+| Descripcion en texto plano   |
+| con saltos de linea, maximo  |
+| 5 lineas visibles antes de   |
+| truncar con line-clamp-5     |
+|                              |
+|              [edit] [delete]  |  <-- solo visible en hover
++-----------------------------+
 ```
 
-En mobile:
-- `/ideas` muestra solo la lista
-- `/ideas/:id` o `/ideas/new` muestra solo el detalle con boton "Volver"
-- Al presionar "Volver", navega a `/ideas`
+**Limpieza de descripcion**: Para mostrar solo texto plano, se usara una funcion `stripMarkdown(text)` que elimine sintaxis markdown (`**`, `#`, `- `, etc.) y solo deje el texto con saltos de linea.
 
-### Flujo de confirmacion al completar
+**Grid responsive**:
+- Mobile: 1 columna
+- sm: 2 columnas
+- lg: 3 columnas
+- xl: 4 columnas
 
-```text
-Usuario clickea circulo -> AlertDialog "Marcar como completada?"
-  -> Confirmar -> handleToggleDone(id, true) -> idea se mueve al tab "Completadas"
-  -> Cancelar -> nada cambia
-```
+### Archivos a modificar (6 archivos)
 
-Lo mismo al reactivar desde el tab de completadas, pero con mensaje "Reactivar idea?".
+| Archivo | Cambio |
+|---------|--------|
+| `src/components/me/IdeasTab.tsx` | Refactorizar a grid de cards sticky notes, eliminar drag-and-drop |
+| `src/components/me/ideas/IdeaDetail.tsx` | Textarea simple en vez de MarkdownEditor, boton volver |
+| `src/i18n/es/profile.json` | Agregar claves `ideas.edit`, `ideas.daysAgo` |
+| `src/i18n/en/profile.json` | Agregar claves `ideas.edit`, `ideas.daysAgo` |
+| `src/i18n/fr/profile.json` | Agregar claves `ideas.edit`, `ideas.daysAgo` |
+| `src/i18n/pt/profile.json` | Agregar claves `ideas.edit`, `ideas.daysAgo` |
 
