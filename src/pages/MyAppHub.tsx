@@ -8,12 +8,11 @@ import { useRoadmap } from '@/hooks/useRoadmap';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users, Paintbrush, Eye, Settings } from 'lucide-react';
+import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users, Paintbrush, Eye, Settings, User, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VerificationBadge } from '@/components/me/VerificationBadge';
 import { getStatusColors } from '@/lib/appStatusColors';
@@ -25,13 +24,6 @@ import { BetaManagement } from '@/components/beta/BetaManagement';
 import { UnifiedFeedbackList } from '@/components/beta/UnifiedFeedbackList';
 
 type TabId = 'info' | 'roadmap' | 'feedback' | 'squad';
-
-const LANGUAGE_OPTIONS = [
-  { value: 'es', label: 'Español' },
-  { value: 'en', label: 'English' },
-  { value: 'fr', label: 'Français' },
-  { value: 'pt', label: 'Português' },
-];
 
 export default function MyAppHub() {
   const { appId } = useParams<{ appId: string }>();
@@ -48,15 +40,17 @@ export default function MyAppHub() {
   const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
 
-  // Settings form for the dialog
+  // Settings form for the sheet
   const [settingsAuthMode, setSettingsAuthMode] = useState<'anonymous' | 'authenticated'>('anonymous');
-  const [settingsLanguage, setSettingsLanguage] = useState<string>('');
+  const [settingsIsPublic, setSettingsIsPublic] = useState(true);
+  const [settingsIsFeedbackPublic, setSettingsIsFeedbackPublic] = useState(false);
 
-  // Sync settings dialog form when opening
+  // Sync settings sheet form when opening
   useEffect(() => {
     if (showSettingsDialog && roadmap.settings) {
       setSettingsAuthMode((roadmap.settings as any).feedback_auth_mode || 'anonymous');
-      setSettingsLanguage((roadmap.settings as any).default_language || '');
+      setSettingsIsPublic(roadmap.settings.is_public);
+      setSettingsIsFeedbackPublic(roadmap.settings.is_feedback_public);
     }
   }, [showSettingsDialog, roadmap.settings]);
 
@@ -135,7 +129,8 @@ export default function MyAppHub() {
     try {
       await roadmap.updateSettings({
         feedback_auth_mode: settingsAuthMode,
-        default_language: settingsLanguage || null,
+        is_public: settingsIsPublic,
+        is_feedback_public: settingsIsFeedbackPublic,
       } as any);
       setShowSettingsDialog(false);
       toast.success('Settings saved');
@@ -212,42 +207,29 @@ export default function MyAppHub() {
 
     return (
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full md:max-w-[90%] mx-auto mb-4 px-1 gap-3">
-        {/* Left: Switches */}
+        {/* Left: Status indicators */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Roadmap public switch */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              checked={roadmap.settings.is_public}
-              onCheckedChange={async (v) => {
-                try { await roadmap.updateSettings({ is_public: v }); } catch {}
-              }}
-              className="h-5 w-9 [&>span]:h-4 [&>span]:w-4"
-            />
-            <span className={cn("text-xs font-medium", roadmap.settings.is_public ? "text-primary" : "text-muted-foreground")}>
-              Roadmap
-            </span>
-          </div>
+          {/* Roadmap visibility indicator */}
+          <span className={cn("text-xs font-medium flex items-center gap-1.5", roadmap.settings.is_public ? "text-primary" : "text-muted-foreground")}>
+            <span className={cn("w-2 h-2 rounded-full", roadmap.settings.is_public ? "bg-primary" : "bg-muted-foreground/40")} />
+            Roadmap {roadmap.settings.is_public ? '' : '(off)'}
+          </span>
 
           <Separator orientation="vertical" className="h-4 hidden sm:block" />
 
-          {/* Feedback public switch */}
-          <div className="flex items-center gap-1.5">
-            <Switch
-              checked={roadmap.settings.is_feedback_public}
-              onCheckedChange={async (v) => {
-                try { await roadmap.updateSettings({ is_feedback_public: v }); } catch {}
-              }}
-              className="h-5 w-9 [&>span]:h-4 [&>span]:w-4"
-            />
-            <span className={cn("text-xs font-medium", roadmap.settings.is_feedback_public ? "text-primary" : "text-muted-foreground")}>
-              Feedback
-            </span>
-          </div>
+          {/* Feedback visibility indicator */}
+          <span className={cn("text-xs font-medium flex items-center gap-1.5", roadmap.settings.is_feedback_public ? "text-primary" : "text-muted-foreground")}>
+            <span className={cn("w-2 h-2 rounded-full", roadmap.settings.is_feedback_public ? "bg-primary" : "bg-muted-foreground/40")} />
+            Feedback {roadmap.settings.is_feedback_public ? '' : '(off)'}
+          </span>
 
           {/* Auth mode inline indicator when feedback is public */}
           {roadmap.settings.is_feedback_public && (
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">
-              {(roadmap.settings as any).feedback_auth_mode === 'authenticated' ? '🔒 Login' : '👤 Anon'}
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-muted-foreground font-medium flex items-center gap-1">
+              {(roadmap.settings as any).feedback_auth_mode === 'authenticated' 
+                ? <><Lock className="w-3 h-3" /> Login</>
+                : <><User className="w-3 h-3" /> Anon</>
+              }
             </span>
           )}
         </div>
@@ -336,82 +318,101 @@ export default function MyAppHub() {
         {activeTab === 'squad' && <BetaManagement appId={appId!} config={betaConfig} onConfigChange={handleBetaConfigChange} />}
       </div>
 
-      {/* Settings Dialog */}
-      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      {/* Settings Sheet */}
+      <Sheet open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <SheetContent side="right" className="w-full sm:w-[400px] sm:max-w-[400px] overflow-y-auto">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               {tR.t('editor.settings')}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 py-2">
-            {/* Participation Mode */}
+            </SheetTitle>
+          </SheetHeader>
+
+          <div className="space-y-6 pb-24">
+            {/* Visibility Section */}
             <div className="space-y-3">
               <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-                {tR.t('editor.participationMode')}
+                {tR.t('editor.visibility') || 'Visibility'}
               </Label>
               <div className="space-y-2">
-                <button
-                  onClick={() => setSettingsAuthMode('anonymous')}
-                  className={cn(
-                    "w-full text-left p-3 rounded-lg border-2 transition-all",
-                    settingsAuthMode === 'anonymous' ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", settingsAuthMode === 'anonymous' ? "border-primary" : "border-muted-foreground/40")}>
-                      {settingsAuthMode === 'anonymous' && <div className="w-2 h-2 rounded-full bg-primary" />}
-                    </div>
-                    <span className="text-sm font-medium">👤 {tR.t('editor.anonymous')}</span>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-medium">{tR.t('editor.roadmapPublic') || 'Public Roadmap'}</span>
+                    <p className="text-xs text-muted-foreground">{tR.t('editor.publicOnHint')}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1 ml-6">{tR.t('editor.anonymousDesc')}</p>
-                </button>
-                <button
-                  onClick={() => setSettingsAuthMode('authenticated')}
-                  className={cn(
-                    "w-full text-left p-3 rounded-lg border-2 transition-all",
-                    settingsAuthMode === 'authenticated' ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", settingsAuthMode === 'authenticated' ? "border-primary" : "border-muted-foreground/40")}>
-                      {settingsAuthMode === 'authenticated' && <div className="w-2 h-2 rounded-full bg-primary" />}
-                    </div>
-                    <span className="text-sm font-medium">🔒 {tR.t('editor.authenticated')}</span>
+                  <Switch
+                    checked={settingsIsPublic}
+                    onCheckedChange={setSettingsIsPublic}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                  <div className="space-y-0.5">
+                    <span className="text-sm font-medium">{tR.t('editor.feedbackPublicLabel') || 'Public Feedback'}</span>
+                    <p className="text-xs text-muted-foreground">{tR.t('editor.feedbackPublicOnHint')}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1 ml-6">{tR.t('editor.authenticatedDesc')}</p>
-                </button>
+                  <Switch
+                    checked={settingsIsFeedbackPublic}
+                    onCheckedChange={setSettingsIsFeedbackPublic}
+                  />
+                </div>
               </div>
             </div>
 
-            <Separator />
-
-            {/* Default Language */}
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
-                {tR.t('editor.defaultLanguage')}
-              </Label>
-              <p className="text-xs text-muted-foreground">{tR.t('editor.defaultLanguageDesc')}</p>
-              <Select value={settingsLanguage || 'auto'} onValueChange={v => setSettingsLanguage(v === 'auto' ? '' : v)}>
-                <SelectTrigger className="h-9">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="auto">🌐 Auto (Browser)</SelectItem>
-                  {LANGUAGE_OPTIONS.map(lang => (
-                    <SelectItem key={lang.value} value={lang.value}>{lang.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Participation Mode - only if feedback public */}
+            {settingsIsFeedbackPublic && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">
+                    {tR.t('editor.participationMode')}
+                  </Label>
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setSettingsAuthMode('anonymous')}
+                      className={cn(
+                        "w-full text-left p-3 rounded-lg border-2 transition-all",
+                        settingsAuthMode === 'anonymous' ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", settingsAuthMode === 'anonymous' ? "border-primary" : "border-muted-foreground/40")}>
+                          {settingsAuthMode === 'anonymous' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{tR.t('editor.anonymous')}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 ml-6">{tR.t('editor.anonymousDesc')}</p>
+                    </button>
+                    <button
+                      onClick={() => setSettingsAuthMode('authenticated')}
+                      className={cn(
+                        "w-full text-left p-3 rounded-lg border-2 transition-all",
+                        settingsAuthMode === 'authenticated' ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={cn("w-4 h-4 rounded-full border-2 flex items-center justify-center", settingsAuthMode === 'authenticated' ? "border-primary" : "border-muted-foreground/40")}>
+                          {settingsAuthMode === 'authenticated' && <div className="w-2 h-2 rounded-full bg-primary" />}
+                        </div>
+                        <Lock className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{tR.t('editor.authenticated')}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 ml-6">{tR.t('editor.authenticatedDesc')}</p>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>{tR.t('editor.cancel')}</Button>
-            <Button onClick={handleSaveSettings}>{tR.t('editor.save')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+          <SheetFooter className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
+            <div className="flex gap-2 w-full">
+              <Button variant="outline" className="flex-1" onClick={() => setShowSettingsDialog(false)}>{tR.t('editor.cancel')}</Button>
+              <Button className="flex-1" onClick={handleSaveSettings}>{tR.t('editor.save')}</Button>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

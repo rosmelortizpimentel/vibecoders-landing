@@ -225,7 +225,8 @@ export default function RoadmapEditor() {
   // Form states
   const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: 'Inter' });
   const [cardForm, setCardForm] = useState({ title: '', description: '' });
-  const [settingsForm, setSettingsForm] = useState({ custom_title: '', font_family: 'Inter', favicon_url: '' });
+  const [settingsForm, setSettingsForm] = useState({ default_language: '', font_family: 'Inter', favicon_url: '' });
+  const [userProfileLanguage, setUserProfileLanguage] = useState<string>('es');
 
   // Feedback management
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
@@ -346,11 +347,20 @@ export default function RoadmapEditor() {
     })();
   }, [app?.user_id]);
 
+  // Fetch user profile language
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase.from('profiles').select('language').eq('id', user.id).maybeSingle();
+      if (data?.language) setUserProfileLanguage(data.language);
+    })();
+  }, [user]);
+
   // Sync settings form
   useEffect(() => {
     if (roadmap.settings) {
       setSettingsForm({
-        custom_title: roadmap.settings.custom_title || '',
+        default_language: (roadmap.settings as any).default_language || '',
         font_family: roadmap.settings.font_family || 'Inter',
         favicon_url: roadmap.settings.favicon_url || '',
       });
@@ -765,12 +775,18 @@ export default function RoadmapEditor() {
             {/* Branding section */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.customTitle')}</Label>
-                <Input
-                  value={settingsForm.custom_title}
-                  onChange={e => setSettingsForm(prev => ({ ...prev, custom_title: e.target.value }))}
-                  placeholder={t('editor.customTitlePlaceholder')}
-                />
+                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.defaultLanguage')}</Label>
+                <Select value={settingsForm.default_language || userProfileLanguage} onValueChange={v => setSettingsForm(prev => ({ ...prev, default_language: v }))}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="es">Español</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="pt">Português</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.fontFamily')}</Label>
