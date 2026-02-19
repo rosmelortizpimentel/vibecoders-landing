@@ -5,10 +5,10 @@ import { useApps } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
 import { MeTabs } from '@/components/me/MeTabs';
 import { ProfileTab } from '@/components/me/ProfileTab';
-import { AppsTab } from '@/components/me/AppsTab';
 import { BrandingTab } from '@/components/me/BrandingTab';
 import { ProfilePreview } from '@/components/me/ProfilePreview';
-import { Loader2, Eye, X, Smartphone } from 'lucide-react';
+import { Loader2, Eye, X, Smartphone, User } from 'lucide-react';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +25,19 @@ const Me = () => {
   const appsHook = useApps();
   const isMobile = useIsMobile();
   const t = useTranslation('profile');
+  const tCommon = useTranslation('common');
   const [previewOpen, setPreviewOpen] = useState(false);
+  const { setHeaderContent } = usePageHeader();
+
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex items-center gap-2 min-w-0">
+        <User className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground truncate">{tCommon.navigation.myProfile}</span>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
 
   const { profile, loading, isSaving, error } = profileEditor;
 
@@ -42,7 +54,6 @@ const Me = () => {
 
   // Determine active tab from URL
   const getActiveTab = () => {
-    if (location.pathname === '/me/apps') return 'apps';
     if (location.pathname === '/me/branding') return 'branding';
     return 'profile';
   };
@@ -67,7 +78,7 @@ const Me = () => {
         <div className="flex gap-4 sm:gap-6">
           {/* Main content */}
           <div className={showPreview ? 'w-[60%]' : 'w-full max-w-full overflow-x-hidden'}>
-            <MeTabs />
+            <MeTabs onPreviewClick={() => setPreviewOpen(true)} username={profile?.username} />
             
             <div className={`mt-4 sm:mt-6 ${showMobilePreview ? 'pb-20' : ''}`}>
               {activeTab === 'profile' && (
@@ -80,9 +91,6 @@ const Me = () => {
                   isSaving={isSaving}
                   error={error}
                 />
-              )}
-              {activeTab === 'apps' && (
-                <AppsTab appsHook={appsHook} />
               )}
               {activeTab === 'branding' && (
                 <BrandingTab 

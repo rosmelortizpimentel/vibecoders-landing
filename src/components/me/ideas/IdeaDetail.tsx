@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MarkdownEditor } from '@/components/beta/MarkdownEditor';
-import { Loader2, Trash2, Save, X } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2, Trash2, Save, ChevronLeft } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,13 +21,15 @@ export interface Idea {
   title: string;
   description: string | null;
   created_at?: string;
+  display_order?: number;
+  is_done?: boolean;
 }
 
 interface IdeaDetailProps {
-  idea: Idea | null; // null means new idea
+  idea: Idea | null;
   onSave: (idea: Partial<Idea>) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onCancel: () => void; // for closing the Detail view on mobile or just resetting
+  onCancel: () => void;
   onDirtyChange: (isDirty: boolean) => void;
   isSaving: boolean;
 }
@@ -42,11 +44,9 @@ export function IdeaDetail({
 }: IdeaDetailProps) {
   const { t } = useTranslation('profile');
   
-  // Local state for form fields
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   
-  // Initialize form when idea changes
   useEffect(() => {
     if (idea) {
       setTitle(idea.title || '');
@@ -57,18 +57,15 @@ export function IdeaDetail({
     }
   }, [idea]);
 
-  // Check unique dirty state
   useEffect(() => {
     const originalTitle = idea?.title || '';
     const originalDesc = idea?.description || '';
-    
     const isDirty = title !== originalTitle || description !== originalDesc;
     onDirtyChange(isDirty);
   }, [title, description, idea, onDirtyChange]);
 
   const handleSave = async () => {
     if (!title.trim()) return;
-    
     await onSave({
       id: idea?.id,
       title,
@@ -80,11 +77,21 @@ export function IdeaDetail({
 
   return (
     <div className="h-full flex flex-col bg-card rounded-lg border border-border overflow-hidden">
+      {/* Back button */}
+      <div className="p-3 border-b border-border">
+        <Button 
+          variant="ghost" 
+          className="-ml-2 gap-1 text-muted-foreground text-xs"
+          onClick={onCancel}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          {t('ideas.backToList')}
+        </Button>
+      </div>
 
-      {/* Form Content */}
-      <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+      <div className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6 overflow-y-auto">
         <div className="space-y-2">
-          <label htmlFor="title" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label htmlFor="title" className="text-sm font-medium leading-none">
             {t('ideas.titleLabel')} <span className="text-destructive">*</span>
           </label>
           <Input
@@ -97,23 +104,23 @@ export function IdeaDetail({
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="description" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          <label htmlFor="description" className="text-sm font-medium leading-none">
             {t('ideas.descriptionLabel')}
           </label>
-          <MarkdownEditor
+          <Textarea
+            id="description"
             value={description}
-            onChange={(val) => {
-              setDescription(val);
+            onChange={(e) => {
+              setDescription(e.target.value);
               onDirtyChange(true);
             }}
             placeholder={t('ideas.descriptionPlaceholder')}
-            className="min-h-[200px]"
+            className="min-h-[200px] resize-y"
           />
         </div>
       </div>
 
-      {/* Footer Actions */}
-      <div className="p-4 border-t border-border bg-muted/30 flex justify-between items-center gap-2">
+      <div className="p-3 md:p-4 border-t border-border bg-muted/30 flex justify-between items-center gap-2">
         <div>
           {!isNew && (
             <AlertDialog>
@@ -125,9 +132,7 @@ export function IdeaDetail({
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>{t('ideas.confirmDeleteTitle')}</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {t('ideas.confirmDeleteMessage')}
-                  </AlertDialogDescription>
+                  <AlertDialogDescription>{t('ideas.confirmDeleteMessage')}</AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>{t('ideas.cancel')}</AlertDialogCancel>
@@ -144,12 +149,10 @@ export function IdeaDetail({
         </div>
 
         <div className="flex gap-2">
-          {/* Cancel button mainly for mobile or resetting state */}
-          <Button variant="ghost" onClick={onCancel} disabled={isSaving}>
-             {t('ideas.cancel')}
+          <Button variant="ghost" onClick={onCancel} disabled={isSaving} size="sm" className="md:size-default">
+            {t('ideas.cancel')}
           </Button>
-          
-          <Button onClick={handleSave} disabled={isSaving || !title.trim()}>
+          <Button onClick={handleSave} disabled={isSaving || !title.trim()} size="sm" className="md:size-default">
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

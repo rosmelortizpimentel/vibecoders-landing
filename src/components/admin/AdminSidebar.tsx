@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Layers, Settings, Users, Mail, Cpu, MessageCircle, ChevronLeft, ChevronRight, Menu, Bell, ClipboardList } from 'lucide-react';
+import { LayoutGrid, Layers, Settings, Users, Mail, Cpu, MessageCircle, ChevronLeft, ChevronRight, Menu, Bell, ClipboardList, AppWindow, PanelLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -41,9 +41,19 @@ const menuItems = [
     icon: Bell,
   },
   {
+    title: 'Apps',
+    href: '/admin/apps',
+    icon: AppWindow,
+  },
+  {
     title: 'Surveys',
     href: '/admin/surveys',
     icon: ClipboardList,
+  },
+  {
+    title: 'Menú',
+    href: '/admin/menu',
+    icon: PanelLeft,
   },
   {
     title: 'Settings',

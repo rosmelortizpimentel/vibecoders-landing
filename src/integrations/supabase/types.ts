@@ -200,6 +200,7 @@ export type Database = {
           created_at: string
           description: string | null
           display_order: number
+          favicon_url: string | null
           hours_building: number | null
           hours_ideation: number | null
           id: string
@@ -228,6 +229,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number
+          favicon_url?: string | null
           hours_building?: number | null
           hours_ideation?: number | null
           id?: string
@@ -256,6 +258,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           display_order?: number
+          favicon_url?: string | null
           hours_building?: number | null
           hours_ideation?: number | null
           id?: string
@@ -773,13 +776,13 @@ export type Database = {
       profiles: {
         Row: {
           accent_color: string | null
-          booking_button_text: string | null
-          booking_url: string | null
           avatar_position: string | null
           avatar_url: string | null
           banner_position: string | null
           banner_url: string | null
           bio: string | null
+          booking_button_text: string | null
+          booking_url: string | null
           card_style: string | null
           created_at: string | null
           display_order: number | null
@@ -811,13 +814,13 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
-          booking_button_text?: string | null
-          booking_url?: string | null
           avatar_position?: string | null
           avatar_url?: string | null
           banner_position?: string | null
           banner_url?: string | null
           bio?: string | null
+          booking_button_text?: string | null
+          booking_url?: string | null
           card_style?: string | null
           created_at?: string | null
           display_order?: number | null
@@ -849,13 +852,13 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
-          booking_button_text?: string | null
-          booking_url?: string | null
           avatar_position?: string | null
           avatar_url?: string | null
           banner_position?: string | null
           banner_url?: string | null
           bio?: string | null
+          booking_button_text?: string | null
+          booking_url?: string | null
           card_style?: string | null
           created_at?: string | null
           display_order?: number | null
@@ -1027,6 +1030,313 @@ export type Database = {
           },
         ]
       }
+      roadmap_card_likes: {
+        Row: {
+          card_id: string
+          created_at: string
+          device_fingerprint: string
+          id: string
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          device_fingerprint: string
+          id?: string
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          device_fingerprint?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_card_likes_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_cards: {
+        Row: {
+          app_id: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          lane_id: string
+          likes_count: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          app_id: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          lane_id: string
+          likes_count?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          app_id?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          lane_id?: string
+          likes_count?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_cards_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadmap_cards_lane_id_fkey"
+            columns: ["lane_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_lanes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_feedback: {
+        Row: {
+          app_id: string
+          author_email: string | null
+          author_name: string | null
+          created_at: string
+          description: string
+          id: string
+          is_hidden: boolean
+          likes_count: number
+          linked_card_id: string | null
+          owner_response: string | null
+          owner_response_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          app_id: string
+          author_email?: string | null
+          author_name?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          is_hidden?: boolean
+          likes_count?: number
+          linked_card_id?: string | null
+          owner_response?: string | null
+          owner_response_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          app_id?: string
+          author_email?: string | null
+          author_name?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          is_hidden?: boolean
+          likes_count?: number
+          linked_card_id?: string | null
+          owner_response?: string | null
+          owner_response_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_feedback_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadmap_feedback_linked_card_id_fkey"
+            columns: ["linked_card_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_feedback_attachments: {
+        Row: {
+          created_at: string
+          feedback_id: string
+          file_name: string
+          file_path: string | null
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback_id: string
+          file_name: string
+          file_path?: string | null
+          file_size?: number
+          file_type: string
+          file_url: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          feedback_id?: string
+          file_name?: string
+          file_path?: string | null
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_feedback_attachments_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_feedback_likes: {
+        Row: {
+          created_at: string
+          device_fingerprint: string
+          feedback_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          device_fingerprint: string
+          feedback_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          device_fingerprint?: string
+          feedback_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_feedback_likes_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_lanes: {
+        Row: {
+          app_id: string
+          color: string
+          created_at: string
+          display_order: number
+          font: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          app_id: string
+          color?: string
+          created_at?: string
+          display_order?: number
+          font?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          app_id?: string
+          color?: string
+          created_at?: string
+          display_order?: number
+          font?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_lanes_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_settings: {
+        Row: {
+          app_id: string
+          created_at: string
+          custom_title: string | null
+          default_language: string | null
+          favicon_url: string | null
+          feedback_auth_mode: string
+          font_family: string | null
+          id: string
+          is_feedback_public: boolean
+          is_public: boolean
+          updated_at: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string
+          custom_title?: string | null
+          default_language?: string | null
+          favicon_url?: string | null
+          feedback_auth_mode?: string
+          font_family?: string | null
+          id?: string
+          is_feedback_public?: boolean
+          is_public?: boolean
+          updated_at?: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string
+          custom_title?: string | null
+          default_language?: string | null
+          favicon_url?: string | null
+          feedback_auth_mode?: string
+          font_family?: string | null
+          id?: string
+          is_feedback_public?: boolean
+          is_public?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_settings_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: true
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrape_logs: {
         Row: {
           created_at: string | null
@@ -1105,6 +1415,167 @@ export type Database = {
           project_thumbnail?: string
           project_title?: string
           project_url?: string
+        }
+        Relationships: []
+      }
+      sidebar_menu_items: {
+        Row: {
+          created_at: string
+          css_class: string | null
+          display_order: number
+          icon: string
+          id: string
+          is_active: boolean
+          key: string
+          label_key: string
+          path: string
+          requires_waitlist: boolean
+          section: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          css_class?: string | null
+          display_order?: number
+          icon: string
+          id?: string
+          is_active?: boolean
+          key: string
+          label_key: string
+          path: string
+          requires_waitlist?: boolean
+          section?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          css_class?: string | null
+          display_order?: number
+          icon?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          label_key?: string
+          path?: string
+          requires_waitlist?: boolean
+          section?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      survey_options: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          order_index: number
+          survey_id: string | null
+          text: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index: number
+          survey_id?: string | null
+          text: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          order_index?: number
+          survey_id?: string | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_options_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_responses: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          ordered_option_ids: string[]
+          skipped: boolean | null
+          survey_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          ordered_option_ids: string[]
+          skipped?: boolean | null
+          survey_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          ordered_option_ids?: string[]
+          skipped?: boolean | null
+          survey_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_survey_responses_profiles"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surveys: {
+        Row: {
+          badge_text: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          question: string
+          show_comment_field: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          badge_text?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          question: string
+          show_comment_field?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          badge_text?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          question?: string
+          show_comment_field?: boolean | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1271,7 +1742,9 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          display_order: number
           id: string
+          is_done: boolean
           title: string
           updated_at: string
           user_id: string
@@ -1279,7 +1752,9 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          display_order?: number
           id?: string
+          is_done?: boolean
           title?: string
           updated_at?: string
           user_id: string
@@ -1287,7 +1762,9 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          display_order?: number
           id?: string
+          is_done?: boolean
           title?: string
           updated_at?: string
           user_id?: string

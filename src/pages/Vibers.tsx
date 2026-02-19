@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { 
   Users, 
   Search, 
@@ -7,6 +7,7 @@ import {
   Rocket,
   ShieldAlert
 } from 'lucide-react';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFollowAction } from '@/hooks/useFollowAction';
@@ -53,11 +54,21 @@ interface ProfileSummary {
 export default function Vibers() {
   const { stats, isLoading } = useDashboardStats();
   const { t } = useTranslation('vibers');
+  const tCommon = useTranslation('common');
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState<'followers' | 'following'>('followers');
+  const [activeTab, setActiveTab] = useState<'followers' | 'following' | 'community'>('followers');
+  const { setHeaderContent } = usePageHeader();
 
-  // Removed filterUsers function to use direct filtering in useMemo
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex items-center gap-2 min-w-0">
+        <Users className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground truncate">{tCommon.navigation.vibers}</span>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
 
   const filteredFollowers = useMemo(() => 
     (stats?.followers || [])
@@ -79,53 +90,59 @@ export default function Vibers() {
     [stats?.following, searchTerm]
   );
 
+  const filteredCommunity = useMemo(() => 
+    (stats?.community || [])
+      .filter(user => 
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        user.username.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .sort((a, b) => (b.activeAppsCount || 0) - (a.activeAppsCount || 0)),
+    [stats?.community, searchTerm]
+  );
+
   return (
-    <div className="flex-1 space-y-8 w-full max-w-5xl mx-auto pb-24 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            {t('title')}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {t('subtitle')}
-          </p>
-        </div>
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input 
-            placeholder={t('search')} 
-            className="pl-10 bg-background/50 border-border/50 focus:border-primary/50 transition-all rounded-xl"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-      </div>
-
-      {/* Grid Content */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'followers' | 'following')} className="w-full">
-        <div className="flex items-center justify-between mb-6">
-          <TabsList className="bg-muted/50 p-1 rounded-xl border border-border/50">
-            <TabsTrigger value="followers" className="rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
-              {t('followersTab')}
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-none pointer-events-none px-1.5 py-0 h-5 text-[10px] font-bold">
-                {isLoading ? '...' : (stats?.followersCount ?? 0)}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="following" className="rounded-lg px-6 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-2">
-              {t('followingTab')}
-              <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-500 border-none pointer-events-none px-1.5 py-0 h-5 text-[10px] font-bold">
-                {isLoading ? '...' : (stats?.followingCount ?? 0)}
-              </Badge>
-            </TabsTrigger>
-          </TabsList>
+    <div className="flex-1 space-y-6 w-full max-w-5xl mx-auto pb-24 animate-in fade-in duration-500">
+      {/* Tabs + Search in one row */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} className="w-full">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="w-full sm:w-auto overflow-x-auto scrollbar-hide">
+            <TabsList className="bg-muted/50 p-1 rounded-xl border border-border/50 inline-flex w-max sm:w-auto">
+              <TabsTrigger value="followers" className="rounded-lg px-3 sm:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+                {t('followersTab')}
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-none pointer-events-none px-1 sm:px-1.5 py-0 h-4 sm:h-5 text-[9px] sm:text-[10px] font-bold">
+                  {isLoading ? '...' : (stats?.followersCount ?? 0)}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="following" className="rounded-lg px-3 sm:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+                {t('followingTab')}
+                <Badge variant="secondary" className="bg-indigo-500/10 text-indigo-500 border-none pointer-events-none px-1 sm:px-1.5 py-0 h-4 sm:h-5 text-[9px] sm:text-[10px] font-bold">
+                  {isLoading ? '...' : (stats?.followingCount ?? 0)}
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="community" className="rounded-lg px-3 sm:px-4 data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1.5 text-xs sm:text-sm whitespace-nowrap">
+                {t('allTab') || 'Todos'}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          <div className="relative w-full sm:w-64 sm:ml-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input 
+              placeholder={t('search')} 
+              className="pl-10 bg-background/50 border-border/50 focus:border-primary/50 transition-all rounded-xl"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
 
-        <TabsContent value="followers" className="m-0">
+        <TabsContent value="followers" className="m-0 mt-6">
           <ViberGrid users={filteredFollowers} isLoading={isLoading} emptyMessage={t('empty.title')} emptySub={t('empty.description')} />
         </TabsContent>
-        <TabsContent value="following" className="m-0">
+        <TabsContent value="following" className="m-0 mt-6">
           <ViberGrid users={filteredFollowing} isLoading={isLoading} emptyMessage={t('empty.title')} emptySub={t('empty.description')} />
+        </TabsContent>
+        <TabsContent value="community" className="m-0 mt-6">
+          <ViberGrid users={filteredCommunity} isLoading={isLoading} emptyMessage={t('empty.title')} emptySub={t('empty.description')} />
         </TabsContent>
       </Tabs>
     </div>

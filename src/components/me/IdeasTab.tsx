@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from '@/hooks/useTranslation';
 import { 
@@ -6,13 +7,16 @@ import {
   Lightbulb, 
   Search, 
   Loader2, 
-  ChevronLeft 
+  CheckCircle2,
+  Circle,
+  X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { IdeaDetail, Idea } from './ideas/IdeaDetail';
+import { SortableIdeaCard } from './ideas/SortableIdeaCard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,45 +29,69 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
+import { differenceInDays } from 'date-fns';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
 
-export function IdeasTab() {
-  const t = useTranslation('profile').t; // Access t function directly if useTranslation returns object
+interface IdeasTabProps {
+  initialIdeaId?: string;
+}
 
-
+export function IdeasTab({ initialIdeaId }: IdeasTabProps) {
+  const { t } = useTranslation('profile');
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedID, setSelectedID] = useState<string | null>(null);
+  const [selectedID, setSelectedID] = useState<string | null>(initialIdeaId === 'new' ? 'new' : initialIdeaId || null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState<'pending' | 'done'>('pending');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   
-  // Dirty state management for unsaved changes
   const [isDetailDirty, setIsDetailDirty] = useState(false);
-  const [pendingID, setPendingID] = useState<string | null>(null); // ID we want to switch TO
+  const [pendingID, setPendingID] = useState<string | null>(null);
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Deletion state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [idToDelete, setIdToDelete] = useState<string | null>(null);
 
-  // Fetch ideas
+  const [pendingToggle, setPendingToggle] = useState<{ id: string; newDone: boolean } | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const getDaysTag = useCallback((createdAt: string): string => {
+    const days = differenceInDays(new Date(), new Date(createdAt));
+    if (days === 0) return t('ideas.today');
+    return `${days}d`;
+  }, [t]);
+
   useEffect(() => {
     const fetchIdeas = async () => {
       try {
         const { data, error } = await supabase
           .from('user_ideas')
           .select('*')
-          .order('updated_at', { ascending: false });
+          .order('is_done' as string, { ascending: true })
+          .order('display_order' as string, { ascending: true })
+          .order('created_at', { ascending: false });
 
         if (error) throw error;
-        setIdeas(data || []);
-        
-        // Select first idea on desktop if none selected and we have ideas
-        if (!isMobile && data && data.length > 0 && !selectedID) {
-           setSelectedID(data[0].id);
-        }
-
+        setIdeas((data as unknown as Idea[]) || []);
       } catch (error) {
         console.error('Error fetching ideas:', error);
         toast.error(t('error'));
@@ -74,37 +102,58 @@ export function IdeasTab() {
 
     fetchIdeas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
+  }, []);
 
-  // Refetch helper
   const refetchIdeas = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('user_ideas')
-          .select('*')
-          .order('updated_at', { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from('user_ideas')
+        .select('*')
+        .order('is_done' as string, { ascending: true })
+        .order('display_order' as string, { ascending: true })
+        .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        setIdeas(data || []);
-      } catch (error) {
-        console.error('Error fetching ideas:', error);
-      }
+      if (error) throw error;
+      setIdeas((data as unknown as Idea[]) || []);
+    } catch (error) {
+      console.error('Error fetching ideas:', error);
+    }
   };
 
-  // Filter ideas
-  const filteredIdeas = ideas.filter(idea => 
+  const sortedIdeas = [...ideas].sort((a, b) => {
+    const aDone = a.is_done ? 1 : 0;
+    const bDone = b.is_done ? 1 : 0;
+    if (aDone !== bDone) return aDone - bDone;
+    return (a.display_order || 0) - (b.display_order || 0);
+  });
+
+  const filteredIdeas = sortedIdeas.filter(idea => 
     idea.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (idea.description && idea.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  const pendingFilteredIdeas = filteredIdeas.filter(i => !i.is_done);
+  const doneFilteredIdeas = filteredIdeas.filter(i => i.is_done);
+
+  const pendingCount = ideas.filter(i => !i.is_done).length;
+  const doneCount = ideas.filter(i => i.is_done).length;
+
+  const showDetail = selectedID !== null;
+
   const handleSelectIdea = (id: string | null) => {
     if (selectedID === id) return;
-
     if (isDetailDirty) {
       setPendingID(id);
       setShowUnsavedDialog(true);
     } else {
       setSelectedID(id);
+      if (id === null) {
+        navigate('/ideas', { replace: true });
+      } else if (id === 'new') {
+        navigate('/ideas/new', { replace: true });
+      } else {
+        navigate(`/ideas/${id}`, { replace: true });
+      }
     }
   };
 
@@ -112,6 +161,13 @@ export function IdeasTab() {
     setSelectedID(pendingID);
     setIsDetailDirty(false);
     setShowUnsavedDialog(false);
+    if (pendingID === null) {
+      navigate('/ideas', { replace: true });
+    } else if (pendingID === 'new') {
+      navigate('/ideas/new', { replace: true });
+    } else {
+      navigate(`/ideas/${pendingID}`, { replace: true });
+    }
     setPendingID(null);
   };
 
@@ -121,7 +177,34 @@ export function IdeasTab() {
   };
 
   const handleCreateNew = () => {
-     handleSelectIdea('new');
+    handleSelectIdea('new');
+  };
+
+  const requestToggleDone = (id: string, newDone: boolean) => {
+    setPendingToggle({ id, newDone });
+  };
+
+  const confirmToggleDone = async () => {
+    if (!pendingToggle) return;
+    await handleToggleDone(pendingToggle.id, pendingToggle.newDone);
+    setPendingToggle(null);
+  };
+
+  const handleToggleDone = async (id: string, done: boolean) => {
+    setIdeas(prev => prev.map(i => i.id === id ? { ...i, is_done: done } : i));
+    
+    try {
+      const { error } = await supabase
+        .from('user_ideas')
+        .update({ is_done: done } as Record<string, unknown>)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error toggling done:', error);
+      setIdeas(prev => prev.map(i => i.id === id ? { ...i, is_done: !done } : i));
+      toast.error(t('error'));
+    }
   };
 
   const handleSave = async (ideaData: Partial<Idea>) => {
@@ -131,47 +214,45 @@ export function IdeasTab() {
       if (!user) return;
 
       if (ideaData.id) {
-        // Update
         const { error } = await supabase
           .from('user_ideas')
           .update({
-             title: ideaData.title,
-             description: ideaData.description,
-             updated_at: new Date().toISOString()
+            title: ideaData.title,
+            description: ideaData.description,
+            updated_at: new Date().toISOString()
           })
           .eq('id', ideaData.id);
         
         if (error) throw error;
         toast.success(t('saved'));
       } else {
-        // Create
-        const { data, error } = await supabase
-          .from('user_ideas')
-          .insert({
+        const maxOrder = ideas.reduce((max, i) => Math.max(max, i.display_order || 0), 0);
+        const insertData: Record<string, unknown> = {
             user_id: user.id,
             title: ideaData.title,
-            description: ideaData.description
-          })
+            description: ideaData.description,
+            display_order: maxOrder + 1
+        };
+        const { data, error } = await supabase
+          .from('user_ideas')
+          .insert(insertData as any)
           .select()
           .single();
         
         if (error) throw error;
         toast.success(t('saved'));
         
-        // Update list and select the new idea
         if (data) {
-            setIdeas([data, ...ideas]);
-            setSelectedID(data.id);
-            // dirty state will reset because selectedID changes
-            setIsDetailDirty(false);
-            return; // Exit early to avoid fetchIdeas call if we manually updated state (though fetchIdeas is safer)
+          setIdeas([(data as unknown as Idea), ...ideas]);
+          setSelectedID(data.id);
+          setIsDetailDirty(false);
+          navigate(`/ideas/${data.id}`, { replace: true });
+          return;
         }
       }
       
-      // Refresh list
       await refetchIdeas();
       setIsDetailDirty(false);
-
     } catch (error) {
       console.error('Error saving idea:', error);
       toast.error(t('error'));
@@ -192,6 +273,7 @@ export function IdeasTab() {
       setIdeas(ideas.filter(i => i.id !== id));
       if (selectedID === id) {
         setSelectedID(null);
+        navigate('/ideas', { replace: true });
       }
       toast.success(t('ideas.delete')); 
     } catch (error) {
@@ -207,14 +289,47 @@ export function IdeasTab() {
     setIdToDelete(id);
     setIsDeleteDialogOpen(true);
   };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = pendingFilteredIdeas.findIndex(i => i.id === active.id);
+    const newIndex = pendingFilteredIdeas.findIndex(i => i.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(pendingFilteredIdeas, oldIndex, newIndex);
+    
+    // Update local state optimistically
+    const previousIdeas = [...ideas];
+    const updatedIdeas = ideas.map(idea => {
+      const newIdx = reordered.findIndex(r => r.id === idea.id);
+      if (newIdx !== -1) {
+        return { ...idea, display_order: newIdx };
+      }
+      return idea;
+    });
+    setIdeas(updatedIdeas);
+
+    // Persist to Supabase
+    try {
+      const updates = reordered.map((idea, idx) => 
+        supabase
+          .from('user_ideas')
+          .update({ display_order: idx } as Record<string, unknown>)
+          .eq('id', idea.id)
+      );
+      await Promise.all(updates);
+    } catch (error) {
+      console.error('Error persisting order:', error);
+      setIdeas(previousIdeas);
+      toast.error(t('error'));
+    }
+  };
   
   const selectedIdea = selectedID === 'new' 
     ? null 
     : ideas.find(i => i.id === selectedID) || null;
-
-  // Determine view state
-  // Desktop: Always show List (left) + Detail (right). Detail is empty if no selection.
-  // Mobile: Show List. If selectedID, show Detail (full screen override).
 
   if (loading) {
     return (
@@ -224,15 +339,47 @@ export function IdeasTab() {
     );
   }
 
+  const displayedIdeas = activeTab === 'pending' ? pendingFilteredIdeas : doneFilteredIdeas;
+
+  // Detail view
+  if (showDetail) {
+    return (
+      <div className="h-full">
+        <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('ideas.unsavedChangesTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('ideas.unsavedChangesMessage')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={cancelNavigation}>{t('ideas.keepEditing')}</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmNavigation}>{t('ideas.discard')}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <IdeaDetail 
+          key={selectedID}
+          idea={selectedIdea} 
+          onSave={handleSave}
+          onDelete={handleDelete}
+          onCancel={() => handleSelectIdea(null)}
+          onDirtyChange={setIsDetailDirty}
+          isSaving={isSaving}
+        />
+      </div>
+    );
+  }
+
+  // Grid view
   return (
-    <div className="h-[calc(100vh-200px)] min-h-[500px]">
+    <div className="h-full space-y-3">
+      {/* Unsaved changes dialog */}
       <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('ideas.unsavedChangesTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('ideas.unsavedChangesMessage')}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t('ideas.unsavedChangesMessage')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelNavigation}>{t('ideas.keepEditing')}</AlertDialogCancel>
@@ -241,13 +388,12 @@ export function IdeasTab() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Delete confirmation dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent className="max-w-[400px]">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-bold">{t('ideas.confirmDeleteTitle')}</AlertDialogTitle>
-            <AlertDialogDescription className="text-sm">
-              {t('ideas.confirmDeleteMessage')}
-            </AlertDialogDescription>
+            <AlertDialogDescription className="text-sm">{t('ideas.confirmDeleteMessage')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 mt-4">
             <AlertDialogCancel className="h-9 px-4 rounded-lg bg-muted/50 border-none hover:bg-muted transition-colors">
@@ -263,121 +409,140 @@ export function IdeasTab() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="grid md:grid-cols-12 gap-6 h-full">
-        {/* LEFT COLUMN: List */}
-        <div className={cn(
-          "md:col-span-4 lg:col-span-3 flex flex-col gap-4 h-full",
-          isMobile && selectedID ? "hidden" : "flex"
-        )}>
-           <div className="flex items-center gap-2">
-             <div className="relative flex-1">
-               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-               <Input
-                 placeholder={t('search') || "Search..."} 
-                 className="pl-9"
-                 value={searchQuery}
-                 onChange={(e) => setSearchQuery(e.target.value)}
-               />
-             </div>
-             <Button size="icon" onClick={handleCreateNew} className="h-10 w-10 shrink-0 rounded-full">
-                <Plus className="h-5 w-5" />
-             </Button>
-           </div>
+      {/* Toggle done confirmation dialog */}
+      <AlertDialog open={!!pendingToggle} onOpenChange={(open) => !open && setPendingToggle(null)}>
+        <AlertDialogContent className="max-w-[400px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingToggle?.newDone ? t('ideas.confirmCompleteTitle') : t('ideas.confirmReactivateTitle')}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingToggle?.newDone ? t('ideas.confirmCompleteMessage') : t('ideas.confirmReactivateMessage')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-4">
+            <AlertDialogCancel>{t('ideas.cancel')}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmToggleDone}>
+              {pendingToggle?.newDone ? t('ideas.markDone') : t('ideas.markPending')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-           <ScrollArea className="flex-1 -mx-2 px-2">
-             <div className="space-y-2">
-                {selectedID === 'new' && (
-                  <div className={cn(
-                    "p-3 rounded-lg border cursor-pointer bg-primary/5 border-primary"
-                  )}>
-                     <div className="font-medium text-primary">{t('ideas.newIdeaTitle')}</div>
-                  </div>
-                )}
-                
-                {filteredIdeas.length === 0 && searchQuery && (
-                   <div className="text-center py-8 text-muted-foreground text-sm">
-                      {t('noResults') || "No results found"}
-                   </div>
-                )}
+      {/* Header: Tabs + Search + Create */}
+      <div className="flex items-center gap-2">
+        {isMobile && isSearchOpen ? (
+          /* Mobile: expanded search */
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <Input
+              autoFocus
+              placeholder={t('ideas.search')}
+              className="h-9 text-sm flex-1"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </>
+        ) : (
+          /* Desktop always / Mobile default */
+          <>
+            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pending' | 'done')}>
+              <TabsList className="h-9">
+                <TabsTrigger value="pending" className="text-xs px-3 gap-1.5">
+                  <Circle className="h-3.5 w-3.5 text-primary" />
+                  {t('ideas.tabPending')} ({pendingCount})
+                </TabsTrigger>
+                <TabsTrigger value="done" className="text-xs px-3 gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                  {t('ideas.tabCompleted')} ({doneCount})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
 
-                {filteredIdeas.map(idea => (
-                  <div
-                    key={idea.id}
-                    onClick={() => handleSelectIdea(idea.id)}
-                    className={cn(
-                      "group flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all",
-                      selectedID === idea.id 
-                        ? "bg-primary text-primary-foreground shadow-md hover:bg-primary/90" 
-                        : "bg-background border border-border hover:bg-accent/50"
-                    )}
-                  >
-                    <h4 className="font-medium line-clamp-1 text-sm flex-1">{idea.title}</h4>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn(
-                        "h-6 w-6 ml-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity",
-                        selectedID === idea.id ? "text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/20" : ""
-                      )}
-                      onClick={(e) => {
-                         e.stopPropagation();
-                         openDeleteDialog(idea.id);
-                      }}
-                    >
-                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-trash-2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                    </Button>
-                  </div>
-                ))}
-
-                {ideas.length === 0 && !selectedID && (
-                    <div className="flex flex-col items-center justify-center py-10 text-center space-y-3 opacity-60">
-                       <Lightbulb className="h-10 w-10 text-muted-foreground" />
-                       <p className="text-sm text-muted-foreground">{t('ideas.noIdeasMessage')}</p>
-                       <Button variant="outline" size="sm" onClick={handleCreateNew}>
-                          {t('ideas.createNew')}
-                       </Button>
-                    </div>
-                )}
-             </div>
-           </ScrollArea>
-        </div>
-
-        {/* RIGHT COLUMN: Detail */}
-        <div className={cn(
-           "md:col-span-8 lg:col-span-9 h-full",
-           isMobile && !selectedID ? "hidden" : "block"
-        )}>
-          {(selectedID || selectedIdea) ? (
-             <div className="h-full flex flex-col">
-                {isMobile && (
-                   <Button 
-                     variant="ghost" 
-                     className="self-start mb-2 -ml-2 gap-1 text-muted-foreground"
-                     onClick={() => handleSelectIdea(null)}
-                   >
-                     <ChevronLeft className="h-4 w-4" />
-                     {t('ideas.backToList')}
-                   </Button>
-                )}
-                
-                <IdeaDetail 
-                  key={selectedID} // Force re-mount on ID change to reset local state
-                  idea={selectedIdea} 
-                  onSave={handleSave}
-                  onDelete={handleDelete}
-                  onCancel={() => handleSelectIdea(null)}
-                  onDirtyChange={setIsDetailDirty}
-                  isSaving={isSaving}
+            {isMobile ? (
+              /* Mobile: search icon */
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0 ml-auto"
+                onClick={() => setIsSearchOpen(true)}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            ) : (
+              /* Desktop: search input */
+              <div className="relative flex-1 max-w-xs ml-auto">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder={t('ideas.search')} 
+                  className="pl-9 h-9 text-sm"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-             </div>
-          ) : (
-             <div className="h-full flex flex-col items-center justify-center text-muted-foreground border rounded-lg border-dashed bg-muted/20">
-                <Lightbulb className="h-12 w-12 mb-4 opacity-20" />
-                <p>{t('ideas.selectIdea')}</p>
-             </div>
+              </div>
+            )}
+          </>
+        )}
+
+        <Button size="icon" onClick={handleCreateNew} className="h-9 w-9 shrink-0 rounded-full">
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Grid */}
+      {displayedIdeas.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center space-y-3 opacity-60">
+          <Lightbulb className="h-10 w-10 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">
+            {ideas.length === 0 ? t('ideas.noIdeasMessage') : t('ideas.noIdeasMessage')}
+          </p>
+          {ideas.length === 0 && (
+            <Button variant="outline" size="sm" onClick={handleCreateNew} className="text-xs h-7">
+              {t('ideas.createNew')}
+            </Button>
           )}
         </div>
-      </div>
+      ) : activeTab === 'pending' ? (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={displayedIdeas.map(i => i.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {displayedIdeas.map(idea => (
+                <SortableIdeaCard
+                  key={idea.id}
+                  idea={idea}
+                  getDaysTag={getDaysTag}
+                  onSelect={(id) => handleSelectIdea(id)}
+                  onDelete={openDeleteDialog}
+                  onToggleDone={requestToggleDone}
+                  t={t}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {displayedIdeas.map(idea => (
+            <SortableIdeaCard
+              key={idea.id}
+              idea={idea}
+              getDaysTag={getDaysTag}
+              onSelect={(id) => handleSelectIdea(id)}
+              onDelete={openDeleteDialog}
+              onToggleDone={requestToggleDone}
+              t={t}
+              isDragDisabled
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

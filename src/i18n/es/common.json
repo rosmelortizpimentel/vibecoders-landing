@@ -15,16 +15,20 @@
   "navigation": {
     "home": "Inicio",
     "myProfile": "Mi Perfil",
+    "myApps": "Mis Apps",
     "myIdeas": "Mis Ideas",
+    "roadmap": "Roadmap",
     "prompts": "Librería de Recursos",
-    "vibers": "Mis Conexiones",
+    "vibers": "Mi Comunidad",
     "betaTesting": "Mis Beta Testing",
     "startups": "Explorar",
     "publicBetaTesting": "App for Testing",
     "tools": "Herramientas",
     "feedback": "Hablemos",
+    "notifications": "Notificaciones",
     "buildLog": "Build Log",
     "admin": "Admin"
   },
-  "visitWebsite": "Visitar Sitio Web"
+  "visitWebsite": "Visitar Sitio Web",
+  "joinGroup": "Únete al Grupo"
 }

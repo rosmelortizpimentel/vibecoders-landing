@@ -51,6 +51,8 @@
   "required": "required",
   "ideas": {
     "title": "My Ideas",
+    "pageTitle": "My Ideas",
+    "pageDescription": "Capture your next big thing. Scratchpad for your flashes of genius.",
     "description": "A private space to store your ideas.",
     "noIdeasTitle": "No ideas yet",
     "noIdeasMessage": "You have no saved ideas. Start creating something amazing!",
@@ -70,7 +72,20 @@
     "unsavedChangesTitle": "Unsaved changes",
     "unsavedChangesMessage": "You have unsaved changes. Do you want to discard them or go back to save?",
     "discard": "Discard changes",
-    "keepEditing": "Keep editing"
+    "keepEditing": "Keep editing",
+    "today": "today",
+    "markDone": "Mark as done",
+    "markPending": "Reactivate",
+    "done": "Done",
+    "search": "Search...",
+    "tabPending": "Pending",
+    "tabCompleted": "Completed",
+    "confirmCompleteTitle": "Mark as completed?",
+    "confirmCompleteMessage": "This idea will be moved to the completed list.",
+    "confirmReactivateTitle": "Reactivate idea?",
+    "confirmReactivateMessage": "This idea will be moved back to the pending list.",
+    "edit": "Edit",
+    "daysAgo": "ago"
   },
   "bannerCrop": {
     "title": "Adjust Banner",

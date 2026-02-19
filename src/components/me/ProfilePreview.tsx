@@ -117,13 +117,12 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
     <div className="space-y-3">
       {/* Preview Header - hide in mobile sheet */}
       {!isMobileSheet && (
-        <div className="flex items-center justify-between px-1">
-          <span className="text-sm font-medium text-slate-500">{t.preview}</span>
+        <div className="flex items-center justify-end px-1">
           <a 
             href={`${window.location.origin}/@${username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
             title={t.viewLive}
           >
             <ExternalLink className="h-4 w-4" />
@@ -139,15 +138,6 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
         )}
         style={{ fontFamily }}
       >
-      {/* App-style Header - Logo on the left */}
-      <div className="flex items-center justify-start px-4 py-2 bg-white border-b border-gray-100">
-        <img 
-          src={vibecodersLogo} 
-          alt="Vibecoders" 
-          className="h-10 w-10 rounded-full border-2 border-gray-200"
-        />
-      </div>
-
       {/* Banner + Avatar */}
       <div className="relative">
         {profile.banner_url ? (
@@ -179,7 +169,7 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
       {/* Main Content */}
       <div className={`pt-12 md:pt-14 pb-6 px-4 md:px-6 space-y-3 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
         {/* Name + Pioneer Badge Container - Now justify-between */}
-        <div className="w-full flex items-center justify-between gap-4">
+        <div className={`w-full flex items-center gap-4 ${avatarPosition === 'center' ? 'justify-center' : 'justify-between'}`}>
           <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
             <h2 className="text-lg md:text-xl font-bold text-gray-900">
               {profile.name || 'Tu Nombre'}

@@ -1,55 +1,77 @@
 
 
-## Limpiar y corregir la configuracion de precios de Stripe
+## Mejoras en Feedback Publico y Panel de Mantenimiento
 
-### Problema actual
+### 1. Idioma en pagina publica de feedback (PublicRoadmap.tsx)
 
-Hay 10 settings de Stripe en `general_settings`, muchos redundantes o desactualizados. El precio activo apunta a $24/ano cuando deberia apuntar a $9.90/ano.
+**Problema**: El idioma del browser se aplica antes de que carguen los settings, pisando el `default_language` configurado.
 
-### Cambios en la base de datos (general_settings)
+**Solucion**: Inicializar `lang` como `'en'` sin aplicar browser language, y solo setear el idioma final cuando `default_language` llega de la DB. Si no hay `default_language`, entonces usar browser language como fallback. Actualmente el `useEffect` de browser language corre aunque `langResolved` sea false al inicio, y se aplica antes de que el fetch de settings complete.
 
-1. **Actualizar `stripe_active_price_id`** de `price_1SzoOTEK9buyjfG9HP7bspLX` ($24) a `price_1T07aoEK9buyjfG9VsJ3R1te` ($9.90)
+**Archivo**: `src/pages/PublicRoadmap.tsx`
+- Mover la deteccion del browser language al bloque del fetch de settings como fallback (solo si `default_language` no esta definido).
+- Eliminar el `useEffect` separado de deteccion de browser language.
 
-2. **Actualizar `stripe_active_price_amount`** de `24` a `9.90`
+---
 
-3. **Actualizar `stripe_active_product_name`** de `Vibe Coders Pro` a `Vibe Coder Pro Early Adopter` (o el nombre que prefieras)
+### 2. Attachments: imagenes como miniaturas, PDFs como icono de descarga (PublicRoadmap.tsx)
 
-4. **Eliminar settings redundantes** que ya no se usan y solo generan confusion:
-   - `stripe_early_adopter_990_price_id` (ya estara como el activo)
-   - `stripe_early_adopter_price_id` (plan de $12, obsoleto)
-   - `stripe_early_adopter_price_amount` (obsoleto)
-   - `stripe_early_adopter_product_name` (obsoleto)
+**Problema actual**: Todos los attachments se muestran como links de texto con icono de clip.
 
-5. **Mantener** los siguientes para referencia futura:
-   - `stripe_active_price_id` = $9.90 (el activo)
-   - `stripe_active_price_amount` = 9.90
-   - `stripe_active_product_name` = nombre del plan activo
-   - `stripe_allow_coupons` = true
-   - `stripe_pro_price_id` = $24 (para cuando suba el precio)
-   - `stripe_test_price_id` = $1 (para pruebas)
+**Solucion**:
+- **Imagenes** (file_type starts with `image/`): Mostrar como miniaturas (thumbnails) de ~80px debajo de la descripcion.
+- **PDFs** (file_type = `application/pdf`): Mostrar con icono de descarga/PDF.
+- **Al hacer click en imagen**: Abrir un dialog/drawer fullscreen (mobile) o modal (desktop) con navegacion izquierda/derecha entre todas las imagenes del feedback item.
 
-### Resultado
+**Componente nuevo**: `ImageGalleryDialog` dentro de `src/pages/PublicRoadmap.tsx` (inline, no necesita archivo separado).
+- Estado: `selectedFeedbackImages` (array de attachments de imagen) y `currentImageIndex`.
+- En mobile: usar `DialogContent` con `className="max-w-full h-full"` para fullscreen.
+- Botones de navegacion (ChevronLeft/ChevronRight) para recorrer imagenes.
+- Soporte de swipe en mobile via touch events.
 
-Despues de estos cambios, `create-checkout-session` usara automaticamente el precio de $9.90/ano porque lee `stripe_active_price_id` de la tabla. Los settings quedaran limpios y claros: solo 6 entradas en lugar de 10.
+---
 
-### Detalle tecnico
+### 3. Panel de mantenimiento: filtro de estado + cambio de estado + bugs + switch de visibilidad (UnifiedFeedbackList.tsx)
 
-Se ejecutara una migracion SQL con:
+**3a. Filtro adicional de Estado**
+- Agregar un segundo `Select` para filtrar por status: `all`, `new`, `reviewed`, `planned`, `in_progress`, `done`, `declined`, `open`, `closed`.
 
-```text
--- 1. Actualizar el precio activo a $9.90
-UPDATE general_settings SET value = 'price_1T07aoEK9buyjfG9VsJ3R1te' WHERE key = 'stripe_active_price_id';
-UPDATE general_settings SET value = '9.90' WHERE key = 'stripe_active_price_amount';
-UPDATE general_settings SET value = 'Vibe Coder Pro Early Adopter' WHERE key = 'stripe_active_product_name';
+**3b. Cambio de estado desde el panel**
+- Cada item tendra un dropdown para cambiar su status.
+- Para items `public` (roadmap_feedback): actualizar `roadmap_feedback.status`.
+- Para items `beta`/`bug` (beta_feedback): actualizar `beta_feedback.status`.
+- Refrescar la lista despues del cambio.
 
--- 2. Eliminar settings obsoletos
-DELETE FROM general_settings WHERE key IN (
-  'stripe_early_adopter_990_price_id',
-  'stripe_early_adopter_price_id',
-  'stripe_early_adopter_price_amount',
-  'stripe_early_adopter_product_name'
-);
+**3c. Registrar Bugs**
+- Agregar boton "Reportar Bug" que abre un dialog simple con titulo + descripcion.
+- Inserta en `beta_feedback` con `type: 'bug'` y el `app_id` actual.
+
+**3d. Switch de visibilidad publica**
+- Agregar columna `is_hidden` a `roadmap_feedback` (nueva migracion SQL).
+- Cada item publico tendra un switch (Eye/EyeOff) para ocultarlo del roadmap publico.
+- En `PublicRoadmap.tsx`, filtrar los feedback con `is_hidden = true`.
+
+**Nota sobre la columna `is_hidden`**: Se necesita agregar esta columna a la tabla `roadmap_feedback` via migracion SQL:
+```sql
+ALTER TABLE roadmap_feedback ADD COLUMN is_hidden boolean NOT NULL DEFAULT false;
 ```
 
-No se requieren cambios en el codigo -- `create-checkout-session` ya lee dinamicamente de `general_settings`.
+---
+
+### 4. Traducciones
+
+Agregar keys nuevas a los archivos de traduccion `src/i18n/{es,en}/apps.json`:
+- `hub.statusFilter`, `hub.allStatuses`, `hub.reportBug`, `hub.bugTitle`, `hub.bugDescription`, `hub.visibility`, `hub.hidden`, `hub.visible`
+
+---
+
+### Archivos a modificar
+
+| Archivo | Cambios |
+|---------|---------|
+| `src/pages/PublicRoadmap.tsx` | Fix idioma, attachments como thumbnails/PDF icons, galeria de imagenes fullscreen |
+| `src/components/beta/UnifiedFeedbackList.tsx` | Filtro de estado, cambio de estado, boton de bugs, switch de visibilidad |
+| `src/i18n/es/apps.json` | Nuevas traducciones para feedback management |
+| `src/i18n/en/apps.json` | Nuevas traducciones para feedback management |
+| Migracion SQL | Agregar columna `is_hidden` a `roadmap_feedback` |
 

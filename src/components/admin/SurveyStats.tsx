@@ -42,7 +42,7 @@ export function SurveyStats({ surveyId, onClose }: SurveyStatsProps) {
     queryKey: ['survey-stats', surveyId],
     queryFn: async () => {
       // 1. Get survey and options
-      const { data: survey, error: surveyError } = await supabase
+      const { data: survey, error: surveyError } = await (supabase as any)
         .from('surveys')
         .select('title, question, survey_options(id, text)')
         .eq('id', surveyId)
@@ -50,8 +50,7 @@ export function SurveyStats({ surveyId, onClose }: SurveyStatsProps) {
 
       if (surveyError) throw surveyError;
 
-      // 2. Get all responses (including skipped for details)
-      const { data: responses, error: responsesError } = await supabase
+      const { data: responses, error: responsesError } = await (supabase as any)
         .from('survey_responses')
         .select('*, profiles(name, avatar_url, username)')
         .eq('survey_id', surveyId)
@@ -94,6 +93,7 @@ export function SurveyStats({ surveyId, onClose }: SurveyStatsProps) {
       }, {} as Record<string, string>);
 
       return {
+        title: survey.title,
         question: survey.question,
         chartData,
         totalResponses: validResponses.length,
@@ -106,7 +106,7 @@ export function SurveyStats({ surveyId, onClose }: SurveyStatsProps) {
 
   const deleteResponseMutation = useMutation({
     mutationFn: async (responseId: string) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('survey_responses')
         .delete()
         .eq('id', responseId);

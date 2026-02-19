@@ -1,16 +1,29 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { User, Layers, Palette, FlaskConical, Lightbulb } from 'lucide-react';
+import { User, Palette, ExternalLink } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
-export function MeTabs() {
+interface MeTabsProps {
+  onPreviewClick?: () => void;
+  username?: string | null;
+}
+
+export function MeTabs({ onPreviewClick, username }: MeTabsProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const t = useTranslation('profile');
+
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  useEffect(() => {
+    const check = () => setIsLargeScreen(window.innerWidth >= 1280);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   
   const tabs = [
     { id: 'profile', label: t.tabs.profile, icon: User, path: '/me/profile' },
-    { id: 'apps', label: t.tabs.apps, icon: Layers, path: '/me/apps' },
     { id: 'branding', label: t.tabs.branding, icon: Palette, path: '/me/branding' },
   ];
   
@@ -41,6 +54,15 @@ export function MeTabs() {
           </button>
         );
       })}
+
+      {/* Preview tab - abre perfil público o Sheet */}
+      <button
+        onClick={isLargeScreen ? () => window.open(`/@${username}`, '_blank') : onPreviewClick}
+        className="flex items-center justify-center gap-2 px-3 sm:px-5 py-2 rounded-full text-sm text-slate-500 hover:text-slate-700 transition-all duration-200 whitespace-nowrap ml-auto"
+      >
+        <ExternalLink className="h-4 w-4 text-slate-400" />
+        <span className="hidden min-[420px]:inline">{t.preview}</span>
+      </button>
     </div>
   );
 }

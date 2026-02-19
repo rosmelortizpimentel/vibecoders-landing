@@ -20,6 +20,8 @@
   "following": "Siguiendo",
   "viewProfile": "Ver Perfil",
   "mutualContactsTab": "Contactos comunes",
+  "communityTab": "Comunidad",
+  "allTab": "Todos",
   "confirmUnfollow": {
     "title": "Dejar de seguir",
     "message": "¿Estás seguro que deseas dejar de seguir a {{name}}?",

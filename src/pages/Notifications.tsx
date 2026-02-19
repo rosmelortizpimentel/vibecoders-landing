@@ -3,14 +3,27 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { NotificationItem } from '@/components/notifications/NotificationItem';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { CheckCheck, BellOff, Loader2 } from 'lucide-react';
+import { CheckCheck, BellOff, Bell, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
 
 export const NotificationsPage: React.FC = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, isLoading, refetch } = useNotifications();
   const [activeTab, setActiveTab] = useState('all');
   const { t } = useTranslation('notifications');
+  const tCommon = useTranslation('common');
+  const { setHeaderContent } = usePageHeader();
+
+  useEffect(() => {
+    setHeaderContent(
+      <div className="flex items-center gap-2 min-w-0">
+        <Bell className="h-4 w-4 text-primary shrink-0" />
+        <span className="font-semibold text-foreground truncate">{(tCommon.navigation as any).notifications || 'Notifications'}</span>
+      </div>
+    );
+    return () => setHeaderContent(null);
+  }, [setHeaderContent]);
 
   const filteredNotifications = notifications.filter(n => {
     if (activeTab === 'unread') return !n.read_at;
@@ -20,15 +33,8 @@ export const NotificationsPage: React.FC = () => {
   return (
     <div className="container px-4 py-6 max-w-5xl mx-auto pt-2 pb-24">
       <div className="animate-in fade-in duration-500">
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
-            <p className="text-muted-foreground mt-2">
-              {t('subtitle')}
-            </p>
-          </div>
-          
-          {unreadCount > 0 && (
+        {unreadCount > 0 && (
+          <div className="mb-4 flex justify-end">
             <Button 
               variant="outline" 
               size="sm"
@@ -38,8 +44,8 @@ export const NotificationsPage: React.FC = () => {
               <CheckCheck className="w-4 h-4" />
               {t('markAllAsRead')}
             </Button>
-          )}
-        </div>
+          </div>
+        )}
 
         <Card className="border-border/50 bg-background/50 backdrop-blur-sm overflow-hidden">
           <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>

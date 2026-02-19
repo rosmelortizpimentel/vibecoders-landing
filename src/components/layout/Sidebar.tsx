@@ -1,28 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
-  User, 
-  Users,
-  Rocket, 
-  FlaskConical, 
-  Wrench, 
-  MessageSquare, 
   LogOut, 
-  Settings, 
-  Crown,
-  LayoutDashboard,
   ChevronLeft,
   ChevronRight,
-  Lightbulb,
-  BookOpen,
-  LucideIcon,
-  X,
-  ChevronDown,
-  Globe,
   ExternalLink,
-  MessageCircle,
   ChevronsUpDown,
-  Bell
+  LayoutDashboard,
 } from 'lucide-react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useAuth } from '@/hooks/useAuth';
@@ -30,14 +14,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfile } from '@/hooks/useProfile';
-import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -45,6 +27,8 @@ import { useState, useEffect } from 'react';
 import { useBetaBadges } from '@/hooks/useBetaBadges';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useSidebarMenu } from '@/hooks/useSidebarMenu';
+import type { LucideIcon } from 'lucide-react';
 
 export function Sidebar() {
   const location = useLocation();
@@ -57,7 +41,7 @@ export function Sidebar() {
   const tAuth = useTranslation('auth');
   const { ownedAppsCount, publicSquadsCount } = useBetaBadges();
   const { unreadCount } = useNotifications();
-  const { t: tNotif } = useTranslation('notifications');
+  const { items: menuItems } = useSidebarMenu();
   
   // Initialize collapsed state from localStorage if available
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -67,9 +51,20 @@ export function Sidebar() {
 
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', String(isCollapsed));
-    // Dispatch a custom event so layouts can adjust padding
     window.dispatchEvent(new CustomEvent('sidebar-resize', { detail: { isCollapsed } }));
   }, [isCollapsed]);
+
+  // Listen for external sidebar-collapse commands (e.g. from roadmap auto-collapse)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.external && typeof detail.isCollapsed === 'boolean') {
+        setIsCollapsed(detail.isCollapsed);
+      }
+    };
+    window.addEventListener('sidebar-collapse', handler);
+    return () => window.removeEventListener('sidebar-collapse', handler);
+  }, []);
 
   const isActive = (path: string) => {
     if (path === '/me') {
@@ -80,28 +75,44 @@ export function Sidebar() {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  const navLinks: Array<{ path: string; label: string; icon: LucideIcon; className?: string; badge?: number } | { type: 'separator'; path: string }> = [
-    // Personal Block
-    { path: '/home', label: t('navigation.home'), icon: LayoutDashboard },
-    { path: '/notifications', label: tNotif('title'), icon: Bell, badge: unreadCount },
-    { path: '/me', label: t('navigation.myProfile'), icon: User },
-    { path: '/ideas', label: t('navigation.myIdeas'), icon: Lightbulb },
-    { path: '/prompts', label: t('navigation.prompts'), icon: BookOpen },
-    { path: '/connections', label: t('navigation.vibers'), icon: Users },
-    { path: '/beta-testing', label: t('navigation.betaTesting'), icon: FlaskConical, badge: ownedAppsCount },
+  // Badge map: key -> runtime count
+  const badgeMap: Record<string, number> = {
+    'notifications': unreadCount,
+    'beta-testing': ownedAppsCount,
+    'public-beta-testing': publicSquadsCount,
+  };
 
-    // Separator
-    { type: 'separator', path: 'sep1' },
+  // Build nav links from DB items, filtering waitlist items and inserting separators between sections
+  const filteredItems = menuItems.filter(item => !item.requiresWaitlist || isInWaitlist);
+  
+  // Resolve i18n labels - for notifications namespace, use a simple lookup
+  const { t: tNotif } = useTranslation('notifications');
+  
+  const resolveLabel = (labelKey: string): string => {
+    const parts = labelKey.split('.');
+    if (parts.length === 2 && parts[0] === 'notifications') {
+      return tNotif(parts[1]);
+    }
+    return t(labelKey);
+  };
 
-    // Community Block
-    { path: '/public-beta-testing', label: t('navigation.publicBetaTesting'), icon: Rocket, badge: publicSquadsCount },
-    { path: '/explore', label: t('navigation.startups'), icon: Globe },
-
-    // Utilities
-    { path: '/tools', label: t('navigation.tools'), icon: Wrench },
-    { path: '/feedback', label: t('navigation.feedback'), icon: MessageSquare },
-    ...(isInWaitlist ? [{ path: '/buildlog', label: t('navigation.buildLog'), icon: Crown, className: "text-amber-500" }] : []),
-  ];
+  type NavItem = { path: string; label: string; icon: typeof LayoutDashboard; className?: string; badge?: number } | { type: 'separator'; path: string };
+  
+  const navLinks: NavItem[] = [];
+  let lastSection = '';
+  filteredItems.forEach((item) => {
+    if (lastSection && item.section !== lastSection) {
+      navLinks.push({ type: 'separator', path: `sep-${item.section}` });
+    }
+    lastSection = item.section;
+    navLinks.push({
+      path: item.path,
+      label: resolveLabel(item.labelKey),
+      icon: item.icon,
+      className: item.cssClass || undefined,
+      badge: badgeMap[item.key] || undefined,
+    });
+  });
 
   return (
     <div 

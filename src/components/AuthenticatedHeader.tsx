@@ -17,6 +17,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap, Linkedin } from 'lucide-react';
+import { useSidebarMenu } from '@/hooks/useSidebarMenu';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
@@ -29,6 +30,11 @@ import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { GlobalShareButton } from './GlobalShareButton';
+import { usePageHeader } from '@/contexts/PageHeaderContext';
+import { useBetaBadges } from '@/hooks/useBetaBadges';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface AuthenticatedHeaderProps {
   profile: {
@@ -77,6 +83,29 @@ export function AuthenticatedHeader({
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [open, setOpen] = useState(false);
+  const { header } = usePageHeader();
+  const { items: sidebarMenuItems } = useSidebarMenu();
+  const { ownedAppsCount, publicSquadsCount } = useBetaBadges();
+  const { unreadCount } = useNotifications();
+  const { t: tNotif } = useTranslation('notifications');
+
+  const badgeMap: Record<string, number> = {
+    'notifications': unreadCount,
+    'beta-testing': ownedAppsCount,
+    'public-beta-testing': publicSquadsCount,
+  };
+
+  const resolveLabel = (labelKey: string): string => {
+    const parts = labelKey.split('.');
+    if (parts.length === 2 && parts[0] === 'notifications') {
+      return tNotif(parts[1]);
+    }
+    return t.t(labelKey);
+  };
+
+  // Build mobile menu from dynamic sidebar items
+  const mobileMenuItems = sidebarMenuItems
+    .filter(item => !item.requiresWaitlist || isInWaitlist);
 
   const isActive = (path: string) => {
     // For /me, match any /me/* route
@@ -90,13 +119,16 @@ export function AuthenticatedHeader({
   // Include all Sidebar links here so the header can resolve the title/icon
   const navLinks: { path: string; label: string; icon: typeof User; premium: boolean; isNew?: boolean }[] = [
     { path: '/home', label: t.navigation.home, icon: LayoutDashboard, premium: false },
+    { path: '/notifications', label: (t.navigation as any).notifications || 'Notifications', icon: Menu, premium: false },
     { path: '/me', label: t.navigation.myProfile, icon: User, premium: false },
+    { path: '/apps', label: t.navigation.myApps, icon: Rocket, premium: false },
     { path: '/ideas', label: t.navigation.myIdeas, icon: Lightbulb, premium: false },
+    { path: '/connections', label: t.navigation.vibers, icon: User, premium: false },
+    { path: '/feedback', label: t.navigation.feedback, icon: MessageCircle, premium: false },
     { path: '/beta-testing', label: t.navigation.betaTesting, icon: FlaskConical, premium: false },
     { path: '/public-beta-testing', label: t.navigation.publicBetaTesting, icon: Rocket, premium: false },
     { path: '/explore', label: t.navigation.startups, icon: Rocket, premium: false },
     { path: '/tools', label: t.navigation.tools, icon: Wrench, premium: false },
-    { path: '/feedback', label: t.navigation.feedback, icon: MessageCircle, premium: false },
     ...(isInWaitlist ? [{ path: '/buildlog', label: t.navigation.buildLog, icon: Crown, premium: true }] : []),
   ];
 
@@ -107,33 +139,67 @@ export function AuthenticatedHeader({
   return (
     <header className="sticky top-0 z-50 h-16 border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between px-4">
-        {/* Mobile Logo - hidden on desktop (moved to sidebar) */}
-        <Link to="/home" className="flex md:hidden items-center shrink-0">
-          <img 
-            src={vibecodersLogo} 
-            alt="Vibecoders" 
-            className="h-10 w-10 rounded-full border-2 border-border hover:border-primary transition-colors"
-          />
-        </Link>
-        {/* Mobile Share Button */}
-        <div className="flex md:hidden ml-2">
-          <GlobalShareButton showText={false} className="h-8 w-8" />
-        </div>
-        <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-          <Link to="/home" className="hover:text-foreground font-medium transition-colors">Home</Link>
-          {location.pathname !== '/home' && (
+        <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground min-w-0 flex-1">
+          {header.element ? (
+            // Custom page header content (e.g., app detail with logo + badges)
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {header.element}
+            </div>
+          ) : (
             <>
-              <span className="text-border/60">|</span>
-              {(() => {
-                 const activeLink = navLinks.find(link => isActive(link.path));
-                 const Icon = activeLink?.icon;
-                 
-                 return (
-                  <span className="text-foreground font-medium flex items-center gap-2">
-                    {Icon && <Icon className="h-4 w-4" />}
-                    {activeLink?.label || displayName}
-                  </span>
-                 );
+              <Link to="/home" className="hover:text-foreground font-medium transition-colors shrink-0">Home</Link>
+              {location.pathname !== '/home' && (
+                <>
+                  <span className="text-border/60">|</span>
+                  {(() => {
+                     const activeLink = navLinks.find(link => isActive(link.path));
+                     const Icon = activeLink?.icon;
+                     
+                     return (
+                      <span className="text-foreground font-medium flex items-center gap-2 truncate">
+                        {Icon && <Icon className="h-4 w-4 shrink-0" />}
+                        {activeLink?.label || displayName}
+                      </span>
+                     );
+                  })()}
+                </>
+              )}
+            </>
+          )}
+        </div>
+        {/* Mobile: show custom header or logo */}
+        <div className="flex md:hidden items-center min-w-0 flex-1">
+          {header.element ? (
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              {header.element}
+            </div>
+          ) : (
+            <>
+           {(() => {
+                const activeLink = navLinks.find(link => isActive(link.path));
+                const Icon = activeLink?.icon;
+                if (activeLink && location.pathname !== '/home') {
+                  return (
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {Icon && <Icon className="h-4 w-4 text-primary shrink-0" />}
+                      <span className="font-semibold text-foreground truncate text-sm">{activeLink.label}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <>
+                    <Link to="/home" className="flex items-center shrink-0">
+                      <img 
+                        src={vibecodersLogo} 
+                        alt="Vibecoders" 
+                        className="h-10 w-10 rounded-full border-2 border-border hover:border-primary transition-colors"
+                      />
+                    </Link>
+                    <div className="flex ml-2">
+                      <GlobalShareButton showText={false} className="h-8 w-8" />
+                    </div>
+                  </>
+                );
               })()}
             </>
           )}
@@ -203,104 +269,50 @@ export function AuthenticatedHeader({
                 <SheetTitle className="text-left text-base font-medium text-foreground">{tAuth.menu}</SheetTitle>
               </SheetHeader>
               
-                {/* Navigation Links - Clean list */}
+                {/* Navigation Links - Dynamic from sidebar menu */}
                 <nav className="flex flex-col px-5 py-6 flex-1 overflow-y-auto">
-                  {/* Home and Personal */}
-                  {[
-                    navLinks.find(l => l.path === '/home'),
-                    navLinks.find(l => l.path === '/me'),
-                    navLinks.find(l => l.path === '/ideas'),
-                    navLinks.find(l => l.path === '/beta-testing')
-                  ].filter(Boolean).map((link) => {
-                    const l = link!;
-                    const Icon = l.icon;
-                    return (
-                      <Link
-                        key={l.path}
-                        to={l.path}
-                        onClick={handleNavClick}
-                        className={cn(
-                          "flex items-center gap-3 text-base py-3 transition-colors",
-                          isActive(l.path)
-                            ? "text-foreground font-semibold"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {l.label}
-                      </Link>
-                    );
-                  })}
-
-                  <div className="my-2 border-t border-border/50" />
-
-                  {/* Public and Explore */}
-                  {[
-                    navLinks.find(l => l.path === '/public-beta-testing'),
-                    navLinks.find(l => l.path === '/explore')
-                  ].filter(Boolean).map((link) => {
-                    const l = link!;
-                    const Icon = l.icon;
-                    return (
-                      <Link
-                        key={l.path}
-                        to={l.path}
-                        onClick={handleNavClick}
-                        className={cn(
-                          "flex items-center gap-3 text-base py-3 transition-colors",
-                          isActive(l.path)
-                            ? "text-foreground font-semibold"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {l.label}
-                      </Link>
-                    );
-                  })}
-
-                  <div className="my-2 border-t border-border/50" />
-
-                  {/* Tools and Others */}
-                  {[
-                    navLinks.find(l => l.path === '/tools'),
-                    navLinks.find(l => l.path === '/hablemos'),
-                    ...(isInWaitlist ? [navLinks.find(l => l.path === '/buildlog')] : [])
-                  ].filter(Boolean).map((link) => {
-                    const l = link!;
-                    const Icon = l.icon;
-                    return (
-                      <Link
-                        key={l.path}
-                        to={l.path}
-                        onClick={handleNavClick}
-                        className={cn(
-                          "flex items-center gap-3 text-base py-3 transition-colors",
-                          isActive(l.path)
-                            ? "text-foreground font-semibold"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        {l.label}
-                        {l.isNew && (
-                          <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold bg-primary text-primary-foreground rounded-full">
-                            New
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
+                  {(() => {
+                    let lastSection = '';
+                    return mobileMenuItems.map((item) => {
+                      const showSeparator = lastSection && item.section !== lastSection;
+                      lastSection = item.section;
+                      const Icon = item.icon;
+                      const badge = badgeMap[item.key] || 0;
+                      return (
+                        <div key={item.path}>
+                          {showSeparator && <Separator className="my-2 bg-border/50" />}
+                          <Link
+                            to={item.path}
+                            onClick={handleNavClick}
+                            className={cn(
+                              "flex items-center gap-3 text-base py-3 transition-colors",
+                              isActive(item.path)
+                                ? "text-foreground font-semibold"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
+                          >
+                            <Icon className="h-4 w-4" />
+                            <span className="flex-1">{resolveLabel(item.labelKey)}</span>
+                            {badge > 0 && (
+                              <Badge variant="secondary" className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-[10px] font-bold border-none">
+                                {badge}
+                              </Badge>
+                            )}
+                          </Link>
+                        </div>
+                      );
+                    });
+                  })()}
 
                   {/* Admin Link - Only visible for admins */}
                   {isAdmin && (
                     <>
-                      <div className="my-2 border-t border-border/50" />
+                      <Separator className="my-2 bg-border/50" />
                       <Link
                         to="/admin"
                         onClick={handleNavClick}
                         className={cn(
-                          "flex items-center gap-2 text-base py-3 transition-colors",
+                          "flex items-center gap-3 text-base py-3 transition-colors",
                           isActive('/admin')
                             ? "text-foreground font-semibold"
                             : "text-muted-foreground hover:text-foreground"
