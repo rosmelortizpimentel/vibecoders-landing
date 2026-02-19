@@ -48,14 +48,10 @@ export default function MyAppHub() {
     prevTabRef.current = activeTab;
 
     if (activeTab === 'roadmap' && prev !== 'roadmap') {
-      wasCollapsedRef.current = localStorage.getItem('sidebarCollapsed') === 'true';
       localStorage.setItem('sidebarCollapsed', 'true');
       window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { isCollapsed: true, external: true } }));
-    } else if (activeTab !== 'roadmap' && prev === 'roadmap') {
-      const restore = wasCollapsedRef.current;
-      localStorage.setItem('sidebarCollapsed', String(restore));
-      window.dispatchEvent(new CustomEvent('sidebar-collapse', { detail: { isCollapsed: restore, external: true } }));
     }
+    // No restore on leave — keep sidebar collapsed
   }, [activeTab]);
 
   const tabs: { id: TabId; label: string; icon: typeof Info; path: string }[] = [
