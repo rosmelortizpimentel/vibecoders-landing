@@ -170,7 +170,7 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
       {/* Main Content */}
       <div className={`pt-12 md:pt-14 pb-6 px-4 md:px-6 space-y-3 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
         {/* Name + Pioneer Badge Container - Now justify-between */}
-        <div className="w-full flex items-center justify-between gap-4">
+        <div className={`w-full flex items-center gap-4 ${avatarPosition === 'center' ? 'justify-center' : 'justify-between'}`}>
           <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
             <h2 className="text-lg md:text-xl font-bold text-gray-900">
               {profile.name || 'Tu Nombre'}
