@@ -256,7 +256,7 @@ export default function PublicRoadmap() {
         const isCustom = isCustomDomain(window.location.hostname);
 
         if (isCustom) {
-          const { data: settingsData } = await supabase.from('roadmap_settings').select('app_id').eq('custom_domain', window.location.hostname).maybeSingle() as { app_id: string } | null;
+          const { data: settingsData } = await (supabase.from('roadmap_settings').select('app_id').eq('custom_domain', window.location.hostname).maybeSingle() as any);
           if (!settingsData) { setLoading(false); return; }
           const { data: appData } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('id', settingsData.app_id).eq('is_visible', true).maybeSingle();
           if (appData) found = appData as AppInfo;

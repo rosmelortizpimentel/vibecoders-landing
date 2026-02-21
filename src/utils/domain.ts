@@ -16,11 +16,16 @@ export const isCustomDomain = (hostname: string) => {
     if (isCustomDomain(hostname)) return null;
   
     const parts = hostname.split('.');
+    let subdomain = null;
+    
     if (hostname.includes('localhost') || hostname.includes('127.0.0.1')) {
-      return parts.length >= 2 ? parts[0] : null;
+      subdomain = parts.length >= 2 ? parts[0] : null;
+    } else {
+      subdomain = parts.length >= 3 ? parts[0] : null;
     }
-  
-    return parts.length >= 3 ? parts[0] : null;
+    
+    // Ignore 'www' as a subdomain
+    return subdomain === 'www' ? null : subdomain;
   };
   
   export const detectedSubdomain = getSubdomain(window.location.hostname);
