@@ -10,6 +10,7 @@
     "authorName": "Rosmel Ortiz",
     "linkedIn": "https://www.linkedin.com/in/rosmelortiz/",
     "privacy": "Privacy",
+    "deleteConfirmDesc": "Are you sure you want to delete this link? This action cannot be undone.",
     "terms": "Terms"
   },
   "navigation": {
@@ -27,8 +28,10 @@
     "feedback": "Let's Talk",
     "notifications": "Notifications",
     "buildLog": "Build Log",
+    "roadmapAndFeedback": "Roadmap & Feedback",
     "admin": "Admin"
   },
   "visitWebsite": "Visit Website",
-  "joinGroup": "Join the Group"
+  "joinGroup": "Join the Group",
+  "upgradeOffer": "🔥 Offer expires Feb 28th"
 }

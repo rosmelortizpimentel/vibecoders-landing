@@ -47,7 +47,7 @@ export function BetaFeedbackCompactCard({ feedback }: BetaFeedbackCompactCardPro
   return (
     <Card 
       className="w-full border-border bg-card/50 hover:bg-card transition-all cursor-pointer group"
-      onClick={() => navigate(`/app/${feedback.app_id}/feedback`)}
+      onClick={() => navigate(`/app/${feedback.app_id}`)}
     >
       <CardContent className="p-3 flex flex-col gap-2">
         {/* App Info */}

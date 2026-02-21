@@ -23,12 +23,15 @@
     "startups": "Explorar",
     "betaTesting": "Beta Testing",
     "publicBetaTesting": "Desafios Beta",
+    "upgradeOffer": "🔥 Oferta expira em 28 de Fev",
     "betaSquads": "Beta Squad",
     "tools": "Ferramentas",
     "feedback": "Vamos Conversar",
     "notifications": "Notificações",
     "buildLog": "Log de Construção",
+    "roadmapAndFeedback": "Roadmap & Feedback",
     "admin": "Admin"
   },
-  "joinGroup": "Entrar no Grupo"
+  "joinGroup": "Entrar no Grupo",
+  "upgradeOffer": "🔥 Oferta expira em 28 de Fev"
 }

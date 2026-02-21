@@ -1,4 +1,4 @@
-import { X, ShieldCheck, CheckCircle2, Circle } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Circle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -27,21 +27,13 @@ export function ProfileStrengthModal({ isOpen, onClose, strength }: ProfileStren
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden bg-card border-border">
-        <DialogHeader className="p-6 pb-0 flex flex-row items-center justify-between">
+        <DialogHeader className="p-6 pb-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
               <ShieldCheck className="w-5 h-5 text-primary" strokeWidth={1.5} />
             </div>
             <DialogTitle className="text-xl font-bold">Fortaleza del Perfil</DialogTitle>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8 rounded-full hover:bg-muted"
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
 
         <div className="p-6 space-y-6">

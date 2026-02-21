@@ -28,7 +28,9 @@
     "feedback": "Discutons",
     "notifications": "Notifications",
     "buildLog": "Journal de Bord",
+    "roadmapAndFeedback": "Roadmap & Feedback",
     "admin": "Admin"
   },
-  "joinGroup": "Rejoindre le Groupe"
+  "joinGroup": "Rejoindre le Groupe",
+  "upgradeOffer": "🔥 L'offre expire le 28 fév"
 }

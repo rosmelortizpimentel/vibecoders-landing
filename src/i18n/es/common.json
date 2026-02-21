@@ -27,8 +27,10 @@
     "feedback": "Hablemos",
     "notifications": "Notificaciones",
     "buildLog": "Build Log",
+    "roadmapAndFeedback": "Roadmap & Feedback",
     "admin": "Admin"
   },
   "visitWebsite": "Visitar Sitio Web",
-  "joinGroup": "Únete al Grupo"
+  "joinGroup": "Únete al Grupo",
+  "upgradeOffer": "🔥 Oferta expira 28 Feb"
 }
