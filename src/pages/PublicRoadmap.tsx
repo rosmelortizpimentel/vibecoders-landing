@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { detectedSubdomain } from '@/App';
-import { useRoadmapFeedback, RoadmapLane, RoadmapCard, RoadmapSettings, RoadmapFeedback } from '@/hooks/useRoadmap';
+import { detectedSubdomain, isCustomDomain } from '@/utils/domain';
+import { useRoadmapFeedback, RoadmapLane, RoadmapCard, RoadmapSettings, RoadmapFeedback, RoadmapFeedbackAttachment } from '@/hooks/useRoadmap';
 import { useFavicon } from '@/hooks/useFavicon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -211,7 +211,7 @@ export default function PublicRoadmap() {
   };
   const [isFeedbackPublic, setIsFeedbackPublic] = useState(false);
   const [authMode, setAuthMode] = useState<'anonymous' | 'authenticated'>('anonymous');
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
 
   // Feedback form
   const [fbTitle, setFbTitle] = useState('');
@@ -253,8 +253,14 @@ export default function PublicRoadmap() {
     (async () => {
       try {
         let found: AppInfo | null = null;
+        const isCustom = isCustomDomain(window.location.hostname);
 
-        if (username) {
+        if (isCustom) {
+          const { data: settingsData } = await supabase.from('roadmap_settings').select('app_id').eq('custom_domain', window.location.hostname).maybeSingle() as { app_id: string } | null;
+          if (!settingsData) { setLoading(false); return; }
+          const { data: appData } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('id', settingsData.app_id).eq('is_visible', true).maybeSingle();
+          if (appData) found = appData as AppInfo;
+        } else if (username) {
           const { data: profileData } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
           if (!profileData) { setLoading(false); return; }
           const { data: apps } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('user_id', profileData.id).eq('is_visible', true);
@@ -282,10 +288,10 @@ export default function PublicRoadmap() {
 
         if (settingsRes.data) {
           setSettings(settingsRes.data as RoadmapSettings);
-          setIsFeedbackPublic((settingsRes.data as any).is_feedback_public ?? false);
-          setAuthMode((settingsRes.data as any).feedback_auth_mode || 'anonymous');
+          setIsFeedbackPublic((settingsRes.data as RoadmapSettings).is_feedback_public ?? false);
+          setAuthMode((settingsRes.data as RoadmapSettings).feedback_auth_mode || 'anonymous');
           // Apply default language from settings (takes priority over browser)
-          const defaultLang = (settingsRes.data as any).default_language;
+          const defaultLang = (settingsRes.data as RoadmapSettings).default_language;
           if (defaultLang && ['es', 'en', 'fr', 'pt'].includes(defaultLang)) {
             setLang(defaultLang);
           } else {
@@ -391,11 +397,10 @@ export default function PublicRoadmap() {
   };
 
   const handleToggleCardLike = async (cardId: string) => {
-    if (requiresLogin) { setShowLoginDialog(true); return; }
     if (!fingerprint) return;
     const isLiked = likedCardIds.has(cardId);
     setLikedCardIds(prev => { const next = new Set(prev); if (isLiked) next.delete(cardId); else next.add(cardId); return next; });
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, likes_count: (c as any).likes_count + (isLiked ? -1 : 1) } : c));
+    setCards(prev => prev.map(c => c.id === cardId ? { ...c, likes_count: (c.likes_count || 0) + (isLiked ? -1 : 1) } : c));
     if (isLiked) { await supabase.from('roadmap_card_likes').delete().eq('card_id', cardId).eq('device_fingerprint', fingerprint); }
     else { await supabase.from('roadmap_card_likes').insert({ card_id: cardId, device_fingerprint: fingerprint }); }
   };
@@ -430,7 +435,7 @@ export default function PublicRoadmap() {
 
       const { data: refreshed } = await supabase.from('roadmap_feedback')
         .select('*, roadmap_feedback_attachments(*)').eq('app_id', app.id).eq('is_hidden', false).order('likes_count', { ascending: false });
-      if (refreshed) setFeedback(refreshed.map((f: any) => ({ ...f, attachments: f.roadmap_feedback_attachments || [] })) as RoadmapFeedback[]);
+      if (refreshed) setFeedback(refreshed.map(f => ({ ...f, attachments: f.roadmap_feedback_attachments || [] })) as RoadmapFeedback[]);
     } catch {
       toast.error(l.error);
     } finally {
@@ -445,7 +450,7 @@ export default function PublicRoadmap() {
   };
 
   // Helper to render attachments as thumbnails/PDF icons
-  const renderAttachments = (attachments: any[]) => {
+  const renderAttachments = (attachments: RoadmapFeedbackAttachment[]) => {
     if (!attachments || attachments.length === 0) return null;
     const images = attachments.filter(a => a.file_type?.startsWith('image/'));
     const pdfs = attachments.filter(a => a.file_type === 'application/pdf');
@@ -591,7 +596,7 @@ export default function PublicRoadmap() {
                                   </div>
                                   <button onClick={() => handleToggleCardLike(card.id)} className={cn('flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all', likedCardIds.has(card.id) ? 'bg-rose-50 text-rose-600' : 'text-gray-400 hover:text-rose-500')}>
                                     <Heart className={cn('w-3.5 h-3.5', likedCardIds.has(card.id) && 'fill-current')} />
-                                    {(card as any).likes_count > 0 && (card as any).likes_count}
+                                    {(card.likes_count || 0) > 0 && card.likes_count}
                                   </button>
                                 </div>
                               </div>
@@ -630,7 +635,7 @@ export default function PublicRoadmap() {
                                 </div>
                                 <button onClick={() => handleToggleCardLike(card.id)} className={cn('flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all', likedCardIds.has(card.id) ? 'bg-rose-50 text-rose-600' : 'text-gray-400 hover:text-rose-500')}>
                                   <Heart className={cn('w-3.5 h-3.5', likedCardIds.has(card.id) && 'fill-current')} />
-                                  {(card as any).likes_count > 0 && (card as any).likes_count}
+                                  {(card.likes_count || 0) > 0 && card.likes_count}
                                 </button>
                               </div>
                             </div>

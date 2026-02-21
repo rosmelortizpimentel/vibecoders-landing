@@ -1,6 +1,6 @@
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, ArrowRight, Loader2 } from 'lucide-react';
+import { Check, Loader2, Map, MessageSquare, Megaphone, Phone, ShieldCheck } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useState } from 'react';
@@ -10,17 +10,26 @@ interface ProUpgradeModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const BENEFIT_KEYS = [
-  'unlimitedApps',
-  'bookCall',
-  'betaSquads',
-  'roadmap',
-  'vault',
-  'verifiedBadge',
-] as const;
+const proFeatures = [
+  { key: 'f1', included: true },
+  { key: 'f2', included: true },
+  { key: 'f3', included: true },
+  { key: 'f4', included: true },
+  { key: 'f5', included: true },
+  { key: 'f6', included: true },
+];
+
+const proFeatureIcons: Record<string, React.ReactNode> = {
+  f1: <Check className="h-4 w-4 text-[#3D5AFE]" />,
+  f2: <Map className="h-4 w-4 text-[#3D5AFE]" />,
+  f3: <MessageSquare className="h-4 w-4 text-[#3D5AFE]" />,
+  f4: <Megaphone className="h-4 w-4 text-[#3D5AFE]" />,
+  f5: <Phone className="h-4 w-4 text-[#3D5AFE]" />,
+  f6: <ShieldCheck className="h-4 w-4 text-[#3D5AFE]" />,
+};
 
 export function ProUpgradeModal({ open, onOpenChange }: ProUpgradeModalProps) {
-  const { t } = useTranslation('pro');
+  const { t } = useTranslation('newLanding');
   const { createCheckout } = useSubscription();
   const [loading, setLoading] = useState(false);
 
@@ -40,78 +49,80 @@ export function ProUpgradeModal({ open, onOpenChange }: ProUpgradeModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-0 border-0 bg-transparent shadow-none [&>button]:text-white/60 [&>button]:hover:text-white max-h-[90dvh] overflow-y-auto">
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#141414] to-[#0a0a0a] border border-[#c9a44c]/20 shadow-2xl shadow-[#c9a44c]/5">
-          {/* Gold accent line */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#c9a44c] to-transparent" />
+      <DialogContent className="max-w-[440px] w-[95vw] p-0 border-0 bg-transparent shadow-none [&>button]:text-white/60 [&>button]:hover:text-white max-h-[95dvh] sm:max-h-[90dvh] overflow-y-auto no-scrollbar">
+        <div className="relative rounded-3xl border border-white/10 bg-zinc-950 p-6 sm:p-8 md:p-10 flex flex-col overflow-hidden m-2 shadow-2xl">
+          {/* Decorative background gradient */}
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-[#3D5AFE]/10 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 bg-primary/5 rounded-full blur-[80px]" />
 
-          <div className="p-5 sm:p-8 space-y-5 sm:space-y-6">
-            {/* Badge */}
-            <div className="flex justify-center">
-              <span className="px-3 py-1 text-xs font-bold tracking-widest uppercase border border-[#c9a44c]/40 rounded-full text-[#c9a44c] bg-[#c9a44c]/10">
-                {t('badge')}
+          {/* Badge */}
+          <div className="absolute top-6 right-6 rounded-full bg-[#3D5AFE]/10 border border-[#3D5AFE]/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#3D5AFE] shadow-sm z-10">
+            {t('pricing.plans.pro.badge')}
+          </div>
+
+          <div className="mb-6 md:mb-8 mt-2 relative">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#3D5AFE] mb-3">
+              {t('pricing.plans.pro.title')}
+            </h3>
+            <p className="text-[15px] text-zinc-400 font-medium leading-relaxed">
+              {t('pricing.plans.pro.desc').split('.').filter(Boolean).map((sentence, i, arr) => (
+                <span key={i}>
+                  {sentence.trim()}.{i < arr.length - 1 && <br />}
+                </span>
+              ))}
+            </p>
+          </div>
+
+          <div className="mb-6 md:mb-8">
+            <div className="mb-1">
+              <span className="text-base font-bold text-white/25 line-through decoration-white/15 decoration-2">
+                {t('pricing.plans.pro.oldPrice')}
               </span>
             </div>
+            <span className="text-5xl sm:text-6xl font-black tracking-tighter text-white">
+              {t('pricing.plans.pro.price')}
+            </span>
+            <span className="ml-2 text-white/35 font-bold uppercase text-xs tracking-widest">
+              {t('pricing.plans.pro.priceLabel')}
+            </span>
+          </div>
 
-            {/* Title & Subtitle */}
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                {t('title')}
-              </h2>
-              <p className="text-sm text-white/50 leading-relaxed max-w-xs mx-auto">
-                {t('subtitle')}
-              </p>
-            </div>
-
-            {/* Benefits */}
-            <div className="space-y-3">
-              {BENEFIT_KEYS.map((key) => (
-                <div key={key} className="flex gap-3 items-start">
-                  <div className="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full bg-[#c9a44c]/15 flex items-center justify-center">
-                    <Check className="w-3 h-3 text-[#c9a44c]" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white leading-snug">
-                      {t(`benefits.${key}.title`)}
-                    </p>
-                    <p className="text-xs text-white/40 leading-relaxed">
-                      {t(`benefits.${key}.description`)}
-                    </p>
-                  </div>
+          <ul className="mb-8 md:mb-10 space-y-4 text-left flex-grow">
+            {proFeatures.map(({ key }) => (
+              <li key={key} className="flex items-start gap-3 text-[14px]">
+                <div className="mt-1 shrink-0 p-0.5 rounded-full bg-[#3D5AFE]/10">
+                  {proFeatureIcons[key] || <Check className="h-3 w-3 text-[#3D5AFE]" />}
                 </div>
-              ))}
-            </div>
+                <span className={`font-medium ${key === 'f5' ? 'text-white font-bold' : 'text-zinc-300'}`}>
+                  {t(`pricing.plans.pro.${key}`)}
+                </span>
+              </li>
+            ))}
+          </ul>
 
-            {/* Price */}
-            <div className="text-center pt-2">
-              <span className="text-3xl font-bold text-white">{t('price')}</span>
-              <span className="text-sm text-white/40 ml-1">{t('priceUnit')}</span>
-            </div>
-
-            {/* CTA */}
+          {/* Checkout Button */}
+          <div className="mt-auto flex flex-col gap-4">
             <Button
               onClick={handleCheckout}
               disabled={loading}
-              className="w-full h-12 bg-gradient-to-r from-[#c9a44c] to-[#b8933f] hover:from-[#d4af5a] hover:to-[#c9a44c] text-black font-bold text-sm rounded-xl transition-all duration-300 shadow-lg shadow-[#c9a44c]/20 hover:shadow-[#c9a44c]/30"
+              className="w-full h-14 rounded-2xl font-bold text-base text-white flex items-center justify-center gap-3 transition-all duration-200 active:scale-[0.98] shadow-[0_8px_30px_rgb(61,90,254,0.3)] hover:shadow-[0_8px_40px_rgb(61,90,254,0.4)] border border-[#3D5AFE]/50"
+              style={{ background: 'linear-gradient(135deg, #3D5AFE 0%, #1A237E 100%)' }}
             >
               {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  {t('cta')}
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ShieldCheck className="h-5 w-5" />
+                  {t('pricing.plans.pro.cta').replace('Reservar por', 'Suscribirme por')}
                 </>
               )}
             </Button>
 
-            {/* Close text */}
-            <button
-              onClick={() => onOpenChange(false)}
-              className="w-full text-center text-xs text-white/30 hover:text-white/50 transition-colors"
-            >
-              {t('close')}
-            </button>
+            <span className="text-[11px] font-medium text-center text-zinc-500 uppercase tracking-widest">
+              {t('pricing.plans.pro.footer')}
+            </span>
           </div>
+
         </div>
       </DialogContent>
     </Dialog>

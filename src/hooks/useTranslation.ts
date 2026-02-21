@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from 'react';
 import { useLanguage, Language } from '@/contexts/LanguageContext';
 
 // Spanish imports
@@ -250,7 +251,8 @@ export function useTranslation<T extends Section>(section: T) {
   const sectionTranslations = translations[language][section];
   
   // Return a t function that gets nested keys and supports interpolation
-  const tFunction = (key: string, data?: Record<string, string | number>): string => {
+  // Memoize it to prevent infinite loops in downstream components like DomainSettingsInput
+  const t = useCallback((key: string, data?: Record<string, string | number>): string => {
     const keys = key.split('.');
     let result: unknown = sectionTranslations;
     for (const k of keys) {
@@ -282,13 +284,13 @@ export function useTranslation<T extends Section>(section: T) {
     }
     
     return finalResult;
-  };
+  }, [language, sectionTranslations, section]); // Stability depends on language, section data, and section name
   
-  // Return object with both t function and spread translations for backward compatibility
-  return { 
-    t: tFunction, 
+  // Memoize the return object as well to maintain referential integrity
+  return useMemo(() => ({ 
+    t, 
     ...(sectionTranslations as object)
-  } as { t: (key: string, data?: Record<string, string | number>) => string } & typeof translations['es'][T];
+  }), [t, sectionTranslations]);
 }
 
 // Static function for use outside React components (with explicit language)

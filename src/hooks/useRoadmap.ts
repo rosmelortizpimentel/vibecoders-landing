@@ -12,6 +12,7 @@ export interface RoadmapSettings {
   is_feedback_public: boolean;
   feedback_auth_mode: 'anonymous' | 'authenticated';
   default_language: string | null;
+  custom_domain: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -113,7 +114,7 @@ export function useRoadmap(appId: string | undefined) {
 
     const { data: settingsData, error: settingsErr } = await supabase
       .from('roadmap_settings')
-      .insert({ app_id: appId })
+      .insert({ app_id: appId, is_public: false })
       .select()
       .single();
 
@@ -227,11 +228,28 @@ export function useRoadmap(appId: string | undefined) {
     setCards(prev => prev.map(c => c.id === cardId ? { ...c, lane_id: newLaneId, display_order: newOrder, ...(completedAt !== undefined ? { completed_at: completedAt } : {}) } : c));
   }, []);
 
+  const reorderCards = useCallback(async (laneId: string, reorderedCards: RoadmapCard[]) => {
+    // Update local state immediately for performance
+    const updatedCards = reorderedCards.map((c, i) => ({ ...c, display_order: i }));
+    setCards(prev => {
+      const otherCards = prev.filter(c => c.lane_id !== laneId);
+      return [...otherCards, ...updatedCards].sort((a, b) => a.display_order - b.display_order);
+    });
+
+    // Update database for each card
+    for (let i = 0; i < reorderedCards.length; i++) {
+      await supabase
+        .from('roadmap_cards')
+        .update({ display_order: i, updated_at: new Date().toISOString() })
+        .eq('id', reorderedCards[i].id);
+    }
+  }, []);
+
   return {
     settings, lanes, cards, loading,
     initializeRoadmap, updateSettings,
     createLane, updateLane, deleteLane, reorderLanes,
-    createCard, updateCard, deleteCard, moveCard,
+    createCard, updateCard, deleteCard, moveCard, reorderCards,
     refetch: fetchAll,
   };
 }

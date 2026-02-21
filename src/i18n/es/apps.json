@@ -9,7 +9,7 @@
   "urlPlaceholder": "https://tu-app.com",
   "deleteConfirmTitle": "¿Eliminar esta app?",
   "deleteConfirmDescription": "Esta acción no se puede deshacer. La app será eliminada permanentemente de tu perfil.",
-  "verifyDomain": "Verificar dominio",
+  "verifyOwnership": "Verificar propiedad",
   "verified": "Verificado",
   "visible": "Visible",
   "hidden": "Oculto",
