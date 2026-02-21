@@ -51,11 +51,11 @@ export default function MyApps() {
     setHeaderContent(
       <div className="flex items-center gap-2 min-w-0">
         <Rocket className="h-4 w-4 text-primary shrink-0" />
-        <span className="font-semibold text-foreground truncate">{tCommon.navigation.myApps}</span>
+        <span className="font-semibold text-foreground truncate">{tCommon.t('navigation.myApps')}</span>
       </div>
     );
     return () => setHeaderContent(null);
-  }, [setHeaderContent]);
+  }, [setHeaderContent, tCommon]);
 
   const [isUrlInputOpen, setIsUrlInputOpen] = useState(false);
   const [showProModal, setShowProModal] = useState(false);
@@ -130,16 +130,16 @@ export default function MyApps() {
               else setIsUrlInputOpen(true);
             }}
             disabled={!!scrapingAppId}
-            className="w-full border border-dashed border-border rounded-lg h-14 hover:border-muted-foreground hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-50 disabled:pointer-events-none"
+            className="w-full border border-dashed border-border rounded-lg h-14 bg-[#f9fafb] hover:border-primary/50 hover:bg-white text-muted-foreground hover:text-primary transition-all duration-200 flex items-center justify-center gap-2 text-sm font-semibold shadow-sm overflow-hidden disabled:opacity-50 disabled:pointer-events-none"
           >
-            <Plus className="h-4 w-4" /> {t.addApp}
+            <Plus className="h-4 w-4" /> {t.t('addApp')}
           </button>
         ) : (
           <div className="flex flex-col sm:flex-row gap-2 p-4 border border-border rounded-lg bg-background">
-            <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={t.urlPlaceholder} className="flex-1" autoFocus onKeyDown={e => e.key === 'Enter' && handleCreate()} />
+            <Input value={newUrl} onChange={e => setNewUrl(e.target.value)} placeholder={t.t('urlPlaceholder')} className="flex-1" autoFocus onKeyDown={e => e.key === 'Enter' && handleCreate()} />
             <div className="flex gap-2">
-              <Button onClick={handleCreate} disabled={!newUrl.trim() || !!scrapingAppId} className="flex-1 sm:flex-none">{t.add}</Button>
-              <Button variant="ghost" onClick={() => { setIsUrlInputOpen(false); setNewUrl(''); }} className="flex-1 sm:flex-none">{t.cancel}</Button>
+              <Button onClick={handleCreate} disabled={!newUrl.trim() || !!scrapingAppId} className="flex-1 sm:flex-none">{t.t('add')}</Button>
+              <Button variant="ghost" onClick={() => { setIsUrlInputOpen(false); setNewUrl(''); }} className="flex-1 sm:flex-none">{t.t('cancel')}</Button>
             </div>
           </div>
         )}
@@ -153,11 +153,11 @@ export default function MyApps() {
       )}
 
       {apps.length === 0 && !isUrlInputOpen ? (
-        <div className="text-center py-12 text-muted-foreground"><p>{t.noApps}</p></div>
+        <div className="text-center py-12 text-muted-foreground"><p>{t.t('noApps')}</p></div>
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={apps.map(app => app.id)} strategy={verticalListSortingStrategy}>
-            <div className="space-y-2">
+            <div className="bg-white border border-border rounded-2xl shadow-sm overflow-hidden divide-y divide-border">
               {apps.map(app => (
                 <SortableAppCard key={app.id} app={app} onExpand={() => navigate(`/apps/${app.id}`)} onToggleVisibility={() => updateApp(app.id, { is_visible: !app.is_visible })} onVerify={() => setVerifyingApp(app)} />
               ))}
@@ -169,12 +169,12 @@ export default function MyApps() {
       <Dialog open={!!deleteConfirmId} onOpenChange={() => setDeleteConfirmId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t.deleteConfirmTitle}</DialogTitle>
-            <DialogDescription>{t.deleteConfirmDescription}</DialogDescription>
+            <DialogTitle>{t.t('deleteConfirmTitle')}</DialogTitle>
+            <DialogDescription>{t.t('deleteConfirmDescription')}</DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-3 mt-4">
-            <Button variant="ghost" onClick={() => setDeleteConfirmId(null)}>{t.cancel}</Button>
-            <Button variant="destructive" onClick={handleDelete}>{t.delete}</Button>
+            <Button variant="ghost" onClick={() => setDeleteConfirmId(null)}>{t.t('cancel')}</Button>
+            <Button variant="destructive" onClick={handleDelete}>{t.t('delete')}</Button>
           </div>
         </DialogContent>
       </Dialog>

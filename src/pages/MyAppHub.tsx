@@ -10,10 +10,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users, Paintbrush, Eye, Settings, User, Lock, Crown, Check } from 'lucide-react';
+import { HexColorPicker } from 'react-colorful';
+import { FontSelector } from '@/components/me/FontSelector';
+import { ColorPicker } from '@/components/me/ColorPicker';
+import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users, Paintbrush, Eye, Settings, User, Lock, Crown, Check, Upload, FlaskConical, X, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VerificationBadge } from '@/components/me/VerificationBadge';
 import { DomainSettingsInput } from '@/components/me/DomainSettingsInput';
@@ -53,6 +57,17 @@ export default function MyAppHub() {
   const [settingsCustomDomain, setSettingsCustomDomain] = useState<string | null>(null);
   const [settingsCustomTitle, setSettingsCustomTitle] = useState<string | null>(null);
 
+  const [faviconUploading, setFaviconUploading] = useState(false);
+  const [showBrandingSheet, setShowBrandingSheet] = useState(false);
+  const [brandingForm, setBrandingForm] = useState({
+    default_language: 'es',
+    font_family: 'Inter',
+    favicon_url: '',
+    primary_color: '#3D5AFE',
+    primary_button_color: '#3D5AFE',
+    primary_button_text_color: '#FFFFFF',
+  });
+
   // Sync settings sheet form when opening
   useEffect(() => {
     if (showSettingsDialog && roadmap.settings) {
@@ -64,6 +79,20 @@ export default function MyAppHub() {
     }
   }, [showSettingsDialog, roadmap.settings]);
 
+  // Sync branding form when roadmap settings change
+  useEffect(() => {
+    if (roadmap.settings) {
+      setBrandingForm({
+        default_language: roadmap.settings?.default_language || 'es',
+        font_family: roadmap.settings?.font_family || 'Inter',
+        favicon_url: roadmap.settings?.favicon_url || '',
+        primary_color: roadmap.settings?.primary_color || '#3D5AFE',
+        primary_button_color: roadmap.settings?.primary_button_color || roadmap.settings?.primary_color || '#3D5AFE',
+        primary_button_text_color: roadmap.settings?.primary_button_text_color || '#FFFFFF',
+      });
+    }
+  }, [roadmap.settings]);
+
   // Fetch owner username for public URL
   useEffect(() => {
     if (!app?.user_id) return;
@@ -73,7 +102,7 @@ export default function MyAppHub() {
     })();
   }, [app?.user_id]);
 
-  const appSlug = ((app as any)?.slug || app?.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const appSlug = (app?.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const getBaseUrl = () => {
     const isProd = window.location.hostname.endsWith('vibecoders.la');
     if (isProd) return `https://${appSlug}.vibecoders.la`;
@@ -111,7 +140,7 @@ export default function MyAppHub() {
     { id: 'info', label: t.t('hub.info'), icon: Info, path: `/apps/${appId}` },
     { id: 'roadmap', label: t.t('hub.roadmap'), icon: Map, path: `/apps/${appId}/roadmap` },
     { id: 'feedback', label: t.t('hub.feedback'), icon: MessageSquare, path: `/apps/${appId}/feedback` },
-    { id: 'squad', label: t.t('hub.squad'), icon: Users, path: `/apps/${appId}/squad` },
+    { id: 'squad', label: "Open for Testing", icon: FlaskConical, path: `/apps/${appId}/squad` },
   ];
 
   const [betaConfig, setBetaConfig] = useState({
@@ -159,54 +188,128 @@ export default function MyAppHub() {
     } catch { toast.error('Error saving settings'); }
   };
 
+  const handleSaveBranding = async () => {
+    try {
+      await roadmap.updateSettings(brandingForm);
+      setShowBrandingSheet(false);
+      toast.success('Branding saved');
+    } catch { toast.error('Error saving branding'); }
+  };
+
+  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !appId) return;
+    const allowedTypes = ['image/png', 'image/svg+xml', 'image/webp', 'image/x-icon', 'image/vnd.microsoft.icon'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only .ico, .png, .svg, .webp files');
+      return;
+    }
+    setFaviconUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `favicons/${appId}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('roadmap-attachments').upload(path, file, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from('roadmap-attachments').getPublicUrl(path);
+      setBrandingForm(prev => ({ ...prev, favicon_url: urlData.publicUrl }));
+      toast.success('Favicon uploaded');
+    } catch { toast.error('Error uploading favicon'); }
+    finally { setFaviconUploading(false); }
+  };
+
   const { statuses } = useStatuses();
   const status = app ? statuses.find(s => s.id === app.status_id) : undefined;
   const { setHeaderContent } = usePageHeader();
 
-  // Set header content with app detail
+  // Set header content with app detail and secondary navigation
   useEffect(() => {
     if (!app) {
       setHeaderContent(null);
       return;
     }
     const colors = getStatusColors(status?.slug);
-    setHeaderContent(
+    
+    // Header Info Bar
+    const headerElement = (
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-7 w-7">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8 -ml-1">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         {app.logo_url ? (
-          <img src={app.logo_url} alt={app.name || ''} className="w-7 h-7 rounded-lg object-cover border shrink-0" />
+          <img src={app.logo_url} alt={app.name || ''} className="w-7 h-7 rounded-lg object-cover shrink-0" />
         ) : (
           <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xs font-bold shrink-0">
             {(app.name || 'A').charAt(0)}
           </div>
         )}
-        <span className="text-sm sm:text-base font-bold text-foreground truncate">{app.name || app.url}</span>
+        <span className="text-sm font-bold text-foreground truncate max-w-[120px] xs:max-w-[180px] sm:max-w-none">{app.name || app.url}</span>
         {status && (
-          <span className={cn('hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-tight border shrink-0', colors.bg, colors.text, colors.border)}>
+          <span className={cn('hidden xs:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-tight border shrink-0', colors.bg, colors.text, colors.border)}>
             <span className={cn('w-1.5 h-1.5 rounded-full', colors.dot)} />
             {status.name}
           </span>
         )}
-        <span className="hidden sm:inline-flex shrink-0">
-          <VerificationBadge 
-            isVerified={app.is_verified} 
-            onClick={() => setShowVerifyModal(true)}
-          />
-        </span>
         <div className="flex-1" />
-        <a href={app.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
-          <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs">
-            <ExternalLink className="w-3 h-3" />
-            <span className="hidden sm:inline">{t.t('hub.viewPage')}</span>
-          </Button>
-        </a>
+        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          {(activeTab === 'roadmap' || activeTab === 'feedback') && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 h-8 w-8 sm:w-auto sm:px-3 text-xs text-muted-foreground hover:text-foreground px-0"
+                onClick={() => setShowBrandingSheet(true)}
+                title="Branding"
+              >
+                <Paintbrush className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline-flex lg:inline">Branding</span>
+              </Button>
+
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 h-8 w-8 sm:w-auto sm:px-3 text-xs text-muted-foreground hover:text-foreground px-0"
+                onClick={() => setShowSettingsDialog(true)}
+                title={tR.t('editor.settings')}
+              >
+                <Settings className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden sm:inline-flex lg:inline">{tR.t('editor.settings')}</span>
+              </Button>
+              <Separator orientation="vertical" className="h-4 mx-0.5 sm:mx-1 opacity-50" />
+            </>
+          )}
+        </div>
       </div>
     );
+
+    // Secondary Navigation (Tabs)
+    const secondaryNav = (
+      <div className="flex items-center w-full gap-2 -mx-1 sm:mx-0 overflow-hidden">
+        <div className="flex overflow-x-auto gap-1 p-1 bg-muted/30 rounded-xl scrollbar-hide flex-1 sm:flex-none">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button 
+                key={tab.id} 
+                onClick={() => navigate(tab.path)} 
+                className={cn(
+                  'flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs transition-all duration-200 whitespace-nowrap min-w-fit shrink-0',
+                  isActive ? 'bg-background text-foreground shadow-sm font-bold' : 'text-muted-foreground/80 hover:text-foreground hover:bg-background/20'
+                )}
+              >
+                <Icon className={cn("h-4 w-4 sm:h-3.5 sm:w-3.5", isActive ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("inline-flex sm:inline", isActive && "font-bold")}>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+
+    setHeaderContent(headerElement, secondaryNav);
     return () => setHeaderContent(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [app?.id, app?.name, app?.logo_url, app?.url, app?.is_verified, app?.status_id, status?.slug, status?.name]);
+  }, [app?.id, app?.name, app?.logo_url, app?.url, app?.is_verified, app?.status_id, status?.slug, status?.name, activeTab]);
 
   if (authLoading || appsLoading) {
     return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -223,62 +326,20 @@ export default function MyAppHub() {
     );
   }
 
-  // Shared toolbar for roadmap & feedback tabs
+  // Shared toolbar to accommodate bug reporting button and others
   const renderToolbar = () => {
     if (!roadmap.settings) return null;
-    const isRoadmapTab = activeTab === 'roadmap';
-    const isFeedbackTab = activeTab === 'feedback';
-    if (!isRoadmapTab && !isFeedbackTab) return null;
+    if (activeTab !== 'roadmap' && activeTab !== 'feedback') return null;
 
-    return (
-      <div className="flex items-center justify-end w-full md:max-w-[90%] mx-auto mb-4 px-1 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 h-8 text-xs"
-            onClick={() => window.dispatchEvent(new CustomEvent('roadmap-open-branding'))}
-          >
-            <Paintbrush className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Branding</span>
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 h-8 text-xs"
-            onClick={() => setShowSettingsDialog(true)}
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{tR.t('editor.settings')}</span>
-          </Button>
-      </div>
-    );
+    return null; // All buttons moved to header or locally managed
   };
 
   return (
     <div className={cn(
-      "container px-3 sm:px-4 py-4 sm:py-6 flex-1 mx-auto transition-all",
-      activeTab === 'roadmap' ? "max-w-full" : "max-w-5xl"
+      "container px-3 sm:px-4 py-2 sm:py-4 flex-1 mx-auto transition-all duration-300",
+      activeTab === 'roadmap' ? "max-w-full" : "max-w-5xl",
+      (activeTab === 'info' || activeTab === 'feedback') && "bg-[#f0f0f0] dark:bg-muted/5 rounded-2xl"
     )}>
-
-      {/* Tabs */}
-      <div className="flex items-center w-full md:max-w-[90%] mx-auto gap-2 mb-4">
-        <div className="flex overflow-x-auto gap-1 p-1 sm:p-1.5 bg-muted/50 rounded-full scrollbar-hide flex-1">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button key={tab.id} onClick={() => navigate(tab.path)} className={cn(
-                'flex items-center justify-center gap-2 px-3 sm:px-5 py-2 rounded-full text-sm transition-all duration-200 flex-1 sm:flex-none whitespace-nowrap',
-                isActive ? 'bg-background text-foreground shadow-sm font-medium' : 'text-muted-foreground hover:text-foreground'
-              )}>
-                <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground")} />
-                <span className="hidden min-[420px]:inline">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       {/* Unified Toolbar */}
       {renderToolbar()}
@@ -295,12 +356,20 @@ export default function MyAppHub() {
 
       {/* Settings Sheet */}
       <Sheet open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-        <SheetContent side="right" className="w-full sm:w-[400px] sm:max-w-[400px] h-full flex flex-col p-0 gap-0">
-          <SheetHeader className="p-6 pb-4 shrink-0 border-b bg-background/50 backdrop-blur-sm z-10">
+        <SheetContent side="right" className="w-full sm:w-[400px] sm:max-w-[400px] h-full flex flex-col p-0 gap-0 [&_button.absolute]:!hidden">
+          <SheetHeader className="p-6 pb-4 shrink-0 border-b bg-background z-10 flex flex-row items-center justify-between">
             <SheetTitle className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
               {tR.t('editor.settings')}
             </SheetTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-9 w-9 rounded-full hover:bg-muted shrink-0 text-muted-foreground hover:text-foreground" 
+              onClick={() => setShowSettingsDialog(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto min-h-0">
@@ -457,6 +526,126 @@ export default function MyAppHub() {
                 {tR.t('editor.cancel')}
               </Button>
               <Button className="flex-1 font-bold shadow-lg shadow-primary/20" onClick={handleSaveSettings}>
+                {tR.t('editor.save')}
+              </Button>
+            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* Branding Sheet */}
+      <Sheet open={showBrandingSheet} onOpenChange={setShowBrandingSheet}>
+        <SheetContent side="right" className="w-full sm:w-[400px] sm:max-w-[400px] flex flex-col p-0 [&_button.absolute]:!hidden">
+          <SheetHeader className="p-6 pb-4 shrink-0 bg-background z-10 flex flex-row items-center justify-between border-b mb-0">
+            <SheetTitle className="flex items-center gap-2">
+              <Paintbrush className="w-4 h-4" />
+              {tR.t('editor.branding')}
+            </SheetTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-9 w-9 rounded-full hover:bg-muted shrink-0 text-muted-foreground hover:text-foreground" 
+              onClick={() => setShowBrandingSheet(false)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </SheetHeader>
+          <div className="px-6 py-6 space-y-6 flex-1 overflow-y-auto">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{tR.t('editor.defaultLanguage')}</Label>
+                <Select value={brandingForm.default_language} onValueChange={v => setBrandingForm(prev => ({ ...prev, default_language: v }))}>
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="es">Español</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="fr">Français</SelectItem>
+                    <SelectItem value="pt">Português</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{tR.t('editor.fontFamily')}</Label>
+                <FontSelector value={brandingForm.font_family} onChange={v => setBrandingForm(prev => ({ ...prev, font_family: v }))} />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Favicon</Label>
+                <div className="flex items-center gap-3">
+                  {brandingForm.favicon_url && (
+                    <img src={brandingForm.favicon_url} alt="Favicon" className="w-8 h-8 rounded object-contain border" />
+                  )}
+                  <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-md cursor-pointer hover:border-primary transition-colors text-sm text-muted-foreground">
+                    {faviconUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    {faviconUploading ? 'Uploading...' : 'Upload favicon'}
+                    <input type="file" className="hidden" accept=".ico,.png,.svg,.webp" onChange={handleFaviconUpload} disabled={faviconUploading} />
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <div className="p-4 rounded-xl bg-muted/20 border border-border/50">
+                  <div className="flex items-center mb-6">
+                    <div 
+                      className="px-5 py-2.5 rounded-full text-sm font-medium shadow-sm flex items-center gap-2"
+                      style={{ 
+                        backgroundColor: brandingForm.primary_button_color,
+                        color: brandingForm.primary_button_text_color 
+                      }}
+                    >
+                      <Send className="w-4 h-4" />
+                      {tR.t('public.submitFeedback') || 'Enviar Sugerencia'}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Fondo</Label>
+                      <ColorPicker 
+                        compact 
+                        value={brandingForm.primary_button_color} 
+                        onChange={v => setBrandingForm(prev => ({ ...prev, primary_button_color: v, primary_color: v }))} 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Texto</Label>
+                      <ColorPicker 
+                        compact 
+                        value={brandingForm.primary_button_text_color} 
+                        onChange={v => setBrandingForm(prev => ({ ...prev, primary_button_text_color: v }))} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+            <div className="space-y-3">
+              <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{tR.t('editor.columnColors')}</Label>
+              <div className="space-y-3">
+                {roadmap.lanes.map(lane => (
+                  <div key={lane.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
+                    <span className="text-sm font-medium">{lane.name}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded border shadow-sm" style={{ backgroundColor: lane.color }} />
+                      <span className="text-xs font-mono text-muted-foreground">{lane.color}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground italic">
+                {tR.t('editor.editColorsInRoadmap') || 'Edita los colores directamente en las columnas del Roadmap.'}
+              </p>
+            </div>
+          </div>
+
+          <SheetFooter className="shrink-0 p-6 bg-background border-t">
+            <div className="flex gap-3 w-full">
+              <Button variant="ghost" className="flex-1 font-semibold text-muted-foreground" onClick={() => setShowBrandingSheet(false)}>
+                {tR.t('editor.cancel')}
+              </Button>
+              <Button className="flex-1 font-bold shadow-lg" onClick={handleSaveBranding}>
                 {tR.t('editor.save')}
               </Button>
             </div>

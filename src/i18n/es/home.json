@@ -23,6 +23,9 @@
     "following": "siguiendo",
     "completeProfile": "Completar Perfil"
   },
+  "navigation": {
+    "activity": "Tu Actividad"
+  },
   "actionCenter": {
     "pendingTesters": "Testers Pendientes",
     "appHealth": "Estado de Apps",

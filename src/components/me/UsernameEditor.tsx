@@ -9,10 +9,11 @@ interface UsernameEditorProps {
   currentUsername: string | null;
   onUpdate: (username: string) => void;
   userId: string;
+  isRequired?: boolean;
 }
 
-export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEditorProps) {
-  const t = useTranslation('profile');
+export function UsernameEditor({ currentUsername, onUpdate, userId, isRequired }: UsernameEditorProps) {
+  const { t } = useTranslation('profile');
   const [username, setUsername] = useState(currentUsername || '');
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
@@ -78,7 +79,7 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
       setIsChecking(false);
       
       if (!available) {
-        setError(t.username.notAvailable);
+        setError(t('username.notAvailable'));
       } else {
         setError(null);
         // Auto-save when available
@@ -90,7 +91,7 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
       active = false;
       clearTimeout(timer);
     };
-  }, [username, currentUsername, checkUsernameAvailable, onUpdate]);
+  }, [username, currentUsername, checkUsernameAvailable, onUpdate, t]);
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
@@ -103,7 +104,9 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="username" className="text-[#1c1c1c]">{t.username.label}</Label>
+      <Label htmlFor="username" className="text-[#1c1c1c]">
+        {t('username.label')} {isRequired && '*'}
+      </Label>
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium text-sm">
           @
@@ -115,8 +118,9 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
           onChange={handleUsernameChange}
           onFocus={() => { isFocusedRef.current = true; }}
           onBlur={() => { isFocusedRef.current = false; }}
-          placeholder={t.username.placeholder}
-          className="text-sm pl-7 pr-10 border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0 w-full max-w-full"
+          placeholder={t('username.placeholder')}
+          title={t('username.hint')}
+          className="text-sm pl-7 pr-10 border border-gray-200 bg-white text-[#1c1c1c] placeholder:text-gray-400 focus:border-[#3D5AFE] focus:outline-none focus:ring-0 w-full max-full"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
           {isChecking && (
@@ -126,16 +130,13 @@ export function UsernameEditor({ currentUsername, onUpdate, userId }: UsernameEd
             <Check className="h-4 w-4 text-[#3D5AFE]" />
           )}
           {!isChecking && isAvailable === false && (
-            <X className="h-4 w-4 text-red-500" />
+            <Check className="h-4 w-4 text-red-500" />
           )}
         </div>
       </div>
       {error && (
         <p className="text-xs text-red-500">{error}</p>
       )}
-      <p className="text-xs text-gray-500">
-        {t.username.hint}
-      </p>
     </div>
   );
 }

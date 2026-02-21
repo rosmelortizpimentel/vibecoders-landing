@@ -160,10 +160,10 @@ function PublicAppCard({
             {app.is_verified && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
+                  <BadgeCheck className="h-4 w-4 text-black flex-shrink-0" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  Propietario Verificado
+                  Verificado
                 </TooltipContent>
               </Tooltip>
             )}
@@ -369,21 +369,20 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
             </div>
 
             {profile.booking_url && (
-              <Button
-                asChild
-                size="sm"
+              <a
+                href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={handleBookingClick}
-                className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-8 px-3 whitespace-nowrap"
+                style={{
+                  backgroundColor: profile.primary_color || '#3D5AFE',
+                  color: profile.accent_color || '#FFFFFF',
+                }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap shadow-sm hover:opacity-90 transition-opacity"
               >
-                <a 
-                  href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span className="hidden sm:inline">{profile.booking_button_text || 'Book a call'}</span>
-                  <Calendar className="h-3.5 w-3.5" />
-                </a>
-              </Button>
+                <span className="hidden sm:inline">{profile.booking_button_text || 'Book a call'}</span>
+                <Calendar className="h-3.5 w-3.5" style={{ color: profile.accent_color || '#FFFFFF' }} />
+              </a>
             )}
           </div>
 

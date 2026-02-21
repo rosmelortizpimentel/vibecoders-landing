@@ -3,6 +3,7 @@ import { HexColorPicker } from 'react-colorful';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 interface ColorPickerProps {
   label?: string;
@@ -70,25 +71,27 @@ export function ColorPicker({ label, value, onChange, compact = false }: ColorPi
           />
         </PopoverTrigger>
         <PopoverContent className="w-auto p-3" align="end">
-          <HexColorPicker color={value} onChange={handlePickerChange} />
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-muted-foreground text-sm">#</span>
-            <Input
-              value={inputValue.replace('#', '')}
-              onChange={e => handleInputChange('#' + e.target.value)}
-              placeholder="3D5AFE"
-              className="font-mono uppercase text-sm h-8"
-              maxLength={6}
-            />
-          </div>
+      <HexColorPicker color={value} onChange={handlePickerChange} />
+      <div className="mt-4 flex items-center gap-2 px-1">
+        <div className="flex-1 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-mono">#</span>
+          <Input
+            value={inputValue.replace('#', '').toUpperCase()}
+            onChange={e => handleInputChange('#' + e.target.value)}
+            placeholder="000000"
+            className="pl-7 pr-3 py-1 h-9 rounded-full bg-muted/30 border-none font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
+            maxLength={6}
+          />
+        </div>
+      </div>
         </PopoverContent>
       </Popover>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {label && <Label className="text-[#1c1c1c]">{label}</Label>}
+    <div className="space-y-4">
+      {label && <Label className="text-sm font-medium text-foreground/80">{label}</Label>}
       
       <div className="flex items-center gap-3">
         {/* Color Preview - clickable to open picker */}
@@ -96,48 +99,52 @@ export function ColorPicker({ label, value, onChange, compact = false }: ColorPi
           <PopoverTrigger asChild>
             <button
               type="button"
-              className="w-12 h-12 rounded-lg border border-gray-200 shadow-sm flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-[#3D5AFE] hover:ring-offset-2 transition-all"
+              className="w-10 h-10 rounded-full border border-border shadow-sm flex-shrink-0 cursor-pointer hover:scale-105 transition-transform"
               style={{ backgroundColor: value }}
               aria-label="Abrir selector de color"
             />
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-3" align="start">
-            <HexColorPicker color={value} onChange={handlePickerChange} />
-            <div className="mt-3 flex items-center gap-2">
-              <span className="text-gray-500 text-sm">#</span>
-              <Input
-                value={inputValue.replace('#', '')}
-                onChange={e => handleInputChange('#' + e.target.value)}
-                placeholder="3D5AFE"
-                className="font-mono uppercase text-sm h-8"
-                maxLength={6}
-              />
+          <PopoverContent className="w-[200px] p-3 rounded-2xl shadow-xl border-none" align="start" sideOffset={8}>
+            <div className="space-y-4">
+              <HexColorPicker color={value} onChange={handlePickerChange} className="!w-full !h-40" />
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-mono">#</span>
+                <Input
+                  value={inputValue.replace('#', '').toUpperCase()}
+                  onChange={e => handleInputChange('#' + e.target.value)}
+                  placeholder="000000"
+                  className="pl-7 pr-3 py-1 h-9 rounded-full bg-muted/50 border-none font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/30"
+                  maxLength={6}
+                />
+              </div>
             </div>
           </PopoverContent>
         </Popover>
         
-        {/* Hex Input */}
-        <Input
-          value={inputValue}
-          onChange={e => handleInputChange(e.target.value)}
-          placeholder="#3D5AFE"
-          className="flex-1 font-mono uppercase border-gray-300 bg-white text-[#1c1c1c] focus:border-[#3D5AFE] focus:ring-0"
-          maxLength={7}
-        />
+        {/* Minimalist Hex Display */}
+        <div className="flex-1 relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-xs font-mono">#</span>
+          <Input
+            value={inputValue.replace('#', '').toUpperCase()}
+            onChange={e => handleInputChange('#' + e.target.value)}
+            placeholder="000000"
+            className="pl-7 pr-3 h-10 rounded-full bg-muted/20 border-border/50 font-mono text-sm focus-visible:ring-1 focus-visible:ring-primary/20"
+            maxLength={6}
+          />
+        </div>
       </div>
 
-      {/* Preset Colors */}
-      <div className="flex flex-wrap gap-2">
+      {/* Preset Colors - Clean small dots */}
+      <div className="flex flex-wrap gap-2.5 px-0.5">
         {PRESET_COLORS.map(color => (
           <button
             key={color}
             type="button"
             onClick={() => handlePresetClick(color)}
-            className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${
-              value.toLowerCase() === color.toLowerCase()
-                ? 'border-[#1c1c1c] scale-110 ring-2 ring-offset-1 ring-gray-300'
-                : 'border-white shadow-sm'
-            }`}
+            className={cn(
+              "w-5 h-5 rounded-full border border-white shadow-sm transition-all hover:scale-125",
+              value.toLowerCase() === color.toLowerCase() && "ring-2 ring-primary ring-offset-2 scale-110"
+            )}
             style={{ backgroundColor: color }}
             aria-label={`Color ${color}`}
           />

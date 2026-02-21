@@ -3,13 +3,12 @@ import { useLocation } from 'react-router-dom';
 import { useProfileEditor } from '@/hooks/useProfileEditor';
 import { useApps } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
-import { MeTabs } from '@/components/me/MeTabs';
 import { ProfileTab } from '@/components/me/ProfileTab';
-import { BrandingTab } from '@/components/me/BrandingTab';
 import { ProfilePreview } from '@/components/me/ProfilePreview';
 import { Loader2, Eye, X, Smartphone, User } from 'lucide-react';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -33,11 +32,11 @@ const Me = () => {
     setHeaderContent(
       <div className="flex items-center gap-2 min-w-0">
         <User className="h-4 w-4 text-primary shrink-0" />
-        <span className="font-semibold text-foreground truncate">{tCommon.navigation.myProfile}</span>
+        <span className="font-semibold text-foreground truncate">{tCommon.t('navigation.myProfile')}</span>
       </div>
     );
     return () => setHeaderContent(null);
-  }, [setHeaderContent]);
+  }, [setHeaderContent, tCommon]);
 
   const { profile, loading, isSaving, error } = profileEditor;
 
@@ -54,7 +53,6 @@ const Me = () => {
 
   // Determine active tab from URL
   const getActiveTab = () => {
-    if (location.pathname === '/me/branding') return 'branding';
     return 'profile';
   };
   
@@ -74,13 +72,14 @@ const Me = () => {
 
   return (
     <>
-      <div className="container px-3 sm:px-4 py-4 sm:py-6 flex-1">
+      <div className="container px-3 sm:px-4 pt-1 sm:pt-2 pb-4 sm:pb-6 flex-1">
         <div className="flex gap-4 sm:gap-6">
           {/* Main content */}
           <div className={showPreview ? 'w-[60%]' : 'w-full max-w-full overflow-x-hidden'}>
-            <MeTabs onPreviewClick={() => setPreviewOpen(true)} username={profile?.username} />
-            
-            <div className={`mt-4 sm:mt-6 ${showMobilePreview ? 'pb-20' : ''}`}>
+            <div className={cn(
+              showPreview && "bg-white border border-slate-200 rounded-2xl shadow-sm p-6 sm:p-8",
+              showMobilePreview && 'pb-20'
+            )}>
               {activeTab === 'profile' && (
                 <ProfileTab 
                   profile={profile} 
@@ -88,16 +87,10 @@ const Me = () => {
                   onUploadAvatar={profileEditor.uploadAvatar}
                   onUploadBanner={profileEditor.uploadBanner}
                   onDeleteBanner={profileEditor.deleteBanner}
-                  isSaving={isSaving}
-                  error={error}
-                />
-              )}
-              {activeTab === 'branding' && (
-                <BrandingTab 
-                  profile={profile} 
-                  onUpdate={profileEditor.updateProfile}
                   onUploadOgImage={profileEditor.uploadOgImage}
                   onDeleteOgImage={profileEditor.deleteOgImage}
+                  isSaving={isSaving}
+                  error={error}
                 />
               )}
             </div>
@@ -106,7 +99,7 @@ const Me = () => {
           {/* Preview sidebar - only on desktop and NOT on beta tab */}
           {showPreview && (
             <div className="w-[40%]">
-              <div className="sticky top-20">
+              <div className="sticky top-24">
                 <ProfilePreview profile={profile} apps={appsHook.apps} />
               </div>
             </div>
@@ -124,7 +117,7 @@ const Me = () => {
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 <Eye className="h-5 w-5 mr-2" />
-                {t.preview}
+                {t.t('preview')}
               </Button>
             </div>
           </SheetTrigger>
@@ -133,7 +126,7 @@ const Me = () => {
             <div className="sticky top-0 z-10 flex items-center justify-between bg-background border-b border-border px-4 py-3">
               <div className="flex items-center gap-2">
                 <Smartphone className="h-5 w-5 text-primary" />
-                <span className="font-medium text-foreground">{t.preview}</span>
+                <span className="font-medium text-foreground">{t.t('preview')}</span>
               </div>
               <button
                 onClick={() => setPreviewOpen(false)}
@@ -143,7 +136,7 @@ const Me = () => {
               </button>
             </div>
             <SheetHeader className="sr-only">
-              <SheetTitle>{t.preview}</SheetTitle>
+              <SheetTitle>{t.t('preview')}</SheetTitle>
             </SheetHeader>
             <ProfilePreview profile={profile} apps={appsHook.apps} isMobileSheet />
           </SheetContent>

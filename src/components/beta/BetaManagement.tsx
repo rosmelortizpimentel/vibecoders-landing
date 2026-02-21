@@ -371,145 +371,94 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
       </div>
 
       {config.beta_active && (
-        <Tabs defaultValue="inbox" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="inbox" className="gap-1.5 md:gap-2 relative">
-              <MessageSquare className="w-4 h-4" />
-              <span className="hidden md:inline">Feedback</span>
-              {openFeedback.length > 0 && (
-                <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center rounded-full">
-                  {openFeedback.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="squad" className="gap-1.5 md:gap-2">
-              <Users className="w-4 h-4" />
-              <span className="hidden md:inline">Squad</span>
-              <Badge variant="secondary" className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-xs">
-                {acceptedTesters.length}
-              </Badge>
-            </TabsTrigger>
+        <Tabs defaultValue="config" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="config" className="gap-1.5 md:gap-2">
               <Settings className="w-4 h-4" />
               <span className="hidden md:inline">Config</span>
             </TabsTrigger>
+            <TabsTrigger value="squad" className="gap-1.5 md:gap-2">
+              <Users className="w-4 h-4" />
+              <span className="hidden md:inline">Beta Testers</span>
+              <Badge variant="secondary" className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-xs">
+                {acceptedTesters.length}
+              </Badge>
+            </TabsTrigger>
           </TabsList>
 
-          {/* Inbox Feedback Content */}
-          <TabsContent value="inbox" className="mt-4 space-y-4">
-            <div className="flex justify-end items-center">
-              <Select value={feedbackFilter} onValueChange={(v) => setFeedbackFilter(v as typeof feedbackFilter)}>
-                <SelectTrigger className="w-32 h-8">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('filterAll')}</SelectItem>
-                  <SelectItem value="open">{t('filterOpen')}</SelectItem>
-                  <SelectItem value="in_review">{t('filterInReview')}</SelectItem>
-                  <SelectItem value="closed">{t('filterClosed')}</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Configuration Content */}
+          <TabsContent value="config" className="mt-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('betaMode')}</Label>
+                <Select
+                  value={config.beta_mode}
+                  onValueChange={(value) => onConfigChange({ beta_mode: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="open">{t('modeOpen')}</SelectItem>
+                    <SelectItem value="closed">{t('modeClosed')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>{t('limit')}</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={config.beta_limit === 0 ? '' : config.beta_limit}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      onConfigChange({ beta_limit: 0 });
+                    } else {
+                      const num = parseInt(value);
+                      if (!isNaN(num) && num >= 1 && num <= 100) {
+                        onConfigChange({ beta_limit: num });
+                      }
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const num = parseInt(e.target.value);
+                    if (isNaN(num) || num < 1) {
+                      onConfigChange({ beta_limit: 1 });
+                    }
+                  }}
+                />
+              </div>
             </div>
 
-            {filteredFeedback.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground bg-muted/20 rounded-lg border border-dashed">
-                <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                <p>{t('noFeedback')}</p>
+            <div className="space-y-2">
+              <Label>{t('secretLink')}</Label>
+              <DebouncedInput
+                value={config.beta_link || ''}
+                onValueChange={(value) => onConfigChange({ beta_link: value || null })}
+                placeholder={t('secretLinkPlaceholder')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>{t('instructionsLabel')}</Label>
+                <Link 
+                  to="/post/writing-tester-instructions" 
+                  target="_blank"
+                  className="text-xs text-primary hover:underline flex items-center gap-1"
+                >
+                  {t('viewGuide')}
+                  <ExternalLink className="w-3 h-3" />
+                </Link>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {filteredFeedback.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className="p-4 rounded-lg border bg-card hover:border-primary/20 transition-colors group"
-                  >
-                    {/* Content - Main Focus */}
-                    <p className="text-base text-foreground mb-3">{item.content}</p>
-                    
-                    {/* Attachments */}
-                    {item.attachments.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {item.attachments.map((att, idx) => (
-                          <button
-                            key={att.id}
-                            onClick={() => openImageCarousel(item.attachments, idx)}
-                            className="block rounded-lg overflow-hidden hover:opacity-90 transition-opacity border"
-                          >
-                            <img
-                              src={att.file_url}
-                              alt={att.file_name}
-                              className="h-16 w-16 object-cover"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Footer: User Info & Actions */}
-                    <div className="flex items-center justify-between mt-2">
-                       <div className="flex items-center gap-3">
-                          <Link 
-                            to={item.tester?.username ? `/@${item.tester.username}` : '#'}
-                            className="flex items-center gap-2 group/user"
-                          >
-                            <Avatar className="w-6 h-6 border border-border">
-                              <AvatarImage src={item.tester?.avatar_url || ''} />
-                              <AvatarFallback className="text-[10px]">{item.tester?.name?.charAt(0) || '?'}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium text-muted-foreground group-hover/user:text-foreground transition-colors leading-none">
-                                {item.tester?.name || item.tester?.username}
-                              </span>
-                              <span className={cn(
-                                "text-[10px] font-bold uppercase tracking-wider mt-1",
-                                item.status === 'open' ? "text-blue-500" : 
-                                item.status === 'in_review' ? "text-yellow-500" : "text-muted-foreground"
-                              )}>
-                                {item.status === 'open' ? t('feedbackOpen') : 
-                                 item.status === 'in_review' ? t('feedbackInReview') : t('feedbackClosed')}
-                              </span>
-                            </div>
-                          </Link>
-                          
-                          {/* Date separator */}
-                          <span className="text-muted-foreground/40 text-[10px]">•</span>
-                          
-                           <span className="text-xs text-muted-foreground/60">
-                              {format(new Date(item.created_at), 'dd MMM', {
-                                 locale: getDateLocale()
-                              })}
-                           </span>
-                       </div>
-
-                       {/* Actions & subtle status indicator if needed, but user wanted clean. 
-                           I'll keep just the menu. */}
-                        <div className="flex items-center gap-1">
-                           <Button
-                             size="sm"
-                             variant="ghost"
-                             className={cn(
-                               "h-8 w-8 rounded-full p-0 transition-all",
-                               item.is_useful ? "text-red-500 hover:text-red-600 bg-red-50" : "text-muted-foreground/40 hover:text-red-500 hover:bg-red-50"
-                             )}
-                             onClick={() => handleMarkUseful(item.id, item.is_useful)}
-                             title={item.is_useful ? t('markedUseful') : t('markUseful')}
-                           >
-                             <Heart className={cn("w-4 h-4", item.is_useful && "fill-current")} />
-                           </Button>
-
-                           <FeedbackActionMenu
-                             feedbackId={item.id}
-                             status={item.status}
-                             onMarkResolved={() => handleMarkResolved(item.id)}
-                             onClose={() => handleCloseFeedback(item.id)}
-                             onDelete={() => handleDeleteFeedback(item.id)}
-                           />
-                        </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+              <MarkdownEditor
+                value={config.beta_instructions || ''}
+                onChange={(value) => onConfigChange({ beta_instructions: value || null })}
+                placeholder={t('instructionsPlaceholder')}
+              />
+            </div>
           </TabsContent>
 
           {/* Squad & Solicitudes Content */}
@@ -619,81 +568,6 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                     </div>
                   </div>
                 ))}
-          </TabsContent>
-
-          {/* Configuration Content */}
-          <TabsContent value="config" className="mt-4 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('betaMode')}</Label>
-                <Select
-                  value={config.beta_mode}
-                  onValueChange={(value) => onConfigChange({ beta_mode: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">{t('modeOpen')}</SelectItem>
-                    <SelectItem value="closed">{t('modeClosed')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('limit')}</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={config.beta_limit === 0 ? '' : config.beta_limit}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === '') {
-                      onConfigChange({ beta_limit: 0 });
-                    } else {
-                      const num = parseInt(value);
-                      if (!isNaN(num) && num >= 1 && num <= 100) {
-                        onConfigChange({ beta_limit: num });
-                      }
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const num = parseInt(e.target.value);
-                    if (isNaN(num) || num < 1) {
-                      onConfigChange({ beta_limit: 1 });
-                    }
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>{t('secretLink')}</Label>
-              <DebouncedInput
-                value={config.beta_link || ''}
-                onValueChange={(value) => onConfigChange({ beta_link: value || null })}
-                placeholder={t('secretLinkPlaceholder')}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>{t('instructionsLabel')}</Label>
-                <Link 
-                  to="/post/writing-tester-instructions" 
-                  target="_blank"
-                  className="text-xs text-primary hover:underline flex items-center gap-1"
-                >
-                  {t('viewGuide')}
-                  <ExternalLink className="w-3 h-3" />
-                </Link>
-              </div>
-              <MarkdownEditor
-                value={config.beta_instructions || ''}
-                onChange={(value) => onConfigChange({ beta_instructions: value || null })}
-                placeholder={t('instructionsPlaceholder')}
-              />
-            </div>
           </TabsContent>
         </Tabs>
       )}

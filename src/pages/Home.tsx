@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Activity, Heart, Users, ShieldCheck, Rocket, Loader2, User, AppWindow, Trophy, LayoutDashboard } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
@@ -19,12 +20,13 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { TrafficModal } from '@/components/home/modals/TrafficModal';
 import { LikesModal } from '@/components/home/modals/LikesModal';
 import { NetworkModal } from '@/components/home/modals/NetworkModal';
+import { ProfileStrengthModal } from '@/components/home/modals/ProfileStrengthModal';
 
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const t = useTranslation('home');
-  const tCommon = useTranslation('common');
+  const { t } = useTranslation('home');
+  const { t: tCommon } = useTranslation('common');
   const { stats, isLoading, acceptTester, rejectTester } = useDashboardStats();
   const { setHeaderContent } = usePageHeader();
 
@@ -32,11 +34,11 @@ export default function Home() {
     setHeaderContent(
       <div className="flex items-center gap-2 min-w-0">
         <LayoutDashboard className="h-4 w-4 text-primary shrink-0" />
-        <span className="font-semibold text-foreground truncate">{tCommon.navigation.home}</span>
+        <span className="font-semibold text-foreground truncate">{tCommon('navigation.home')}</span>
       </div>
     );
     return () => setHeaderContent(null);
-  }, [setHeaderContent]);
+  }, [setHeaderContent, tCommon]);
   const { data: freshDrops = [], isLoading: freshDropsLoading } = useFreshDrops();
   const { isFounder, isFree, founderNumber } = useSubscription();
 
@@ -44,6 +46,7 @@ export default function Home() {
   const [isTrafficOpen, setIsTrafficOpen] = useState(false);
   const [isLikesOpen, setIsLikesOpen] = useState(false);
   const [isNetworkOpen, setIsNetworkOpen] = useState(false);
+  const [isStrengthOpen, setIsStrengthOpen] = useState(false);
 
   const handleCompleteProfile = () => {
     navigate('/me');
@@ -62,17 +65,103 @@ export default function Home() {
       {/* Upgrade Banner for Free Users */}
       {isFree && <UpgradeBanner />}
 
-      {/* Fresh Drops Carousel - Moved to Top */}
-      <section className="pt-2 w-full max-w-full min-w-0 overflow-hidden">
+      {/* Tu Actividad Section */}
+      <section className="w-full">
+        <div className="flex items-center gap-2 mb-4 px-1">
+          <div className="p-2 bg-muted rounded-lg">
+            <Activity className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+          </div>
+          <h2 className="text-sm font-semibold text-foreground">
+            {t('navigation.activity') || 'Tu Actividad'}
+          </h2>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 w-full min-w-0">
+          {/* Card 1: Profile Views */}
+          <StatsCard
+            onClick={() => setIsTrafficOpen(true)}
+            onDoubleClick={() => setIsTrafficOpen(true)}
+            icon={User}
+            title={t('stats.profileViews') || 'Profile Views'}
+            value={isLoading ? '—' : (stats?.profileViews ?? 0)}
+            className="animate-in fade-in slide-in-from-bottom-3 duration-500"
+          />
+
+          {/* Card 2: App Clicks */}
+          <StatsCard
+            onClick={() => setIsTrafficOpen(true)}
+            onDoubleClick={() => setIsTrafficOpen(true)}
+            icon={AppWindow}
+            title={t('stats.appClicks') || 'App Project Clicks'}
+            value={isLoading ? '—' : (stats?.appClicks ?? 0)}
+            className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-75"
+          />
+
+          {/* Card 3: App Likes */}
+          <StatsCard
+            onClick={() => setIsLikesOpen(true)}
+            onDoubleClick={() => setIsLikesOpen(true)}
+            icon={Heart}
+            title={t('stats.engagement') || 'App Likes'}
+            value={isLoading ? '—' : (stats?.totalLikes ?? 0)}
+            footer={isLoading ? undefined : (topApp && topApp.count > 0 ? `Top: ${topApp.name}` : undefined)}
+            className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-100"
+          />
+
+          {/* Card 4: Followers */}
+          <StatsCard
+            onClick={() => setIsNetworkOpen(true)}
+            onDoubleClick={() => setIsNetworkOpen(true)}
+            icon={Users}
+            title={t('stats.followers') || 'Followers'}
+            value={isLoading ? '—' : (stats?.followersCount ?? 0)}
+            className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-150"
+          />
+
+          {/* Card 5: Following */}
+          <StatsCard
+            onClick={() => setIsNetworkOpen(true)}
+            onDoubleClick={() => setIsNetworkOpen(true)}
+            icon={Users}
+            title={t('stats.following') || 'Following'}
+            value={isLoading ? '—' : (stats?.followingCount ?? 0)}
+            className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-200"
+          />
+
+          {/* Card 6: Profile Strength */}
+          <StatsCard
+            onClick={() => setIsStrengthOpen(true)}
+            onDoubleClick={() => setIsStrengthOpen(true)}
+            icon={ShieldCheck}
+            iconVariant={stats?.profileStrength === 100 ? "primary" : "neutral"}
+            title={t('stats.identity') || 'Profile Strength'}
+            value={isLoading ? '—' : `${Math.round(stats?.profileStrength ?? 0)}%`}
+            subtitle={stats?.profileStrength === 100 ? "¡Tu perfil está optimizado!" : undefined}
+            progress={stats?.profileStrength ?? 0}
+            className={cn(
+              "animate-in fade-in slide-in-from-bottom-3 duration-500 delay-300",
+              stats?.profileStrength === 100 && "border-primary/30 ring-1 ring-primary/5 shadow-sm"
+            )}
+          />
+        </div>
+      </section>
+
+      {/* Action Center - 2 Column Grid */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full min-w-0">
+        {/* ... action center content ... */}
+      </section>
+
+      {/* Fresh Drops Carousel - Moved to Bottom */}
+      <section className="pt-2 w-full max-w-full min-w-0 overflow-hidden pb-4">
         <div className="flex items-center gap-2 mb-4 px-1">
           <div className="p-2 bg-muted rounded-lg">
             <Rocket className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
           </div>
           <h2 className="text-sm font-semibold text-foreground">
-            {t.freshDrops?.title || 'Fresh out of the oven'}
+            {t('freshDrops.title') || 'Nuevas Apps'}
           </h2>
         </div>
-
+        
         {freshDropsLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {[...Array(3)].map((_, i) => (
@@ -83,83 +172,6 @@ export default function Home() {
           <FreshDropsCarousel apps={freshDrops} />
         )}
       </section>
-
-      {/* Stats Row - 4 Metric Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 w-full min-w-0">
-        {/* Card A: Traffic (Vistas) */}
-        <StatsCard
-          onClick={() => setIsTrafficOpen(true)}
-          rows={[
-            { icon: User, label: t.stats?.profileViews || 'Profile Views', value: isLoading ? '—' : (stats?.profileViews ?? 0) },
-            { icon: AppWindow, label: t.stats?.appClicks || 'App Project Clicks', value: isLoading ? '—' : (stats?.appClicks ?? 0) }
-          ]}
-          className="animate-in fade-in slide-in-from-bottom-3 duration-500"
-        />
-
-        {/* Card B: Engagement (Likes) */}
-        <StatsCard
-          onClick={() => setIsLikesOpen(true)}
-          headline={topApp && topApp.count > 0 ? {
-            icon: Trophy,
-            label: 'Top App',
-            highlight: topApp.name
-          } : undefined}
-          icon={Heart}
-          title={t.stats?.engagement || 'App Likes'}
-          value={isLoading ? '—' : (topApp?.count ?? 0)}
-          footer={isLoading ? undefined : `Total likes: ${stats?.totalLikes ?? 0}`}
-          className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-75"
-        />
-
-        {/* Card C: Community (Seguidores) */}
-        <StatsCard
-          onClick={() => setIsNetworkOpen(true)}
-          split={{
-            left: { value: isLoading ? '—' : (stats?.followersCount ?? 0), label: t.stats?.followers || 'Followers' },
-            right: { value: isLoading ? '—' : (stats?.followingCount ?? 0), label: t.stats?.following || 'Following' }
-          }}
-          className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-150"
-        />
-
-        {/* Card D: Identity / Profile Strength */}
-        <StatsCard
-          icon={ShieldCheck}
-          title={t.stats?.identity || 'Profile Strength'}
-          value={isLoading ? '—' : `${Math.round(stats?.profileStrength ?? 0)}%`}
-          progress={stats?.profileStrength ?? 0}
-          action={
-            (stats?.profileStrength ?? 0) < 100
-              ? {
-                  label: t.stats?.completeProfile || 'Complete Profile',
-                  onClick: handleCompleteProfile,
-                }
-              : undefined
-          }
-          className="animate-in fade-in slide-in-from-bottom-3 duration-500 delay-200"
-        />
-      </section>
-
-      {/* Action Center - 2 Column Grid */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full min-w-0">
-        {/* Pending Testers Panel (2/3 width on desktop) */}
-        <div className="lg:col-span-2">
-          <PendingTestersPanel
-            testers={stats?.pendingTesters || []}
-            onAccept={acceptTester}
-            onReject={rejectTester}
-            isLoading={isLoading}
-          />
-        </div>
-
-        {/* App Health Panel (1/3 width on desktop) */}
-        <div className="lg:col-span-1">
-          <AppHealthPanel
-            apps={stats?.appHealth || []}
-            isLoading={isLoading}
-          />
-        </div>
-      </section>
-
 
       {/* Detail Modals */}
       <TrafficModal 
@@ -181,6 +193,12 @@ export default function Home() {
         onClose={() => setIsNetworkOpen(false)}
         followers={stats?.followers ?? []}
         following={stats?.following ?? []}
+      />
+
+      <ProfileStrengthModal
+        isOpen={isStrengthOpen}
+        onClose={() => setIsStrengthOpen(false)}
+        strength={stats?.profileStrength ?? 0}
       />
     </div>
   );

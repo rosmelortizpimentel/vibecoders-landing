@@ -137,7 +137,7 @@ export function AuthenticatedHeader({
   };
 
   return (
-    <header className="sticky top-0 z-50 h-16 border-b border-border/50 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground min-w-0 flex-1">
           {header.element ? (
@@ -369,6 +369,11 @@ export function AuthenticatedHeader({
           </Sheet>
         </div>
       </div>
+      {header.secondaryNav && (
+        <div className="container px-4 pb-3">
+          {header.secondaryNav}
+        </div>
+      )}
     </header>
   );
 }

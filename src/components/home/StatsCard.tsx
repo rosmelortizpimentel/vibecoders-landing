@@ -16,6 +16,8 @@ interface StatsCardProps {
   progress?: number;
   className?: string;
   onClick?: () => void;
+  onDoubleClick?: () => void;
+  iconVariant?: 'neutral' | 'primary';
   
   // Custom layouts
   rows?: { icon: LucideIcon; label: string; value: string | number }[];
@@ -23,6 +25,11 @@ interface StatsCardProps {
   split?: { left: { value: string | number, label: string }, right: { value: string | number, label: string } };
   footer?: string;
 }
+
+const variantStyles = {
+  neutral: { bg: 'bg-muted/50', icon: 'text-muted-foreground' },
+  primary: { bg: 'bg-primary/10', icon: 'text-primary' },
+};
 
 export function StatsCard({
   icon: Icon,
@@ -35,6 +42,8 @@ export function StatsCard({
   progress,
   className,
   onClick,
+  onDoubleClick,
+  iconVariant = 'neutral',
   rows,
   headline,
   split,
@@ -45,9 +54,10 @@ export function StatsCard({
   return (
     <CardWrapper
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       className={cn(
         'bg-card border border-border rounded-xl p-4 transition-all text-left w-full h-full overflow-hidden relative min-w-0',
-        onClick && 'hover:border-primary/50 hover:shadow-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20',
+        onClick && 'hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20',
         className
       )}
     >
@@ -55,8 +65,8 @@ export function StatsCard({
       {!split && !headline && (
         <div className="flex items-start justify-between mb-3">
           {Icon && (
-            <div className="p-2 bg-muted rounded-lg">
-              <Icon className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
+            <div className={cn("p-2 rounded-lg transition-colors", variantStyles[iconVariant].bg)}>
+              <Icon className={cn("w-4 h-4", variantStyles[iconVariant].icon)} strokeWidth={2} />
             </div>
           )}
           {trend && trendValue && (
@@ -114,8 +124,8 @@ export function StatsCard({
         </div>
       ) : (
         <div className="space-y-1">
-          <p className="text-2xl font-bold text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground font-medium">{title}</p>
+          <p className="text-2xl font-bold text-primary tracking-tight">{value}</p>
+          <p className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider">{title}</p>
           {subtitle && (
             <p className="text-[11px] text-muted-foreground/80 mt-1">{subtitle}</p>
           )}

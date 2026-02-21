@@ -38,7 +38,7 @@ export function Sidebar() {
   const { isAdmin } = useUserRole();
   const { profile } = useProfile();
   const [menuOpen, setMenuOpen] = useState(false);
-  const tAuth = useTranslation('auth');
+  const { t: tAuth } = useTranslation('auth');
   const { ownedAppsCount, publicSquadsCount } = useBetaBadges();
   const { unreadCount } = useNotifications();
   const { items: menuItems } = useSidebarMenu();
@@ -87,6 +87,7 @@ export function Sidebar() {
   
   // Resolve i18n labels - for notifications namespace, use a simple lookup
   const { t: tNotif } = useTranslation('notifications');
+  const { t: tHero } = useTranslation('hero');
   
   const resolveLabel = (labelKey: string): string => {
     const parts = labelKey.split('.');
@@ -136,8 +137,8 @@ export function Sidebar() {
             />
           </div>
           {!isCollapsed && (
-            <p className="text-[10px] text-muted-foreground font-medium text-left max-w-[140px] leading-tight opacity-80">
-              The Official Home for Vibe Coders
+            <p className="text-sm text-muted-foreground font-medium text-left max-w-[160px] leading-tight opacity-100 whitespace-pre-line">
+              {tHero('badge')}
             </p>
           )}
         </Link>
@@ -284,7 +285,7 @@ export function Sidebar() {
                   className="flex items-center gap-3 py-3 px-5 cursor-pointer group transition-colors"
                 >
                   <ExternalLink className="h-4 w-4 text-white/40 group-hover:text-white/80 transition-colors" strokeWidth={1.5} />
-                  <span className="text-sm font-medium">{tAuth.viewPublicProfile}</span>
+                  <span className="text-sm font-medium">{tAuth('viewPublicProfile')}</span>
                 </Link>
               </DropdownMenuItem>
               
@@ -294,7 +295,7 @@ export function Sidebar() {
                   className="flex items-center gap-3 py-3 px-5 cursor-pointer text-white/80 hover:bg-white/10 hover:text-white border-none focus:bg-white/10 focus:text-white outline-none group transition-colors"
                 >
                   <LayoutDashboard className="h-4 w-4 text-white/40 group-hover:text-white/80 transition-colors" strokeWidth={1.5} />
-                  <span className="text-sm font-medium">{tAuth.adminPanel}</span>
+                  <span className="text-sm font-medium">{tAuth('adminPanel')}</span>
                 </DropdownMenuItem>
               )}
 
@@ -304,7 +305,7 @@ export function Sidebar() {
                   className="flex items-center gap-3 py-3 px-5 cursor-pointer text-white/60 hover:bg-red-500/10 hover:text-red-400 border-none focus:bg-red-500/10 focus:text-red-400 outline-none group transition-colors"
                 >
                   <LogOut className="h-4 w-4 text-white/40 group-hover:text-red-400 transition-colors" strokeWidth={1.5} />
-                  <span className="text-sm font-medium">{tAuth.signOut}</span>
+                  <span className="text-sm font-medium">{tAuth('signOut')}</span>
                 </DropdownMenuItem>
               </div>
             </div>

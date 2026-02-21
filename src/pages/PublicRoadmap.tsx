@@ -252,93 +252,50 @@ export default function PublicRoadmap() {
 
     (async () => {
       try {
-        let found: AppInfo | null = null;
-        const isCustom = isCustomDomain(window.location.hostname);
+        const fp = await generateDeviceFingerprint();
+        setFingerprint(fp);
+        
+        const hostname = window.location.hostname;
+        const username = handle?.startsWith('@') ? handle.slice(1) : handle;
+        const { data, error: funcError } = await supabase.functions.invoke('get-public-roadmap', {
+          body: { hostname, slugToSearch, username, fingerprint: fp }
+        });
 
-        if (isCustom) {
-          const { data: settingsData } = await (supabase.from('roadmap_settings').select('app_id').eq('custom_domain', window.location.hostname).maybeSingle() as any);
-          if (!settingsData) { setLoading(false); return; }
-          const { data: appData } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('id', settingsData.app_id).eq('is_visible', true).maybeSingle();
-          if (appData) found = appData as AppInfo;
-        } else if (username) {
-          const { data: profileData } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
-          if (!profileData) { setLoading(false); return; }
-          const { data: apps } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('user_id', profileData.id).eq('is_visible', true);
-          found = (apps?.find(a => {
-            const slug = (a.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            return slug === slugToSearch;
-          }) as AppInfo) || null;
-        } else {
-          const { data: apps } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('is_visible', true);
-          found = (apps?.find(a => {
-            const slug = (a.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            return slug === slugToSearch;
-          }) as AppInfo) || null;
-        }
+        if (funcError) throw funcError;
 
-        if (!found) { setLoading(false); return; }
-        setApp(found);
-
-        const [settingsRes, lanesRes, cardsRes, feedbackRes] = await Promise.all([
-          supabase.from('roadmap_settings').select('*').eq('app_id', found.id).eq('is_public', true).maybeSingle(),
-          supabase.from('roadmap_lanes').select('*').eq('app_id', found.id).order('display_order'),
-          supabase.from('roadmap_cards').select('*').eq('app_id', found.id).order('display_order'),
-          supabase.from('roadmap_feedback').select('*, roadmap_feedback_attachments(*)').eq('app_id', found.id).eq('is_hidden', false).order('likes_count', { ascending: false }),
-        ]);
-
-        if (settingsRes.data) {
-          const s = settingsRes.data as RoadmapSettings;
-          setSettings(s);
-          setIsFeedbackPublic(s.is_feedback_public ?? false);
-          setAuthMode(s.feedback_auth_mode || 'anonymous');
+        if (data) {
+          const { app: a, settings: s, lanes: l, cards: c, feedback: f, userLikes } = data;
           
-          // Apply default language from settings (takes priority)
-          if (s.default_language && ['es', 'en', 'fr', 'pt'].includes(s.default_language)) {
+          setApp(a);
+          setSettings(s);
+          setLanes(l);
+          setCards(c);
+          setFeedback(f);
+          
+          if (userLikes) {
+            if (userLikes.cards) setLikedCardIds(new Set(userLikes.cards));
+            if (userLikes.feedback) setLikedFeedbackIds(new Set(userLikes.feedback));
+          }
+          
+          setIsFeedbackPublic(s?.is_feedback_public ?? false);
+          setAuthMode(s?.feedback_auth_mode || 'anonymous');
+          
+          // Apply language
+          if (s?.default_language && ['es', 'en', 'fr', 'pt'].includes(s.default_language)) {
             setLang(s.default_language);
           } else {
             const browserLang = navigator.language?.substring(0, 2);
             if (['es', 'en', 'fr', 'pt'].includes(browserLang)) setLang(browserLang);
           }
-        } else {
-          const browserLang = navigator.language?.substring(0, 2);
-          if (['es', 'en', 'fr', 'pt'].includes(browserLang)) setLang(browserLang);
         }
-        setLanes((lanesRes.data || []) as RoadmapLane[]);
-        setCards((cardsRes.data || []) as RoadmapCard[]);
-        setFeedback((feedbackRes.data || []).map((f: any) => ({
-          ...f, attachments: f.roadmap_feedback_attachments || [],
-        })) as RoadmapFeedback[]);
       } catch (err) {
-        console.error('Error loading roadmap:', err);
+        console.error('Error loading roadmap via Edge Function:', err);
       } finally {
         setLoading(false);
       }
     })();
   }, [appName, handle, appSlugParam]);
 
-  // Fingerprint & liked state
-  useEffect(() => {
-    (async () => {
-      const fp = await generateDeviceFingerprint();
-      setFingerprint(fp);
-      if (feedback.length > 0) {
-        const { data } = await supabase
-          .from('roadmap_feedback_likes')
-          .select('feedback_id')
-          .eq('device_fingerprint', fp)
-          .in('feedback_id', feedback.map(f => f.id));
-        if (data) setLikedFeedbackIds(new Set(data.map(d => d.feedback_id)));
-      }
-      if (cards.length > 0) {
-        const { data } = await supabase
-          .from('roadmap_card_likes')
-          .select('card_id')
-          .eq('device_fingerprint', fp)
-          .in('card_id', cards.map(c => c.id));
-        if (data) setLikedCardIds(new Set(data.map(d => d.card_id)));
-      }
-    })();
-  }, [feedback.length, cards.length]);
 
   useFavicon(settings?.favicon_url ?? undefined);
 
@@ -513,12 +470,18 @@ export default function PublicRoadmap() {
     );
   }
 
-  const fontFamily = settings.font_family || 'Inter';
-  const title = settings.custom_title || app.name || 'Roadmap';
+  const {
+    font_family: fontFamily = 'Inter',
+    favicon_url,
+    default_language,
+    primary_color: primaryColor = '#3D5AFE',
+    primary_button_color: primaryButtonColor = '#3D5AFE',
+    primary_button_text_color: primaryButtonTextColor = '#FFFFFF',
+  } = settings || {};
+  const title = settings?.custom_title || app.name || 'Roadmap';
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50" style={{ fontFamily }}>
-      {/* Header */}
+    <div className="min-h-screen flex flex-col bg-gray-50" style={{ fontFamily, '--primary': primaryColor } as React.CSSProperties}>
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -540,7 +503,15 @@ export default function PublicRoadmap() {
               )}
             </div>
             {activeTab === 'feedback' && isFeedbackPublic && (
-              <Button size="sm" onClick={() => handleActionWithAuth(() => setShowFeedbackForm(true))}>
+              <Button 
+                size="sm" 
+                onClick={() => handleActionWithAuth(() => setShowFeedbackForm(true))}
+                style={{ 
+                  backgroundColor: primaryButtonColor ?? primaryColor,
+                  color: primaryButtonTextColor ?? '#FFFFFF'
+                }}
+                className="hover:opacity-90 border-0 shadow-sm"
+              >
                 <Send className="w-4 h-4 mr-1" />
                 <span className="hidden sm:inline">{l.submit}</span>
               </Button>
@@ -653,7 +624,11 @@ export default function PublicRoadmap() {
         {activeTab === 'feedback' && isFeedbackPublic && (
           <div className="space-y-4">
             <div className="sm:hidden mb-4">
-              <Button className="w-full" onClick={() => handleActionWithAuth(() => setShowFeedbackForm(true))}>
+              <Button 
+                className="w-full" 
+                onClick={() => handleActionWithAuth(() => setShowFeedbackForm(true))}
+                style={{ backgroundColor: primaryColor }}
+              >
                 <Send className="w-4 h-4 mr-2" /> {l.submit}
               </Button>
             </div>
@@ -770,7 +745,15 @@ export default function PublicRoadmap() {
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowFeedbackForm(false)} className="w-full sm:w-auto">{l.cancel}</Button>
-            <Button onClick={handleSubmitFeedback} disabled={submitting || !fbTitle.trim() || !fbDesc.trim()} className="w-full sm:w-auto">
+            <Button 
+              onClick={handleSubmitFeedback} 
+              disabled={submitting || !fbTitle.trim() || !fbDesc.trim()} 
+              className="w-full sm:w-auto shadow-sm"
+              style={{ 
+                backgroundColor: primaryButtonColor ?? primaryColor,
+                color: primaryButtonTextColor ?? '#FFFFFF'
+              }}
+            >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
               {l.send}
             </Button>

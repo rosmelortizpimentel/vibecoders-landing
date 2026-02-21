@@ -44,6 +44,7 @@ export interface PublicProfile {
   website: string | null;
   booking_url: string | null;
   booking_button_text: string | null;
+  primary_color: string | null;
   accent_color: string | null;
   font_family: string | null;
   member_number: number;
