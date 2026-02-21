@@ -389,14 +389,7 @@ export function ProfileTab({
           <Label className="flex items-center gap-2 text-foreground">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             {t('fields.bookingUrl')}
-            {(isFounder || isPro) ? (
-              <ProBadge />
-            ) : (
-              <div className="flex items-center gap-1 xl:gap-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 w-fit">
-                <Check className="w-2.5 h-2.5 text-amber-600" />
-                <span className="text-[8px] font-bold text-amber-700 uppercase">Pro</span>
-              </div>
-            )}
+            <ProBadge />
           </Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
             {/* URL input */}
