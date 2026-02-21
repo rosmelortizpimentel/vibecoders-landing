@@ -247,7 +247,7 @@ export default function PublicRoadmap() {
   // Fetch data
   useEffect(() => {
     const slugToSearch = appSlugParam || appName || detectedSubdomain;
-    if (!slugToSearch) return;
+    if (!slugToSearch && !isCustomDomain(window.location.hostname)) return;
     const username = handle?.startsWith('@') ? handle.slice(1) : handle;
 
     (async () => {
