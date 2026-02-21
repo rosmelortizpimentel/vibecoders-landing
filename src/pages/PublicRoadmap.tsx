@@ -252,64 +252,35 @@ export default function PublicRoadmap() {
 
     (async () => {
       try {
-        let found: AppInfo | null = null;
-        const isCustom = isCustomDomain(window.location.hostname);
+        const hostname = window.location.hostname;
+        const { data, error: funcError } = await supabase.functions.invoke('get-public-roadmap', {
+          body: { hostname, slugToSearch }
+        });
 
-        if (isCustom) {
-          const { data: settingsData } = await (supabase.from('roadmap_settings').select('app_id').eq('custom_domain', window.location.hostname).maybeSingle() as any);
-          if (!settingsData) { setLoading(false); return; }
-          const { data: appData } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('id', settingsData.app_id).eq('is_visible', true).maybeSingle();
-          if (appData) found = appData as AppInfo;
-        } else if (username) {
-          const { data: profileData } = await supabase.from('profiles').select('id').eq('username', username).maybeSingle();
-          if (!profileData) { setLoading(false); return; }
-          const { data: apps } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('user_id', profileData.id).eq('is_visible', true);
-          found = (apps?.find(a => {
-            const slug = (a.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            return slug === slugToSearch;
-          }) as AppInfo) || null;
-        } else {
-          const { data: apps } = await supabase.from('apps').select('id, name, tagline, logo_url').eq('is_visible', true);
-          found = (apps?.find(a => {
-            const slug = (a.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            return slug === slugToSearch;
-          }) as AppInfo) || null;
-        }
+        if (funcError) throw funcError;
 
-        if (!found) { setLoading(false); return; }
-        setApp(found);
-
-        const [settingsRes, lanesRes, cardsRes, feedbackRes] = await Promise.all([
-          supabase.from('roadmap_settings').select('*').eq('app_id', found.id).eq('is_public', true).maybeSingle(),
-          supabase.from('roadmap_lanes').select('*').eq('app_id', found.id).order('display_order'),
-          supabase.from('roadmap_cards').select('*').eq('app_id', found.id).order('display_order'),
-          supabase.from('roadmap_feedback').select('*, roadmap_feedback_attachments(*)').eq('app_id', found.id).eq('is_hidden', false).order('likes_count', { ascending: false }),
-        ]);
-
-        if (settingsRes.data) {
-          const s = settingsRes.data as RoadmapSettings;
-          setSettings(s);
-          setIsFeedbackPublic(s.is_feedback_public ?? false);
-          setAuthMode(s.feedback_auth_mode || 'anonymous');
+        if (data) {
+          const { app: a, settings: s, lanes: l, cards: c, feedback: f } = data;
           
-          // Apply default language from settings (takes priority)
-          if (s.default_language && ['es', 'en', 'fr', 'pt'].includes(s.default_language)) {
+          setApp(a);
+          setSettings(s);
+          setLanes(l);
+          setCards(c);
+          setFeedback(f);
+          
+          setIsFeedbackPublic(s?.is_feedback_public ?? false);
+          setAuthMode(s?.feedback_auth_mode || 'anonymous');
+          
+          // Apply language
+          if (s?.default_language && ['es', 'en', 'fr', 'pt'].includes(s.default_language)) {
             setLang(s.default_language);
           } else {
             const browserLang = navigator.language?.substring(0, 2);
             if (['es', 'en', 'fr', 'pt'].includes(browserLang)) setLang(browserLang);
           }
-        } else {
-          const browserLang = navigator.language?.substring(0, 2);
-          if (['es', 'en', 'fr', 'pt'].includes(browserLang)) setLang(browserLang);
         }
-        setLanes((lanesRes.data || []) as RoadmapLane[]);
-        setCards((cardsRes.data || []) as RoadmapCard[]);
-        setFeedback((feedbackRes.data || []).map((f: any) => ({
-          ...f, attachments: f.roadmap_feedback_attachments || [],
-        })) as RoadmapFeedback[]);
       } catch (err) {
-        console.error('Error loading roadmap:', err);
+        console.error('Error loading roadmap via Edge Function:', err);
       } finally {
         setLoading(false);
       }
