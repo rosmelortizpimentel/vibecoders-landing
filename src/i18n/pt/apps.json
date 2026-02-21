@@ -9,7 +9,7 @@
   "urlPlaceholder": "https://your-app.com",
   "deleteConfirmTitle": "Delete this app?",
   "deleteConfirmDescription": "This action cannot be undone. The app will be permanently deleted from your profile.",
-  "verifyDomain": "Verify domain",
+  "verifyOwnership": "Verificar propriedade",
   "verified": "Verified",
   "visible": "Visible",
   "hidden": "Hidden",

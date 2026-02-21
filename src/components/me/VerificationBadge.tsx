@@ -41,7 +41,7 @@ export function VerificationBadge({ isVerified, onClick, className }: Verificati
       )}
     >
       <ShieldQuestion className="h-3 w-3" />
-      <span className="hidden md:inline">{t('verifyDomain')}</span>
+      <span className="hidden md:inline">{t('verifyOwnership')}</span>
     </button>
   );
 }

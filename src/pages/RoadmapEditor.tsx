@@ -308,16 +308,19 @@ export default function RoadmapEditor() {
     }
 
     if (sourceLaneId === targetLaneId) {
-      if (overData?.type === 'card') {
-        const laneCards = roadmap.cards
-          .filter(c => c.lane_id === sourceLaneId)
-          .sort((a, b) => a.display_order - b.display_order);
-        const oldIndex = laneCards.findIndex(c => c.id === activeCardId);
-        if (oldIndex === targetIndex) return;
-      }
+      const laneCards = roadmap.cards
+        .filter(c => c.lane_id === sourceLaneId)
+        .sort((a, b) => a.display_order - b.display_order);
+      
+      const oldIndex = laneCards.findIndex(c => c.id === activeCardId);
+      if (oldIndex === targetIndex || oldIndex === -1) return;
+      
+      const reordered = arrayMove(laneCards, oldIndex, targetIndex);
       try {
-        await roadmap.moveCard(activeCardId, targetLaneId, targetIndex);
-      } catch { toast.error(t('editor.errorMovingCard')); }
+        await roadmap.reorderCards(sourceLaneId, reordered);
+      } catch { 
+        toast.error(t('editor.errorMovingCard')); 
+      }
       return;
     }
 
@@ -363,6 +366,8 @@ export default function RoadmapEditor() {
         default_language: (roadmap.settings as any).default_language || '',
         font_family: roadmap.settings.font_family || 'Inter',
         favicon_url: roadmap.settings.favicon_url || '',
+        custom_domain: roadmap.settings.custom_domain || '',
+        custom_title: roadmap.settings.custom_title || '',
       });
     }
   }, [roadmap.settings]);
@@ -376,10 +381,10 @@ export default function RoadmapEditor() {
 
   // Auto-initialize roadmap if no settings exist
   useEffect(() => {
-    if (!roadmap.settings && !roadmap.loading && app?.is_verified) {
+    if (!roadmap.settings && !roadmap.loading && app) {
       roadmap.initializeRoadmap().catch(() => {});
     }
-  }, [roadmap.settings, roadmap.loading, app?.is_verified]);
+  }, [roadmap.settings, roadmap.loading, app]);
 
   if (authLoading || appLoading || roadmap.loading) {
     return (
@@ -394,17 +399,6 @@ export default function RoadmapEditor() {
       <div className="text-center py-20">
         <p className="text-muted-foreground">App not found</p>
         <Button variant="ghost" onClick={() => navigate('/me/apps')} className="mt-4">
-          <ArrowLeft className="w-4 h-4 mr-2" /> {t('editor.backToApps')}
-        </Button>
-      </div>
-    );
-  }
-
-  if (!app.is_verified) {
-    return (
-      <div className="text-center py-20 space-y-4">
-        <p className="text-muted-foreground">{t('editor.verifiedOnly')}</p>
-        <Button variant="ghost" onClick={() => navigate('/me/apps')}>
           <ArrowLeft className="w-4 h-4 mr-2" /> {t('editor.backToApps')}
         </Button>
       </div>

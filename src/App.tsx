@@ -5,23 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 
-// Subdomain detection: if user visits scalein.vibecoders.la, redirect to /roadmap/scalein
-const BASE_DOMAINS = ['vibecoders.la', 'vibecoders-la.lovable.app', 'localhost'];
-function getSubdomain(): string | null {
-  const hostname = window.location.hostname;
-  for (const base of BASE_DOMAINS) {
-    if (hostname.endsWith(base) && hostname !== base && hostname !== `www.${base}`) {
-      const sub = hostname.replace(`.${base}`, '');
-      if (sub && !sub.includes('.')) return sub;
-    }
-  }
-  return null;
-}
+import { detectedSubdomain, isCustomDomain } from '@/utils/domain';
 
-// Export detected subdomain so PublicRoadmap can use it
-export const detectedSubdomain = getSubdomain();
+const isCustom = isCustomDomain(window.location.hostname);
+
 // On load, if subdomain detected and at root, redirect to /roadmap
-if (detectedSubdomain && window.location.pathname === '/') {
+if ((detectedSubdomain || isCustom) && window.location.pathname === '/') {
   window.history.replaceState(null, '', '/roadmap');
 }
 // import Index from "./pages/Index";
@@ -78,15 +67,15 @@ const App = () => (
         <BrowserRouter>
         <Routes>
           {/* Public routes */}
-          {/* Subdomain mode: clean /roadmap and /feedback routes (no slug in URL) */}
-          {detectedSubdomain && (
+          {/* Subdomain or Custom Domain mode: clean /roadmap and /feedback routes (no slug in URL) */}
+          {(detectedSubdomain || isCustom) && (
             <>
               <Route path="/roadmap" element={<PublicRoadmap />} />
               <Route path="/feedback" element={<PublicRoadmap />} />
             </>
           )}
           {/* Public routes - New Landing is now Official */}
-          <Route path="/" element={detectedSubdomain ? <Navigate to="/roadmap" replace /> : <NewLanding />} />
+          <Route path="/" element={detectedSubdomain || isCustom ? <Navigate to="/roadmap" replace /> : <NewLanding />} />
           {/* Public roadmap & feedback: /@username/app-slug/roadmap */}
           <Route path="/:handle/:appSlug/roadmap" element={<PublicRoadmap />} />
           <Route path="/:handle/:appSlug/feedback" element={<PublicRoadmap />} />

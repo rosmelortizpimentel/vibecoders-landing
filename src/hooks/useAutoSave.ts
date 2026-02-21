@@ -17,7 +17,7 @@ export function useAutoSave<T>(
   saveFn: SaveFunction<T>,
   options: UseAutoSaveOptions = {}
 ): UseAutoSaveReturn<T> {
-  const { debounceMs = 1500 } = options;
+  const { debounceMs = 800 } = options;
   
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -60,8 +60,11 @@ export function useAutoSave<T>(
     }
   }, [saveFn]);
 
-  const save = useCallback((data: T) => {
-    pendingDataRef.current = data;
+  const save = useCallback((data: Partial<T> | T) => {
+    // Merge new updates into pending data to avoid losing fields
+    pendingDataRef.current = (typeof data === 'object' && data !== null && !Array.isArray(data)) 
+      ? { ...pendingDataRef.current, ...data } as T
+      : data as T;
     
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);

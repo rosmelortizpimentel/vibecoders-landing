@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { AppData } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useCategories } from '@/hooks/useCategories';
@@ -53,8 +53,13 @@ interface AppEditorProps {
   const screenshotInputRef = useRef<HTMLInputElement>(null);
   
   const [localApp, setLocalApp] = useState(app);
-   const [showVerifyModal, setShowVerifyModal] = useState(false);
-   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Sync local state when prop changes (e.g., after a remote update)
+  useEffect(() => {
+    setLocalApp(app);
+  }, [app]);
 
   const saveApp = useCallback(async (data: Partial<AppData>) => {
     await onUpdate(app.id, data);

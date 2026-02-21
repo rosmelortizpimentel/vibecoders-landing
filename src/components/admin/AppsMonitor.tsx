@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Eye, EyeOff, FlaskConical, ArrowUpDown, Monitor } from 'lucide-react';
+import { Search, Eye, EyeOff, FlaskConical, ArrowUpDown, Monitor, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface AppRow {
@@ -18,6 +18,7 @@ interface AppRow {
   hours_ideation: number | null;
   hours_building: number | null;
   created_at: string;
+  custom_domain: string | null;
   stacks: { name: string; logo_url: string }[];
   clicks_count: number;
   author_name: string | null;
@@ -62,7 +63,8 @@ export function AppsMonitor() {
         .select(`
           id, name, url, is_visible, beta_active, hours_ideation, hours_building, created_at, status_id, user_id,
           profiles:user_id(name, username, avatar_url),
-          app_statuses:status_id(name, color, icon)
+          app_statuses:status_id(name, color, icon),
+          roadmap_settings:app_id(custom_domain)
         `)
         .order('created_at', { ascending: false });
 
@@ -98,6 +100,7 @@ export function AppsMonitor() {
         hours_ideation: app.hours_ideation,
         hours_building: app.hours_building,
         created_at: app.created_at,
+        custom_domain: app.roadmap_settings?.[0]?.custom_domain || null,
         stacks: stacksMap[app.id] || [],
         clicks_count: clicksMap[app.id] || 0,
         author_name: app.profiles?.name || null,
@@ -265,7 +268,8 @@ export function AppsMonitor() {
                   <TableHead className="w-[70px]">
                     <SortButton field="hours_building" label="Build" />
                   </TableHead>
-                  <TableHead className="w-[70px] text-center">Beta</TableHead>
+                   <TableHead className="w-[70px] text-center">Beta</TableHead>
+                  <TableHead className="min-w-[150px]">Dominio Personalizado</TableHead>
                   <TableHead className="w-[70px] text-center">Visible</TableHead>
                 </TableRow>
               </TableHeader>
@@ -324,9 +328,26 @@ export function AppsMonitor() {
                     <TableCell className="text-center text-sm text-gray-600">
                       {app.hours_building || 0}h
                     </TableCell>
-                    <TableCell className="text-center">
+                       <TableCell className="text-center">
                       {app.beta_active ? (
                         <FlaskConical className="h-4 w-4 text-green-500 mx-auto" />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {app.custom_domain ? (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-primary">
+                          <Globe className="h-3.5 w-3.5" />
+                          <a 
+                            href={`https://${app.custom_domain}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:underline truncate max-w-[140px]"
+                          >
+                            {app.custom_domain}
+                          </a>
+                        </div>
                       ) : (
                         <span className="text-xs text-muted-foreground">—</span>
                       )}
