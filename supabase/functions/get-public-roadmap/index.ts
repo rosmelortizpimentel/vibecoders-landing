@@ -21,11 +21,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { hostname, slugToSearch, username } = await req.json()
+    const { hostname, slugToSearch, username, fingerprint } = await req.json()
     const origin = req.headers.get('origin') || ''
     const referer = req.headers.get('referer') || ''
 
-    console.log(`Processing request for hostname: ${hostname}, slug: ${slugToSearch}, User: ${username}`)
+    console.log(`Processing request for hostname: ${hostname}, slug: ${slugToSearch}, User: ${username}, Fingerprint: ${fingerprint}`)
 
     let appData = null
     let settingsData = null
@@ -92,6 +92,7 @@ serve(async (req) => {
     )
 
     if (!isMatch && !hostname.includes('localhost')) {
+      console.log(`Security violation: Origin: ${origin}, Referer: ${referer}, Allowed: ${allowedDomains.join(', ')}`)
       return new Response(JSON.stringify({ error: 'Unauthorized origin' }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -100,11 +101,26 @@ serve(async (req) => {
 
     // 4. Fetch consolidated data
     const appId = appData.id
+    
     const [lanes, cards, feedback] = await Promise.all([
       supabaseClient.from('roadmap_lanes').select('*').eq('app_id', appId).order('display_order'),
       supabaseClient.from('roadmap_cards').select('*').eq('app_id', appId).order('display_order'),
       supabaseClient.from('roadmap_feedback').select('*, roadmap_feedback_attachments(*)').eq('app_id', appId).eq('is_hidden', false).order('likes_count', { ascending: false })
     ])
+
+    // Optional: Fetch user likes if fingerprint provided
+    let likedCardIds = []
+    let likedFeedbackIds = []
+
+    if (fingerprint) {
+      const [cardLikes, feedbackLikes] = await Promise.all([
+        supabaseClient.from('roadmap_card_likes').select('card_id').eq('device_fingerprint', fingerprint),
+        supabaseClient.from('roadmap_feedback_likes').select('feedback_id').eq('device_fingerprint', fingerprint)
+      ])
+      
+      likedCardIds = cardLikes.data?.map(l => l.card_id) || []
+      likedFeedbackIds = feedbackLikes.data?.map(l => l.feedback_id) || []
+    }
 
     return new Response(
       JSON.stringify({
@@ -115,7 +131,11 @@ serve(async (req) => {
         feedback: (feedback.data || []).map(f => ({
           ...f,
           attachments: f.roadmap_feedback_attachments || [],
-        }))
+        })),
+        userLikes: {
+          cards: likedCardIds,
+          feedback: likedFeedbackIds
+        }
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

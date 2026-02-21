@@ -250,23 +250,39 @@ export function useProfileEditor() {
   }, [updateProfile]);
 
   const uploadOgImage = useCallback(async (file: File) => {
-    if (!user) throw new Error('No user');
+    if (!user) throw new Error('No user authenticated');
 
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${user.id}/og_image_${Date.now()}.${fileExt}`;
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `og_image_${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('profile-assets')
-      .upload(filePath, file, { upsert: true });
+      console.log('Attempting to upload OG image to path:', filePath);
 
-    if (uploadError) throw uploadError;
+      const { error: uploadError } = await supabase.storage
+        .from('profile-assets')
+        .upload(filePath, file, { 
+          upsert: true,
+          contentType: file.type 
+        });
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('profile-assets')
-      .getPublicUrl(filePath);
+      if (uploadError) {
+        console.error('Supabase storage upload error:', uploadError);
+        throw uploadError;
+      }
 
-    updateProfile({ og_image_url: publicUrl });
-    return publicUrl;
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-assets')
+        .getPublicUrl(filePath);
+
+      console.log('Upload successful, public URL:', publicUrl);
+
+      updateProfile({ og_image_url: publicUrl });
+      return publicUrl;
+    } catch (err) {
+      console.error('Failed to upload OG image:', err);
+      throw err;
+    }
   }, [user, updateProfile]);
 
   const deleteOgImage = useCallback(() => {

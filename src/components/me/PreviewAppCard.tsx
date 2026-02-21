@@ -1,4 +1,4 @@
-import { ExternalLink, BadgeCheck } from 'lucide-react';
+import { BadgeCheck } from 'lucide-react';
 import { AppData } from '@/hooks/useApps';
 import { Status } from '@/hooks/useStatuses';
 import { TechStack } from '@/hooks/useTechStacks';
@@ -59,8 +59,8 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Title Row with Status Badge */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          {/* Title Row: Name + Verified + Status (status pushed to right) */}
+          <div className="flex items-center gap-1.5">
             <h4 className="text-sm font-semibold text-gray-900 truncate">
               {app.name || (() => { 
                 try { 
@@ -79,18 +79,18 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
             {app.is_verified && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <BadgeCheck className="h-4 w-4 text-primary flex-shrink-0" />
+                  <BadgeCheck className="h-4 w-4 text-black flex-shrink-0" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="text-xs">
-                  Propietario Verificado
+                  Verificado
                 </TooltipContent>
               </Tooltip>
             )}
 
-            {/* Status Badge - Premium colors */}
+            {/* Status Badge — pinned to the right */}
             {status && (
               <span 
-                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors.bg} ${statusColors.text}`}
+                className={`ml-auto inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium flex-shrink-0 ${statusColors.bg} ${statusColors.text}`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
                 {status.name.toUpperCase()}
@@ -100,17 +100,13 @@ export function PreviewAppCard({ app, statuses, stacks, appUrl }: PreviewAppCard
 
           {/* Tagline */}
           {app.tagline && (
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
               {app.tagline}
             </p>
           )}
         </div>
 
-        {/* Icon-only Visit Button */}
-        <span className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors flex-shrink-0">
-          <ExternalLink className="w-4 h-4" />
-        </span>
-      </div>
+        </div>
 
       {/* Bottom Row: Tech Stack Icons Only */}
       {appStacks.length > 0 && (

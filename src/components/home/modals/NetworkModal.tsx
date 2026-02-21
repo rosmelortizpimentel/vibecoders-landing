@@ -46,45 +46,32 @@ export function NetworkModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] w-full h-[100dvh] sm:h-[85vh] p-0 overflow-hidden sm:rounded-2xl rounded-none border-none shadow-2xl flex flex-col gap-0">
-        <DialogHeader className="px-6 pt-6 pb-2 bg-gray-50/50 shrink-0 space-y-0">
-          <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-500" />
-            Social Network
+        <DialogHeader className="px-5 pt-5 pb-1 bg-gray-50/50 shrink-0 space-y-0">
+          <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Users className="w-4 h-4 text-indigo-500" />
+            Red Social
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground mt-1">
-            Manage your community and connections.
-          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="followers" className="w-full flex-1 flex flex-col min-h-0">
-          <div className="px-6 py-2 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between shrink-0">
+          <div className="px-5 py-2 bg-gray-50/50 border-b border-gray-100 flex items-center justify-between shrink-0">
             <TabsList className="bg-muted/50 p-1 rounded-lg">
-              <TabsTrigger value="followers" className="text-xs font-semibold px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                Followers <span className="ml-1.5 opacity-50 font-medium">{followers.length}</span>
+              <TabsTrigger value="followers" className="text-[10px] font-bold px-3 py-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                Seguidores <span className="ml-1 opacity-50">{followers.length}</span>
               </TabsTrigger>
-              <TabsTrigger value="following" className="text-xs font-semibold px-4 py-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                Following <span className="ml-1.5 opacity-50 font-medium">{following.length}</span>
+              <TabsTrigger value="following" className="text-[10px] font-bold px-3 py-1.5 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+                Siguiendo <span className="ml-1 opacity-50">{following.length}</span>
               </TabsTrigger>
             </TabsList>
-            
-            <div className="relative w-40">
-              <Search className="absolute left-2.5 top-2.5 h-3 w-3 text-muted-foreground" />
-              <Input
-                placeholder="Filter users..."
-                className="pl-8 h-8 text-[11px] bg-white border-none focus-visible:ring-1 focus-visible:ring-indigo-100"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
           </div>
 
           {/* Container for tab content - uses relative/absolute to ensure proper height */}
           <div className="relative flex-1 min-h-0">
             <TabsContent value="followers" className="absolute inset-0 m-0 overflow-y-auto">
-              <UserList users={filteredFollowers} emptyMessage="No followers found." />
+              <UserList users={filteredFollowers} emptyMessage="No se encontraron seguidores." />
             </TabsContent>
             <TabsContent value="following" className="absolute inset-0 m-0 overflow-y-auto">
-              <UserList users={filteredFollowing} emptyMessage="You are not following anyone yet." />
+              <UserList users={filteredFollowing} emptyMessage="Aún no sigues a nadie." />
             </TabsContent>
           </div>
         </Tabs>

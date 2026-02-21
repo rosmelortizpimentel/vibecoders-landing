@@ -34,50 +34,36 @@ export function LikesModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px] w-full h-[100dvh] sm:h-auto p-0 overflow-hidden sm:rounded-2xl rounded-none border-none shadow-2xl flex flex-col">
-        <DialogHeader className="px-6 pt-6 pb-4 bg-gray-50/50 border-b border-gray-100">
-          <DialogTitle className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-primary" />
-            Likes Leaderboard
+        <DialogHeader className="px-5 pt-5 pb-3 bg-gray-50/50 border-b border-gray-100 shrink-0">
+          <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-primary" />
+            Tabla de Posiciones de Likes
           </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            See which of your projects are winning the hearts of the community.
-          </DialogDescription>
         </DialogHeader>
 
-        <div className="p-6 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+        <div className="p-5 space-y-5 flex-1 overflow-y-auto custom-scrollbar">
           {/* Top Performer Highlight */}
           {appList.length > 0 && appList[0].count > 0 && (
-            <div className="p-5 bg-gradient-to-br from-indigo-50/50 to-primary/5 rounded-xl border border-primary/10 flex items-center justify-between">
+            <div className="p-4 bg-gradient-to-br from-indigo-50/30 to-primary/5 rounded-xl border border-primary/10 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-white rounded-lg shadow-sm">
-                  <Trophy className="w-5 h-5 text-primary" />
+                <div className="p-2 bg-white rounded-lg shadow-sm">
+                  <Trophy className="w-4 h-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-primary uppercase tracking-wider mb-0.5">Top Performer</p>
-                  <p className="text-lg font-bold text-gray-900 leading-tight">{appList[0].name}</p>
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-wide mb-0.5">Mejor Desempeño</p>
+                  <p className="text-base font-bold text-gray-900 leading-tight">{appList[0].name}</p>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-2xl font-black text-primary leading-none">{appList[0].count}</span>
-                <p className="text-[10px] font-bold text-primary uppercase mt-0.5">Likes</p>
+                <span className="text-xl font-black text-primary leading-none">{appList[0].count}</span>
+                <p className="text-[9px] font-bold text-primary uppercase mt-0.5">Likes</p>
               </div>
             </div>
           )}
 
-          {/* Search & List */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-foreground">Project Ranking</h3>
-              <div className="relative w-48">
-                <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Filter projects..."
-                  className="pl-8 h-8 text-xs bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary/20"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
+          {/* List */}
+          <div className="space-y-3">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Ranking de Proyectos</h3>
 
             <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
               {filteredApps.length > 0 ? (
@@ -119,7 +105,7 @@ export function LikesModal({
         </div>
 
         <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center rotate-0">
-           <span className="text-xs font-medium text-muted-foreground">Total platform likes</span>
+           <span className="text-xs font-medium text-muted-foreground">Total de likes en la plataforma</span>
            <span className="text-sm font-bold text-foreground">{totalLikes}</span>
         </div>
       </DialogContent>

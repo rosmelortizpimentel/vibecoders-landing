@@ -11,7 +11,7 @@ interface AppCardProps {
   onExpand: () => void;
   onToggleVisibility: () => void;
   onVerify: () => void;
-  dragHandleProps?: React.HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<any> };
+  dragHandleProps?: React.HTMLAttributes<HTMLDivElement> & { ref?: React.Ref<HTMLDivElement> };
 }
 
 export function AppCard({ app, onExpand, onToggleVisibility, onVerify, dragHandleProps }: AppCardProps) {
@@ -24,7 +24,7 @@ export function AppCard({ app, onExpand, onToggleVisibility, onVerify, dragHandl
 
   return (
     <div
-      className="group flex items-center gap-2 sm:gap-4 py-3 px-2 border-b border-border bg-card hover:bg-muted/50 transition-colors cursor-pointer"
+      className="group flex items-center gap-2 sm:gap-4 py-3 px-3 bg-card hover:bg-[#f9fafb] transition-all duration-200 cursor-pointer overflow-hidden relative"
       onClick={onExpand}
     >
       {/* Drag Handle - Hide on mobile */}

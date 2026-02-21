@@ -11,10 +11,14 @@
     "tagline": "Tagline",
     "location": "Ubicación",
     "website": "Website",
-    "bookingUrl": "Link de Agenda (Calendly, Cal.com)",
+    "bookingUrl": "Link personalizado",
     "bookingButtonText": "Texto del Botón de Agenda",
     "socialNetworks": "Redes Sociales",
     "banner": "Banner"
+  },
+  "sections": {
+    "basicInfo": "Información Básica",
+    "contactLinks": "Contacto & Links"
   },
   "placeholders": {
     "name": "Tu nombre completo",
@@ -35,7 +39,14 @@
     "bannerLeft": "Banner a la izquierda",
     "bannerCenter": "Banner centrado",
     "bannerRight": "Banner a la derecha",
-    "earlyFoundingMember": "Early Founding Member"
+    "earlyFoundingMember": "Early Founding Member",
+    "profileAlignment": "Alineación del perfil",
+    "bookingButtonPreviewHint": "Así se verá el botón en tu perfil público:",
+    "clickToEdit": "Clic para editar",
+    "buttonColors": "Colores del botón"
+  },
+  "hints": {
+    "bookingButtonText": "Este texto aparecerá en el botón de tu perfil público"
   },
   "username": {
     "label": "Username",

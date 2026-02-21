@@ -252,22 +252,30 @@ export default function PublicRoadmap() {
 
     (async () => {
       try {
+        const fp = await generateDeviceFingerprint();
+        setFingerprint(fp);
+        
         const hostname = window.location.hostname;
         const username = handle?.startsWith('@') ? handle.slice(1) : handle;
         const { data, error: funcError } = await supabase.functions.invoke('get-public-roadmap', {
-          body: { hostname, slugToSearch, username }
+          body: { hostname, slugToSearch, username, fingerprint: fp }
         });
 
         if (funcError) throw funcError;
 
         if (data) {
-          const { app: a, settings: s, lanes: l, cards: c, feedback: f } = data;
+          const { app: a, settings: s, lanes: l, cards: c, feedback: f, userLikes } = data;
           
           setApp(a);
           setSettings(s);
           setLanes(l);
           setCards(c);
           setFeedback(f);
+          
+          if (userLikes) {
+            if (userLikes.cards) setLikedCardIds(new Set(userLikes.cards));
+            if (userLikes.feedback) setLikedFeedbackIds(new Set(userLikes.feedback));
+          }
           
           setIsFeedbackPublic(s?.is_feedback_public ?? false);
           setAuthMode(s?.feedback_auth_mode || 'anonymous');
@@ -288,29 +296,6 @@ export default function PublicRoadmap() {
     })();
   }, [appName, handle, appSlugParam]);
 
-  // Fingerprint & liked state
-  useEffect(() => {
-    (async () => {
-      const fp = await generateDeviceFingerprint();
-      setFingerprint(fp);
-      if (feedback.length > 0) {
-        const { data } = await supabase
-          .from('roadmap_feedback_likes')
-          .select('feedback_id')
-          .eq('device_fingerprint', fp)
-          .in('feedback_id', feedback.map(f => f.id));
-        if (data) setLikedFeedbackIds(new Set(data.map(d => d.feedback_id)));
-      }
-      if (cards.length > 0) {
-        const { data } = await supabase
-          .from('roadmap_card_likes')
-          .select('card_id')
-          .eq('device_fingerprint', fp)
-          .in('card_id', cards.map(c => c.id));
-        if (data) setLikedCardIds(new Set(data.map(d => d.card_id)));
-      }
-    })();
-  }, [feedback.length, cards.length]);
 
   useFavicon(settings?.favicon_url ?? undefined);
 

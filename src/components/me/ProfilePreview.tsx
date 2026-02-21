@@ -4,6 +4,7 @@ import { AppData } from '@/hooks/useApps';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useTechStacks } from '@/hooks/useTechStacks';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useFollow } from '@/hooks/useFollow';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, Calendar } from 'lucide-react';
@@ -62,6 +63,10 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
   const { stacks } = useTechStacks();
   const t = useTranslation('profile');
   const visibleApps = apps.filter(app => app.is_visible);
+  
+  // Get real follow counts (Must be called before any early return)
+  const { followersCount, followingCount } = useFollow(profile?.id);
+
   // Load font dynamically
   useEffect(() => {
     if (!profile?.font_family) return;
@@ -114,187 +119,248 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
   const activeSocials = socialConfig.filter(({ key }) => profile[key as keyof ProfileData]);
 
   return (
-    <div className="space-y-3">
+    <div className="w-full flex flex-col items-center">
       {/* Preview Header - hide in mobile sheet */}
       {!isMobileSheet && (
-        <div className="flex items-center justify-end px-1">
+        <div className="w-full max-w-[320px] flex items-center justify-between px-2 mb-3">
+          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Vista Previa Móvil</span>
           <a 
             href={`${window.location.origin}/@${username}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            title={t.viewLive}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-muted rounded-full"
+            title={(t as any).viewLive || 'Ver sitio en vivo'}
           >
             <ExternalLink className="h-4 w-4" />
           </a>
         </div>
       )}
       
-      {/* Preview Card */}
+      {/* Phone Mockup Container */}
       <div 
         className={cn(
-          "overflow-hidden w-full bg-white",
-          isMobileSheet ? "rounded-none border-none" : "rounded-2xl border border-slate-200 shadow-sm"
+          "relative transition-all duration-500",
+          !isMobileSheet 
+            ? "w-[300px] h-[600px] border-[8px] border-slate-900 rounded-[2.2rem] shadow-[0_45px_100px_-20px_rgba(0,0,0,0.6)] bg-slate-900 ring-2 ring-slate-800/50 group" 
+            : "w-full min-h-screen"
         )}
-        style={{ fontFamily }}
       >
-      {/* Banner + Avatar */}
-      <div className="relative">
-        {profile.banner_url ? (
-          <div className={`aspect-[4/1] w-full flex items-center bg-gray-50 ${bannerPositionClasses[bannerPosition]}`}>
-            <img 
-              src={profile.banner_url} 
-              alt="Banner" 
-              className="max-w-full max-h-full object-contain"
-            />
-          </div>
-        ) : (
-          <div className="aspect-[4/1] w-full bg-gradient-to-r from-gray-100 to-gray-50" />
-        )}
-        
-        {/* Avatar with dynamic position */}
-        <div className={`absolute -bottom-10 md:-bottom-12 ${positionClasses[avatarPosition]}`}>
-          <Avatar 
-            className="h-20 w-20 md:h-24 md:w-24 shadow-md"
-            style={{ border: `4px solid ${avatarBorderColor}` }}
-          >
-            <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
-            <AvatarFallback className="text-xl md:text-2xl font-bold bg-gray-100 text-gray-600">
-              {profile.name?.charAt(0) || '?'}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className={`pt-12 md:pt-14 pb-6 px-4 md:px-6 space-y-3 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
-        {/* Name + Pioneer Badge Container - Now justify-between */}
-        <div className={`w-full flex items-center gap-4 ${avatarPosition === 'center' ? 'justify-center' : 'justify-between'}`}>
-          <div className={`flex items-center gap-2 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-            <h2 className="text-lg md:text-xl font-bold text-gray-900">
-              {profile.name || 'Tu Nombre'}
-            </h2>
-            {profile.is_pioneer && profile.show_pioneer_badge && (
-              <PioneerBadge />
-            )}
-          </div>
-
-          {profile.booking_url && (
-            <Button
-              asChild
-              size="sm"
-              className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white gap-2 h-7 px-2.5 whitespace-nowrap"
-            >
-              <a 
-                href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="hidden sm:inline">{profile.booking_button_text || 'Book a call'}</span>
-                <Calendar className="h-3 w-3" />
-              </a>
-            </Button>
+        {/* Internal Screen Container with Independent Scroll */}
+        <div 
+          className={cn(
+            "w-full bg-white overflow-x-hidden transition-all duration-300",
+            !isMobileSheet 
+              ? "h-full overflow-y-auto rounded-[1.8rem] relative custom-mobile-scroll" 
+              : "min-h-screen"
           )}
-        </div>
+          style={{ 
+            fontFamily,
+            scrollbarWidth: 'none', // Hide standard scrollbar for Firefox
+            msOverflowStyle: 'none', // Hide for IE
+          }}
+        >
+          {/* Style injection for custom scrollbar (only for the mockup) */}
+          {!isMobileSheet && (
+            <style>{`
+              .custom-mobile-scroll::-webkit-scrollbar {
+                width: 4px;
+              }
+              .custom-mobile-scroll::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .custom-mobile-scroll::-webkit-scrollbar-thumb {
+                background: rgba(0,0,0,0.1);
+                border-radius: 10px;
+              }
+              .custom-mobile-scroll::-webkit-scrollbar-thumb:hover {
+                background: rgba(0,0,0,0.2);
+              }
+            `}</style>
+          )}
 
-        {/* Tagline - directly below name */}
-        {profile.tagline && (
-          <p className="text-sm text-gray-600 italic">
-            {profile.tagline}
-          </p>
-        )}
-
-        {/* Social Icons Row - only if there are active socials */}
-        {activeSocials.length > 0 && (
-          <div className={`flex items-center gap-2 pt-1 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-            {activeSocials.map(({ key, icon: Icon, getUrl }) => {
-              const value = profile[key as keyof ProfileData] as string;
-              return (
-                <a
-                  key={key}
-                  href={getUrl(value)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-                >
-                  <Icon className="h-3.5 w-3.5 text-gray-700" />
-                </a>
-              );
-            })}
-          </div>
-        )}
-
-        {(profile.location || profile.website) && (
-          <div className="space-y-1 pt-2">
-            {profile.location && (
-              <div className={`flex items-center gap-1.5 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{profile.location}</span>
-              </div>
-            )}
-            {profile.website && (
-              <div className={`flex items-center gap-1.5 text-sm text-gray-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
-                <LinkIcon className="h-3.5 w-3.5" />
-                <a 
-                  href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-gray-700 hover:underline"
-                >
-                  {profile.website.replace(/^https?:\/\//, '')}
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Apps Section - only if there are visible apps */}
-      {visibleApps.length > 0 && (
-        <div className="border-t border-gray-100 px-4 md:px-6 py-4 bg-gray-50/50">
-          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-3">
-            Apps
-          </p>
-          <div className="space-y-2">
-            {visibleApps.slice(0, 3).map(app => {
-              // Generate app URL with ref - normalize first to handle URLs without protocol
-              const appUrl = (() => {
-                try {
-                  const normalized = app.url.trim();
-                  const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
-                    ? normalized 
-                    : `https://${normalized}`;
-                  const url = new URL(urlWithProtocol);
-                  url.searchParams.set('ref', 'vibecoders.la');
-                  return url.toString();
-                } catch {
-                  // Fallback: just prepend https:// if missing
-                  const normalized = app.url.trim();
-                  return normalized.startsWith('http://') || normalized.startsWith('https://') 
-                    ? normalized 
-                    : `https://${normalized}`;
-                }
-              })();
-              
-              return (
-                <PreviewAppCard 
-                  key={app.id}
-                  app={app}
-                  statuses={statuses}
-                  stacks={stacks}
-                  appUrl={appUrl}
+          {/* Banner + Avatar */}
+          <div className="relative">
+            {profile.banner_url ? (
+              <div className="aspect-[4/1.2] w-full relative overflow-hidden bg-gray-50">
+                <img 
+                  src={profile.banner_url} 
+                  alt="Banner" 
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
-              );
-            })}
-            {visibleApps.length > 3 && (
-              <p className="text-xs text-center text-gray-400 pt-1">
-                +{visibleApps.length - 3} más
+              </div>
+            ) : (
+              <div className="aspect-[4/1.2] w-full bg-gradient-to-r from-gray-100 to-gray-50" />
+            )}
+            
+            {/* Avatar with dynamic position */}
+            <div className={`absolute -bottom-8 ${positionClasses[avatarPosition]}`}>
+              <Avatar 
+                className="h-16 w-16 shadow-lg"
+                style={{ border: `3px solid ${avatarBorderColor}` }}
+              >
+                <AvatarImage src={profile.avatar_url || ''} alt={profile.name || ''} />
+                <AvatarFallback className="text-xl font-bold bg-gray-100 text-gray-600">
+                  {profile.name?.charAt(0) || '?'}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </div>
+
+          {/* Main Content - Scaled down fonts */}
+          <div className={`pt-10 pb-6 px-4 space-y-3.5 flex flex-col ${contentAlignmentClasses[avatarPosition]}`}>
+            {/* Name + Pioneer Badge Container */}
+            <div className={`w-full flex items-center gap-3 ${avatarPosition === 'center' ? 'justify-center' : 'justify-between'}`}>
+              <div className={`flex items-center gap-1.5 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+                <h2 className="text-base font-bold text-gray-900 tracking-tight">
+                  {profile.name || 'Tu Nombre'}
+                </h2>
+                {profile.is_pioneer && profile.show_pioneer_badge && (
+                  <PioneerBadge />
+                )}
+              </div>
+
+              {profile.booking_url && (
+                <a
+                  href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    backgroundColor: profile.primary_color || '#3D5AFE',
+                    color: profile.accent_color || '#FFFFFF',
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap shadow-sm hover:opacity-90 transition-opacity"
+                >
+                  <span>{profile.booking_button_text || 'Hablemos'}</span>
+                  <Calendar className="h-2.5 w-2.5" style={{ color: profile.accent_color || '#FFFFFF' }} />
+                </a>
+              )}
+            </div>
+
+            {/* Tagline */}
+            {profile.tagline && (
+              <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                {profile.tagline}
               </p>
             )}
+
+            {/* Username + Stats Row (Public Profile Style) */}
+            <div className={`flex items-center gap-2 text-[10px] text-slate-500 font-medium ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+              <div className="flex items-center gap-1">
+                <span className="font-bold text-slate-900">{followingCount}</span>
+                <span>siguiendo</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="font-bold text-slate-900">{followersCount}</span>
+                <span>seguidores</span>
+              </div>
+              <span>·</span>
+              <span className="font-semibold text-slate-400">@{username}</span>
+            </div>
+
+            {/* Social Icons Row */}
+            {activeSocials.length > 0 && (
+              <div className={`flex flex-wrap items-center gap-1.5 pt-1 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+                {activeSocials.map(({ key, icon: Icon, getUrl }) => {
+                  const value = profile[key as keyof ProfileData] as string;
+                  return (
+                    <a
+                      key={key}
+                      href={getUrl(value)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors"
+                    >
+                      <Icon className="h-3 w-3 text-slate-600" />
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+
+            {(profile.location || profile.website) && (
+              <div className="space-y-1 pt-1">
+                {profile.location && (
+                  <div className={`flex items-center gap-2 text-[11px] text-slate-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+                    <MapPin className="h-3 w-3 text-slate-400" />
+                    <span>{profile.location}</span>
+                  </div>
+                )}
+                {profile.website && (
+                  <div className={`flex items-center gap-2 text-[11px] text-slate-500 ${avatarPosition === 'right' ? 'flex-row-reverse' : ''}`}>
+                    <LinkIcon className="h-3 w-3 text-slate-400" />
+                    <a 
+                      href={profile.website.startsWith('http') ? profile.website : `https://${profile.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-primary transition-colors font-medium"
+                    >
+                      {profile.website.replace(/^https?:\/\//, '')}
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Apps Section */}
+          {visibleApps.length > 0 && (
+            <div className="border-t border-slate-100 px-4 py-5 bg-slate-50/30">
+              <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4">
+                Apps
+              </p>
+              <div className="space-y-3">
+                {visibleApps.map(app => {
+                  const appUrl = (() => {
+                    try {
+                      const normalized = app.url.trim();
+                      const urlWithProtocol = normalized.startsWith('http://') || normalized.startsWith('https://') 
+                        ? normalized 
+                        : `https://${normalized}`;
+                      const url = new URL(urlWithProtocol);
+                      url.searchParams.set('ref', 'vibecoders.la');
+                      return url.toString();
+                    } catch {
+                      const normalized = app.url.trim();
+                      return normalized.startsWith('http://') || normalized.startsWith('https://') 
+                        ? normalized 
+                        : `https://${normalized}`;
+                    }
+                  })();
+                  
+                  return (
+                    <div key={app.id} className="scale-[0.95] origin-left">
+                      <PreviewAppCard 
+                        app={app}
+                        statuses={statuses}
+                        stacks={stacks}
+                        appUrl={appUrl}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Footer - minimal */}
+          <div className="py-10 px-6 flex flex-col items-center justify-center gap-2.5 opacity-30">
+            <img src={vibecodersLogo} alt="Vibecoders" className="h-4 w-auto grayscale" />
           </div>
         </div>
-      )}
 
+        {/* Improved Side Buttons (Hardware Look) */}
+        {!isMobileSheet && (
+          <div className="absolute -left-2 top-0 bottom-0 py-24 flex flex-col gap-4 pointer-events-none">
+            <div className="w-[3px] h-8 bg-slate-800 rounded-l-sm border-l border-white/5 shadow-sm" />
+            <div className="w-[3px] h-12 bg-slate-800 rounded-l-sm border-l border-white/5 shadow-sm" />
+            <div className="w-[3px] h-12 bg-slate-800 rounded-l-sm border-l border-white/5 shadow-sm" />
+          </div>
+        )}
+        {!isMobileSheet && (
+          <div className="absolute -right-2 top-32 pointer-events-none">
+            <div className="w-[3px] h-16 bg-slate-800 rounded-r-sm border-r border-white/5 shadow-sm" />
+          </div>
+        )}
       </div>
     </div>
   );

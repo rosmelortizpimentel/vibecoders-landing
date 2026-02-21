@@ -66,9 +66,10 @@ Deno.serve(async (req) => {
         id, username, member_number, is_pioneer, show_pioneer_badge,
         name, tagline, bio, location, website, banner_url, avatar_url,
         avatar_position, banner_position,
-        accent_color, font_family,
+        primary_color, accent_color, font_family,
         booking_url, booking_button_text,
-        lovable, twitter, github, linkedin, instagram, youtube, tiktok, email_public
+        lovable, twitter, github, linkedin, instagram, youtube, tiktok, email_public,
+        is_contributor, show_contributor_badge
       `)
       .eq('username', username.toLowerCase())
       .maybeSingle()
@@ -108,7 +109,6 @@ Deno.serve(async (req) => {
       .eq('user_id', profile.id)
       .eq('is_visible', true)
       .order('display_order', { ascending: true })
-      .limit(6)
 
     if (appsError) {
       console.error(`[get-public-profile] Apps query error:`, appsError)
@@ -191,6 +191,7 @@ Deno.serve(async (req) => {
           location: profile.location,
           website: profile.website,
           accent_color: profile.accent_color,
+          primary_color: profile.primary_color || '#3D5AFE',
           font_family: profile.font_family,
           booking_url: profile.booking_url,
           booking_button_text: profile.booking_button_text,

@@ -7,7 +7,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
+import AutoScroll from "embla-carousel-auto-scroll";
 import type { FreshDropApp } from '@/hooks/useFreshDrops';
 
 interface FreshDropsCarouselProps {
@@ -115,8 +115,8 @@ export function FreshDropsCarousel({ apps }: FreshDropsCarouselProps) {
           dragFree: true,
         }}
         plugins={[
-          Autoplay({
-            delay: 3000,
+          AutoScroll({
+            speed: 0.8,
             stopOnInteraction: false,
             stopOnMouseEnter: true,
           }),

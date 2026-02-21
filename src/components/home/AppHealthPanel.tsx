@@ -1,6 +1,7 @@
-import { Stethoscope, Bug, Lightbulb, Loader2 } from 'lucide-react';
+import { Stethoscope, Bug, Lightbulb, Loader2, Rocket } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,7 +19,7 @@ interface AppHealthPanelProps {
 }
 
 export function AppHealthPanel({ apps, isLoading }: AppHealthPanelProps) {
-  const t = useTranslation('home');
+  const { t } = useTranslation('home');
   const navigate = useNavigate();
 
   const getInitials = (name: string) => {
@@ -42,7 +43,7 @@ export function AppHealthPanel({ apps, isLoading }: AppHealthPanelProps) {
           <Stethoscope className="w-4 h-4 text-muted-foreground" strokeWidth={1.5} />
         </div>
         <h3 className="font-semibold text-foreground text-sm">
-          {t.actionCenter?.appHealth || 'App Status'}
+          {t('actionCenter.appHealth') || 'App Status'}
         </h3>
       </div>
 
@@ -52,8 +53,19 @@ export function AppHealthPanel({ apps, isLoading }: AppHealthPanelProps) {
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
         </div>
       ) : apps.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground text-sm">
-          {t.actionCenter?.noApps || 'No apps yet'}
+        <div className="flex flex-col items-center justify-center py-8 text-center space-y-3">
+          <p className="text-muted-foreground text-sm">
+            {t('actionCenter.noApps') || 'No apps yet'}
+          </p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/apps')}
+            className="h-8 text-xs font-medium border-primary/20 hover:bg-primary/5 text-primary"
+          >
+            {t('actionCenter.viewMyApps') || 'Ver todas mis apps'}
+            <Rocket className="ml-2 w-3 h-3" />
+          </Button>
         </div>
       ) : (
         <div className="space-y-2">

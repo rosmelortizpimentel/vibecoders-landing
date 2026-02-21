@@ -11,7 +11,7 @@
     "tagline": "Tagline",
     "location": "Location",
     "website": "Website",
-    "bookingUrl": "Booking Link (Calendly, Cal.com)",
+    "bookingUrl": "Custom Link",
     "bookingButtonText": "Booking Button Text",
     "socialNetworks": "Social Networks",
     "banner": "Banner"
@@ -35,7 +35,10 @@
     "bannerLeft": "Banner to the left",
     "bannerCenter": "Banner centered",
     "bannerRight": "Banner to the right",
-    "earlyFoundingMember": "Early Founding Member"
+    "earlyFoundingMember": "Early Founding Member",
+    "bookingButtonPreviewHint": "This is how the button will look on your public profile:",
+    "clickToEdit": "Click to edit",
+    "buttonColors": "Button colors"
   },
   "username": {
     "label": "Username",
