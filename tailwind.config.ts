@@ -244,6 +244,9 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0" },
         },
+        shimmer: {
+          "100%": { transform: "translateX(100vw)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -252,6 +255,7 @@ export default {
         "fade-in-up": "fade-in-up 0.6s ease-out forwards",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         float: "float 3s ease-in-out infinite",
+        shimmer: "shimmer 2s linear infinite",
         "scroll-left": "scroll-left 20s linear infinite",
         "fall-to-target": "fall-to-target 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards",
         "pulse-absorb": "pulse-absorb 0.3s ease-out",

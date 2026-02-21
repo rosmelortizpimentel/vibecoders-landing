@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Check, X, Loader2, Lock, Map, MessageSquare, Megaphone, Phone, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,6 +11,34 @@ export default function ChoosePlan() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { tier, loading: subLoading, createCheckout } = useSubscription();
+
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const difference = +new Date("2026-02-28T23:59:59") - +new Date();
+    if (difference > 0) {
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
+    }
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const difference = +new Date("2026-02-28T23:59:59") - +new Date();
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        });
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     if (searchParams.get('cancelled') === 'true') {
@@ -57,16 +85,16 @@ export default function ChoosePlan() {
     { text: 'Valida tus apps con feedback de expertos', included: true },
     { text: 'Networking con +100 fundadores', included: true },
     { text: 'Crea tu perfil y demuestra lo que estás construyendo', included: true, hasExample: true },
-    { text: 'Sin acceso a la Suite de Widgets', included: false },
+    { text: '¿Listo para crecer? Desbloquea la Suite Pro por $9.90/año →', isGrowLink: true },
   ];
 
   const proFeatures = [
     { text: 'Todo lo incluido en Gratis', icon: <Check className="h-4 w-4 text-[#3D5AFE]" /> },
-    { text: 'Roadmap público listo: No gastes ni un commit en esto', icon: <Map className="h-4 w-4 text-[#3D5AFE]" /> },
-    { text: 'Captura Feedback y Bugs: Sin montar otro backend', icon: <MessageSquare className="h-4 w-4 text-[#3D5AFE]" /> },
-    { text: 'Banners sin Deploy: Lanza alertas sin tocar código', icon: <Megaphone className="h-4 w-4 text-[#3D5AFE]" /> },
-    { text: 'Vende tus Servicios: Botón "Book Call" integrado a tu Perfil', icon: <Phone className="h-4 w-4 text-[#3D5AFE]" />, bold: true },
-    { text: 'Precio de $9.90 congelado de por vida', icon: <ShieldCheck className="h-4 w-4 text-[#3D5AFE]" /> },
+    { text: 'Roadmap público listo: Muéstrale al mundo lo que estás construyendo', exampleUrl: 'https://vibecoders.vibecoders.la/roadmap', exampleText: 'Ver ejemplo', icon: <Map className="h-4 w-4 text-[#3D5AFE]" /> },
+    { text: 'Feedback & Bugs centralizado: Tu comunidad reporta, tú priorizas', exampleUrl: 'https://vibecoders.vibecoders.la/feedback', exampleText: 'Ver ejemplo', icon: <MessageSquare className="h-4 w-4 text-[#3D5AFE]" /> },
+    { text: 'Banners sin Deploy: Lanza anuncios en vivo sin tocar una línea de código', icon: <Megaphone className="h-4 w-4 text-[#3D5AFE]" /> },
+    { text: 'Book a Call integrado: Convierte visitas en reuniones desde tu perfil', exampleUrl: 'https://www.vibecoders.la/@rosmelortiz', exampleText: 'Ver ejemplo', icon: <Phone className="h-4 w-4 text-[#3D5AFE]" />, bold: true },
+    { text: 'Precio de $9.90 congelado de por vida. Sube cuando quieras, pagas esto siempre', icon: <ShieldCheck className="h-4 w-4 text-[#3D5AFE]" /> },
   ];
 
   return (
@@ -109,28 +137,41 @@ export default function ChoosePlan() {
             </div>
 
             <ul className="mb-8 md:mb-12 space-y-4 text-left flex-grow">
-              {freeFeatures.map(({ text, included, hasExample }) => (
-                <li key={text} className={`flex items-start gap-3 text-sm ${!included ? 'opacity-40' : ''}`}>
-                  <div className="mt-0.5 shrink-0">
-                    {included ? (
-                      <Check className="h-4 w-4 text-stone-400" />
-                    ) : (
-                      <X className="h-4 w-4 text-stone-300" />
-                    )}
-                  </div>
+              {freeFeatures.map(({ text, included, hasExample, isGrowLink }) => (
+                <li key={text} className={`flex items-start gap-3 text-sm ${(!included && !isGrowLink) ? 'opacity-40' : ''}`}>
+                  {!isGrowLink && (
+                    <div className="mt-0.5 shrink-0">
+                      {included ? (
+                        <Check className="h-4 w-4 text-stone-400" />
+                      ) : (
+                        <X className="h-4 w-4 text-stone-300" />
+                      )}
+                    </div>
+                  )}
                   <div>
-                    <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
-                      {text}
-                    </span>
-                    {hasExample && (
-                      <a
-                        href="https://www.vibecoders.la/@rosmelortiz"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block mt-1 text-xs text-[#3D5AFE] hover:underline font-medium"
+                    {isGrowLink ? (
+                      <button
+                        onClick={handlePro}
+                        className="block mt-1 text-[13px] text-[#3D5AFE] hover:underline font-bold text-left"
                       >
-                        Mira un ejemplo →
-                      </a>
+                        {text}
+                      </button>
+                    ) : (
+                      <>
+                        <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
+                          {text}
+                        </span>
+                        {hasExample && (
+                          <a
+                            href="https://www.vibecoders.la/@rosmelortiz"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block mt-1 text-xs text-[#3D5AFE] hover:underline font-medium"
+                          >
+                            Mira un ejemplo →
+                          </a>
+                        )}
+                      </>
                     )}
                   </div>
                 </li>
@@ -149,7 +190,7 @@ export default function ChoosePlan() {
           <div className="relative rounded-2xl border-2 border-stone-900 bg-stone-900 p-6 sm:p-8 md:p-10 flex flex-col">
             {/* Badge */}
             <div className="absolute -top-3.5 left-6 sm:left-10 rounded-md bg-[#3D5AFE] px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-white shadow-sm">
-              Pre-Lanzamiento
+              OFERTA EXPIRA EN 7 DÍAS
             </div>
 
             <div className="mb-6 md:mb-8 mt-2">
@@ -157,7 +198,7 @@ export default function ChoosePlan() {
                 Pro Builder + Suite
               </h3>
               <p className="text-sm text-white/35 font-medium">
-                Enfócate en funcionalidades core.<br />Nosotros nos encargamos del resto.
+                Todo lo que necesitas para lanzar, validar y crecer.<br />Sin fricción técnica.
               </p>
             </div>
 
@@ -173,22 +214,56 @@ export default function ChoosePlan() {
               <span className="ml-2 text-white/35 font-bold uppercase text-xs tracking-widest">
                 / año
               </span>
+              <div className="text-xs text-yellow-400 mt-2 font-medium">Precio especial válido hasta el 28 de Feb</div>
             </div>
 
             <ul className="mb-8 md:mb-10 space-y-4 text-left flex-grow">
-              {proFeatures.map(({ text, icon, bold }) => (
+              {proFeatures.map(({ text, icon, bold, exampleUrl, exampleText }) => (
                 <li key={text} className="flex items-start gap-3 text-sm">
                   <div className="mt-0.5 shrink-0">
                     {icon}
                   </div>
-                  <span className={`font-medium ${bold ? 'font-bold text-white/90' : 'text-white/75'}`}>
-                    {text}
-                  </span>
+                  <div>
+                    <span className={`font-medium ${bold ? 'font-bold text-white/90' : 'text-white/75'}`}>
+                      {text}
+                    </span>
+                    {exampleUrl && exampleText && (
+                      <a
+                        href={exampleUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-1 text-[11px] text-white/50 hover:text-white/80 hover:underline font-bold transition-colors"
+                      >
+                        → {exampleText}
+                      </a>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
 
             <div className="mt-auto">
+              <div className="flex gap-2 justify-center mb-3">
+                <div className="bg-stone-800 rounded px-2 py-1 text-center min-w-[36px]">
+                  <span className="block text-white text-sm font-bold leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
+                  <span className="block text-[8px] text-white/50 uppercase mt-0.5">días</span>
+                </div>
+                <div className="text-white/30 font-bold self-start mt-1">:</div>
+                <div className="bg-stone-800 rounded px-2 py-1 text-center min-w-[36px]">
+                  <span className="block text-white text-sm font-bold leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                  <span className="block text-[8px] text-white/50 uppercase mt-0.5">hrs</span>
+                </div>
+                <div className="text-white/30 font-bold self-start mt-1">:</div>
+                <div className="bg-stone-800 rounded px-2 py-1 text-center min-w-[36px]">
+                  <span className="block text-white text-sm font-bold leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                  <span className="block text-[8px] text-white/50 uppercase mt-0.5">min</span>
+                </div>
+                <div className="text-white/30 font-bold self-start mt-1">:</div>
+                <div className="bg-stone-800 rounded px-2 py-1 text-center min-w-[36px]">
+                  <span className="block text-white text-sm font-bold leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                  <span className="block text-[8px] text-white/50 uppercase mt-0.5">seg</span>
+                </div>
+              </div>
               <button
                 onClick={handlePro}
                 disabled={createCheckout.isPending}

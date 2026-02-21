@@ -25,6 +25,7 @@ import { VerifyDomainModal } from '@/components/me/VerifyDomainModal';
 import { getStatusColors } from '@/lib/appStatusColors';
 import { toast } from 'sonner';
 import { useSubscription } from '@/hooks/useSubscription';
+import { ProBadge } from '@/components/ui/ProBadge';
 
 import { AppEditor } from '@/components/me/AppEditor';
 import RoadmapEditor from '@/pages/RoadmapEditor';
@@ -435,10 +436,7 @@ export default function MyAppHub() {
                     {tR.t('editor.customDomain') || 'Dominio Personalizado'}
                   </Label>
                   {(isFounder || isPro) ? (
-                    <div className="flex items-center gap-1.5 bg-black/5 px-2 py-0.5 rounded-full border border-black/10 transition-all">
-                      <Crown className="w-2.5 h-2.5 text-black fill-black/10" />
-                      <span className="text-[8px] font-black uppercase tracking-[0.15em] text-black">Pro</span>
-                    </div>
+                    <ProBadge />
                   ) : (
                     <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
                       <Crown className="w-2.5 h-2.5 text-amber-600" />

@@ -71,15 +71,12 @@ export function AuthenticatedHeader({
   error 
 }: AuthenticatedHeaderProps) {
   const location = useLocation();
-  const t = useTranslation('common');
-  const tAuth = useTranslation('auth');
-  const tProfile = useTranslation('profile');
-  const { isFree, loading: subLoading } = useSubscription();
-  
-  const displayName = formatDisplayName(profile?.name, tAuth.user);
-  const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
-  const { isAdmin } = useUserRole();
-  const { isInWaitlist } = useWaitlistStatus();
+  const { user } = useAuth();
+  const { isPro, isFounder, isFree, loading: subLoading } = useSubscription();
+  const { t: tAuth } = useTranslation('auth');
+  const { t: tProfile } = useTranslation('profile');
+  const { t } = useTranslation('common');
+  const { profile: userProfile } = useProfile(); // Renamed to avoid conflict with prop 'profile'
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [open, setOpen] = useState(false);
@@ -88,6 +85,11 @@ export function AuthenticatedHeader({
   const { ownedAppsCount, publicSquadsCount } = useBetaBadges();
   const { unreadCount } = useNotifications();
   const { t: tNotif } = useTranslation('notifications');
+  const { isAdmin } = useUserRole();
+  const { isInWaitlist } = useWaitlistStatus();
+
+  const displayName = formatDisplayName(userProfile?.name, tAuth('user'));
+  const publicProfileUrl = userProfile?.username ? `/@${userProfile.username}` : null;
 
   const badgeMap: Record<string, number> = {
     'notifications': unreadCount,
@@ -100,7 +102,7 @@ export function AuthenticatedHeader({
     if (parts.length === 2 && parts[0] === 'notifications') {
       return tNotif(parts[1]);
     }
-    return t.t(labelKey);
+    return t(labelKey);
   };
 
   // Build mobile menu from dynamic sidebar items
@@ -118,18 +120,13 @@ export function AuthenticatedHeader({
   // Build navigation links dynamically based on waitlist status
   // Include all Sidebar links here so the header can resolve the title/icon
   const navLinks: { path: string; label: string; icon: typeof User; premium: boolean; isNew?: boolean }[] = [
-    { path: '/home', label: t.navigation.home, icon: LayoutDashboard, premium: false },
-    { path: '/notifications', label: (t.navigation as any).notifications || 'Notifications', icon: Menu, premium: false },
-    { path: '/me', label: t.navigation.myProfile, icon: User, premium: false },
-    { path: '/apps', label: t.navigation.myApps, icon: Rocket, premium: false },
-    { path: '/ideas', label: t.navigation.myIdeas, icon: Lightbulb, premium: false },
-    { path: '/connections', label: t.navigation.vibers, icon: User, premium: false },
-    { path: '/feedback', label: t.navigation.feedback, icon: MessageCircle, premium: false },
-    { path: '/beta-testing', label: t.navigation.betaTesting, icon: FlaskConical, premium: false },
-    { path: '/public-beta-testing', label: t.navigation.publicBetaTesting, icon: Rocket, premium: false },
-    { path: '/explore', label: t.navigation.startups, icon: Rocket, premium: false },
-    { path: '/tools', label: t.navigation.tools, icon: Wrench, premium: false },
-    ...(isInWaitlist ? [{ path: '/buildlog', label: t.navigation.buildLog, icon: Crown, premium: true }] : []),
+    { path: '/connections', label: t('navigation.vibers'), icon: User, premium: false },
+    { path: '/feedback', label: t('navigation.feedback'), icon: MessageCircle, premium: false },
+    { path: '/beta-testing', label: t('navigation.betaTesting'), icon: FlaskConical, premium: false },
+    { path: '/public-beta-testing', label: t('navigation.publicBetaTesting'), icon: Rocket, premium: false },
+    { path: '/explore', label: t('navigation.startups'), icon: Rocket, premium: false },
+    { path: '/tools', label: t('navigation.tools'), icon: Wrench, premium: false },
+    ...(isInWaitlist ? [{ path: '/buildlog', label: t('navigation.buildLog'), icon: Crown, premium: true }] : []),
   ];
 
   const handleNavClick = () => {
@@ -214,17 +211,17 @@ export function AuthenticatedHeader({
                 {isSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                    <span className="text-muted-foreground">{tProfile.saving}</span>
+                    <span className="text-muted-foreground">{t('saving')}</span>
                   </>
                 ) : error ? (
                   <>
                     <AlertCircle className="h-4 w-4 text-red-500" />
-                    <span className="text-red-500">{tProfile.error}</span>
+                    <span className="text-red-500">{t('error')}</span>
                   </>
                 ) : lastSaved ? (
                   <>
                     <Check className="h-4 w-4 text-primary" />
-                    <span className="text-muted-foreground">{tProfile.saved}</span>
+                    <span className="text-muted-foreground">{t('saved')}</span>
                   </>
                 ) : null}
               </div>
@@ -232,13 +229,19 @@ export function AuthenticatedHeader({
 
             {/* Upgrade Button - only for free tier */}
             {isFree && !subLoading && (
-              <Link
-                to="/choose-plan"
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-stone-900 hover:bg-stone-800 text-white transition-colors border border-amber-500/60 hover:border-amber-400/80"
-              >
-                <Zap className="h-3.5 w-3.5 fill-current" />
-                <span className="text-xs font-bold">$9.90/año</span>
-              </Link>
+              <div className="relative group">
+                {/* Subtle ping animation on the subtle border background */}
+                <div className="absolute -inset-[1px] bg-amber-500/30 rounded-full animate-ping opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                <Link
+                  to="/choose-plan"
+                  className="relative flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-b from-stone-800 to-stone-900 hover:from-stone-700 hover:to-stone-800 text-white transition-all duration-300 border border-amber-500/50 hover:border-amber-400/80 shadow-md hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:-translate-y-0.5 overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                  <span className="relative z-10 text-[11px] sm:text-xs font-bold tracking-wide">
+                    {t('upgradeOffer') || '🔥 Oferta expira 28 Feb'}
+                  </span>
+                </Link>
+              </div>
             )}
 
             {/* Share Button - Desktop */}
@@ -260,13 +263,13 @@ export function AuthenticatedHeader({
         <div className="flex md:hidden items-center">
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label={tAuth.menu}>
+              <Button variant="ghost" size="icon" aria-label={t('menu')}>
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[280px] bg-background p-0 flex flex-col">
               <SheetHeader className="p-5 border-b border-border">
-                <SheetTitle className="text-left text-base font-medium text-foreground">{tAuth.menu}</SheetTitle>
+                <SheetTitle className="text-left text-base font-medium text-foreground">{t('menu')}</SheetTitle>
               </SheetHeader>
               
                 {/* Navigation Links - Dynamic from sidebar menu */}
@@ -319,7 +322,7 @@ export function AuthenticatedHeader({
                         )}
                       >
                         <Shield className="h-4 w-4" />
-                        {t.navigation.admin}
+                        {t('navigation.admin')}
                       </Link>
                     </>
                   )}
@@ -345,7 +348,7 @@ export function AuthenticatedHeader({
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate group-hover:text-foreground/80 transition-colors">
-                      {profile?.name || tAuth.user}
+                      {profile?.name || tAuth('user')}
                     </p>
                     {profile?.username && (
                       <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>
@@ -359,7 +362,7 @@ export function AuthenticatedHeader({
                       onSignOut();
                     }}
                     className="p-2 rounded-lg text-muted-foreground hover:text-red-500 hover:bg-red-50 transition-colors"
-                    aria-label={tAuth.signOut}
+                    aria-label={tAuth('signOut')}
                   >
                     <LogOut className="h-5 w-5" />
                   </button>

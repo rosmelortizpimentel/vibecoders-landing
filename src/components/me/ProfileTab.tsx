@@ -10,8 +10,10 @@ import { PioneerBadge } from '@/components/PioneerBadge';
 import { ContributorBadge } from '@/components/ContributorBadge';
 import { Camera, MapPin, Globe, ImagePlus, AlignLeft, AlignCenter, AlignRight, Trash2, Calendar, Loader2, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
+import { ProBadge } from '@/components/ui/ProBadge';
 import { BannerCropDialog } from './BannerCropDialog';
 import { ColorPicker } from './ColorPicker';
 import { FontSelector } from './FontSelector';
@@ -42,6 +44,7 @@ export function ProfileTab({
   error 
 }: ProfileTabProps) {
   const { user } = useAuth();
+  const { isPro, isFounder } = useSubscription();
   const { t } = useTranslation('profile');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -386,6 +389,14 @@ export function ProfileTab({
           <Label className="flex items-center gap-2 text-foreground">
             <Calendar className="h-4 w-4 text-muted-foreground" />
             {t('fields.bookingUrl')}
+            {(isFounder || isPro) ? (
+              <ProBadge />
+            ) : (
+              <div className="flex items-center gap-1 xl:gap-1.5 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 w-fit">
+                <Check className="w-2.5 h-2.5 text-amber-600" />
+                <span className="text-[8px] font-bold text-amber-700 uppercase">Pro</span>
+              </div>
+            )}
           </Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
             {/* URL input */}
@@ -395,7 +406,8 @@ export function ProfileTab({
               onValueChange={value => onUpdate({ booking_url: value })}
               placeholder={t('placeholders.bookingUrl')}
               type="url"
-              className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0"
+              disabled={!(isPro || isFounder)}
+              className="border border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0 disabled:opacity-50"
             />
 
             {/* Button preview — inline editable + color pickers */}

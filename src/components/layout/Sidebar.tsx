@@ -211,8 +211,25 @@ export function Sidebar() {
         })}
       </nav>
 
+      {/* Roadmap & Feedback */}
+      <div className="mt-auto px-4 pb-3 pt-2 shrink-0">
+        <a 
+          href="https://vibecoders.vibecoders.la/roadmap" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className={cn(
+            "flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors opacity-80 hover:opacity-100",
+            isCollapsed ? "justify-center" : "px-3"
+          )}
+          title={isCollapsed ? t('navigation.roadmapAndFeedback') : undefined}
+        >
+          <span className="text-sm shrink-0">🗺</span>
+          {!isCollapsed && <span className="truncate">{t('navigation.roadmapAndFeedback')}</span>}
+        </a>
+      </div>
+
       {/* Footer / User Menu */}
-      <div className="mt-auto border-t border-border/50 px-3 pt-3 pb-3 shrink-0 overflow-visible">
+      <div className="border-t border-border/50 px-3 pt-3 pb-3 shrink-0 overflow-visible">
         <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
           <DropdownMenuTrigger asChild>
             <button 

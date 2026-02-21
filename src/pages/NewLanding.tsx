@@ -552,6 +552,34 @@ const FeatureGrid = () => {
 const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: { totalBuilders: number; onLinkedInClick: (signupSource?: string) => void; onGoogleClick: (signupSource?: string) => void }) => {
   const { t } = useTranslation('newLanding');
 
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const difference = +new Date("2026-02-28T23:59:59") - +new Date();
+    if (difference > 0) {
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
+    }
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const difference = +new Date("2026-02-28T23:59:59") - +new Date();
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        });
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const avatarPhotos = [
     'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/e2df4196-aa86-465e-9a62-0d2508843b9e/avatar_1770449276650.jpeg',
     'https://zkotnnmrehzqonlyeorv.supabase.co/storage/v1/object/public/profile-assets/b8256ba9-2633-4c0c-b14f-4d6ad3c770a9/avatar_migrated_1770716423332.png',
@@ -646,27 +674,37 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
 
             <ul className="mb-8 md:mb-12 space-y-4 text-left flex-grow">
               {freeFeatures.map(({ key, included }) => (
-                <li key={key} className={`flex items-start gap-3 text-sm ${!included ? 'opacity-40' : ''}`}>
-                  <div className="mt-0.5 shrink-0">
-                    {included ? (
-                      <Check className="h-4 w-4 text-stone-400" />
-                    ) : (
-                      <X className="h-4 w-4 text-stone-300" />
-                    )}
-                  </div>
+                <li key={key} className={`flex items-start gap-3 text-sm ${(!included && key !== 'f4') ? 'opacity-40' : ''}`}>
+                  {key !== 'f4' && (
+                    <div className="mt-0.5 shrink-0">
+                      {included ? (
+                        <Check className="h-4 w-4 text-stone-400" />
+                      ) : (
+                        <X className="h-4 w-4 text-stone-300" />
+                      )}
+                    </div>
+                  )}
                   <div>
-                    <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
-                      {t(`pricing.plans.free.${key}`)}
-                    </span>
-                    {key === 'f3' && included && (
-                      <a
-                        href="https://www.vibecoders.la/@rosmelortiz"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block mt-1 text-xs text-[#3D5AFE] hover:underline font-medium"
-                      >
-                        {t('pricing.plans.free.f3_example')} →
-                      </a>
+                    {key === 'f4' ? (
+                      <span className="block mt-1 text-[13px] text-[#3D5AFE] font-bold text-left">
+                        {t(`pricing.plans.free.${key}`)}
+                      </span>
+                    ) : (
+                      <>
+                        <span className={`font-medium ${included ? 'text-stone-600' : 'text-stone-400'}`}>
+                          {t(`pricing.plans.free.${key}`)}
+                        </span>
+                        {key === 'f3' && included && (
+                          <a
+                            href="https://www.vibecoders.la/@rosmelortiz"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block mt-1 text-xs text-[#3D5AFE] hover:underline font-medium"
+                          >
+                            {t('pricing.plans.free.f3_example')} →
+                          </a>
+                        )}
+                      </>
                     )}
                   </div>
                 </li>
@@ -701,7 +739,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
           <div className="relative rounded-2xl border-2 border-stone-900 bg-stone-900 p-6 sm:p-8 md:p-10 flex flex-col">
             {/* Badge */}
             <div className="absolute -top-3.5 left-6 sm:left-10 rounded-md bg-[#3D5AFE] px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-white shadow-sm">
-              {t('pricing.plans.pro.badge')}
+              OFERTA EXPIRA EN 7 DÍAS
             </div>
 
             <div className="mb-6 md:mb-8 mt-2">
@@ -729,6 +767,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
               <span className="ml-2 text-white/35 font-bold uppercase text-xs tracking-widest">
                 {t('pricing.plans.pro.priceLabel')}
               </span>
+              <div className="text-xs text-yellow-400 mt-2 font-medium">Precio especial válido hasta el 28 de Feb</div>
             </div>
 
             <ul className="mb-8 md:mb-10 space-y-4 text-left flex-grow">
@@ -737,15 +776,48 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
                   <div className="mt-0.5 shrink-0">
                     {proFeatureIcons[key] || <Check className="h-4 w-4 text-[#3D5AFE]" />}
                   </div>
-                  <span className={`font-medium text-white/75 ${key === 'f5' ? 'font-bold text-white/90' : ''}`}>
-                    {t(`pricing.plans.pro.${key}`)}
-                  </span>
+                  <div>
+                    <span className={`font-medium text-white/75 ${key === 'f5' ? 'font-bold text-white/90' : ''}`}>
+                      {t(`pricing.plans.pro.${key}`)}
+                    </span>
+                    {['f2', 'f3', 'f5'].includes(key) && (
+                      <a
+                        href={key === 'f2' ? 'https://vibecoders.vibecoders.la/roadmap' : key === 'f3' ? 'https://vibecoders.vibecoders.la/feedback' : 'https://www.vibecoders.la/@rosmelortiz'}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block mt-1 text-[11px] text-white/50 hover:text-white/80 hover:underline font-bold transition-colors"
+                      >
+                        → {t(`pricing.plans.pro.${key}_example`)}
+                      </a>
+                    )}
+                  </div>
                 </li>
               ))}
             </ul>
 
             {/* Auth Buttons - Solid */}
             <div className="mt-auto flex flex-col gap-2.5">
+              <div className="flex gap-2 justify-center mb-1">
+                <div className="bg-stone-800 rounded px-2 py-1 text-center min-w-[36px]">
+                  <span className="block text-white text-sm font-bold leading-none">{String(timeLeft.days).padStart(2, '0')}</span>
+                  <span className="block text-[8px] text-white/50 uppercase mt-0.5">días</span>
+                </div>
+                <div className="text-white/30 font-bold self-start mt-1">:</div>
+                <div className="bg-stone-800 rounded px-2 py-1 text-center min-w-[36px]">
+                  <span className="block text-white text-sm font-bold leading-none">{String(timeLeft.hours).padStart(2, '0')}</span>
+                  <span className="block text-[8px] text-white/50 uppercase mt-0.5">hrs</span>
+                </div>
+                <div className="text-white/30 font-bold self-start mt-1">:</div>
+                <div className="bg-stone-800 rounded px-2 py-1 text-center min-w-[36px]">
+                  <span className="block text-white text-sm font-bold leading-none">{String(timeLeft.minutes).padStart(2, '0')}</span>
+                  <span className="block text-[8px] text-white/50 uppercase mt-0.5">min</span>
+                </div>
+                <div className="text-white/30 font-bold self-start mt-1">:</div>
+                <div className="bg-stone-800 rounded px-2 py-1 text-center min-w-[36px]">
+                  <span className="block text-white text-sm font-bold leading-none">{String(timeLeft.seconds).padStart(2, '0')}</span>
+                  <span className="block text-[8px] text-white/50 uppercase mt-0.5">seg</span>
+                </div>
+              </div>
               <button
                 onClick={() => onLinkedInClick('paid_card')}
                 className="w-full h-14 rounded-xl font-bold text-base text-white flex items-center justify-center gap-3 transition-all hover:scale-[1.01] shadow-lg"
