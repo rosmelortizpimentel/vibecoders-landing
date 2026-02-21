@@ -287,20 +287,19 @@ export default function PublicRoadmap() {
         ]);
 
         if (settingsRes.data) {
-          setSettings(settingsRes.data as RoadmapSettings);
-          setIsFeedbackPublic((settingsRes.data as RoadmapSettings).is_feedback_public ?? false);
-          setAuthMode((settingsRes.data as RoadmapSettings).feedback_auth_mode || 'anonymous');
-          // Apply default language from settings (takes priority over browser)
-          const defaultLang = (settingsRes.data as RoadmapSettings).default_language;
-          if (defaultLang && ['es', 'en', 'fr', 'pt'].includes(defaultLang)) {
-            setLang(defaultLang);
+          const s = settingsRes.data as RoadmapSettings;
+          setSettings(s);
+          setIsFeedbackPublic(s.is_feedback_public ?? false);
+          setAuthMode(s.feedback_auth_mode || 'anonymous');
+          
+          // Apply default language from settings (takes priority)
+          if (s.default_language && ['es', 'en', 'fr', 'pt'].includes(s.default_language)) {
+            setLang(s.default_language);
           } else {
-            // Fallback to browser language only if no default_language configured
             const browserLang = navigator.language?.substring(0, 2);
             if (['es', 'en', 'fr', 'pt'].includes(browserLang)) setLang(browserLang);
           }
         } else {
-          // No settings found, use browser language as fallback
           const browserLang = navigator.language?.substring(0, 2);
           if (['es', 'en', 'fr', 'pt'].includes(browserLang)) setLang(browserLang);
         }

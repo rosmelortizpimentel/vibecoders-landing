@@ -362,15 +362,16 @@ export default function RoadmapEditor() {
   // Sync settings form
   useEffect(() => {
     if (roadmap.settings) {
+      const s = roadmap.settings as any;
       setSettingsForm({
-        default_language: (roadmap.settings as any).default_language || '',
-        font_family: roadmap.settings.font_family || 'Inter',
-        favicon_url: roadmap.settings.favicon_url || '',
-        custom_domain: roadmap.settings.custom_domain || '',
-        custom_title: roadmap.settings.custom_title || '',
+        default_language: s.default_language || userProfileLanguage || 'es',
+        font_family: s.font_family || 'Inter',
+        favicon_url: s.favicon_url || '',
+        custom_domain: s.custom_domain || '',
+        custom_title: s.custom_title || '',
       });
     }
-  }, [roadmap.settings]);
+  }, [roadmap.settings, userProfileLanguage]);
 
   // Open all lanes by default on mobile
   useEffect(() => {
