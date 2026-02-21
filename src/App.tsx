@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 
 import { detectedSubdomain, isCustomDomain } from '@/utils/domain';
@@ -56,8 +57,26 @@ import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+const App = () => {
+  useEffect(() => {
+    // Only inject ToggleUp on main domain
+    if (!isCustom) {
+      const script = document.createElement('script');
+      script.src = "https://cdn.toggleup.io/v1/sdk.js";
+      script.setAttribute('data-project-id', "0ff4a57e314aa8b15d78b98c16a1c9af");
+      script.async = true;
+      document.head.appendChild(script);
+
+      return () => {
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+      };
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <TooltipProvider>
         <Toaster />
@@ -157,6 +176,7 @@ const App = () => (
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
