@@ -8,12 +8,22 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { MessageSquare, Loader2, Eye, EyeOff, Bug, FileText, Download } from 'lucide-react';
+import { Trash2, MessageSquare, Loader2, Eye, EyeOff, Bug, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { es, enUS, fr, pt } from 'date-fns/locale';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface FeedbackAttachment {
   file_url: string;
@@ -59,6 +69,8 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
   const [showBugDialog, setShowBugDialog] = useState(false);
   const [bugContent, setBugContent] = useState('');
   const [bugSubmitting, setBugSubmitting] = useState(false);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<UnifiedFeedbackItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getDateLocale = () => {
     switch (language) {
@@ -215,6 +227,33 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
     setItems(prev => prev.map(i => i.id === item.id ? { ...i, is_hidden: newHidden } : i));
   };
 
+  const handleDeleteFeedback = async () => {
+    if (!deleteConfirmItem) return;
+    setIsDeleting(true);
+    try {
+      if (deleteConfirmItem.source === 'public') {
+        // If it has a linked card, delete it first
+        if (deleteConfirmItem.linked_card_id) {
+          await supabase.from('roadmap_cards').delete().eq('id', deleteConfirmItem.linked_card_id);
+        }
+        const { error } = await supabase.from('roadmap_feedback').delete().eq('id', deleteConfirmItem.realId);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('beta_feedback').delete().eq('id', deleteConfirmItem.realId);
+        if (error) throw error;
+      }
+
+      setItems(prev => prev.filter(i => i.id !== deleteConfirmItem.id));
+      toast.success(t.t('hub.feedbackDeleted') || 'Feedback deleted');
+      setDeleteConfirmItem(null);
+    } catch (err) {
+      console.error('Error deleting feedback:', err);
+      toast.error('Error deleting feedback');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleSubmitBug = async () => {
     if (!bugContent.trim() || !user) return;
     setBugSubmitting(true);
@@ -275,7 +314,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
     }
     const lane = lanes.find(l => l.name.toLowerCase() === item.status);
     if (lane) return { name: lane.name, color: lane.color };
-    return { name: 'new', color: undefined };
+    return { name: 'New', color: undefined };
   };
 
   if (loading) {
@@ -303,7 +342,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
               <SelectItem value="new">
                 <span className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40 shrink-0" />
-                  new
+                  New
                 </span>
               </SelectItem>
               {lanes.map(lane => (
@@ -342,16 +381,34 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
                     <p className="text-sm text-foreground">{item.content}</p>
                   </div>
                   {item.source === 'public' && (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        onClick={() => handleToggleVisibility(item)}
+                        className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                        title={item.is_hidden ? t.t('hub.hidden') : t.t('hub.visible')}
+                      >
+                        {item.is_hidden ? (
+                          <EyeOff className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="w-4 h-4 text-green-600" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => setDeleteConfirmItem(item)}
+                        className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors group"
+                        title={t.t('hub.delete') || 'Delete'}
+                      >
+                        <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-destructive" />
+                      </button>
+                    </div>
+                  )}
+                  {item.source !== 'public' && (
                     <button
-                      onClick={() => handleToggleVisibility(item)}
-                      className="shrink-0 p-1.5 rounded-md hover:bg-muted transition-colors"
-                      title={item.is_hidden ? t.t('hub.hidden') : t.t('hub.visible')}
+                      onClick={() => setDeleteConfirmItem(item)}
+                      className="shrink-0 p-1.5 rounded-md hover:bg-destructive/10 transition-colors group"
+                      title={t.t('hub.delete') || 'Delete'}
                     >
-                      {item.is_hidden ? (
-                        <EyeOff className="w-4 h-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="w-4 h-4 text-green-600" />
-                      )}
+                      <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-destructive" />
                     </button>
                   )}
                 </div>
@@ -415,7 +472,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
                           <SelectItem value="new">
                             <span className="flex items-center gap-2 text-xs">
                               <span className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40 shrink-0" />
-                              new
+                              New
                             </span>
                           </SelectItem>
                           {lanes.map(lane => (
@@ -472,6 +529,32 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t.t('hub.deleteFeedback') || 'Delete Feedback'}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t.t('hub.deleteFeedbackConfirm') || 'Are you sure you want to delete this feedback? This action cannot be undone.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>{t.t('hub.cancel') || 'Cancel'}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteFeedback();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              {t.t('hub.delete') || 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
