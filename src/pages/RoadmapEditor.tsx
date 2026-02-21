@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { HexColorPicker } from 'react-colorful';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,7 +14,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -25,7 +25,7 @@ import { FontSelector } from '@/components/me/FontSelector';
 import { ColorPicker } from '@/components/me/ColorPicker';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Plus, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Upload, Calendar, Paintbrush } from 'lucide-react';
+import { Loader2, ArrowLeft, Plus, GripVertical, MoreVertical, Pencil, Trash2, ExternalLink, MoveRight, MessageSquare, Link2, ChevronDown, Upload, Calendar, Paintbrush, Check, X, User, Lock, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
@@ -65,8 +65,16 @@ function ResponsiveModal({ open, onOpenChange, title, children, footer, isMobile
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
         <DrawerContent className="px-4 pb-6">
-          <DrawerHeader className="px-0">
+          <DrawerHeader className="px-0 flex flex-row items-center justify-between">
             <DrawerTitle>{title}</DrawerTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full hover:bg-muted" 
+              onClick={() => onOpenChange(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </DrawerHeader>
           <div className="space-y-4">{children}</div>
           {footer && <DrawerFooter className="px-0 pt-4">{footer}</DrawerFooter>}
@@ -76,9 +84,17 @@ function ResponsiveModal({ open, onOpenChange, title, children, footer, isMobile
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md [&_button.absolute]:!hidden">
+        <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle>{title}</DialogTitle>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8 rounded-full hover:bg-muted" 
+            onClick={() => onOpenChange(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         </DialogHeader>
         <div className="space-y-4">{children}</div>
         {footer && <DialogFooter>{footer}</DialogFooter>}
@@ -214,7 +230,6 @@ export default function RoadmapEditor() {
   const [appLoading, setAppLoading] = useState(true);
 
   // Modals
-  const [showSettings, setShowSettings] = useState(false);
   const [editingLane, setEditingLane] = useState<RoadmapLane | null>(null);
   const [editingCard, setEditingCard] = useState<RoadmapCard | null>(null);
   const [addingCardToLane, setAddingCardToLane] = useState<string | null>(null);
@@ -225,7 +240,6 @@ export default function RoadmapEditor() {
   // Form states
   const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: 'Inter' });
   const [cardForm, setCardForm] = useState({ title: '', description: '' });
-  const [settingsForm, setSettingsForm] = useState({ default_language: '', font_family: 'Inter', favicon_url: '' });
   const [userProfileLanguage, setUserProfileLanguage] = useState<string>('es');
 
   // Feedback management
@@ -233,20 +247,9 @@ export default function RoadmapEditor() {
   const [responseText, setResponseText] = useState('');
   const [linkingFeedback, setLinkingFeedback] = useState<string | null>(null);
   const [deletingFeedback, setDeletingFeedback] = useState<string | null>(null);
-  const [faviconUploading, setFaviconUploading] = useState(false);
   const [moveCompletedAt, setMoveCompletedAt] = useState<string>('');
 
   const [openLanes, setOpenLanes] = useState<Set<string>>(new Set());
-
-  // Owner username for public URL
-  const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
-
-  // Listen for branding open event from parent (MyAppHub toolbar)
-  useEffect(() => {
-    const handler = () => setShowSettings(true);
-    window.addEventListener('roadmap-open-branding', handler);
-    return () => window.removeEventListener('roadmap-open-branding', handler);
-  }, []);
 
   const canAddLane = roadmap.lanes.length < 4;
 
@@ -341,15 +344,6 @@ export default function RoadmapEditor() {
     })();
   }, [appId, user]);
 
-  // Fetch owner username for public URL
-  useEffect(() => {
-    if (!app?.user_id) return;
-    (async () => {
-      const { data } = await supabase.from('profiles').select('username').eq('id', app.user_id).maybeSingle();
-      if (data?.username) setOwnerUsername(data.username);
-    })();
-  }, [app?.user_id]);
-
   // Fetch user profile language
   useEffect(() => {
     if (!user) return;
@@ -358,20 +352,6 @@ export default function RoadmapEditor() {
       if (data?.language) setUserProfileLanguage(data.language);
     })();
   }, [user]);
-
-  // Sync settings form
-  useEffect(() => {
-    if (roadmap.settings) {
-      const s = roadmap.settings as any;
-      setSettingsForm({
-        default_language: s.default_language || userProfileLanguage || 'es',
-        font_family: s.font_family || 'Inter',
-        favicon_url: s.favicon_url || '',
-        custom_domain: s.custom_domain || '',
-        custom_title: s.custom_title || '',
-      });
-    }
-  }, [roadmap.settings, userProfileLanguage]);
 
   // Open all lanes by default on mobile
   useEffect(() => {
@@ -405,46 +385,6 @@ export default function RoadmapEditor() {
       </div>
     );
   }
-
-  if (!roadmap.settings) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const appSlug = (app?.name || 'app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  const publicPath = ownerUsername ? `/@${ownerUsername}/${appSlug}/roadmap` : `/roadmap/${appSlug}`;
-
-  const handleSaveSettings = async () => {
-    try {
-      await roadmap.updateSettings(settingsForm);
-      setShowSettings(false);
-      toast.success('Settings saved');
-    } catch { toast.error('Error saving settings'); }
-  };
-
-  const handleFaviconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !appId) return;
-    const allowedTypes = ['image/png', 'image/svg+xml', 'image/webp', 'image/x-icon', 'image/vnd.microsoft.icon'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Only .ico, .png, .svg, .webp files');
-      return;
-    }
-    setFaviconUploading(true);
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `favicons/${appId}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('roadmap-attachments').upload(path, file, { upsert: true });
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from('roadmap-attachments').getPublicUrl(path);
-      setSettingsForm(prev => ({ ...prev, favicon_url: urlData.publicUrl }));
-      toast.success('Favicon uploaded');
-    } catch { toast.error('Error uploading favicon'); }
-    finally { setFaviconUploading(false); }
-  };
 
   const handleSaveLane = async () => {
     try {
@@ -745,90 +685,12 @@ export default function RoadmapEditor() {
         </DragOverlay>
       </DndContext>
 
-      {/* ===== MODALS ===== */}
-
-      {/* Branding Sidebar */}
-      <Sheet open={showSettings} onOpenChange={setShowSettings}>
-        <SheetContent side="right" className="w-full sm:w-[400px] sm:max-w-[400px] overflow-y-auto">
-          <SheetHeader className="pb-4">
-            <SheetTitle className="flex items-center gap-2">
-              <Paintbrush className="w-4 h-4" />
-              {t('editor.branding')}
-            </SheetTitle>
-          </SheetHeader>
-
-          <div className="space-y-6 pb-24">
-            {/* Branding section */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.defaultLanguage')}</Label>
-                <Select value={settingsForm.default_language || userProfileLanguage} onValueChange={v => setSettingsForm(prev => ({ ...prev, default_language: v }))}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="es">Español</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                    <SelectItem value="pt">Português</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.fontFamily')}</Label>
-                <FontSelector value={settingsForm.font_family} onChange={v => setSettingsForm(prev => ({ ...prev, font_family: v }))} />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">Favicon</Label>
-                <div className="flex items-center gap-3">
-                  {settingsForm.favicon_url && (
-                    <img src={settingsForm.favicon_url} alt="Favicon" className="w-8 h-8 rounded object-contain border" />
-                  )}
-                  <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-md cursor-pointer hover:border-primary transition-colors text-sm text-muted-foreground">
-                    {faviconUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {faviconUploading ? 'Uploading...' : 'Upload favicon'}
-                    <input type="file" className="hidden" accept=".ico,.png,.svg,.webp" onChange={handleFaviconUpload} disabled={faviconUploading} />
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            {/* Column Colors */}
-            <Separator />
-            <div className="space-y-3">
-              <Label className="text-xs uppercase tracking-wider font-medium text-muted-foreground">{t('editor.columnColors')}</Label>
-              {roadmap.lanes.map(lane => (
-                <div key={lane.id} className="flex items-center justify-between gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                  <span className="text-sm font-medium truncate flex-1 min-w-0">{lane.name}</span>
-                  <ColorPicker
-                    compact
-                    value={lane.color}
-                    onChange={async (color) => {
-                      try {
-                        await roadmap.updateLane(lane.id, { color });
-                      } catch { toast.error('Error updating color'); }
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <SheetFooter className="absolute bottom-0 left-0 right-0 p-4 bg-background border-t">
-            <div className="flex gap-2 w-full">
-              <Button variant="outline" className="flex-1" onClick={() => setShowSettings(false)}>{t('editor.cancel')}</Button>
-              <Button className="flex-1" onClick={handleSaveSettings}>{t('editor.save')}</Button>
-            </div>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
-
       {/* Lane Dialog */}
       <ResponsiveModal open={!!editingLane} onOpenChange={() => setEditingLane(null)} title={editingLane?.id ? t('editor.editLane') : t('editor.addLane')} isMobile={isMobile}
-        footer={<>
-          <Button variant="outline" onClick={() => setEditingLane(null)}>{t('editor.cancel')}</Button>
-          <Button onClick={handleSaveLane} disabled={!laneForm.name.trim()}>{t('editor.save')}</Button>
-        </>}
+        footer={<div className="flex gap-2 w-full">
+          <Button variant="outline" className="flex-1" onClick={() => setEditingLane(null)}>{t('editor.cancel')}</Button>
+          <Button className="flex-1" onClick={handleSaveLane} disabled={!laneForm.name.trim()}>{t('editor.save')}</Button>
+        </div>}
       >
         <div className="space-y-2">
           <Label>{t('editor.laneName')}</Label>
@@ -847,10 +709,10 @@ export default function RoadmapEditor() {
 
       {/* Card Dialog */}
       <ResponsiveModal open={!!editingCard || !!addingCardToLane} onOpenChange={() => { setEditingCard(null); setAddingCardToLane(null); }} title={editingCard ? t('editor.editCard') : t('editor.addCard')} isMobile={isMobile}
-        footer={<>
-          <Button variant="outline" onClick={() => { setEditingCard(null); setAddingCardToLane(null); }}>{t('editor.cancel')}</Button>
-          <Button onClick={handleSaveCard} disabled={!cardForm.title.trim()}>{t('editor.save')}</Button>
-        </>}
+        footer={<div className="flex gap-2 w-full">
+          <Button variant="outline" className="flex-1" onClick={() => { setEditingCard(null); setAddingCardToLane(null); }}>{t('editor.cancel')}</Button>
+          <Button className="flex-1" onClick={handleSaveCard} disabled={!cardForm.title.trim()}>{t('editor.save')}</Button>
+        </div>}
       >
         <div className="space-y-2">
           <Label>{t('editor.cardTitle')}</Label>
@@ -858,7 +720,7 @@ export default function RoadmapEditor() {
         </div>
         <div className="space-y-2">
           <Label>{t('editor.cardDescription')}</Label>
-          <Textarea value={cardForm.description} onChange={e => setCardForm(prev => ({ ...prev, description: e.target.value }))} rows={3} className="resize-none" />
+          <Textarea value={cardForm.description} onChange={e => setCardForm(prev => ({ ...prev, description: e.target.value }))} rows={4} />
         </div>
       </ResponsiveModal>
 
@@ -874,7 +736,6 @@ export default function RoadmapEditor() {
                   className="w-full justify-start"
                   onClick={async () => {
                     if (movingCard) {
-                      const completedAt = isDoneLane && moveCompletedAt ? moveCompletedAt : (isDoneLane ? null : null);
                       await roadmap.moveCard(movingCard.id, lane.id, 0, isDoneLane ? (moveCompletedAt || null) : undefined);
                       setMovingCard(null);
                       setMoveCompletedAt('');
@@ -903,10 +764,10 @@ export default function RoadmapEditor() {
 
       {/* Respond to Feedback */}
       <ResponsiveModal open={!!respondingTo} onOpenChange={() => setRespondingTo(null)} title={t('public.reply')} isMobile={isMobile}
-        footer={<>
-          <Button variant="outline" onClick={() => setRespondingTo(null)}>{t('editor.cancel')}</Button>
-          <Button onClick={handleRespondFeedback} disabled={!responseText.trim()}>{t('editor.save')}</Button>
-        </>}
+        footer={<div className="flex gap-2 w-full">
+          <Button variant="outline" className="flex-1" onClick={() => setRespondingTo(null)}>{t('editor.cancel')}</Button>
+          <Button className="flex-1" onClick={handleRespondFeedback} disabled={!responseText.trim()}>{t('editor.save')}</Button>
+        </div>}
       >
         <Textarea value={responseText} onChange={e => setResponseText(e.target.value)} rows={4} className="resize-none" />
       </ResponsiveModal>

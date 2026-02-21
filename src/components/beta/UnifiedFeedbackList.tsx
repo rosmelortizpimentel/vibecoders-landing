@@ -24,6 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { FeedbackActionMenu } from './FeedbackActionMenu';
 
 interface FeedbackAttachment {
   file_url: string;
@@ -254,6 +255,38 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
     }
   };
 
+  const handleMarkResolved = async (itemId: string, realId: string) => {
+    const { error } = await supabase
+      .from('beta_feedback')
+      .update({ 
+        status: 'in_review',
+        resolved_by_owner: true,
+        resolved_at: new Date().toISOString(),
+      })
+      .eq('id', realId);
+
+    if (!error) {
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, status: 'in_review' } : i));
+      toast.success(t.t('hub.markResolved') || 'Marked as in review');
+    } else {
+      toast.error('Error updating status');
+    }
+  };
+
+  const handleCloseFeedback = async (itemId: string, realId: string) => {
+    const { error } = await supabase
+      .from('beta_feedback')
+      .update({ status: 'closed' })
+      .eq('id', realId);
+
+    if (!error) {
+      setItems(prev => prev.map(i => i.id === itemId ? { ...i, status: 'closed' } : i));
+      toast.success(t.t('hub.feedbackClosed') || 'Feedback closed');
+    } else {
+      toast.error('Error updating status');
+    }
+  };
+
   const handleSubmitBug = async () => {
     if (!bugContent.trim() || !user) return;
     setBugSubmitting(true);
@@ -266,12 +299,12 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
         status: 'open',
       });
       if (error) throw error;
-      toast.success(t.t('hub.bugReported') || 'Bug reported');
+      toast.success('Bug registrado');
       setBugContent('');
       setShowBugDialog(false);
       fetchAll();
     } catch {
-      toast.error('Error reporting bug');
+      toast.error('Error al registrar bug');
     } finally {
       setBugSubmitting(false);
     }
@@ -292,11 +325,11 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
   const getSourceBadge = (source: 'public' | 'beta' | 'bug') => {
     switch (source) {
       case 'public':
-        return <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-600 bg-blue-50">{t.t('hub.publicFeedback')}</Badge>;
+        return <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-600 bg-blue-50">Feedback Público</Badge>;
       case 'beta':
-        return <Badge variant="outline" className="text-[10px] border-green-300 text-green-600 bg-green-50">{t.t('hub.betaFeedback')}</Badge>;
+        return <Badge variant="outline" className="text-[10px] border-green-300 text-green-600 bg-green-50">Beta Testers</Badge>;
       case 'bug':
-        return <Badge variant="outline" className="text-[10px] border-red-300 text-red-600 bg-red-50">{t.t('hub.bugFeedback')}</Badge>;
+        return <Badge variant="outline" className="text-[10px] border-red-300 text-red-600 bg-red-50">Bug Privado</Badge>;
     }
   };
 
@@ -310,7 +343,11 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
   /** Get display info for current status */
   const getStatusDisplay = (item: UnifiedFeedbackItem) => {
     if (item.source !== 'public') {
-      return { name: item.status.replace('_', ' '), color: undefined };
+      const status = item.status === 'open' ? 'New' : item.status === 'closed' ? 'Closed' : item.status.replace('_', ' ');
+      return { 
+        name: status.charAt(0).toUpperCase() + status.slice(1), 
+        color: undefined 
+      };
     }
     const lane = lanes.find(l => l.name.toLowerCase() === item.status);
     if (lane) return { name: lane.name, color: lane.color };
@@ -324,19 +361,25 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
   return (
     <div className="space-y-4">
       {/* Filters and actions */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="grid grid-cols-2 sm:flex items-center gap-2">
           <Select value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-            <SelectTrigger className="w-28 h-8"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-36 h-9 sm:h-8 shrink-0">
+              <span className="text-xs font-medium text-muted-foreground mr-1">Origen:</span>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t.t('hub.allFeedback')}</SelectItem>
-              <SelectItem value="public">{t.t('hub.publicFeedback')}</SelectItem>
-              <SelectItem value="beta">{t.t('hub.betaFeedback')}</SelectItem>
-              <SelectItem value="bug">{t.t('hub.bugFeedback')}</SelectItem>
+              <SelectItem value="public">Feedback Público</SelectItem>
+              <SelectItem value="beta">Beta Testers</SelectItem>
+              <SelectItem value="bug">Bug Privado</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36 h-8"><SelectValue placeholder={t.t('hub.statusFilter')} /></SelectTrigger>
+            <SelectTrigger className="w-full sm:w-44 h-9 sm:h-8 shrink-0">
+              <span className="text-xs font-medium text-muted-foreground mr-1">Estado:</span>
+              <SelectValue placeholder={t.t('hub.statusFilter')} />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t.t('hub.allStatuses')}</SelectItem>
               <SelectItem value="new">
@@ -356,9 +399,14 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
             </SelectContent>
           </Select>
         </div>
-        <Button size="sm" variant="outline" onClick={() => setShowBugDialog(true)} className="gap-1.5">
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={() => setShowBugDialog(true)} 
+          className="gap-1.5 w-full sm:w-auto shrink-0 h-9 sm:h-8"
+        >
           <Bug className="w-3.5 h-3.5" />
-          {t.t('hub.reportBug')}
+          Registrar Bug Privado
         </Button>
       </div>
 
@@ -374,7 +422,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
             const currentValue = getItemLaneValue(item);
 
             return (
-              <div key={item.id} className="p-4 rounded-lg border bg-card hover:border-primary/20 transition-colors">
+              <div key={item.id} className="p-4 rounded-lg border bg-card hover:border-primary/30 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-default">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     {item.title && <h4 className="font-medium text-sm text-foreground mb-1">{item.title}</h4>}
@@ -393,23 +441,25 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
                           <Eye className="w-4 h-4 text-green-600" />
                         )}
                       </button>
-                      <button
-                        onClick={() => setDeleteConfirmItem(item)}
-                        className="p-1.5 rounded-md hover:bg-destructive/10 transition-colors group"
-                        title={t.t('hub.delete') || 'Delete'}
-                      >
-                        <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-destructive" />
-                      </button>
+                      <FeedbackActionMenu
+                        feedbackId={item.realId}
+                        status={item.status as any}
+                        onMarkResolved={async () => {}} 
+                        onClose={async () => {}}
+                        onDelete={async () => setDeleteConfirmItem(item)}
+                      />
                     </div>
                   )}
                   {item.source !== 'public' && (
-                    <button
-                      onClick={() => setDeleteConfirmItem(item)}
-                      className="shrink-0 p-1.5 rounded-md hover:bg-destructive/10 transition-colors group"
-                      title={t.t('hub.delete') || 'Delete'}
-                    >
-                      <Trash2 className="w-4 h-4 text-muted-foreground group-hover:text-destructive" />
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <FeedbackActionMenu
+                        feedbackId={item.realId}
+                        status={item.status as any}
+                        onMarkResolved={async () => handleMarkResolved(item.id, item.realId)}
+                        onClose={async () => handleCloseFeedback(item.id, item.realId)}
+                        onDelete={async () => setDeleteConfirmItem(item)}
+                      />
+                    </div>
                   )}
                 </div>
                 {/* Attachments */}
@@ -487,7 +537,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
                       </Select>
                     ) : (
                       <Badge variant="secondary" className="text-[10px] px-2">
-                        {item.status.replace('_', ' ')}
+                        {item.status === 'closed' ? 'Closed' : item.status.replace('_', ' ')}
                       </Badge>
                     )}
                   </div>
@@ -504,7 +554,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bug className="w-4 h-4" />
-              {t.t('hub.reportBug')}
+              Registrar Bug Privado
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
@@ -524,7 +574,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
             <Button variant="outline" onClick={() => setShowBugDialog(false)}>{t.t('hub.cancel') || 'Cancel'}</Button>
             <Button onClick={handleSubmitBug} disabled={bugSubmitting || !bugContent.trim()}>
               {bugSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-1" />}
-              {t.t('hub.reportBug')}
+              Registrar Bug Privado
             </Button>
           </DialogFooter>
         </DialogContent>

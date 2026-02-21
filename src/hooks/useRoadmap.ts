@@ -13,6 +13,9 @@ export interface RoadmapSettings {
   feedback_auth_mode: 'anonymous' | 'authenticated';
   default_language: string | null;
   custom_domain: string | null;
+  primary_color: string | null;
+  primary_button_color: string | null;
+  primary_button_text_color: string | null;
   created_at: string;
   updated_at: string;
 }

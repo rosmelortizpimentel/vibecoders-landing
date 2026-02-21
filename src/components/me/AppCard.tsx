@@ -36,7 +36,7 @@ export function AppCard({ app, onExpand, onToggleVisibility, onVerify, dragHandl
       </div>
 
       {/* Logo */}
-      <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border">
+      <div className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden">
         {app.logo_url ? (
           <img src={app.logo_url} alt={app.name || 'App'} className="w-full h-full object-cover" />
         ) : (

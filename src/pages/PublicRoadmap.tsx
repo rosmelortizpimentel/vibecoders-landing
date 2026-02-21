@@ -470,12 +470,18 @@ export default function PublicRoadmap() {
     );
   }
 
-  const fontFamily = settings.font_family || 'Inter';
-  const title = settings.custom_title || app.name || 'Roadmap';
+  const {
+    font_family: fontFamily = 'Inter',
+    favicon_url,
+    default_language,
+    primary_color: primaryColor = '#3D5AFE',
+    primary_button_color: primaryButtonColor = '#3D5AFE',
+    primary_button_text_color: primaryButtonTextColor = '#FFFFFF',
+  } = settings || {};
+  const title = settings?.custom_title || app.name || 'Roadmap';
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50" style={{ fontFamily }}>
-      {/* Header */}
+    <div className="min-h-screen flex flex-col bg-gray-50" style={{ fontFamily, '--primary': primaryColor } as React.CSSProperties}>
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
           <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -497,7 +503,15 @@ export default function PublicRoadmap() {
               )}
             </div>
             {activeTab === 'feedback' && isFeedbackPublic && (
-              <Button size="sm" onClick={() => handleActionWithAuth(() => setShowFeedbackForm(true))}>
+              <Button 
+                size="sm" 
+                onClick={() => handleActionWithAuth(() => setShowFeedbackForm(true))}
+                style={{ 
+                  backgroundColor: primaryButtonColor ?? primaryColor,
+                  color: primaryButtonTextColor ?? '#FFFFFF'
+                }}
+                className="hover:opacity-90 border-0 shadow-sm"
+              >
                 <Send className="w-4 h-4 mr-1" />
                 <span className="hidden sm:inline">{l.submit}</span>
               </Button>
@@ -610,7 +624,11 @@ export default function PublicRoadmap() {
         {activeTab === 'feedback' && isFeedbackPublic && (
           <div className="space-y-4">
             <div className="sm:hidden mb-4">
-              <Button className="w-full" onClick={() => handleActionWithAuth(() => setShowFeedbackForm(true))}>
+              <Button 
+                className="w-full" 
+                onClick={() => handleActionWithAuth(() => setShowFeedbackForm(true))}
+                style={{ backgroundColor: primaryColor }}
+              >
                 <Send className="w-4 h-4 mr-2" /> {l.submit}
               </Button>
             </div>
@@ -727,7 +745,15 @@ export default function PublicRoadmap() {
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowFeedbackForm(false)} className="w-full sm:w-auto">{l.cancel}</Button>
-            <Button onClick={handleSubmitFeedback} disabled={submitting || !fbTitle.trim() || !fbDesc.trim()} className="w-full sm:w-auto">
+            <Button 
+              onClick={handleSubmitFeedback} 
+              disabled={submitting || !fbTitle.trim() || !fbDesc.trim()} 
+              className="w-full sm:w-auto shadow-sm"
+              style={{ 
+                backgroundColor: primaryButtonColor ?? primaryColor,
+                color: primaryButtonTextColor ?? '#FFFFFF'
+              }}
+            >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
               {l.send}
             </Button>
