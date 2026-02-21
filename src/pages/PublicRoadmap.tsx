@@ -253,8 +253,9 @@ export default function PublicRoadmap() {
     (async () => {
       try {
         const hostname = window.location.hostname;
+        const username = handle?.startsWith('@') ? handle.slice(1) : handle;
         const { data, error: funcError } = await supabase.functions.invoke('get-public-roadmap', {
-          body: { hostname, slugToSearch }
+          body: { hostname, slugToSearch, username }
         });
 
         if (funcError) throw funcError;
