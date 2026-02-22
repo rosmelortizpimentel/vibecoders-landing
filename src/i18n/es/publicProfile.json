@@ -19,5 +19,6 @@
   "ideation": "Ideación",
   "construction": "Construcción",
   "projectDNA": "ADN del Proyecto",
-  "totalHours": "Total horas"
+  "totalHours": "Total horas",
+  "openBetaTooltip": "Esta app está buscando testers"
 }

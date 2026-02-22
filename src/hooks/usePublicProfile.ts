@@ -20,6 +20,7 @@ export interface PublicApp {
   status: { name: string; slug: string } | null;
   category?: { name: string; slug: string } | null;
   tags?: string[];
+  beta_active: boolean;
   stacks: PublicAppStack[];
   owner?: {
     id: string;

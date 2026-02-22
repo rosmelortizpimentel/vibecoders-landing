@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { FlaskConical, Loader2, Sparkles, LayoutGrid } from 'lucide-react';
+import { FlaskConical, Loader2, Sparkles, LayoutGrid, Rocket, Bug, Lightbulb } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -120,7 +120,7 @@ export default function BetaSquads() {
                 <div className={cn("p-1.5 rounded-lg", activeTab === 'findings' ? "bg-orange-500/10" : "bg-transparent")}>
                   <FlaskConical className={cn("h-4 w-4", activeTab === 'findings' ? "text-orange-500" : "text-muted-foreground")} />
                 </div>
-                <span>{t.t('myFindingsTitle') || "Mis Hallazgos"}</span>
+                <span>{t.t('myFindingsTitle')}</span>
                 {activeTab === 'findings' && <div className="absolute bottom-0 left-0 right-0 h-1 bg-orange-500 rounded-t-full" />}
               </button>
 
@@ -172,7 +172,7 @@ export default function BetaSquads() {
                   </div>
                 ) : filteredFindings.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {filteredFindings.slice(0, 8).map((feedback) => (
+                    {filteredFindings.map((feedback) => (
                       <div key={feedback.id}>
                         <BetaFeedbackCompactCard feedback={feedback} />
                       </div>
@@ -197,26 +197,76 @@ export default function BetaSquads() {
 
             {/* Mis Squads Content */}
             {activeTab === 'squads' && (
-              <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-                {isLoadingMySquads ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {[...Array(4)].map((_, i) => (
-                      <div key={i} className="h-[140px] bg-muted animate-pulse rounded-xl" />
-                    ))}
-                  </div>
-                ) : mySquads.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {mySquads.map((app) => (
-                      <div key={app.id}>
-                        <BetaSquadCompactCard app={app} />
+              <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-8 bg-slate-50/50 dark:bg-slate-900/20 p-6 md:p-8 rounded-[2rem]">
+                {/* Estadísticas de Impacto */}
+                {mySquads.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-bold mb-4">{t.t('impactStats', { defaultValue: 'Estadísticas de Impacto' })}</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      {/* Apps Probadas */}
+                      <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-border flex items-center gap-4 hover:-translate-y-1 hover:shadow-md transition-all duration-300">
+                        <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                          <Rocket className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-foreground">{mySquads.length}</p>
+                          <p className="text-xs text-muted-foreground font-medium mb-1">{t.t('testedApps', { defaultValue: 'Apps Probadas' })}</p>
+                          <p className="text-[10px] text-slate-400">
+                            {new Set(myFindings.map(f => f.app_id)).size} {t.t('appsWithFeedback', { defaultValue: 'apps con feedback' })}
+                          </p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="py-8 text-center text-muted-foreground">
-                    <p>No te has unido a ningún Beta Squad todavía.</p>
+                      
+                      {/* Bugs Reportados */}
+                      <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-border flex items-center gap-4 hover:-translate-y-1 hover:shadow-md transition-all duration-300">
+                        <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                          <Bug className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-foreground">{myFindings.length}</p>
+                          <p className="text-xs text-muted-foreground font-medium">{t.t('reportsSent', { defaultValue: 'Reportes Enviados' })}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Feedback Implementado */}
+                      <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-sm border border-border flex items-center gap-4 hover:-translate-y-1 hover:shadow-md transition-all duration-300">
+                        <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                          <Lightbulb className="w-6 h-6 text-slate-700 dark:text-slate-300" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-foreground">{myFindings?.filter(f => f.status === 'resolved' || f.status === 'closed').length || 0}</p>
+                          <p className="text-xs text-muted-foreground font-medium">{t.t('feedbackImplemented', { defaultValue: 'Feedback Implementado' })}</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
+
+                <div>
+                  <h3 className="text-lg font-bold mb-4">
+                    {t.t('myTestingApps', { defaultValue: 'Mis Apps de Testing' })}
+                    {mySquads.length > 0 && ` (${mySquads.length})`}
+                  </h3>
+                  {isLoadingMySquads ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="h-[200px] bg-muted animate-pulse rounded-2xl" />
+                      ))}
+                    </div>
+                  ) : mySquads.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                      {mySquads.map((app) => (
+                        <div key={app.id}>
+                          <BetaSquadCompactCard app={app} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-12 text-center text-muted-foreground border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                      <p>{t.t('noSquadsJoin', { defaultValue: 'No te has unido a ningún Beta Squad todavía.' })}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

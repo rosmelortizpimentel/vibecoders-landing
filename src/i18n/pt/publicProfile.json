@@ -18,5 +18,6 @@
   "createProfile": "Create your vibecoder profile",
   "ideation": "Ideação",
   "construction": "Construção",
-  "totalHours": "Total de horas"
+  "totalHours": "Total de horas",
+  "openBetaTooltip": "Este aplicativo está procurando testadores"
 }
