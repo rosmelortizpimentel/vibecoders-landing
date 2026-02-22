@@ -1,14 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useBetaSquad } from '@/hooks/useBetaSquad';
-import { useQueryClient } from '@tanstack/react-query';
 import { BetaSquadApp } from '@/hooks/useBetaSquadsPublic';
-import { CheckCircle2, Hourglass, XCircle, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { CheckCircle2, AlertCircle, Clock, MessageSquare } from 'lucide-react';
+import { useMyFeedback } from '@/hooks/useMyFeedback';
+import { cn } from '@/lib/utils';
 
 interface BetaSquadCompactCardProps {
   app: BetaSquadApp;
@@ -17,32 +15,21 @@ interface BetaSquadCompactCardProps {
 export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
   const { t } = useTranslation('beta');
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { leaveBeta, leaving } = useBetaSquad(app.id);
   
-  const status = app.user_tester_status?.status;
-
-  const handleAction = () => {
-    if (status === 'accepted') {
-      navigate(`/app/${app.id}`);
-    } else {
-      handleCancel();
-    }
-  };
-
-  const handleCancel = async () => {
-    const result = await leaveBeta();
-    if (result.success) {
-      toast.success(t('leftBeta'));
-      queryClient.invalidateQueries({ queryKey: ['my-beta-squads'] });
-      queryClient.invalidateQueries({ queryKey: ['beta-squads-public'] });
-    }
-  };
+  const { data: myFindings = [] } = useMyFeedback();
+  const appFindings = myFindings.filter(f => f.app_id === app.id);
+  
+  const openCount = appFindings.filter(f => f.status === 'open').length;
+  const inReviewCount = appFindings.filter(f => f.status === 'in_review').length;
+  const resolvedCount = appFindings.filter(f => f.status === 'resolved' || f.status === 'closed').length;
 
   return (
-    <Card className="w-full border-border bg-card/50 hover:bg-card transition-colors">
+    <Card 
+      className="w-full border-border bg-card/50 hover:bg-card transition-all cursor-pointer group"
+      onClick={() => navigate(`/app/${app.id}`)}
+    >
       <CardContent className="p-3 flex flex-col gap-2">
-        {/* App Info */}
+        {/* App Info row */}
         <div className="flex items-center gap-2">
           <Avatar className="h-8 w-8 rounded-lg border border-border shrink-0">
             {app.logo_url ? (
@@ -54,57 +41,48 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
             )}
           </Avatar>
           <div className="min-w-0 flex-1">
-            <h4 className="font-bold text-xs text-foreground truncate">
+            <h4 className="font-bold text-xs text-foreground truncate group-hover:text-primary transition-colors">
               {app.name}
             </h4>
-            <p className="text-[10px] text-muted-foreground">
-              {t('testerRole')}
+            <p className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase">
+              <MessageSquare className="w-2.5 h-2.5" />
+              {appFindings.length} {t('reportsCount', { defaultValue: 'reportes' })}
             </p>
           </div>
         </div>
 
-        {/* Status Badge */}
-        <div className="flex mb-3">
-          {status === 'accepted' ? (
-            <Badge variant="outline" className="bg-transparent border border-[#68CFA2]/40 text-[#68CFA2] hover:bg-transparent gap-1 font-medium text-[10px] px-3 py-1 rounded-2xl">
-              <CheckCircle2 className="w-3 h-3" />
-              {t('squadActiveBadge')}
+        {/* Status Badges row */}
+        <div className="flex flex-wrap gap-1 mt-1">
+          {openCount > 0 && (
+            <Badge variant="outline" className="bg-transparent border-[#FFD700]/50 text-[#D4A800] gap-1 font-medium text-[10px] px-2 py-0.5 rounded-2xl">
+              <AlertCircle className="w-2.5 h-2.5" />
+              {openCount} {t('statusOpen', { defaultValue: 'Abierto' })}
             </Badge>
-          ) : status === 'pending' ? (
-            <Badge variant="outline" className="bg-transparent border border-[#FFD700]/50 text-[#D4A800] hover:bg-transparent gap-1 font-medium text-[10px] px-3 py-1 rounded-2xl">
-              <Hourglass className="w-3 h-3" />
-              {t('waitingBadge')}
+          )}
+          {inReviewCount > 0 && (
+            <Badge variant="outline" className="bg-transparent border-blue-500/40 text-blue-500 gap-1 font-medium text-[10px] px-2 py-0.5 rounded-2xl">
+              <Clock className="w-2.5 h-2.5" />
+              {inReviewCount} {t('statusInReview', { defaultValue: 'En Revisión' })}
             </Badge>
-          ) : (
-            <Badge variant="outline" className="text-muted-foreground gap-1 text-[10px] px-3 py-1 rounded-2xl">
-              <XCircle className="w-3 h-3" />
-              {t('statusRejected')}
+          )}
+          {resolvedCount > 0 && (
+            <Badge variant="outline" className="bg-transparent border-[#68CFA2]/40 text-[#68CFA2] gap-1 font-medium text-[10px] px-2 py-0.5 rounded-2xl">
+              <CheckCircle2 className="w-2.5 h-2.5" />
+              {resolvedCount} {t('statusResolved', { defaultValue: 'Resuelto' })}
+            </Badge>
+          )}
+          
+          {appFindings.length === 0 && (
+            <Badge variant="outline" className="bg-transparent border-border text-muted-foreground gap-1 font-medium text-[10px] px-2 py-0.5 rounded-2xl">
+              {t('noReportsSent', { defaultValue: 'Sin reportes' })}
             </Badge>
           )}
         </div>
 
-        {/* Action Button */}
-        {status === 'accepted' ? (
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="w-full font-medium h-8 text-xs bg-transparent border-[1.5px] border-border text-muted-foreground rounded-lg hover:border-[#68CFA2] hover:text-[#68CFA2] hover:bg-[rgba(104,207,162,0.05)]"
-            onClick={() => navigate(`/app/${app.id}`)}
-          >
-            {t('giveFeedback')}
-          </Button>
-        ) : (
-          <Button 
-            size="sm" 
-            variant="outline" 
-            className="w-full font-medium h-8 text-xs bg-transparent border-[1.5px] border-muted-foreground/30 text-muted-foreground rounded-lg hover:bg-muted/50 hover:border-muted-foreground/50"
-            onClick={handleCancel}
-            disabled={leaving}
-          >
-            <Trash2 className="w-3 h-3 mr-1.5" />
-            {t('cancel')}
-          </Button>
-        )}
+        {/* Action text row */}
+        <p className="text-[10px] text-muted-foreground line-clamp-1 italic mt-1">
+          "{t('clickToGiveFeedback', { defaultValue: 'Haz clic para explorar y dar feedback...' })}"
+        </p>
       </CardContent>
     </Card>
   );

@@ -196,6 +196,7 @@ export type Database = {
           beta_limit: number
           beta_link: string | null
           beta_mode: string
+          beta_updated_at: string | null
           category_id: string | null
           created_at: string
           description: string | null
@@ -225,6 +226,7 @@ export type Database = {
           beta_limit?: number
           beta_link?: string | null
           beta_mode?: string
+          beta_updated_at?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -254,6 +256,7 @@ export type Database = {
           beta_limit?: number
           beta_link?: string | null
           beta_mode?: string
+          beta_updated_at?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -776,6 +779,8 @@ export type Database = {
       profiles: {
         Row: {
           accent_color: string | null
+          allow_analytics: boolean | null
+          allow_marketing: boolean | null
           avatar_position: string | null
           avatar_url: string | null
           banner_position: string | null
@@ -814,6 +819,8 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          allow_analytics?: boolean | null
+          allow_marketing?: boolean | null
           avatar_position?: string | null
           avatar_url?: string | null
           banner_position?: string | null
@@ -852,6 +859,8 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          allow_analytics?: boolean | null
+          allow_marketing?: boolean | null
           avatar_position?: string | null
           avatar_url?: string | null
           banner_position?: string | null
@@ -1291,6 +1300,7 @@ export type Database = {
         Row: {
           app_id: string
           created_at: string
+          custom_domain: string | null
           custom_title: string | null
           default_language: string | null
           favicon_url: string | null
@@ -1299,11 +1309,15 @@ export type Database = {
           id: string
           is_feedback_public: boolean
           is_public: boolean
+          primary_button_color: string | null
+          primary_button_text_color: string | null
+          primary_color: string | null
           updated_at: string
         }
         Insert: {
           app_id: string
           created_at?: string
+          custom_domain?: string | null
           custom_title?: string | null
           default_language?: string | null
           favicon_url?: string | null
@@ -1312,11 +1326,15 @@ export type Database = {
           id?: string
           is_feedback_public?: boolean
           is_public?: boolean
+          primary_button_color?: string | null
+          primary_button_text_color?: string | null
+          primary_color?: string | null
           updated_at?: string
         }
         Update: {
           app_id?: string
           created_at?: string
+          custom_domain?: string | null
           custom_title?: string | null
           default_language?: string | null
           favicon_url?: string | null
@@ -1325,6 +1343,9 @@ export type Database = {
           id?: string
           is_feedback_public?: boolean
           is_public?: boolean
+          primary_button_color?: string | null
+          primary_button_text_color?: string | null
+          primary_color?: string | null
           updated_at?: string
         }
         Relationships: [
