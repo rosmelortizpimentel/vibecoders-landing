@@ -6,9 +6,11 @@ import { DebouncedInput } from '@/components/ui/debounced-input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
 import { PioneerBadge } from '@/components/PioneerBadge';
 import { ContributorBadge } from '@/components/ContributorBadge';
 import { Camera, MapPin, Globe, ImagePlus, AlignLeft, AlignCenter, AlignRight, Trash2, Calendar, Loader2, Check, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -497,7 +499,7 @@ export function ProfileTab({
         />
       </section>
 
-      {/* Divider */}
+
       <hr className="border-border" />
 
       {/* OG Image / Social Image */}

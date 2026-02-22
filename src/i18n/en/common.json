@@ -11,7 +11,8 @@
     "linkedIn": "https://www.linkedin.com/in/rosmelortiz/",
     "privacy": "Privacy",
     "deleteConfirmDesc": "Are you sure you want to delete this link? This action cannot be undone.",
-    "terms": "Terms"
+    "terms": "Terms",
+    "cookies": "Cookies"
   },
   "navigation": {
     "home": "Home",
@@ -29,9 +30,36 @@
     "notifications": "Notifications",
     "buildLog": "Build Log",
     "roadmapAndFeedback": "Roadmap & Feedback",
+    "settings": "Settings",
     "admin": "Admin"
   },
   "visitWebsite": "Visit Website",
   "joinGroup": "Join the Group",
-  "upgradeOffer": "🔥 Offer expires Feb 28th"
+  "upgradeOffer": "🔥 Offer expires Feb 28th",
+  "cookies": {
+    "banner": {
+      "title": "We use cookies",
+      "description": "We use cookies to improve your experience. You can accept all or manage your preferences. <link>Privacy Policy</link>"
+    },
+    "buttons": {
+      "acceptAll": "Accept all",
+      "essentialOnly": "Essential only",
+      "manage": "Manage",
+      "save": "Save preferences"
+    },
+    "categories": {
+      "essential": {
+        "title": "Essential",
+        "description": "Authentication and security. Always on."
+      },
+      "functional": {
+        "title": "Functional",
+        "description": "Language preferences and settings."
+      },
+      "analytics": {
+        "title": "Analytics",
+        "description": "Microsoft Clarity for usage statistics (anonymized)."
+      }
+    }
+  }
 }

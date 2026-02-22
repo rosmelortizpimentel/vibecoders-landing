@@ -26,6 +26,13 @@ const Footer = () => {
             >
               {t.footer.terms}
             </Link>
+            <span className="text-white/40">·</span>
+            <Link 
+              to="/cookies" 
+              className="text-white/70 hover:text-white transition-colors"
+            >
+              {t.footer.cookies}
+            </Link>
           </div>
         </div>
         

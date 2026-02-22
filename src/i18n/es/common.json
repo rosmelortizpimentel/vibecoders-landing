@@ -10,7 +10,8 @@
     "authorName": "Rosmel Ortiz",
     "linkedIn": "https://www.linkedin.com/in/rosmelortiz/",
     "privacy": "Privacidad",
-    "terms": "Términos"
+    "terms": "Términos",
+    "cookies": "Cookies"
   },
   "navigation": {
     "home": "Inicio",
@@ -28,9 +29,36 @@
     "notifications": "Notificaciones",
     "buildLog": "Build Log",
     "roadmapAndFeedback": "Roadmap & Feedback",
+    "settings": "Ajustes",
     "admin": "Admin"
   },
   "visitWebsite": "Visitar Sitio Web",
   "joinGroup": "Únete al Grupo",
-  "upgradeOffer": "🔥 Oferta expira 28 Feb"
+  "upgradeOffer": "🔥 Oferta expira 28 Feb",
+  "cookies": {
+    "banner": {
+      "title": "Usamos cookies",
+      "description": "Usamos cookies para mejorar tu experiencia. Puedes aceptar todas o gestionar tus preferencias. <link>Política de Privacidad</link>"
+    },
+    "buttons": {
+      "acceptAll": "Aceptar todas",
+      "essentialOnly": "Solo esenciales",
+      "manage": "Gestionar",
+      "save": "Guardar preferencias"
+    },
+    "categories": {
+      "essential": {
+        "title": "Esenciales",
+        "description": "Autenticación y seguridad. Siempre activas."
+      },
+      "functional": {
+        "title": "Funcionales",
+        "description": "Preferencias de idioma y ajustes de interfaz."
+      },
+      "analytics": {
+        "title": "Analíticas",
+        "description": "Microsoft Clarity para estadísticas de uso (anonimizadas)."
+      }
+    }
+  }
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { HexColorPicker } from 'react-colorful';
 import { useAuth } from '@/hooks/useAuth';
-import { useRoadmap, useRoadmapFeedback, RoadmapLane, RoadmapCard } from '@/hooks/useRoadmap';
+import { useRoadmap, useRoadmapFeedback, RoadmapLane, RoadmapCard, RoadmapSettings } from '@/hooks/useRoadmap';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
@@ -138,7 +138,7 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
             <div className="flex items-start gap-2 flex-1 min-w-0" {...attributes} {...listeners}>
               <GripVertical className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm leading-tight" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>
+                <p className="font-bold text-sm leading-tight" style={{ fontFamily: lane.font || undefined }}>
                   {card.title}
                 </p>
                 {card.description && (
@@ -226,7 +226,7 @@ export default function RoadmapEditor() {
   const roadmap = useRoadmap(appId);
   const feedbackHook = useRoadmapFeedback(appId);
 
-  const [app, setApp] = useState<any>(null);
+  const [app, setApp] = useState<{ id: string; name: string; user_id: string } | null>(null);
   const [appLoading, setAppLoading] = useState(true);
 
   // Modals
@@ -238,7 +238,7 @@ export default function RoadmapEditor() {
   const [movingCard, setMovingCard] = useState<RoadmapCard | null>(null);
 
   // Form states
-  const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: 'Inter' });
+  const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: '' });
   const [cardForm, setCardForm] = useState({ title: '', description: '' });
   const [userProfileLanguage, setUserProfileLanguage] = useState<string>('es');
 
@@ -358,14 +358,14 @@ export default function RoadmapEditor() {
     if (isMobile && roadmap.lanes.length > 0) {
       setOpenLanes(new Set(roadmap.lanes.map(l => l.id)));
     }
-  }, [isMobile, roadmap.lanes.length]);
+  }, [isMobile, roadmap.lanes]);
 
   // Auto-initialize roadmap if no settings exist
   useEffect(() => {
     if (!roadmap.settings && !roadmap.loading && app) {
       roadmap.initializeRoadmap().catch(() => {});
     }
-  }, [roadmap.settings, roadmap.loading, app]);
+  }, [roadmap.settings, roadmap.loading, app, roadmap]);
 
   if (authLoading || appLoading || roadmap.loading) {
     return (
@@ -394,7 +394,7 @@ export default function RoadmapEditor() {
         await roadmap.createLane(laneForm.name, laneForm.color);
       }
       setEditingLane(null);
-      setLaneForm({ name: '', color: '#3D5AFE', font: 'Inter' });
+      setLaneForm({ name: '', color: '#3D5AFE', font: '' });
     } catch { toast.error('Error saving lane'); }
   };
 
@@ -429,8 +429,10 @@ export default function RoadmapEditor() {
     });
   };
 
+  const boardFont = roadmap.settings?.font_family;
+
   return (
-    <div className="space-y-4 md:space-y-6 md:-mx-4">
+    <div className="space-y-4 md:space-y-6 md:-mx-4" style={{ fontFamily: boardFont || undefined }}>
       {/* Kanban Board */}
       <DndContext
         sensors={sensors}
@@ -560,7 +562,10 @@ export default function RoadmapEditor() {
               <Collapsible key={lane.id} open={openLanes.has(lane.id)} onOpenChange={() => toggleLane(lane.id)}>
                 <div className="rounded-xl border bg-card overflow-hidden">
                   <CollapsibleTrigger asChild>
-                    <button className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors">
+                    <div 
+                      className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => toggleLane(lane.id)}
+                    >
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: lane.color }} />
                         <span className="font-semibold text-sm">{lane.name}</span>
@@ -586,20 +591,24 @@ export default function RoadmapEditor() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => {
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
                               setLaneForm({ name: lane.name, color: lane.color, font: lane.font });
                               setEditingLane(lane);
                             }}>
                               <Pencil className="w-4 h-4 mr-2" /> {t('editor.editLane')}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setDeletingLane(lane.id)} className="text-destructive">
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingLane(lane.id);
+                            }} className="text-destructive">
                               <Trash2 className="w-4 h-4 mr-2" /> {t('editor.deleteLane')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                         <ChevronDown className={cn("w-4 h-4 text-muted-foreground transition-transform", openLanes.has(lane.id) && "rotate-180")} />
                       </div>
-                    </button>
+                    </div>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <div className="px-3 pb-3 space-y-2">

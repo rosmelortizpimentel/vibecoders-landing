@@ -1,79 +1,90 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useEffect } from 'react';
 
 export function useBetaBadges() {
   const { user } = useAuth();
-  const [ownedAppsCount, setOwnedAppsCount] = useState(0);
-  const [publicSquadsCount, setPublicSquadsCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!user) {
-      setOwnedAppsCount(0);
-      setPublicSquadsCount(0);
-      setLoading(false);
-      return;
-    }
+  const { data, isLoading } = useQuery({
+    queryKey: ['beta-badges', user?.id],
+    queryFn: async () => {
+      if (!user) return { ownedAppsCount: 0, publicSquadsCount: 0 };
 
-    const fetchCounts = async () => {
-      try {
-        // Fetch count of owned apps with beta_active = true
-        const { count: ownedCount } = await supabase
-          .from('apps')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('beta_active', true);
+      // 1. Fetch all active beta apps
+      const { data: apps, error: appsError } = await supabase
+        .from('apps')
+        .select('id, user_id, beta_limit')
+        .eq('beta_active', true);
 
-        setOwnedAppsCount(ownedCount || 0);
+      if (appsError) throw appsError;
+      if (!apps || apps.length === 0) return { ownedAppsCount: 0, publicSquadsCount: 0 };
 
-        // Fetch count of public beta squads with available spots
-        const { data: publicBetas } = await supabase
-          .from('apps')
-          .select('id, beta_limit')
-          .eq('beta_active', true);
+      // 2. Fetch all accepted testers for these apps in ONE call
+      const appIds = apps.map(app => app.id);
+      const { data: testers, error: testersError } = await supabase
+        .from('beta_testers')
+        .select('app_id')
+        .eq('status', 'accepted')
+        .in('app_id', appIds);
 
-        if (publicBetas) {
-          // For each beta, check if there are available spots
-          const countsPromises = publicBetas.map(async (app) => {
-            const { count } = await supabase
-              .from('beta_testers')
-              .select('id', { count: 'exact', head: true })
-              .eq('app_id', app.id)
-              .eq('status', 'accepted');
+      if (testersError) throw testersError;
 
-            const currentCount = count || 0;
-            return currentCount < app.beta_limit ? 1 : 0;
-          });
+      // 3. Calculate counts in memory (solves N+1)
+      const testerCountsByApp: Record<string, number> = {};
+      testers?.forEach(t => {
+        testerCountsByApp[t.app_id] = (testerCountsByApp[t.app_id] || 0) + 1;
+      });
 
-          const counts = await Promise.all(countsPromises);
-          const totalWithSpots = counts.reduce((sum, val) => sum + val, 0);
-          setPublicSquadsCount(totalWithSpots);
-        } else {
-          setPublicSquadsCount(0);
+      let ownedAppsCount = 0;
+      let totalWithSpots = 0;
+
+      apps.forEach(app => {
+        // Count owned apps
+        if (app.user_id === user.id) {
+          ownedAppsCount++;
         }
-      } catch (error) {
-        console.error('Error fetching beta badges:', error);
-        setOwnedAppsCount(0);
-        setPublicSquadsCount(0);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchCounts();
+        // Count apps with available spots
+        const currentCount = testerCountsByApp[app.id] || 0;
+        if (currentCount < app.beta_limit) {
+          totalWithSpots++;
+        }
+      });
 
-    // Subscribe to changes in apps and beta_testers
-    const appsChannel = supabase
-      .channel('beta-badges-apps')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'apps' }, fetchCounts)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'beta_testers' }, fetchCounts)
+      return {
+        ownedAppsCount,
+        publicSquadsCount: totalWithSpots
+      };
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  // Realtime subscription with debouncing/query invalidation
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('beta-badges-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'apps' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['beta-badges', user.id] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'beta_testers' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['beta-badges', user.id] });
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(appsChannel);
+      supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, queryClient]);
 
-  return { ownedAppsCount, publicSquadsCount, loading };
+  return {
+    ownedAppsCount: data?.ownedAppsCount || 0,
+    publicSquadsCount: data?.publicSquadsCount || 0,
+    loading: isLoading
+  };
 }

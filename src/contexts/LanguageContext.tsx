@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 export type Language = 'es' | 'en' | 'fr' | 'pt';
 
@@ -32,46 +33,34 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Sync with database when user is authenticated
+  const { profile, loading: profileLoading } = useProfile();
+
+  // Sync with database when profile is loaded
   useEffect(() => {
-    async function syncLanguageFromDB() {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('language')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (error) throw error;
-
-        if (data?.language && ['es', 'en', 'fr', 'pt'].includes(data.language)) {
-          setLanguageState(data.language as Language);
-          localStorage.setItem(STORAGE_KEY, data.language);
-        } else {
-          // No language set in DB, save default
-          const defaultLang = 'en';
-          await supabase
-            .from('profiles')
-            .update({ language: defaultLang })
-            .eq('id', user.id);
-          
+    if (profileLoading) return;
+    
+    const profileData = profile as any; // Safe cast for dynamic fields until interface is fully updated
+    
+    if (profileData?.language && ['es', 'en', 'fr', 'pt'].includes(profileData.language)) {
+      setLanguageState(profileData.language as Language);
+      localStorage.setItem(STORAGE_KEY, profileData.language);
+      setIsLoading(false);
+    } else if (profile) {
+      // No language set in DB for this profile, save default
+      const defaultLang = 'en';
+      supabase
+        .from('profiles')
+        .update({ language: defaultLang })
+        .eq('id', profile.id)
+        .then(() => {
           setLanguageState(defaultLang);
           localStorage.setItem(STORAGE_KEY, defaultLang);
-        }
-      } catch (err) {
-        console.error('Error syncing language:', err);
-      } finally {
-        setIsLoading(false);
-      }
+          setIsLoading(false);
+        });
+    } else if (!user) {
+      setIsLoading(false);
     }
-
-    syncLanguageFromDB();
-  }, [user]);
+  }, [profile, profileLoading, user]);
 
   const setLanguage = useCallback(async (lang: Language) => {
     setLanguageState(lang);

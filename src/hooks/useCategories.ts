@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Category {
@@ -10,30 +10,23 @@ export interface Category {
 }
 
 export function useCategories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { data: categories = [], isLoading: loading, error } = useQuery({
+    queryKey: ['app-categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('app_categories')
+        .select('*')
+        .order('display_order', { ascending: true });
 
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const { data, error } = await supabase
-          .from('app_categories')
-          .select('*')
-          .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-        if (error) throw error;
-        setCategories(data || []);
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-        setError(err instanceof Error ? err : new Error('Error al cargar categorías'));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchCategories();
-  }, []);
-
-  return { categories, loading, error };
+  return { 
+    categories, 
+    loading, 
+    error: error instanceof Error ? error : error ? new Error('Error al cargar categorías') : null 
+  };
 }

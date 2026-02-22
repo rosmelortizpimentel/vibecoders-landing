@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface Status {
@@ -11,30 +11,23 @@ export interface Status {
 }
 
 export function useStatuses() {
-  const [statuses, setStatuses] = useState<Status[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { data: statuses = [], isLoading: loading, error } = useQuery({
+    queryKey: ['app-statuses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('app_statuses')
+        .select('*')
+        .order('display_order', { ascending: true });
 
-  useEffect(() => {
-    async function fetchStatuses() {
-      try {
-        const { data, error } = await supabase
-          .from('app_statuses')
-          .select('*')
-          .order('display_order', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes (metadata changes rarely)
+  });
 
-        if (error) throw error;
-        setStatuses(data || []);
-      } catch (err) {
-        console.error('Error fetching statuses:', err);
-        setError(err instanceof Error ? err : new Error('Error al cargar estados'));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchStatuses();
-  }, []);
-
-  return { statuses, loading, error };
+  return { 
+    statuses, 
+    loading, 
+    error: error instanceof Error ? error : error ? new Error('Error al cargar estados') : null 
+  };
 }

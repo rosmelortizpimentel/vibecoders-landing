@@ -69,10 +69,15 @@ export function JoinConfirmDialog({
             )}
             <span>{t('confirmJoinTitle')}</span>
           </AlertDialogTitle>
-          <AlertDialogDescription className="space-y-3">
-            <p>
-              {t('confirmJoinMessage').replace('{appName}', appName || 'esta app')}
-            </p>
+          <AlertDialogDescription className="space-y-4">
+            <div className="space-y-2">
+              <p>
+                {t('confirmJoinMessage').replace('{appName}', appName || 'esta app')}
+              </p>
+              <p className="text-[11px] leading-relaxed text-muted-foreground bg-accent/30 p-3 rounded-lg border border-border/50">
+                {t('joinLegalNotice')}
+              </p>
+            </div>
             {betaInstructions && (
               <div className="mt-3 p-3 bg-muted rounded-lg text-sm text-left">
                 <p className="font-medium mb-1 text-foreground">{t('instructions')}:</p>

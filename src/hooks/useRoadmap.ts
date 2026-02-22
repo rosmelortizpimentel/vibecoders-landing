@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface RoadmapSettings {
   id: string;
@@ -80,15 +81,13 @@ const DEFAULT_LANES = [
 
 export function useRoadmap(appId: string | undefined) {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<RoadmapSettings | null>(null);
-  const [lanes, setLanes] = useState<RoadmapLane[]>([]);
-  const [cards, setCards] = useState<RoadmapCard[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchAll = useCallback(async () => {
-    if (!appId) return;
-    setLoading(true);
-    try {
+  const { data: roadmapData, isLoading: loading, error } = useQuery({
+    queryKey: ['roadmap', appId],
+    queryFn: async () => {
+      if (!appId) return null;
+      
       const [settingsRes, lanesRes, cardsRes] = await Promise.all([
         supabase.from('roadmap_settings').select('*').eq('app_id', appId).maybeSingle(),
         supabase.from('roadmap_lanes').select('*').eq('app_id', appId).order('display_order'),
@@ -99,17 +98,19 @@ export function useRoadmap(appId: string | undefined) {
       if (lanesRes.error) throw lanesRes.error;
       if (cardsRes.error) throw cardsRes.error;
 
-      setSettings(settingsRes.data as RoadmapSettings | null);
-      setLanes((lanesRes.data || []) as RoadmapLane[]);
-      setCards((cardsRes.data || []) as RoadmapCard[]);
-    } catch (err) {
-      console.error('Error fetching roadmap:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [appId]);
+      return {
+        settings: settingsRes.data as RoadmapSettings | null,
+        lanes: (lanesRes.data || []) as RoadmapLane[],
+        cards: (cardsRes.data || []) as RoadmapCard[],
+      };
+    },
+    enabled: !!appId,
+    staleTime: 0,
+  });
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  const settings = roadmapData?.settings ?? null;
+  const lanes = useMemo(() => roadmapData?.lanes ?? [], [roadmapData?.lanes]);
+  const cards = useMemo(() => roadmapData?.cards ?? [], [roadmapData?.cards]);
 
   // Initialize roadmap with default lanes
   const initializeRoadmap = useCallback(async () => {
@@ -123,18 +124,16 @@ export function useRoadmap(appId: string | undefined) {
 
     if (settingsErr) throw settingsErr;
 
-    const lanesInsert = DEFAULT_LANES.map(l => ({ ...l, app_id: appId, font: 'Inter' }));
-    const { data: lanesData, error: lanesErr } = await supabase
+    const lanesInsert = DEFAULT_LANES.map(l => ({ ...l, app_id: appId, font: '' }));
+    const { error: lanesErr } = await supabase
       .from('roadmap_lanes')
-      .insert(lanesInsert)
-      .select();
+      .insert(lanesInsert);
 
     if (lanesErr) throw lanesErr;
 
-    setSettings(settingsData as RoadmapSettings);
-    setLanes((lanesData || []) as RoadmapLane[]);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
     return settingsData;
-  }, [appId, user]);
+  }, [appId, user, queryClient]);
 
   // Settings
   const updateSettings = useCallback(async (updates: Partial<RoadmapSettings>) => {
@@ -144,8 +143,8 @@ export function useRoadmap(appId: string | undefined) {
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', settings.id);
     if (error) throw error;
-    setSettings(prev => prev ? { ...prev, ...updates } : prev);
-  }, [settings]);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
+  }, [settings, appId, queryClient]);
 
   // Lanes
   const createLane = useCallback(async (name: string, color = '#3D5AFE') => {
@@ -157,9 +156,9 @@ export function useRoadmap(appId: string | undefined) {
       .select()
       .single();
     if (error) throw error;
-    setLanes(prev => [...prev, data as RoadmapLane]);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
     return data;
-  }, [appId, lanes]);
+  }, [appId, lanes, queryClient]);
 
   const updateLane = useCallback(async (laneId: string, updates: Partial<RoadmapLane>) => {
     const { error } = await supabase
@@ -167,8 +166,8 @@ export function useRoadmap(appId: string | undefined) {
       .update(updates)
       .eq('id', laneId);
     if (error) throw error;
-    setLanes(prev => prev.map(l => l.id === laneId ? { ...l, ...updates } : l));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
+  }, [appId, queryClient]);
 
   const deleteLane = useCallback(async (laneId: string) => {
     const { error } = await supabase
@@ -176,16 +175,15 @@ export function useRoadmap(appId: string | undefined) {
       .delete()
       .eq('id', laneId);
     if (error) throw error;
-    setLanes(prev => prev.filter(l => l.id !== laneId));
-    setCards(prev => prev.filter(c => c.lane_id !== laneId));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
+  }, [appId, queryClient]);
 
   const reorderLanes = useCallback(async (reordered: RoadmapLane[]) => {
-    setLanes(reordered.map((l, i) => ({ ...l, display_order: i })));
     for (let i = 0; i < reordered.length; i++) {
       await supabase.from('roadmap_lanes').update({ display_order: i }).eq('id', reordered[i].id);
     }
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
+  }, [appId, queryClient]);
 
   // Cards
   const createCard = useCallback(async (laneId: string, title: string, description?: string) => {
@@ -198,9 +196,9 @@ export function useRoadmap(appId: string | undefined) {
       .select()
       .single();
     if (error) throw error;
-    setCards(prev => [...prev, data as RoadmapCard]);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
     return data;
-  }, [appId, cards]);
+  }, [appId, cards, queryClient]);
 
   const updateCard = useCallback(async (cardId: string, updates: Partial<RoadmapCard>) => {
     const { error } = await supabase
@@ -208,8 +206,8 @@ export function useRoadmap(appId: string | undefined) {
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', cardId);
     if (error) throw error;
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, ...updates } : c));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
+  }, [appId, queryClient]);
 
   const deleteCard = useCallback(async (cardId: string) => {
     const { error } = await supabase
@@ -217,55 +215,52 @@ export function useRoadmap(appId: string | undefined) {
       .delete()
       .eq('id', cardId);
     if (error) throw error;
-    setCards(prev => prev.filter(c => c.id !== cardId));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
+  }, [appId, queryClient]);
 
   const moveCard = useCallback(async (cardId: string, newLaneId: string, newOrder: number, completedAt?: string | null) => {
-    const updateData: any = { lane_id: newLaneId, display_order: newOrder, updated_at: new Date().toISOString() };
+    const updateData: { 
+      lane_id: string; 
+      display_order: number; 
+      updated_at: string; 
+      completed_at?: string | null;
+    } = { lane_id: newLaneId, display_order: newOrder, updated_at: new Date().toISOString() };
     if (completedAt !== undefined) updateData.completed_at = completedAt;
     const { error } = await supabase
       .from('roadmap_cards')
       .update(updateData)
       .eq('id', cardId);
     if (error) throw error;
-    setCards(prev => prev.map(c => c.id === cardId ? { ...c, lane_id: newLaneId, display_order: newOrder, ...(completedAt !== undefined ? { completed_at: completedAt } : {}) } : c));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
+  }, [appId, queryClient]);
 
   const reorderCards = useCallback(async (laneId: string, reorderedCards: RoadmapCard[]) => {
-    // Update local state immediately for performance
-    const updatedCards = reorderedCards.map((c, i) => ({ ...c, display_order: i }));
-    setCards(prev => {
-      const otherCards = prev.filter(c => c.lane_id !== laneId);
-      return [...otherCards, ...updatedCards].sort((a, b) => a.display_order - b.display_order);
-    });
-
-    // Update database for each card
     for (let i = 0; i < reorderedCards.length; i++) {
       await supabase
         .from('roadmap_cards')
         .update({ display_order: i, updated_at: new Date().toISOString() })
         .eq('id', reorderedCards[i].id);
     }
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap', appId] });
+  }, [appId, queryClient]);
 
   return {
-    settings, lanes, cards, loading,
+    settings, lanes, cards, loading, error,
     initializeRoadmap, updateSettings,
     createLane, updateLane, deleteLane, reorderLanes,
     createCard, updateCard, deleteCard, moveCard, reorderCards,
-    refetch: fetchAll,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['roadmap', appId] }),
   };
 }
 
 // Separate hook for public feedback
 export function useRoadmapFeedback(appId: string | undefined) {
-  const [feedback, setFeedback] = useState<RoadmapFeedback[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchFeedback = useCallback(async () => {
-    if (!appId) return;
-    setLoading(true);
-    try {
+  const { data: feedback = [], isLoading: loading, error } = useQuery({
+    queryKey: ['roadmap-feedback', appId],
+    queryFn: async () => {
+      if (!appId) return [];
       const { data, error } = await supabase
         .from('roadmap_feedback')
         .select('*, roadmap_feedback_attachments(*)')
@@ -273,18 +268,14 @@ export function useRoadmapFeedback(appId: string | undefined) {
         .order('likes_count', { ascending: false });
 
       if (error) throw error;
-      setFeedback((data || []).map(f => ({
+      return (data || []).map(f => ({
         ...f,
         attachments: f.roadmap_feedback_attachments || [],
-      })) as RoadmapFeedback[]);
-    } catch (err) {
-      console.error('Error fetching feedback:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [appId]);
-
-  useEffect(() => { fetchFeedback(); }, [fetchFeedback]);
+      })) as RoadmapFeedback[];
+    },
+    enabled: !!appId,
+    staleTime: 0,
+  });
 
   const submitFeedback = useCallback(async (data: {
     title: string;
@@ -307,12 +298,11 @@ export function useRoadmapFeedback(appId: string | undefined) {
         .insert(data.attachments.map(a => ({ feedback_id: fb.id, ...a })));
     }
 
-    await fetchFeedback();
+    await queryClient.invalidateQueries({ queryKey: ['roadmap-feedback', appId] });
     return fb;
-  }, [appId, fetchFeedback]);
+  }, [appId, queryClient]);
 
   const toggleLike = useCallback(async (feedbackId: string, fingerprint: string) => {
-    // Check if already liked
     const { data: existing } = await supabase
       .from('roadmap_feedback_likes')
       .select('id')
@@ -326,9 +316,8 @@ export function useRoadmapFeedback(appId: string | undefined) {
       await supabase.from('roadmap_feedback_likes').insert({ feedback_id: feedbackId, device_fingerprint: fingerprint });
     }
 
-    // Refresh
-    await fetchFeedback();
-  }, [fetchFeedback]);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap-feedback', appId] });
+  }, [appId, queryClient]);
 
   const respondToFeedback = useCallback(async (feedbackId: string, response: string) => {
     const { error } = await supabase
@@ -336,8 +325,8 @@ export function useRoadmapFeedback(appId: string | undefined) {
       .update({ owner_response: response, owner_response_at: new Date().toISOString(), status: 'reviewed' })
       .eq('id', feedbackId);
     if (error) throw error;
-    await fetchFeedback();
-  }, [fetchFeedback]);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap-feedback', appId] });
+  }, [appId, queryClient]);
 
   const updateFeedbackStatus = useCallback(async (feedbackId: string, status: string) => {
     const { error } = await supabase
@@ -345,8 +334,8 @@ export function useRoadmapFeedback(appId: string | undefined) {
       .update({ status })
       .eq('id', feedbackId);
     if (error) throw error;
-    await fetchFeedback();
-  }, [fetchFeedback]);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap-feedback', appId] });
+  }, [appId, queryClient]);
 
   const linkToCard = useCallback(async (feedbackId: string, cardId: string | null) => {
     const { error } = await supabase
@@ -354,8 +343,8 @@ export function useRoadmapFeedback(appId: string | undefined) {
       .update({ linked_card_id: cardId })
       .eq('id', feedbackId);
     if (error) throw error;
-    await fetchFeedback();
-  }, [fetchFeedback]);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap-feedback', appId] });
+  }, [appId, queryClient]);
 
   const deleteFeedback = useCallback(async (feedbackId: string) => {
     const { error } = await supabase
@@ -363,13 +352,13 @@ export function useRoadmapFeedback(appId: string | undefined) {
       .delete()
       .eq('id', feedbackId);
     if (error) throw error;
-    setFeedback(prev => prev.filter(f => f.id !== feedbackId));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['roadmap-feedback', appId] });
+  }, [appId, queryClient]);
 
   return {
-    feedback, loading,
+    feedback, loading, error,
     submitFeedback, toggleLike, respondToFeedback,
     updateFeedbackStatus, linkToCard, deleteFeedback,
-    refetch: fetchFeedback,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['roadmap-feedback', appId] }),
   };
 }

@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useAutoSave } from './useAutoSave';
+import { useProfile } from './useProfile';
 
 export interface ProfileData {
   id: string;
@@ -35,6 +37,8 @@ export interface ProfileData {
   banner_position: 'left' | 'center' | 'right' | null;
   is_contributor: boolean;
   show_contributor_badge: boolean;
+  allow_analytics: boolean;
+  allow_marketing: boolean;
 }
 
 const DEFAULT_PROFILE: Partial<ProfileData> = {
@@ -46,154 +50,77 @@ const DEFAULT_PROFILE: Partial<ProfileData> = {
   banner_position: 'center',
   is_contributor: false,
   show_contributor_badge: false,
+  allow_analytics: false,
+  allow_marketing: false,
 };
 
 export function useProfileEditor() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { profile: cachedProfile, loading: initialLoading } = useProfile();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Initialize editor state from cached profile
+  useEffect(() => {
+    if (cachedProfile && !profile) {
+      setProfile({
+        ...DEFAULT_PROFILE,
+        ...cachedProfile,
+      } as ProfileData);
+      setLoading(false);
+    } else if (!initialLoading && !cachedProfile) {
+      setLoading(false);
+    }
+  }, [cachedProfile, initialLoading, profile]);
+
   const saveProfile = useCallback(async (data: Partial<ProfileData>) => {
     if (!user) throw new Error('No user');
     
+    // Build update object safely - only include fields if they are defined
+    const updates: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    const fields: (keyof ProfileData)[] = [
+      'username', 'show_pioneer_badge', 'show_contributor_badge', 'name', 
+      'tagline', 'bio', 'location', 'website', 'booking_url', 
+      'booking_button_text', 'avatar_url', 'banner_url', 'og_image_url', 
+      'lovable', 'twitter', 'github', 'tiktok', 'instagram', 'youtube', 
+      'linkedin', 'email_public', 'font_family', 'primary_color', 
+      'accent_color', 'card_style', 'avatar_position', 'banner_position',
+      'allow_analytics', 'allow_marketing'
+    ];
+
+    fields.forEach(field => {
+      if (data[field] !== undefined) {
+        updates[field] = data[field];
+      }
+    });
+    
     const { error } = await supabase
       .from('profiles')
-      .update({
-        username: data.username,
-        show_pioneer_badge: data.show_pioneer_badge,
-        show_contributor_badge: data.show_contributor_badge,
-        name: data.name,
-        tagline: data.tagline,
-        bio: data.bio,
-        location: data.location,
-        website: data.website,
-        booking_url: data.booking_url,
-        booking_button_text: data.booking_button_text,
-        avatar_url: data.avatar_url,
-        banner_url: data.banner_url,
-        og_image_url: data.og_image_url,
-        lovable: data.lovable,
-        twitter: data.twitter,
-        github: data.github,
-        tiktok: data.tiktok,
-        instagram: data.instagram,
-        youtube: data.youtube,
-        linkedin: data.linkedin,
-        email_public: data.email_public,
-        font_family: data.font_family,
-        primary_color: data.primary_color,
-        accent_color: data.accent_color,
-        card_style: data.card_style,
-        avatar_position: data.avatar_position,
-        banner_position: data.banner_position,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updates)
       .eq('id', user.id);
 
-    if (error) throw error;
-  }, [user]);
+    if (error) {
+      console.error('Supabase profile update error:', error);
+      throw error;
+    }
+    
+    // Invalidate profile cache
+    queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
+  }, [user, queryClient]);
 
   const { save: autoSave, isSaving, lastSaved, error: saveError } = useAutoSave(saveProfile);
 
+  // Sync user state changes if needed
   useEffect(() => {
-    async function fetchProfile() {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { data, error: fetchError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        // Handle specific errors - PGRST116 is expected for new users
-        if (fetchError && fetchError.code !== 'PGRST116') {
-          throw fetchError;
-        }
-
-        let profileData = data;
-
-        // If profile doesn't exist, create it automatically
-        if (!profileData) {
-          let usernameToInsert: string | null = null;
-          
-          // Extract username from email
-          if (user.email) {
-            const localPart = user.email.split('@')[0] || '';
-            const candidateUsername = localPart
-              .toLowerCase()
-              .replace(/[^a-z0-9_]/g, '')
-              .slice(0, 20);
-            
-            if (candidateUsername.length >= 1) {
-              try {
-                const { data: availabilityData } = await supabase.functions.invoke(
-                  'check-username-available',
-                  { body: { username: candidateUsername } }
-                );
-                
-                if (availabilityData?.success && availabilityData?.available) {
-                  usernameToInsert = candidateUsername;
-                }
-              } catch (err) {
-                console.log('Could not check username, creating profile without it');
-              }
-            }
-          }
-          
-          // Insert new profile
-          const { data: newProfile, error: insertError } = await supabase
-            .from('profiles')
-            .insert({ id: user.id, username: usernameToInsert })
-            .select()
-            .maybeSingle();
-
-          if (insertError) {
-            // Race condition: profile already exists
-            if (insertError.code === '23505') {
-              const { data: existingProfile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .maybeSingle();
-              
-              if (existingProfile) {
-                profileData = existingProfile;
-              } else {
-                throw insertError;
-              }
-            } else {
-              throw insertError;
-            }
-          } else {
-            profileData = newProfile;
-          }
-        }
-
-        // Apply defaults and Google metadata
-        const googleName = user.user_metadata?.full_name;
-        const googleAvatar = user.user_metadata?.avatar_url;
-        
-        setProfile({
-          ...DEFAULT_PROFILE,
-          ...profileData,
-          name: profileData?.name || googleName || null,
-          avatar_url: profileData?.avatar_url || googleAvatar || null,
-        } as ProfileData);
-
-      } catch (err) {
-        console.error('Error fetching/creating profile:', err);
-        setError(err instanceof Error ? err : new Error('Error al cargar perfil'));
-      } finally {
-        setLoading(false);
-      }
+    if (!user) {
+      setLoading(false);
+      setProfile(null);
     }
-
-    fetchProfile();
   }, [user]);
 
   const updateProfile = useCallback((updates: Partial<ProfileData>) => {
