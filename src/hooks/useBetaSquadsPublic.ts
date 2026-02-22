@@ -13,6 +13,7 @@ export interface BetaTester {
 export interface UserTesterStatus {
   id: string;
   status: 'pending' | 'accepted' | 'rejected';
+  feedback_count?: number;
 }
 
 export interface BetaSquadApp {
@@ -55,12 +56,12 @@ export function useBetaSquadsPublic() {
       const { data: apps, error: appsError } = await supabase
         .from('apps')
         .select(`
-          id, name, logo_url, tagline, beta_instructions, beta_limit, updated_at,
+          id, name, logo_url, tagline, beta_instructions, beta_limit, updated_at, beta_updated_at,
           profiles:user_id (id, username, name, avatar_url)
         `)
         .eq('beta_active', true)
         .eq('is_visible', true)
-        .order('updated_at', { ascending: false })
+        .order('beta_updated_at', { ascending: false })
         .range(from, to);
 
       if (appsError) throw appsError;
@@ -82,11 +83,11 @@ export function useBetaSquadsPublic() {
       if (testersError) throw testersError;
 
       // 3. Get user's tester status for these apps (if logged in)
-      let userTesterStatusMap: Record<string, UserTesterStatus> = {};
+      const userTesterStatusMap: Record<string, UserTesterStatus> = {};
       if (user) {
         const { data: userTesterData } = await supabase
           .from('beta_testers')
-          .select('id, app_id, status')
+          .select('id, app_id, status, feedback_count')
           .eq('user_id', user.id)
           .in('app_id', appIds);
         
@@ -94,6 +95,7 @@ export function useBetaSquadsPublic() {
           userTesterStatusMap[t.app_id] = {
             id: t.id,
             status: t.status as 'pending' | 'accepted' | 'rejected',
+            feedback_count: t.feedback_count || 0,
           };
         });
       }
@@ -133,7 +135,7 @@ export function useBetaSquadsPublic() {
           beta_limit: app.beta_limit,
           testers_count: testersCount,
           spots_remaining: app.beta_limit - testersCount,
-          updated_at: app.updated_at,
+          updated_at: app.beta_updated_at || app.updated_at,
           owner: {
             id: profile?.id || '',
             username: profile?.username || null,

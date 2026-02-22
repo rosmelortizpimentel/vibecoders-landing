@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
       .from('apps')
       .select(`
         id, url, name, tagline, description, logo_url, category_id, status_id, display_order, is_verified,
-        hours_ideation, hours_building, screenshots, tags,
+        hours_ideation, hours_building, screenshots, tags, beta_active,
         app_stacks(stack_id)
       `)
       .eq('user_id', profile.id)
@@ -163,6 +163,7 @@ Deno.serve(async (req) => {
         hours_building: app.hours_building || 0,
         screenshots: app.screenshots || [],
         tags: app.tags || [],
+        beta_active: app.beta_active || false,
         status: status ? { name: status.name, slug: status.slug } : null,
         category: app.category_id && categories ? categories.find(c => c.id === app.category_id) : null,
         stacks: appStacks

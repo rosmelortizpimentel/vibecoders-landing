@@ -19,5 +19,6 @@
   "ideation": "Ideation",
   "construction": "Construction",
   "projectDNA": "Project DNA",
-  "totalHours": "Total hours"
+  "totalHours": "Total hours",
+  "openBetaTooltip": "This app is looking for testers"
 }

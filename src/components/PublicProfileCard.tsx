@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck, Calendar, Share2, Globe, Twitter, ArrowLeft, MousePointerClick, Heart, UserPlus, UserCheck } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck, Calendar, Share2, Globe, Twitter, ArrowLeft, MousePointerClick, Heart, UserPlus, UserCheck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PioneerBadge } from '@/components/PioneerBadge';
 import { ContributorBadge } from '@/components/ContributorBadge';
 
@@ -90,6 +91,8 @@ function PublicAppCard({
    ownerClickCount?: number;
    onSelect: () => void;
 }) {
+  const { t } = useTranslation('publicProfile');
+
   const appUrl = (() => {
     try {
       // Normalize URL first - prepend https:// if missing
@@ -128,10 +131,10 @@ function PublicAppCard({
           <img 
             src={app.logo_url} 
             alt={app.name || ''} 
-            className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+            className="w-10 h-10 rounded-full object-contain bg-white border border-gray-100 flex-shrink-0"
           />
         ) : (
-          <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
             <span className="text-sm font-medium text-gray-500">
               {app.name?.charAt(0) || '?'}
             </span>
@@ -168,18 +171,7 @@ function PublicAppCard({
               </Tooltip>
             )}
 
-            {/* Status Badge - Premium colors */}
-            {app.status && (() => {
-              const statusColors = getStatusColors(app.status.slug);
-              return (
-                <span 
-                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors.bg} ${statusColors.text}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
-                  {app.status.name.toUpperCase()}
-                </span>
-              );
-            })()}
+            {/* Removed Status Badge from here */}
           </div>
 
           {/* Tagline - Fixed height for 2 lines to ensure uniformity */}
@@ -188,16 +180,38 @@ function PublicAppCard({
           </p>
         </div>
 
-        {/* Visit Button */}
-        <a 
-          href={appUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="w-8 h-8 flex items-center justify-center rounded-full border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300 hover:bg-gray-50 transition-colors flex-shrink-0"
-        >
-          <ExternalLink className="w-4 h-4" />
-        </a>
+        {/* Badges aligned to right */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {app.beta_active && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative group cursor-help flex-shrink-0">
+                    <div className="absolute -inset-[1px] bg-indigo-500/30 rounded-full animate-ping opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                    <span className="relative inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-indigo-100 text-indigo-700">
+                      <Zap className="w-2.5 h-2.5 fill-current" />
+                      Open Beta
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p className="text-xs">{t('openBetaTooltip')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          {app.status && (() => {
+            const statusColors = getStatusColors(app.status.slug);
+            return (
+              <span 
+                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${statusColors.bg} ${statusColors.text} flex-shrink-0`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${statusColors.dot}`} />
+                {app.status.name.toUpperCase()}
+              </span>
+            );
+          })()}
+        </div>
       </div>
 
       {/* Bottom Row: Tech Stack Icons */}

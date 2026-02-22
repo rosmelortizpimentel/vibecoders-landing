@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ExternalLink, Heart, Upload, ImageIcon, BadgeCheck, AlertCircle, Trash2, Calendar, LayoutTemplate, Zap } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,8 +20,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { BadgeCheck } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getStatusColors } from '@/lib/appStatusColors';
 
 import { FounderCard } from './FounderCard';
 
@@ -198,7 +198,7 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
                     currentApp.screenshots && currentApp.screenshots.length > 0 
                       ? 'w-20 h-20' 
                       : 'w-32 h-32'
-                  } rounded-full object-cover animate-in zoom-in duration-500`}
+                  } rounded-full object-contain animate-in zoom-in duration-500`}
                 />
               ) : (
                 <div className={`${
@@ -224,6 +224,40 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
         currentApp.screenshots && currentApp.screenshots.length > 0 ? 'pt-20' : ''
       }`}>
         <div className="flex flex-col items-center text-center">
+          {/* Custom Badges Layer */}
+          <div className="flex items-center gap-1.5 mb-3 justify-center">
+            {currentApp.beta_active && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative group cursor-help flex-shrink-0">
+                      <div className="absolute -inset-[1px] bg-indigo-500/30 rounded-full animate-ping opacity-75 group-hover:opacity-100 transition-opacity"></div>
+                      <span className="relative inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                        <Zap className="w-3 h-3 fill-current" />
+                        Open Beta
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-sm">{t('openBetaTooltip')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
+            {currentApp.status && (() => {
+              const statusColors = getStatusColors(currentApp.status.slug);
+              return (
+                <span 
+                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${statusColors.bg} ${statusColors.text} flex-shrink-0`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${statusColors.dot}`} />
+                  {currentApp.status.name.toUpperCase()}
+                </span>
+              );
+            })()}
+          </div>
+
           <div className="flex items-center gap-2 mb-2 justify-center">
             <h2 className="text-2xl font-bold text-gray-900 leading-tight">
               {currentApp.name}

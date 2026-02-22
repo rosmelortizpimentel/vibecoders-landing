@@ -72,7 +72,7 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
   const renderCTAButton = () => {
     if (isOwner) {
       return (
-        <Button asChild variant="outline" className="w-full" size="lg">
+        <Button asChild variant="outline" className="rounded-lg hover:shadow-sm hover:-translate-y-0.5 transition-all" size="sm">
           <Link to={`/app/${app.id}`}>{t('viewApp')}</Link>
         </Button>
       );
@@ -80,9 +80,9 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
 
     if (userStatus === 'accepted') {
       return (
-        <Button asChild className="w-full" size="lg">
+        <Button asChild className="rounded-lg bg-emerald-500 hover:bg-emerald-600 outline-none border-none text-white shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all" size="sm">
           <Link to={`/app/${app.id}`}>
-            <CheckCircle2 className="w-4 h-4 mr-2" />
+            <CheckCircle2 className="w-4 h-4 mr-1.5" />
             {t('accessMission')}
           </Link>
         </Button>
@@ -91,8 +91,8 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
 
     if (userStatus === 'pending') {
       return (
-        <Badge variant="secondary" className="w-full justify-center py-3 text-sm">
-          <Hourglass className="w-4 h-4 mr-2" />
+        <Badge variant="secondary" className="justify-center py-1.5 px-3 text-xs bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <Hourglass className="w-3.5 h-3.5 mr-1.5" />
           {t('statusPending')}
         </Badge>
       );
@@ -100,8 +100,8 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
 
     if (userStatus === 'rejected') {
       return (
-        <Badge variant="outline" className="w-full justify-center py-3 text-sm text-muted-foreground">
-          <XCircle className="w-4 h-4 mr-2" />
+        <Badge variant="outline" className="justify-center py-1.5 px-3 text-xs text-muted-foreground">
+          <XCircle className="w-3.5 h-3.5 mr-1.5" />
           {t('statusRejected')}
         </Badge>
       );
@@ -111,9 +111,12 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
     return (
       <Button 
         onClick={handleJoinClick}
-        className="w-full"
+        className={cn(
+          "rounded-lg transition-all",
+          !isFull && "bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5"
+        )}
         variant={isFull ? "secondary" : "default"}
-        size="lg"
+        size="sm"
         disabled={isFull}
       >
         {!user ? t('loginToJoin') : isFull ? t('squadFull') : t('joinSquad')}
@@ -123,121 +126,105 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
 
   return (
     <>
-      <article className="bg-card border border-border rounded-xl overflow-hidden">
+      <article className="bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         {/* Post Header - Author Info */}
-        <div className="p-4 pb-3">
-          <Link 
-            to={app.owner.username ? `/@${app.owner.username}` : '#'}
-            className="flex items-center gap-3 group"
-          >
-            <Avatar className="h-12 w-12 border border-border">
-              {app.owner.avatar_url ? (
-                <AvatarImage src={app.owner.avatar_url} alt={app.owner.name || ''} />
-              ) : (
-                <AvatarFallback className="bg-muted text-muted-foreground font-medium">
-                  {app.owner.name?.charAt(0) || '?'}
-                </AvatarFallback>
-              )}
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                {app.owner.name || 'Usuario'}
-              </p>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>@{app.owner.username || 'user'}</span>
-                <span className="text-muted-foreground/50">·</span>
-                <span className="flex items-center gap-1">
+        <div className="p-4 pb-2">
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <Link 
+              to={app.owner.username ? `/@${app.owner.username}` : '#'}
+              className="flex items-center gap-2 group min-w-0"
+            >
+              <Avatar className="h-6 w-6 border border-border rounded-full shrink-0">
+                {app.owner.avatar_url ? (
+                  <AvatarImage src={app.owner.avatar_url} alt={app.owner.name || ''} />
+                ) : (
+                  <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-medium">
+                    {app.owner.name?.charAt(0) || '?'}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div className="flex items-center gap-1.5 flex-1 min-w-0 text-xs text-slate-500">
+                <span className="truncate hover:text-slate-700 dark:hover:text-slate-300 transition-colors">
+                  {app.owner.name || 'Usuario'}
+                </span>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
+                <span className="flex items-center gap-1 shrink-0">
                   <Clock className="h-3 w-3" />
                   {timeAgo}
                 </span>
               </div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Post Intro Text */}
-        <div className="px-4 pb-3">
-          <p className="text-foreground">
+            </Link>
+          </div>
+          <p className="text-sm font-medium text-slate-800 dark:text-slate-200">
             {t('lookingFor').replace('{count}', String(app.beta_limit))}
           </p>
         </div>
 
         {/* Embedded App Card */}
         <div className="px-4 pb-4">
-          <Card className="bg-muted/30 border-border">
-            <CardContent className="p-4">
+          <div className="bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-xl p-4">
               {/* App Header */}
-              <div className="flex items-start gap-3 mb-4">
-                <Avatar className="h-14 w-14 rounded-xl border border-border shrink-0">
-                  {app.logo_url ? (
-                    <AvatarImage src={app.logo_url} alt={app.name || 'App'} className="object-cover rounded-xl" />
-                  ) : (
-                    <AvatarFallback className="rounded-xl bg-primary/10 text-primary font-bold text-xl">
-                      {app.name?.charAt(0) || '?'}
-                    </AvatarFallback>
-                  )}
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-lg text-foreground truncate">
-                    {app.name || 'Untitled App'}
-                  </h3>
-                  {app.tagline && (
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {app.tagline}
-                    </p>
-                  )}
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar className="h-10 w-10 rounded-lg border border-slate-200 dark:border-slate-700 shrink-0 bg-white dark:bg-slate-800">
+                    {app.logo_url ? (
+                      <AvatarImage src={app.logo_url} alt={app.name || 'App'} className="object-contain p-1 rounded-lg" />
+                    ) : (
+                      <AvatarFallback className="rounded-lg bg-primary/10 text-primary font-bold text-lg">
+                        {app.name?.charAt(0) || '?'}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 truncate">
+                      {app.name || 'Untitled App'}
+                    </h3>
+                  </div>
+                </div>
+                <div className="shrink-0">
+                  {renderCTAButton()}
                 </div>
               </div>
 
               {/* Instructions (formatted markdown) */}
               {app.beta_instructions && (
                 <div className="mb-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    {t('instructions')}
-                  </p>
                   <div 
-                    className="text-sm text-foreground prose prose-sm max-w-none dark:prose-invert prose-strong:text-foreground prose-em:text-foreground"
+                    className="text-sm leading-relaxed text-slate-600 dark:text-slate-300 prose prose-sm max-w-none dark:prose-invert prose-strong:text-slate-800 dark:prose-strong:text-slate-200 prose-em:text-slate-700 [&>p]:mb-2 last:[&>p]:mb-0"
                     dangerouslySetInnerHTML={{ __html: parseMarkdown(app.beta_instructions) }}
                   />
                 </div>
               )}
 
               {/* Progress & Testers Count */}
-              <div className="space-y-2">
+              <div className="space-y-1.5 mt-2">
                 <Progress 
                   value={progressPercent} 
                   className={cn(
-                    "h-2",
-                    isUrgent && "[&>div]:bg-destructive",
-                    isFull && "[&>div]:bg-muted-foreground"
+                    "h-1.5 bg-slate-100 dark:bg-slate-800",
+                    isUrgent ? "[&>div]:bg-destructive" : isFull ? "[&>div]:bg-slate-400" : "[&>div]:bg-emerald-500"
                   )}
                 />
-                <div className="flex justify-between items-center">
+                <div className="flex justify-end items-center">
                   <button
                     onClick={() => setShowTesters(true)}
                     className={cn(
-                      "flex items-center gap-1.5 text-sm font-medium hover:underline transition-colors",
-                      isUrgent ? "text-destructive" : isFull ? "text-muted-foreground" : "text-foreground"
+                      "text-xs font-semibold hover:underline transition-colors flex items-center gap-1",
+                      isUrgent ? "text-destructive" : isFull ? "text-slate-400" : "text-slate-600 dark:text-slate-400"
                     )}
                     disabled={app.testers.length === 0}
                   >
-                    <Users className="h-4 w-4" />
-                    {t('enrolledClickable').replace('{current}', String(app.testers_count)).replace('{limit}', String(app.beta_limit))}
+                    {!isFull && !isUrgent && <Users className="h-3.5 w-3.5 text-emerald-500" />}
+                    {app.testers_count}/{app.beta_limit} {t('enrolled')}
                   </button>
                   {isUrgent && !isFull && (
-                    <span className="text-xs font-medium text-destructive bg-destructive/10 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-full ml-2">
                       {t('spotsLow')}
                     </span>
                   )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* CTA Footer */}
-        <div className="px-4 pb-4">
-          {renderCTAButton()}
+            </div>
         </div>
       </article>
 
