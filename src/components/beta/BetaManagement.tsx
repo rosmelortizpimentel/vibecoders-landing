@@ -49,6 +49,7 @@ import {
   Users,
   Settings,
   Heart,
+  Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -429,6 +430,9 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                     }
                   }}
                 />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {t('limitHelper')}
+                </p>
               </div>
             </div>
 
@@ -458,6 +462,17 @@ export function BetaManagement({ appId, config, onConfigChange }: BetaManagement
                 onChange={(value) => onConfigChange({ beta_instructions: value || null })}
                 placeholder={t('instructionsPlaceholder')}
               />
+              <p className="text-[10px] text-muted-foreground mt-1">
+                {t('instructionsHelper')}
+              </p>
+            </div>
+
+            {/* Legal Notice */}
+            <div className="flex gap-3 p-4 rounded-xl bg-accent/30 border border-border/50 mt-6">
+              <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                {t('legalNotice')}
+              </p>
             </div>
           </TabsContent>
 

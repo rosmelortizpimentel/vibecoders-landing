@@ -2,11 +2,38 @@ import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { queryClient } from '@/lib/react-query';
+import { FounderStatusResponse } from './useFounderStatus';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Use a module-level variable to deduplicate activity logging across hook instances
+  const logActivity = async (userId: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    const logKey = `last_activity_log_${userId}_${today}`;
+    
+    // Check session storage to avoid repeating in the same session/tab
+    if (sessionStorage.getItem(logKey)) return;
+    
+    // Mark as logged immediately to avoid concurrent racy calls
+    sessionStorage.setItem(logKey, 'true');
+    
+    try {
+      await supabase
+        .from('user_activity_log')
+        .upsert(
+          { user_id: userId, active_date: today },
+          { onConflict: 'user_id,active_date' }
+        );
+    } catch (err) {
+      console.error('Error logging daily activity:', err);
+      // Remove item so it can retry if it failed (optional)
+      sessionStorage.removeItem(logKey);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -37,7 +64,15 @@ export function useAuth() {
             const body: Record<string, string> = {};
             if (signupSource) body.signupSource = signupSource;
             
-            supabase.functions.invoke('check-founder-status', { body }).then(async ({ data }) => {
+            queryClient.fetchQuery({
+              queryKey: ['founder-status', currentSession.user.id],
+              queryFn: async () => {
+                const { data, error } = await supabase.functions.invoke('check-founder-status', { body });
+                if (error) throw error;
+                return data as FounderStatusResponse;
+              },
+              staleTime: 0,
+            }).then(async (data) => {
               if (signupSource === 'paid_card') {
                 // Only redirect to Stripe if user doesn't already have a paid subscription
                 const userTier = data?.tier;
@@ -78,15 +113,9 @@ export function useAuth() {
       setUser(existingSession?.user ?? null);
       setLoading(false);
 
-      // Silent daily activity log (transparent, no impact on UX)
+      // Silent daily activity log (deduplicated)
       if (existingSession?.user) {
-        supabase
-          .from('user_activity_log')
-          .upsert(
-            { user_id: existingSession.user.id, active_date: new Date().toISOString().split('T')[0] },
-            { onConflict: 'user_id,active_date' }
-          )
-          .then(() => {});
+        logActivity(existingSession.user.id);
       }
     });
 

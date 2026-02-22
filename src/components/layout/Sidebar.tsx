@@ -7,6 +7,7 @@ import {
   ExternalLink,
   ChevronsUpDown,
   LayoutDashboard,
+  Settings,
 } from 'lucide-react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useAuth } from '@/hooks/useAuth';
@@ -304,6 +305,14 @@ export function Sidebar() {
                   <ExternalLink className="h-4 w-4 text-white/40 group-hover:text-white/80 transition-colors" strokeWidth={1.5} />
                   <span className="text-sm font-medium">{tAuth('viewPublicProfile')}</span>
                 </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem 
+                onClick={() => { setMenuOpen(false); window.location.href = '/settings'; }}
+                className="flex items-center gap-3 py-3 px-5 cursor-pointer text-white/80 hover:bg-white/10 hover:text-white border-none focus:bg-white/10 focus:text-white outline-none group transition-colors"
+              >
+                <Settings className="h-4 w-4 text-white/40 group-hover:text-white/80 transition-colors" strokeWidth={1.5} />
+                <span className="text-sm font-medium">{t('navigation.settings')}</span>
               </DropdownMenuItem>
               
               {isAdmin && (

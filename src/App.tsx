@@ -1,10 +1,12 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 
 import { detectedSubdomain, isCustomDomain } from '@/utils/domain';
 
@@ -25,6 +27,7 @@ import Admin from "./pages/Admin";
 import PublicProfile from "./pages/PublicProfile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
 import Projects from "./pages/Projects";
 import Tools from "./pages/Tools";
 import Feedback from "./pages/Feedback";
@@ -42,6 +45,7 @@ import RoadmapEditor from "./pages/RoadmapEditor";
 import PublicRoadmap from "./pages/PublicRoadmap";
 import MyApps from "./pages/MyApps";
 import MyAppHub from "./pages/MyAppHub";
+import Settings from "./pages/Settings";
 
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -50,12 +54,13 @@ import { InAppBrowserWarning } from "./components/InAppBrowserWarning";
 import { DashboardLayout } from "./layouts/DashboardLayout";
 import { MenuRouteGuard } from "./components/layout/MenuRouteGuard";
 import { SurveyPopup } from "./components/beta/SurveyPopup";
+import { CookieBanner } from "./components/layout/CookieBanner";
 import { useAuth } from "./hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
 
 
-const queryClient = new QueryClient();
+// queryClient is now imported from @/lib/react-query
 
 const App = () => {
   useEffect(() => {
@@ -82,97 +87,99 @@ const App = () => {
         <Toaster />
         <Sonner />
         <InAppBrowserWarning />
-        <SurveyPopup />
         <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          {/* Subdomain or Custom Domain mode: clean /roadmap and /feedback routes (no slug in URL) */}
-          {(detectedSubdomain || isCustom) && (
-            <>
-              <Route path="/roadmap" element={<PublicRoadmap />} />
-              <Route path="/feedback" element={<PublicRoadmap />} />
-            </>
-          )}
-          {/* Public routes - New Landing is now Official */}
-          <Route path="/" element={detectedSubdomain || isCustom ? <Navigate to="/roadmap" replace /> : <NewLanding />} />
-          {/* Public roadmap & feedback: /@username/app-slug/roadmap */}
-          <Route path="/:handle/:appSlug/roadmap" element={<PublicRoadmap />} />
-          <Route path="/:handle/:appSlug/feedback" element={<PublicRoadmap />} />
-          {/* Legacy redirect */}
-          <Route path="/roadmap/:appName" element={<PublicRoadmap />} />
-
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/privacy" element={<Privacy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/post/:slug" element={<Post />} />
-          
-          
-          
-          {/* Plan selection & payment */}
-          <Route path="/choose-plan" element={<ChoosePlan />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          
-          {/* Admin routes - protected by Admin component */}
-          <Route path="/admin/*" element={<Admin />} />
-          
-
-
-          
-
-          {/* Authenticated routes with shared layout (persistent header/footer) */}
-          <Route element={<DashboardLayout />}>
-            <Route element={<MenuRouteGuard />}>
-              <Route path="/home" element={<Home />} />
-              <Route path="/explore" element={<Projects />} />
-              <Route path="/public-beta-testing" element={<BetaSquads />} />
-              <Route path="/tools" element={<Tools />} />
-              <Route path="/buildlog" element={<BuildLog />} />
-              <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
-              <Route path="/feedback" element={<Feedback />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/connections" element={<Vibers />} />
-              <Route path="/me" element={<Navigate to="/me/profile" replace />} />
-              <Route path="/me/profile" element={<Me />} />
-              <Route path="/me/branding" element={<Me />} />
-              {/* New: Apps hub */}
-              <Route path="/apps" element={<MyApps />} />
-              <Route path="/apps/:appId" element={<MyAppHub />} />
-              <Route path="/apps/:appId/roadmap" element={<MyAppHub />} />
-              <Route path="/apps/:appId/feedback" element={<MyAppHub />} />
-              <Route path="/apps/:appId/squad" element={<MyAppHub />} />
-              {/* Legacy routes kept for backward compat */}
-              <Route path="/my-apps" element={<Navigate to="/apps" replace />} />
-              <Route path="/my-apps/:appId" element={<Navigate to="/apps" replace />} />
-              <Route path="/beta-testing" element={<Navigate to="/apps" replace />} />
-              <Route path="/beta-testing/:appId" element={<Navigate to="/apps" replace />} />
-              <Route path="/ideas" element={<Ideas />} />
-              <Route path="/ideas/new" element={<Ideas />} />
-              <Route path="/ideas/:ideaId" element={<Ideas />} />
-              <Route path="/roadmap" element={<Navigate to="/apps" replace />} />
-              <Route path="/prompts" element={<Prompts />} />
-              <Route path="/prompts/new" element={<PromptStudio />} />
-              <Route path="/prompts/:id" element={<PromptViewer />} />
-              <Route path="/prompts/:id/edit" element={<PromptStudio />} />
-              <Route path="/app/:appId" element={<AppDetail />} />
-              <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
+          <AnalyticsProvider>
+            <CookieBanner />
+            <SurveyPopup />
+            <Routes>
+              {/* Public routes */}
+              {/* Subdomain or Custom Domain mode: clean /roadmap and /feedback routes (no slug in URL) */}
+              {(detectedSubdomain || isCustom) && (
+                <>
+                  <Route path="/roadmap" element={<PublicRoadmap />} />
+                  <Route path="/feedback" element={<PublicRoadmap />} />
+                </>
+              )}
+              {/* Public routes - New Landing is now Official */}
+              <Route path="/" element={detectedSubdomain || isCustom ? <Navigate to="/roadmap" replace /> : <NewLanding />} />
+              {/* Public roadmap & feedback: /@username/app-slug/roadmap */}
+              <Route path="/:handle/:appSlug/roadmap" element={<PublicRoadmap />} />
+              <Route path="/:handle/:appSlug/feedback" element={<PublicRoadmap />} />
               {/* Legacy redirect */}
-              <Route path="/me/apps" element={<Navigate to="/apps" replace />} />
-            </Route>
-          </Route>
-          
-          {/* Legacy redirects */}
-          <Route path="/inspiration" element={<Navigate to="/explore" replace />} />
-          <Route path="/projects" element={<Navigate to="/explore" replace />} />
-          <Route path="/startups" element={<Navigate to="/explore" replace />} />
-          <Route path="/stack" element={<Navigate to="/tools" replace />} />
-          
-          {/* Public profile route - captures /@username, validated in component */}
-          <Route path="/:handle" element={<PublicProfile />} />
-          
-          {/* Redirect all unknown routes to landing */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+              <Route path="/roadmap/:appName" element={<PublicRoadmap />} />
+
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/cookies" element={<Cookies />} />
+              <Route path="/post/:slug" element={<Post />} />
+              
+              
+              
+              {/* Plan selection & payment */}
+              <Route path="/choose-plan" element={<ChoosePlan />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              
+              {/* Admin routes - protected by Admin component */}
+              <Route path="/admin/*" element={<Admin />} />
+              
+
+              {/* Authenticated routes with shared layout (persistent header/footer) */}
+              <Route element={<DashboardLayout />}>
+                <Route element={<MenuRouteGuard />}>
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/explore" element={<Projects />} />
+                  <Route path="/public-beta-testing" element={<BetaSquads />} />
+                  <Route path="/tools" element={<Tools />} />
+                  <Route path="/buildlog" element={<BuildLog />} />
+                  <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
+                  <Route path="/feedback" element={<Feedback />} />
+                  <Route path="/notifications" element={<NotificationsPage />} />
+                  <Route path="/connections" element={<Vibers />} />
+                  <Route path="/me" element={<Navigate to="/me/profile" replace />} />
+                  <Route path="/me/profile" element={<Me />} />
+                  <Route path="/me/branding" element={<Me />} />
+                  <Route path="/settings" element={<Settings />} />
+                  {/* New: Apps hub */}
+                  <Route path="/apps" element={<MyApps />} />
+                  <Route path="/apps/:appId" element={<MyAppHub />} />
+                  <Route path="/apps/:appId/roadmap" element={<MyAppHub />} />
+                  <Route path="/apps/:appId/feedback" element={<MyAppHub />} />
+                  <Route path="/apps/:appId/squad" element={<MyAppHub />} />
+                  {/* Legacy routes kept for backward compat */}
+                  <Route path="/my-apps" element={<Navigate to="/apps" replace />} />
+                  <Route path="/my-apps/:appId" element={<Navigate to="/apps" replace />} />
+                  <Route path="/beta-testing" element={<Navigate to="/apps" replace />} />
+                  <Route path="/beta-testing/:appId" element={<Navigate to="/apps" replace />} />
+                  <Route path="/ideas" element={<Ideas />} />
+                  <Route path="/ideas/new" element={<Ideas />} />
+                  <Route path="/ideas/:ideaId" element={<Ideas />} />
+                  <Route path="/roadmap" element={<Navigate to="/apps" replace />} />
+                  <Route path="/prompts" element={<Prompts />} />
+                  <Route path="/prompts/new" element={<PromptStudio />} />
+                  <Route path="/prompts/:id" element={<PromptViewer />} />
+                  <Route path="/prompts/:id/edit" element={<PromptStudio />} />
+                  <Route path="/app/:appId" element={<AppDetail />} />
+                  <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
+                  {/* Legacy redirect */}
+                  <Route path="/me/apps" element={<Navigate to="/apps" replace />} />
+                </Route>
+              </Route>
+              
+              {/* Legacy redirects */}
+              <Route path="/inspiration" element={<Navigate to="/explore" replace />} />
+              <Route path="/projects" element={<Navigate to="/explore" replace />} />
+              <Route path="/startups" element={<Navigate to="/explore" replace />} />
+              <Route path="/stack" element={<Navigate to="/tools" replace />} />
+              
+              {/* Public profile route - captures /@username, validated in component */}
+              <Route path="/:handle" element={<PublicProfile />} />
+              
+              {/* Redirect all unknown routes to landing */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AnalyticsProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </LanguageProvider>
   </QueryClientProvider>

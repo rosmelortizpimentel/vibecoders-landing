@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -23,15 +24,12 @@ export interface Notification {
 
 export function useNotifications() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchNotifications = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      setIsLoading(true);
+  const queryClient = useQueryClient();
+  
+  const { data: notifications = [], isLoading: notificationsLoading } = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: async (): Promise<Notification[]> => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from('notifications')
         .select(`
@@ -41,109 +39,77 @@ export function useNotifications() {
         .eq('recipient_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20);
-
       if (error) throw error;
-      setNotifications((data || []) as unknown as Notification[]);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
+      return (data || []) as unknown as Notification[];
+    },
+    enabled: !!user?.id,
+    staleTime: 0,
+    gcTime: 0,
+  });
 
-  const fetchUnreadCount = useCallback(async () => {
-    if (!user) return;
-
-    try {
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['notifications-unread-count', user?.id],
+    queryFn: async (): Promise<number> => {
+      if (!user) return 0;
       const { count, error } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('recipient_id', user.id)
         .is('read_at', null);
-
       if (error) throw error;
-      setUnreadCount(count || 0);
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
-    }
-  }, [user]);
+      return count || 0;
+    },
+    enabled: !!user?.id,
+    staleTime: 0,
+    gcTime: 0,
+  });
 
-  const markAsRead = async (notificationId: string) => {
-    if (!user) return;
-
-    try {
-      // Optimistic update
-      setNotifications(prev => 
-        prev.map(n => n.id === notificationId ? { ...n, read_at: new Date().toISOString() } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
         .update({ read_at: new Date().toISOString() })
         .eq('id', notificationId);
-
       if (error) throw error;
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      // Revert if error
-      fetchNotifications();
-      fetchUnreadCount();
-    }
-  };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count', user?.id] });
+    },
+  });
 
-  const markAllAsRead = async () => {
-    if (!user) return;
-
-    const now = new Date().toISOString();
-    try {
-      // Optimistic update
-      setNotifications(prev => prev.map(n => ({ ...n, read_at: n.read_at || now })));
-      setUnreadCount(0);
-
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
       const { error } = await supabase
         .from('notifications')
-        .update({ read_at: now })
+        .update({ read_at: new Date().toISOString() })
         .eq('recipient_id', user.id)
         .is('read_at', null);
-
       if (error) throw error;
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-      fetchNotifications();
-      fetchUnreadCount();
-    }
-  };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count', user?.id] });
+    },
+  });
 
-  const deleteNotification = async (notificationId: string) => {
-    if (!user) return;
-
-    try {
-      // Optimistic update
-      const target = notifications.find(n => n.id === notificationId);
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      if (target && !target.read_at) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-
+  const deleteMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
         .delete()
         .eq('id', notificationId);
-
       if (error) throw error;
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-      fetchNotifications();
-      fetchUnreadCount();
-    }
-  };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count', user?.id] });
+    },
+  });
 
   useEffect(() => {
     if (!user) return;
-
-    fetchNotifications();
-    fetchUnreadCount();
 
     const channel = supabase
       .channel(`notifications:${user.id}`)
@@ -155,31 +121,9 @@ export function useNotifications() {
           table: 'notifications',
           filter: `recipient_id=eq.${user.id}`,
         },
-        async (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const { data } = await supabase
-              .from('notifications')
-              .select(`
-                *,
-                actor:profiles!actor_id(name, avatar_url, username)
-              `)
-              .eq('id', payload.new.id)
-              .single();
-            
-            if (data) {
-              setNotifications(prev => [data as Notification, ...prev].slice(0, 20));
-              setUnreadCount(prev => prev + 1);
-            }
-          } else if (payload.eventType === 'DELETE') {
-            setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
-            // Only decrement if it was unread
-            fetchUnreadCount();
-          } else if (payload.eventType === 'UPDATE') {
-            setNotifications(prev => 
-              prev.map(n => n.id === payload.new.id ? { ...n, ...payload.new } : n)
-            );
-            fetchUnreadCount();
-          }
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
+          queryClient.invalidateQueries({ queryKey: ['notifications-unread-count', user?.id] });
         }
       )
       .subscribe();
@@ -187,15 +131,15 @@ export function useNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchNotifications, fetchUnreadCount]);
+  }, [user, queryClient]);
 
   return {
     notifications,
     unreadCount,
-    isLoading,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    refetch: fetchNotifications
+    isLoading: notificationsLoading,
+    markAsRead: markAsReadMutation.mutate,
+    markAllAsRead: markAllAsReadMutation.mutate,
+    deleteNotification: deleteMutation.mutate,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] })
   };
 }

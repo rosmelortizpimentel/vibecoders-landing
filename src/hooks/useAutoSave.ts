@@ -48,9 +48,11 @@ export function useAutoSave<T>(
       if (isMountedRef.current) {
         setLastSaved(new Date());
       }
-    } catch (err) {
+    } catch (err: any) {
       if (isMountedRef.current) {
-        setError(err instanceof Error ? err : new Error('Error al guardar'));
+        // Handle Supabase/Postgrest error objects which often have a 'message' or 'details' field
+        const errorMessage = err?.message || err?.details || 'Error al guardar';
+        setError(new Error(errorMessage));
         console.error('Auto-save error:', err);
       }
     } finally {

@@ -547,13 +547,13 @@ export default function PublicRoadmap() {
                         <div className="bg-gray-100 rounded-xl p-3">
                           <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
                             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
-                            <h3 className="font-semibold text-sm text-gray-700">{lane.name}</h3>
+                            <h3 className="font-semibold text-sm text-gray-700" style={{ fontFamily: lane.font || undefined }}>{lane.name}</h3>
                             <span className="text-xs text-gray-400">({laneCards.length})</span>
                           </div>
                           <div className="space-y-3 min-h-[200px]">
                             {laneCards.map(card => (
                               <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border-l-[3px]" style={{ borderLeftColor: lane.color }}>
-                                <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
+                                <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font || undefined }}>{card.title}</p>
                                 {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
                                 <div className="flex items-center justify-between mt-2">
                                   <div className="flex items-center gap-1.5">
@@ -586,13 +586,13 @@ export default function PublicRoadmap() {
                       <div key={lane.id} className="bg-gray-100 rounded-xl p-3">
                         <div className="flex items-center gap-2 mb-2 pb-2 border-b border-gray-200">
                           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: lane.color }} />
-                          <h3 className="font-semibold text-sm text-gray-700">{lane.name}</h3>
+                          <h3 className="font-semibold text-sm text-gray-700" style={{ fontFamily: lane.font || undefined }}>{lane.name}</h3>
                           <span className="text-xs text-gray-400">({laneCards.length})</span>
                         </div>
                         <div className="space-y-3">
                           {laneCards.map(card => (
                             <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border-l-[3px]" style={{ borderLeftColor: lane.color }}>
-                              <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font !== 'Inter' ? lane.font : undefined }}>{card.title}</p>
+                              <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font || undefined }}>{card.title}</p>
                               {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
                               <div className="flex items-center justify-between mt-2">
                                 <div className="flex items-center gap-1.5">

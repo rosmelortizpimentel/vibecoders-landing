@@ -220,10 +220,22 @@ const HeroSection = () => {
               </button>
             </div>
             
-            {/* Microcopy */}
-            <p className="text-sm text-white/70">
-              {t.notLoggedIn.microcopy}
-            </p>
+            {/* Legal Disclaimer & Microcopy */}
+            <div className="flex flex-col items-center gap-2 mt-2">
+              <p className="text-sm text-white/70">
+                {t.notLoggedIn.microcopy}
+              </p>
+              <div className="text-xs text-white/60 text-center px-4 leading-tight">
+                Al continuar, aceptas nuestros{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">
+                  Términos de Servicio
+                </a>{' '}
+                y{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">
+                  Política de Privacidad
+                </a>.
+              </div>
+            </div>
           </div>
         )}
       </div>

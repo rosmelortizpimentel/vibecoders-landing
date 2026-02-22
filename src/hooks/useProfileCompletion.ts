@@ -1,5 +1,5 @@
  import { useAuth } from './useAuth';
- import { useQuery } from '@tanstack/react-query';
+ import { useQuery, useQueryClient } from '@tanstack/react-query';
  import { supabase } from '@/integrations/supabase/client';
  
  export interface ChecklistItem {
@@ -28,20 +28,23 @@
  
  export function useProfileCompletion(): ProfileCompletionResult {
    const { user } = useAuth();
+   const queryClient = useQueryClient();
  
    const { data, isLoading } = useQuery({
      queryKey: ['profile-completion', user?.id],
      queryFn: async () => {
        if (!user) return null;
  
-       // Fetch profile
-       const { data: profile, error: profileError } = await supabase
-         .from('profiles')
-         .select('name, avatar_url, tagline, lovable, twitter, github, tiktok, instagram, youtube, linkedin, email_public')
-         .eq('id', user.id)
-         .maybeSingle();
- 
-       if (profileError) throw profileError;
+       // Use the cached profile if available, or fetch it
+       const profile = await queryClient.fetchQuery({
+         queryKey: ['profile', user.id],
+         queryFn: async () => {
+           const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
+           if (error) throw error;
+           return data;
+         },
+         staleTime: 0,
+       });
  
        // Fetch apps count
        const { count, error: appsError } = await supabase
@@ -54,7 +57,8 @@
        return { profile, appsCount: count || 0 };
      },
      enabled: !!user,
-     staleTime: 1000 * 60 * 2,
+     staleTime: 0,
+     gcTime: 0,
    });
  
    if (!user || isLoading || !data) {

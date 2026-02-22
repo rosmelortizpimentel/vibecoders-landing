@@ -11,7 +11,8 @@ import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFollowAction } from '@/hooks/useFollowAction';
-import { useFollowList } from '@/hooks/useFollowList';
+import { useFollowList, FollowerProfile } from '@/hooks/useFollowList';
+import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -52,13 +53,27 @@ interface ProfileSummary {
 }
 
 export default function Vibers() {
-  const { stats, isLoading } = useDashboardStats();
+  const { stats, isLoading: statsLoading, refetch: refetchStats } = useDashboardStats();
+  const { user } = useAuth();
   const { t } = useTranslation('vibers');
   const tCommon = useTranslation('common');
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'followers' | 'following' | 'community'>('followers');
   const { setHeaderContent } = usePageHeader();
+
+  // Lazy load lists based on active tab
+  const { profiles: followerProfiles, loading: followersLoading } = useFollowList(
+    user?.id, 
+    'followers', 
+    { enabled: activeTab === 'followers' && !!user?.id }
+  );
+
+  const { profiles: followingProfiles, loading: followingLoading } = useFollowList(
+    user?.id, 
+    'following', 
+    { enabled: !!user?.id } // Always load to support filtering 'community'
+  );
 
   useEffect(() => {
     setHeaderContent(
@@ -68,37 +83,39 @@ export default function Vibers() {
       </div>
     );
     return () => setHeaderContent(null);
-  }, [setHeaderContent]);
+  }, [setHeaderContent, tCommon.navigation.vibers]);
 
   const filteredFollowers = useMemo(() => 
-    (stats?.followers || [])
-      .filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .sort((a, b) => (b.activeAppsCount || 0) - (a.activeAppsCount || 0)),
-    [stats?.followers, searchTerm]
+    (followerProfiles || [])
+      .filter(u => 
+        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        u.username?.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [followerProfiles, searchTerm]
   );
 
   const filteredFollowing = useMemo(() => 
-    (stats?.following || [])
-      .filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .sort((a, b) => (b.activeAppsCount || 0) - (a.activeAppsCount || 0)),
-    [stats?.following, searchTerm]
+    (followingProfiles || [])
+      .filter(u => 
+        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        u.username?.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [followingProfiles, searchTerm]
   );
 
-  const filteredCommunity = useMemo(() => 
-    (stats?.community || [])
-      .filter(user => 
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCommunity = useMemo(() => {
+    const followingIds = new Set(followingProfiles.map(p => p.id));
+    return (stats?.community || [])
+      .filter(u => 
+        !followingIds.has(u.id) && (
+          u.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+          u.username.toLowerCase().includes(searchTerm.toLowerCase())
+        )
       )
-      .sort((a, b) => (b.activeAppsCount || 0) - (a.activeAppsCount || 0)),
-    [stats?.community, searchTerm]
-  );
+      .sort((a, b) => (b.activeAppsCount || 0) - (a.activeAppsCount || 0));
+  }, [stats?.community, searchTerm, followingProfiles]);
+
+  const isLoading = statsLoading || (activeTab === 'followers' && followersLoading) || (activeTab === 'following' && followingLoading);
 
   return (
     <div className="flex-1 space-y-6 w-full max-w-5xl mx-auto pb-24 animate-in fade-in duration-500">
@@ -385,7 +402,11 @@ function ConfirmUnfollowDialog({ isOpen, onClose, onConfirm, userName }: { isOpe
 function ConnectionsModal({ isOpen, onClose, userId, userName, type }: { isOpen: boolean, onClose: () => void, userId: string, userName: string, type: 'followers' | 'following' | 'mutual' }) {
   const { t } = useTranslation('vibers');
   const [searchTerm, setSearchTerm] = useState('');
-  const { profiles, loading } = useFollowList(userId, type === 'mutual' ? 'followers' : type);
+  const { profiles, loading } = useFollowList(
+    userId, 
+    type === 'mutual' ? 'followers' : type,
+    { enabled: isOpen }
+  );
 
   const filteredProfiles = profiles.filter(p => 
     p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -440,15 +461,25 @@ function ConnectionsModal({ isOpen, onClose, userId, userName, type }: { isOpen:
                 >
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 border border-border/50">
-                      <AvatarImage src={profile.avatar_url || undefined} alt={profile.name || ''} />
+                      <AvatarImage src={profile.avatarUrl || undefined} alt={profile.name || ''} />
                       <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
                         {profile.name?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
-                        {profile.name}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+                          {profile.name}
+                        </span>
+                        {(profile.activeAppsCount || 0) > 0 && (
+                          <div className="flex items-center gap-1 px-1 py-0.5 rounded-full bg-primary/10 border border-primary/20 shrink-0">
+                            <Rocket className="w-2 h-2 text-primary" />
+                            <span className="text-[8px] font-bold text-primary">
+                              {profile.activeAppsCount}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                       <span className="text-[11px] text-muted-foreground">
                         @{profile.username}
                       </span>

@@ -1,85 +1,88 @@
- import { useState, useEffect, useCallback } from 'react';
- import { useAuth } from '@/hooks/useAuth';
+ import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface FollowerProfile {
+  id: string;
+  username: string | null;
+  name: string | null;
+  avatarUrl: string | null;
+  tagline: string | null;
+  isFollowing: boolean;
+  activeAppsCount?: number;
+}
+
+interface RawFollowerProfile {
   id: string;
   username: string | null;
   name: string | null;
   avatar_url: string | null;
   tagline: string | null;
   isFollowing: boolean;
+  activeAppsCount?: number;
 }
 
-interface UseFollowListResult {
-  profiles: FollowerProfile[];
-  loading: boolean;
-  refetch: () => void;
+interface UseFollowListOptions {
+  enabled?: boolean;
 }
 
 export function useFollowList(
   profileId: string | undefined,
-  type: 'followers' | 'following'
-): UseFollowListResult {
-  const { user, loading: authLoading } = useAuth();
-  const [profiles, setProfiles] = useState<FollowerProfile[]>([]);
-  const [loading, setLoading] = useState(true);
+  type: 'followers' | 'following',
+  options: UseFollowListOptions = { enabled: true }
+) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-   const fetchProfiles = useCallback(async () => {
-     // Wait for auth to finish loading before fetching
-     if (authLoading) {
-       return;
-     }
- 
-     if (!profileId) {
-       setLoading(false);
-       return;
-     }
- 
-     setLoading(true);
- 
-     try {
-       const params = new URLSearchParams({
-         profileId,
-         type,
-       });
-       
-       if (user?.id) {
-         params.append('currentUserId', user.id);
-       }
- 
-       const response = await fetch(
-         `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/get-follow-list?${params}`,
-         {
-           method: 'GET',
-           headers: {
-             'Content-Type': 'application/json',
-           },
-         }
-       );
- 
-       const result = await response.json();
- 
-       if (result.success) {
-         setProfiles(result.profiles);
-       } else {
-         console.error('Error fetching follow list:', result.error);
-         setProfiles([]);
-       }
-     } catch (error) {
-       console.error('Error fetching follow list:', error);
-       setProfiles([]);
-     } finally {
-       setLoading(false);
-     }
-   }, [profileId, type, user, authLoading]);
+  const { data: profiles = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['follow-list', profileId, type],
+    queryFn: async () => {
+      if (!profileId) return [];
 
-  useEffect(() => {
-    fetchProfiles();
-  }, [fetchProfiles]);
+      const params = new URLSearchParams({
+        profileId,
+        type,
+      });
+      
+      if (user?.id) {
+        params.append('currentUserId', user.id);
+      }
+
+      const response = await fetch(
+        `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/get-follow-list?${params}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Error fetching follow list');
+      }
+
+      // Map snake_case to camelCase
+      return (result.profiles || []).map((p: RawFollowerProfile) => ({
+        id: p.id,
+        username: p.username,
+        name: p.name,
+        avatarUrl: p.avatar_url,
+        tagline: p.tagline,
+        isFollowing: p.isFollowing,
+        activeAppsCount: p.activeAppsCount
+      })) as FollowerProfile[];
+    },
+    enabled: options.enabled && !!profileId,
+    staleTime: 30 * 1000, // 30 seconds (connections change more often than statuses)
+  });
 
   return {
     profiles,
     loading,
-    refetch: fetchProfiles,
+    error,
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['follow-list', profileId, type] }),
   };
 }
