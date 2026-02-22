@@ -54,7 +54,7 @@
           "Eliminar tu cuenta y datos",
           "Exportar tus datos"
         ],
-        "footer": "Para ejercer estos derechos, contáctanos."
+        "footer": "Para ejercer tus derechos de acceso, rectificación o eliminación de datos (GDPR 15-22 / LGPD 18), puedes escribirnos a privacy@vibecoders.la."
       },
       {
         "title": "8. Cookies",
@@ -160,5 +160,36 @@
   "common": {
     "backToHome": "Volver al inicio",
     "logo": "vibecoders.la"
+  },
+  "cookies": {
+    "title": "Política de Cookies",
+    "lastUpdated": "Última actualización: 21 de febrero de 2026",
+    "sections": [
+      {
+        "title": "1. ¿Qué son las cookies?",
+        "content": "Las cookies son pequeños archivos de texto que se colocan en su dispositivo para recopilar información de registro estándar de Internet y de comportamiento. Cuando visita vibecoders.la, podemos recopilar información automáticamente a través de cookies."
+      },
+      {
+        "title": "2. ¿Cómo usamos las cookies?",
+        "content": "Utilizamos cookies para:",
+        "list": [
+          "Mantener su sesión activa de forma segura.",
+          "Entender cómo usa y navega por nuestra plataforma (usando Microsoft Clarity).",
+          "Guardar sus preferencias, como el idioma o el tema visual."
+        ]
+      },
+      {
+        "title": "3. Tipos de cookies que usamos",
+        "content": "Nuestra plataforma utiliza principalmente:",
+        "list": [
+          "Esenciales: Necesarias para el funcionamiento técnico de la plataforma y la autenticación.",
+          "Analíticas: Utilizamos Microsoft Clarity para registrar estadísticas de uso (clics, navegación, mapas de calor) de forma anonimizada, con el fin de mejorar la experiencia del producto. Esto requiere de cookies de terceros operadas por Microsoft."
+        ]
+      },
+      {
+        "title": "4. Control de Cookies",
+        "content": "Desde el panel de 'Privacidad' en la configuración de su cuenta, puede desactivar en cualquier momento la recopilación de datos de Microsoft Clarity. Además, puede configurar su navegador para rechazar todas las cookies, aunque esto podría afectar el funcionamiento de la plataforma."
+      }
+    ]
   }
 }

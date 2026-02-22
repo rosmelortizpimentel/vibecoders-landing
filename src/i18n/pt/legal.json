@@ -54,7 +54,7 @@
           "Delete your account and data",
           "Export your data"
         ],
-        "footer": "To exercise these rights, contact us."
+        "footer": "Para exercer os seus direitos de acesso, retificação ou eliminação de dados (GDPR 15-22 / LGPD 18), pode escrever-nos para privacy@vibecoders.la."
       },
       {
         "title": "8. Cookies",
@@ -158,7 +158,38 @@
     ]
   },
   "common": {
-    "backToHome": "Back to home",
+    "backToHome": "Voltar ao início",
     "logo": "vibecoders.la"
+  },
+  "cookies": {
+    "title": "Política de Cookies",
+    "lastUpdated": "Última atualização: 21 de fevereiro de 2026",
+    "sections": [
+      {
+        "title": "1. O que são cookies?",
+        "content": "Cookies são pequenos arquivos de texto colocados no seu dispositivo para coletar informações padrão de log da Internet e comportamento. Quando você visita vibecoders.la, podemos coletar informações automaticamente através de cookies."
+      },
+      {
+        "title": "2. Como usamos os cookies?",
+        "content": "Usamos cookies para:",
+        "list": [
+          "Manter sua sessão ativa com segurança.",
+          "Entender como você usa e navega em nossa plataforma (usando Microsoft Clarity).",
+          "Salvar suas preferências, como idioma ou tema visual."
+        ]
+      },
+      {
+        "title": "3. Tipos de cookies que usamos",
+        "content": "Nossa plataforma utiliza principalmente:",
+        "list": [
+          "Essenciais: Necessários para o funcionamento técnico da plataforma e autenticação.",
+          "Analíticos: Usamos Microsoft Clarity para registrar estatísticas de uso (cliques, navegação, mapas de calor) de forma anônima, a fim de melhorar a experiência do produto. Isso exige cookies de terceiros operados pela Microsoft."
+        ]
+      },
+      {
+        "title": "4. Controle de Cookies",
+        "content": "No painel 'Privacidade' nas configurações da sua conta, você pode, a qualquer momento, desativar a coleta de dados pelo Microsoft Clarity. Além disso, pode configurar seu navegador para rejeitar todos os cookies, embora isso possa afetar a funcionalidade da plataforma."
+      }
+    ]
   }
 }

@@ -3,15 +3,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
+import { Rocket } from 'lucide-react';
 import { UnfollowConfirmDialog } from './UnfollowConfirmDialog';
 
 interface FollowerCardProps {
   id: string;
   username: string | null;
   name: string | null;
-  avatar_url: string | null;
+  avatarUrl: string | null;
   tagline: string | null;
   isFollowing: boolean;
+  activeAppsCount?: number;
   onFollow: (userId: string) => Promise<boolean>;
   onUnfollow: (userId: string) => Promise<boolean>;
   onNavigateToProfile: (username: string) => void;
@@ -21,9 +23,10 @@ export function FollowerCard({
   id,
   username,
   name,
-  avatar_url,
+  avatarUrl,
   tagline,
   isFollowing: initialIsFollowing,
+  activeAppsCount,
   onFollow,
   onUnfollow,
   onNavigateToProfile,
@@ -83,7 +86,7 @@ export function FollowerCard({
       >
         {/* Avatar */}
         <Avatar className="h-10 w-10 flex-shrink-0">
-          <AvatarImage src={avatar_url || ''} alt={name || ''} />
+          <AvatarImage src={avatarUrl || ''} alt={name || ''} />
           <AvatarFallback className="text-sm font-medium bg-gray-100 text-gray-600">
             {name?.charAt(0) || '?'}
           </AvatarFallback>
@@ -94,14 +97,25 @@ export function FollowerCard({
           <p className="text-sm font-semibold text-gray-900 truncate">
             {name || 'Usuario'}
           </p>
-          <p className="text-xs text-gray-500 truncate">
+          <p className="text-xs text-gray-500 truncate mb-1">
             @{username || 'usuario'}
           </p>
-          {tagline && (
-            <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">
-              {tagline}
-            </p>
-          )}
+          
+          <div className="flex items-center gap-2">
+            {(activeAppsCount || 0) > 0 && (
+              <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 shrink-0">
+                <Rocket className="w-2.5 h-2.5 text-primary" />
+                <span className="text-[9px] font-bold text-primary uppercase">
+                  {activeAppsCount}
+                </span>
+              </div>
+            )}
+            {tagline && (
+              <p className="text-[10px] text-gray-400 truncate italic">
+                {tagline}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Follow Button - Don't show for own profile */}
@@ -134,7 +148,7 @@ export function FollowerCard({
         isOpen={showUnfollowDialog}
         onClose={() => setShowUnfollowDialog(false)}
         onConfirm={handleUnfollowConfirm}
-        user={{ name, username, avatar_url }}
+        user={{ name, username, avatar_url: avatarUrl }}
         isLoading={isProcessing}
       />
     </>

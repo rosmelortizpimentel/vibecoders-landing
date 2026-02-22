@@ -89,9 +89,10 @@ export function FollowersList({
               id={profile.id}
               username={profile.username}
               name={profile.name}
-              avatar_url={profile.avatar_url}
+              avatarUrl={profile.avatarUrl}
               tagline={profile.tagline}
               isFollowing={profile.isFollowing}
+              activeAppsCount={profile.activeAppsCount}
               onFollow={handleFollow}
               onUnfollow={handleUnfollow}
               onNavigateToProfile={onNavigateToProfile}

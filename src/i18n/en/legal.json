@@ -54,7 +54,7 @@
           "Delete your account and data",
           "Export your data"
         ],
-        "footer": "To exercise these rights, contact us."
+        "footer": "To exercise your rights of access, rectification or deletion of data (GDPR 15-22 / LGPD 18), you can write to us at privacy@vibecoders.la."
       },
       {
         "title": "8. Cookies",
@@ -160,5 +160,36 @@
   "common": {
     "backToHome": "Back to home",
     "logo": "vibecoders.la"
+  },
+  "cookies": {
+    "title": "Cookie Policy",
+    "lastUpdated": "Last updated: February 21, 2026",
+    "sections": [
+      {
+        "title": "1. What are cookies?",
+        "content": "Cookies are small text files placed on your device to collect standard Internet log and behavior information. When you visit vibecoders.la, we may collect information automatically through cookies."
+      },
+      {
+        "title": "2. How do we use cookies?",
+        "content": "We use cookies to:",
+        "list": [
+          "Maintain your session securely.",
+          "Understand how you use and navigate our platform (using Microsoft Clarity).",
+          "Save your preferences, such as language or visual theme."
+        ]
+      },
+      {
+        "title": "3. Types of cookies we use",
+        "content": "Our platform primarily uses:",
+        "list": [
+          "Essential: Necessary for the technical operation of the platform and authentication.",
+          "Analytical: We use Microsoft Clarity to record usage statistics (clicks, navigation, heatmaps) anonymously, to improve the product experience. This requires third-party cookies operated by Microsoft."
+        ]
+      },
+      {
+        "title": "4. Cookie Control",
+        "content": "From the 'Privacy' panel in your account settings, you can at any time disable data collection by Microsoft Clarity. Additionally, you can configure your browser to reject all cookies, although this could affect the platform's functionality."
+      }
+    ]
   }
 }

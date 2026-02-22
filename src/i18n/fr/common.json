@@ -10,7 +10,8 @@
     "authorName": "Rosmel Ortiz",
     "linkedIn": "https://www.linkedin.com/in/rosmelortiz/",
     "privacy": "Confidentialité",
-    "terms": "Conditions"
+    "terms": "Conditions",
+    "cookies": "Cookies"
   },
   "navigation": {
     "home": "Accueil",
@@ -29,6 +30,7 @@
     "notifications": "Notifications",
     "buildLog": "Journal de Bord",
     "roadmapAndFeedback": "Roadmap & Feedback",
+    "settings": "Paramètres",
     "admin": "Admin"
   },
   "joinGroup": "Rejoindre le Groupe",

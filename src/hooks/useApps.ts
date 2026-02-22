@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface AppData {
   id: string;
@@ -35,17 +36,13 @@ export interface AppData {
 
 export function useApps() {
   const { user } = useAuth();
-  const [apps, setApps] = useState<AppData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchApps = useCallback(async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  const { data: apps = [], isLoading: loading, error, refetch } = useQuery({
+    queryKey: ['user-private-apps', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
 
-    try {
       const { data, error } = await supabase
         .from('apps')
         .select(`
@@ -57,25 +54,16 @@ export function useApps() {
 
       if (error) throw error;
 
-      const appsWithStacks = data?.map(app => ({
+      return data?.map(app => ({
         ...app,
         stacks: app.app_stacks?.map((s: { stack_id: string }) => s.stack_id) || [],
         screenshots: app.screenshots || [],
-        tags: (app as any).tags || [],
+        tags: (app as { tags?: string[] }).tags || [],
       })) || [];
-
-      setApps(appsWithStacks);
-    } catch (err) {
-      console.error('Error fetching apps:', err);
-      setError(err instanceof Error ? err : new Error('Error al cargar apps'));
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    fetchApps();
-  }, [fetchApps]);
+    },
+    enabled: !!user,
+    staleTime: 0, // Deduplicate concurrent requests but don't cache persistently
+  });
 
   const createApp = useCallback(async (url: string) => {
     if (!user) throw new Error('No user');
@@ -94,9 +82,9 @@ export function useApps() {
 
     if (error) throw error;
 
-    setApps(prev => [...prev, { ...data, stacks: [], screenshots: [], tags: [] }]);
+    await queryClient.invalidateQueries({ queryKey: ['user-private-apps', user.id] });
     return data;
-  }, [user, apps]);
+  }, [user, apps, queryClient]);
 
   const updateApp = useCallback(async (id: string, updates: Partial<AppData>) => {
     const { stacks, ...appUpdates } = updates;
@@ -129,12 +117,8 @@ export function useApps() {
       }
     }
 
-    setApps(prev => prev.map(app => 
-      app.id === id 
-        ? { ...app, ...updates, stacks: stacks ?? app.stacks }
-        : app
-    ));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['user-private-apps', user?.id] });
+  }, [user?.id, queryClient]);
 
   const deleteApp = useCallback(async (id: string) => {
     const { error } = await supabase
@@ -144,8 +128,8 @@ export function useApps() {
 
     if (error) throw error;
 
-    setApps(prev => prev.filter(app => app.id !== id));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['user-private-apps', user?.id] });
+  }, [user?.id, queryClient]);
 
   const uploadAppLogo = useCallback(async (appId: string, file: File) => {
     if (!user) throw new Error('No user');
@@ -200,38 +184,38 @@ export function useApps() {
         .eq('id', update.id);
     }
 
-    setApps(reorderedApps.map((app, index) => ({ ...app, display_order: index })));
-  }, []);
+    await queryClient.invalidateQueries({ queryKey: ['user-private-apps', user?.id] });
+  }, [user?.id, queryClient]);
 
-   const verifyApp = useCallback(async (appId: string) => {
-     const { data, error } = await supabase.functions.invoke('verify-app-domain', {
-       body: { app_id: appId }
-     });
- 
-     if (error) {
-       console.error('Error verifying app:', error);
-       return { success: false, error: 'invoke_error', message: 'Error al conectar con el servidor' };
-     }
- 
-     if (data?.success) {
-       // Refetch to get updated state from server
-       await fetchApps();
-     }
- 
-     return data;
-   }, [fetchApps]);
- 
+  const verifyApp = useCallback(async (appId: string) => {
+    const { data, error } = await supabase.functions.invoke('verify-app-domain', {
+      body: { app_id: appId }
+    });
+
+    if (error) {
+      console.error('Error verifying app:', error);
+      return { success: false, error: 'invoke_error', message: 'Error al conectar con el servidor' };
+    }
+
+    if (data?.success) {
+      // Refetch to get updated state from server
+      await queryClient.invalidateQueries({ queryKey: ['user-private-apps', user?.id] });
+    }
+
+    return data;
+  }, [user?.id, queryClient]);
+
   return {
     apps,
     loading,
-    error,
+    error: error instanceof Error ? error : error ? new Error('Error al cargar apps') : null,
     createApp,
     updateApp,
     deleteApp,
     uploadAppLogo,
     uploadAppScreenshot,
     reorderApps,
-    refetch: fetchApps,
-     verifyApp,
+    refetch,
+    verifyApp,
   };
 }

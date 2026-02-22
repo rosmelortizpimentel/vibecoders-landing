@@ -246,7 +246,7 @@ const translations = {
 
 type Section = keyof typeof translations['es'];
 
-export function useTranslation<T extends Section>(section: T) {
+export function useTranslation<T extends Section>(section: T): { t: (key: string, data?: Record<string, string | number>) => string } & typeof translations['es'][T] {
   const { language } = useLanguage();
   const sectionTranslations = translations[language][section];
   
@@ -290,7 +290,7 @@ export function useTranslation<T extends Section>(section: T) {
   return useMemo(() => ({ 
     t, 
     ...(sectionTranslations as object)
-  }), [t, sectionTranslations]);
+  } as { t: (key: string, data?: Record<string, string | number>) => string } & typeof translations['es'][T]), [t, sectionTranslations]);
 }
 
 // Static function for use outside React components (with explicit language)

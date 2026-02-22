@@ -24,7 +24,6 @@ import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
-import { useProfile } from '@/hooks/useProfile';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -76,7 +75,6 @@ export function AuthenticatedHeader({
   const { t: tAuth } = useTranslation('auth');
   const { t: tProfile } = useTranslation('profile');
   const { t } = useTranslation('common');
-  const { profile: userProfile } = useProfile(); // Renamed to avoid conflict with prop 'profile'
   const isMobile = useIsMobile();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [open, setOpen] = useState(false);
@@ -88,8 +86,8 @@ export function AuthenticatedHeader({
   const { isAdmin } = useUserRole();
   const { isInWaitlist } = useWaitlistStatus();
 
-  const displayName = formatDisplayName(userProfile?.name, tAuth('user'));
-  const publicProfileUrl = userProfile?.username ? `/@${userProfile.username}` : null;
+  const displayName = formatDisplayName(profile?.name, tAuth('user'));
+  const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
 
   const badgeMap: Record<string, number> = {
     'notifications': unreadCount,

@@ -9,6 +9,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { FounderWelcome } from '@/components/home/FounderWelcome';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageHeaderProvider } from '@/contexts/PageHeaderContext';
+import { useFounderStatus } from '@/hooks/useFounderStatus';
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,7 +19,7 @@ export function DashboardLayout() {
   const { profile } = useProfile();
   const { isFounder, founderNumber, founderWelcomeSeen } = useSubscription();
   const queryClient = useQueryClient();
-  const [checkingAccess, setCheckingAccess] = useState(true);
+  const { isLoading: founderStatusLoading } = useFounderStatus();
   
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebarCollapsed') === 'true';
@@ -33,31 +34,17 @@ export function DashboardLayout() {
     return () => window.removeEventListener('sidebar-resize', handleResize as EventListener);
   }, []);
 
-  // Check founder status for new users
+  // Clean up stale Stripe redirect flag (only relevant during initial OAuth callback)
   useEffect(() => {
-    if (authLoading || !user) {
-      setCheckingAccess(false);
-      return;
-    }
-    
-    // Clean up stale Stripe redirect flag (only relevant during initial OAuth callback)
     localStorage.removeItem('pendingStripeRedirect');
-    
-    let cancelled = false;
-    supabase.functions.invoke('check-founder-status').then(() => {
-      if (!cancelled) setCheckingAccess(false);
-    }).catch(() => {
-      if (!cancelled) setCheckingAccess(false);
-    });
-    return () => { cancelled = true; };
-  }, [user, authLoading]);
+  }, []);
 
   // Redirect if not authenticated (after loading)
   if (!authLoading && !user) {
     return <Navigate to="/" replace />;
   }
 
-  if (authLoading || checkingAccess) {
+  if (authLoading || founderStatusLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-card">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

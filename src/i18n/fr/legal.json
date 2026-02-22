@@ -54,7 +54,7 @@
           "Delete your account and data",
           "Export your data"
         ],
-        "footer": "To exercise these rights, contact us."
+        "footer": "Pour exercer vos droits d'accès, de rectification ou de suppression de vos données (RGPD 15-22 / LGPD 18), vous pouvez nous écrire à privacy@vibecoders.la."
       },
       {
         "title": "8. Cookies",
@@ -158,7 +158,38 @@
     ]
   },
   "common": {
-    "backToHome": "Back to home",
+    "backToHome": "Retour à l'accueil",
     "logo": "vibecoders.la"
+  },
+  "cookies": {
+    "title": "Politique de Cookies",
+    "lastUpdated": "Dernière mise à jour : 21 février 2026",
+    "sections": [
+      {
+        "title": "1. Que sont les cookies ?",
+        "content": "Les cookies sont de petits fichiers texte placés sur votre appareil pour collecter des informations standard de journal Internet et de comportement. Lorsque vous visitez vibecoders.la, nous pouvons collecter des informations automatiquement via des cookies."
+      },
+      {
+        "title": "2. Comment utilisons-nous les cookies ?",
+        "content": "Nous utilisons des cookies pour :",
+        "list": [
+          "Maintenir votre session active en toute sécurité.",
+          "Comprendre comment vous utilisez et naviguez sur notre plateforme (en utilisant Microsoft Clarity).",
+          "Enregistrer vos préférences, telles que la langue ou le thème visuel."
+        ]
+      },
+      {
+        "title": "3. Types de cookies que nous utilisons",
+        "content": "Notre plateforme utilise principalement :",
+        "list": [
+          "Essentiels : Nécessaires au fonctionnement technique de la plateforme et à l'authentification.",
+          "Analytiques : Nous utilisons Microsoft Clarity pour enregistrer des statistiques d'utilisation (clics, navigation, cartes de chaleur) de manière anonyme, afin d'améliorer l'expérience produit. Cela nécessite des cookies tiers exploités par Microsoft."
+        ]
+      },
+      {
+        "title": "4. Contrôle des cookies",
+        "content": "Depuis le panneau 'Confidentialité' dans les paramètres de votre compte, vous pouvez à tout moment désactiver la collecte de données por Microsoft Clarity. De plus, vous pouvez configurer votre navigateur pour refuser tous les cookies, bien que cela puisse affecter le fonctionnement de la plateforme."
+      }
+    ]
   }
 }

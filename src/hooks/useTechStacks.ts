@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface TechStack {
@@ -7,65 +8,54 @@ export interface TechStack {
   logo_url: string;
   tags: string[];
   display_order: number;
-   website_url: string | null;
-   referral_url: string | null;
-   referral_param: string | null;
-   default_referral_code: string | null;
+  website_url: string | null;
+  referral_url: string | null;
+  referral_param: string | null;
+  default_referral_code: string | null;
 }
- 
- // Build referral URL for a tech stack with optional custom code
- export function buildStackReferralUrl(
-   stack: TechStack, 
-   customCode?: string | null
- ): string | null {
-   const code = customCode || stack.default_referral_code;
-   
-   // If there's a referral template and a code, use it
-   if (stack.referral_url && code) {
-     return stack.referral_url.replace('{code}', code);
-   }
-   // If there's a param and code, append to website URL
-   if (stack.referral_param && code && stack.website_url) {
-     try {
-       const url = new URL(stack.website_url);
-       url.searchParams.set(stack.referral_param, code);
-       return url.toString();
-     } catch {
-       return stack.website_url;
-     }
-   }
-   // Default to website URL (can be null)
-   return stack.website_url;
- }
+
+// Build referral URL for a tech stack with optional custom code
+export function buildStackReferralUrl(
+  stack: TechStack, 
+  customCode?: string | null
+): string | null {
+  const code = customCode || stack.default_referral_code;
+  
+  // If there's a referral template and a code, use it
+  if (stack.referral_url && code) {
+    return stack.referral_url.replace('{code}', code);
+  }
+  // If there's a param and code, append to website URL
+  if (stack.referral_param && code && stack.website_url) {
+    try {
+      const url = new URL(stack.website_url);
+      url.searchParams.set(stack.referral_param, code);
+      return url.toString();
+    } catch {
+      return stack.website_url;
+    }
+  }
+  // Default to website URL (can be null)
+  return stack.website_url;
+}
 
 export function useTechStacks() {
-  const [stacks, setStacks] = useState<TechStack[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const { data: stacks = [], isLoading: loading, error } = useQuery({
+    queryKey: ['tech-stacks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('tech_stacks')
+        .select('*')
+        .order('display_order', { ascending: true });
 
-  useEffect(() => {
-    async function fetchStacks() {
-      try {
-        const { data, error } = await supabase
-          .from('tech_stacks')
-          .select('*')
-          .order('display_order', { ascending: true });
-
-        if (error) throw error;
-        setStacks(data?.map(stack => ({
-          ...stack,
-          tags: Array.isArray(stack.tags) ? (stack.tags as string[]) : [],
-        })) || []);
-      } catch (err) {
-        console.error('Error fetching tech stacks:', err);
-        setError(err instanceof Error ? err : new Error('Error al cargar tech stacks'));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchStacks();
-  }, []);
+      if (error) throw error;
+      return data?.map(stack => ({
+        ...stack,
+        tags: Array.isArray(stack.tags) ? (stack.tags as string[]) : [],
+      })) || [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const groupedStacks = useMemo(() => {
     const groups: Record<string, TechStack[]> = {
@@ -100,5 +90,10 @@ export function useTechStacks() {
     return groups;
   }, [stacks]);
 
-  return { stacks, groupedStacks, loading, error };
+  return { 
+    stacks, 
+    groupedStacks, 
+    loading, 
+    error: error instanceof Error ? error : error ? new Error('Error al cargar tech stacks') : null 
+  };
 }

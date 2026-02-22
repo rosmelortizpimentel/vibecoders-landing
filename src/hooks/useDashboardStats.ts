@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useProfileCompletion } from './useProfileCompletion';
+import { useUserApps } from './useUserApps';
 
 interface DashboardStats {
   // Traffic
@@ -79,6 +80,7 @@ interface FollowsResponse {
 export function useDashboardStats() {
   const { user } = useAuth();
   const profileCompletion = useProfileCompletion();
+  const { data: userApps = [], isLoading: appsLoading } = useUserApps();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -94,79 +96,42 @@ export function useDashboardStats() {
       // Fetch profile stats (views, clicks, likes)
       const { data: profileStats } = await supabase.functions.invoke('get-profile-stats');
       
-      // Fetch followers/following details
-      const [followersRes, followingRes] = await Promise.all([
+      // Fetch followers/following counts
+      const [followersCountRes, followingCountRes] = await Promise.all([
         supabase
           .from('follows')
-          .select(`
-            follower_id,
-            profiles!follows_follower_id_fkey(
-              id, 
-              name, 
-              username, 
-              avatar_url, 
-              banner_url,
-              tagline,
-              apps(count)
-            )
-          `)
+          .select('*', { count: 'exact', head: true })
           .eq('following_id', user.id),
         supabase
           .from('follows')
-          .select(`
-            following_id,
-            profiles!follows_following_id_fkey(
-              id, 
-              name, 
-              username, 
-              avatar_url, 
-              banner_url,
-              tagline,
-              apps(count)
-            )
-          `)
+          .select('*', { count: 'exact', head: true })
           .eq('follower_id', user.id),
       ]);
 
-      const followers = (followersRes.data as unknown as FollowsResponse[] || []).map(f => ({
-        id: f.profiles.id,
-        name: f.profiles.name || 'User',
-        username: f.profiles.username || 'unknown',
-        avatarUrl: f.profiles.avatar_url || undefined,
-        bannerUrl: f.profiles.banner_url || undefined,
-        tagline: f.profiles.tagline || undefined,
-        activeAppsCount: f.profiles.apps?.[0]?.count || 0,
-        isFollowing: false, // Will be set below
-      }));
+      const followersCount = followersCountRes.count || 0;
+      const followingCount = followingCountRes.count || 0;
 
-      const following = (followingRes.data as unknown as FollowsResponse[] || []).map(f => ({
-        id: f.profiles.id,
-        name: f.profiles.name || 'User',
-        username: f.profiles.username || 'unknown',
-        avatarUrl: f.profiles.avatar_url || undefined,
-        bannerUrl: f.profiles.banner_url || undefined,
-        tagline: f.profiles.tagline || undefined,
-        activeAppsCount: f.profiles.apps?.[0]?.count || 0,
-        isFollowing: true,
-      }));
-
-      // Set isFollowing for followers (check if they are also in the following list)
-      const followingIds = new Set(following.map(f => f.id));
-      followers.forEach(f => {
-        f.isFollowing = followingIds.has(f.id);
-      });
-
-      // Fetch community profiles (users not followed by current user)
-      const excludeIds = [user.id, ...followingIds];
+      // Fetch community profiles (users to discover)
+      // Note: We don't exclude 'following' anymore here because we don't have the list.
+      // We can either fetch the following IDs or just accept a bit of overlap in the "Community" tab
+      // until the user actually follows them.
       const { data: communityData } = await supabase
         .from('profiles')
         .select('id, name, username, avatar_url, banner_url, tagline, apps(count)')
-        .not('id', 'in', `(${excludeIds.join(',')})`)
+        .not('id', 'eq', user.id)
         .not('username', 'is', null)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      const community: ProfileSummary[] = (communityData || []).map((p: any) => ({
+      const community: ProfileSummary[] = (communityData || []).map((p: {
+        id: string;
+        name: string | null;
+        username: string | null;
+        avatar_url: string | null;
+        banner_url: string | null;
+        tagline: string | null;
+        apps?: { count: number }[];
+      }) => ({
         id: p.id,
         name: p.name || 'User',
         username: p.username || 'unknown',
@@ -177,13 +142,8 @@ export function useDashboardStats() {
         isFollowing: false,
       }));
 
-      // Fetch user's apps
-      const { data: userApps } = await supabase
-        .from('apps')
-        .select('id, name, logo_url, beta_active')
-        .eq('user_id', user.id);
-
-      const appIds = userApps?.map(app => app.id) || [];
+      // Fetch user's apps (Already handled by useUserApps hook - we use the data from there)
+      const appIds = userApps.map(app => app.id);
 
       // Fetch pending testers for all user's apps
       let pendingTesters: PendingTester[] = [];
@@ -282,10 +242,10 @@ export function useDashboardStats() {
         appClicks: profileStats?.app_clicks || 0,
         totalViews: (profileStats?.profile_views || 0) + (profileStats?.app_clicks || 0),
         totalLikes,
-        followersCount: followers.length,
-        followingCount: following.length,
-        followers,
-        following,
+        followersCount,
+        followingCount,
+        followers: [], // Now fetched on-demand via useFollowList
+        following: [], // Now fetched on-demand via useFollowList
         community,
         clicksByApp,
         likesByApp,
@@ -349,7 +309,7 @@ export function useDashboardStats() {
 
   return {
     stats: combinedStats,
-    isLoading: isLoading || profileCompletion.loading,
+    isLoading: isLoading || profileCompletion.loading || appsLoading,
     refetch: fetchStats,
     acceptTester,
     rejectTester,

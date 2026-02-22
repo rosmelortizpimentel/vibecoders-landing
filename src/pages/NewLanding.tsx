@@ -31,6 +31,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import FoundersMarquee from '@/components/home/FoundersMarquee';
 import AppsShowcase from '@/components/home/AppsShowcase';
@@ -80,6 +81,8 @@ const NewHeroSection = () => {
   const navigate = useNavigate();
   const { user, signInWithGoogle, signInWithLinkedIn } = useAuth();
   const { t } = useTranslation('newLanding');
+  const { t: tAuth } = useTranslation('auth');
+  const { language } = useLanguage();
   // Initialize with null to hide by default until data loads
   const [stats, setStats] = useState<{ totalBuilders: number; totalApps: number; spotsLeft: number } | null>(null);
 
@@ -209,6 +212,23 @@ const NewHeroSection = () => {
                 <Linkedin className="h-5 w-5 fill-white" />
                 {t('hero.continueLinkedIn')}
               </button>
+            </div>
+            
+            {/* Legal Disclaimer */}
+            <div className="flex flex-col items-center gap-2 mt-2">
+              <div className="text-xs text-white/60 text-center px-4 leading-tight">
+                {tAuth('legalDisclaimer')}{' '}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">
+                  {tAuth('termsOfService')}
+                </a>,{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">
+                  {tAuth('privacyPolicy')}
+                </a>{' '}
+                {language === 'en' ? 'and' : language === 'pt' ? 'e' : 'y'}{' '}
+                <a href="/cookies" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">
+                  {tAuth('cookiePolicy')}
+                </a>.
+              </div>
             </div>
           </div>
         )}

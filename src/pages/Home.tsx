@@ -191,8 +191,9 @@ export default function Home() {
       <NetworkModal 
         isOpen={isNetworkOpen}
         onClose={() => setIsNetworkOpen(false)}
-        followers={stats?.followers ?? []}
-        following={stats?.following ?? []}
+        userId={user?.id}
+        followersCount={stats?.followersCount ?? 0}
+        followingCount={stats?.followingCount ?? 0}
       />
 
       <ProfileStrengthModal

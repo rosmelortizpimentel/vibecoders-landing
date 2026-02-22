@@ -62,7 +62,7 @@ export default function MyAppHub() {
   const [showBrandingSheet, setShowBrandingSheet] = useState(false);
   const [brandingForm, setBrandingForm] = useState({
     default_language: 'es',
-    font_family: 'Inter',
+    font_family: '',
     favicon_url: '',
     primary_color: '#3D5AFE',
     primary_button_color: '#3D5AFE',
@@ -85,7 +85,7 @@ export default function MyAppHub() {
     if (roadmap.settings) {
       setBrandingForm({
         default_language: roadmap.settings?.default_language || 'es',
-        font_family: roadmap.settings?.font_family || 'Inter',
+        font_family: roadmap.settings?.font_family || '',
         favicon_url: roadmap.settings?.favicon_url || '',
         primary_color: roadmap.settings?.primary_color || '#3D5AFE',
         primary_button_color: roadmap.settings?.primary_button_color || roadmap.settings?.primary_color || '#3D5AFE',
@@ -282,10 +282,9 @@ export default function MyAppHub() {
       </div>
     );
 
-    // Secondary Navigation (Tabs)
     const secondaryNav = (
-      <div className="flex items-center w-full gap-2 -mx-1 sm:mx-0 overflow-hidden">
-        <div className="flex overflow-x-auto gap-1 p-1 bg-muted/30 rounded-xl scrollbar-hide flex-1 sm:flex-none">
+      <div className="flex items-center w-full gap-2 px-1 sm:px-0">
+        <div className="flex gap-1 p-1 bg-muted/30 rounded-xl w-full sm:w-auto overflow-hidden">
           {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -294,12 +293,12 @@ export default function MyAppHub() {
                 key={tab.id} 
                 onClick={() => navigate(tab.path)} 
                 className={cn(
-                  'flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs transition-all duration-200 whitespace-nowrap min-w-fit shrink-0',
+                  'flex items-center justify-center gap-2 px-2 sm:px-4 py-2 rounded-lg text-xs transition-all duration-200 flex-1 sm:flex-none min-w-0',
                   isActive ? 'bg-background text-foreground shadow-sm font-bold' : 'text-muted-foreground/80 hover:text-foreground hover:bg-background/20'
                 )}
               >
-                <Icon className={cn("h-4 w-4 sm:h-3.5 sm:w-3.5", isActive ? "text-primary" : "text-muted-foreground")} />
-                <span className={cn("inline-flex sm:inline", isActive && "font-bold")}>{tab.label}</span>
+                <Icon className={cn("h-4 w-4 sm:h-3.5 sm:w-3.5 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                <span className={cn("hidden sm:inline-flex", isActive && "font-bold")}>{tab.label}</span>
               </button>
             );
           })}

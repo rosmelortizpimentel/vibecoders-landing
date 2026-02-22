@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -16,46 +16,28 @@ function normalizeEmail(email: string): string {
 
 export function useWaitlistStatus() {
   const { user, loading: authLoading } = useAuth();
-  const [isInWaitlist, setIsInWaitlist] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function checkWaitlistStatus() {
-      // Wait for auth to finish loading
-      if (authLoading) {
-        return;
+  const { data: isInWaitlist = false, isLoading } = useQuery({
+    queryKey: ['waitlist', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return false;
+      
+      const normalizedEmail = normalizeEmail(user.email);
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('id')
+        .eq('email', normalizedEmail)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error checking waitlist status:', error);
+        return false;
       }
+      return !!data;
+    },
+    enabled: !authLoading && !!user?.email,
+    staleTime: 5 * 60 * 1000, // Waitlist status is quite static
+  });
 
-      if (!user?.email) {
-        setIsInWaitlist(false);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const normalizedEmail = normalizeEmail(user.email);
-        const { data, error } = await supabase
-          .from('waitlist')
-          .select('id')
-          .eq('email', normalizedEmail)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error checking waitlist status:', error);
-          setIsInWaitlist(false);
-        } else {
-          setIsInWaitlist(!!data);
-        }
-      } catch (err) {
-        console.error('Error checking waitlist:', err);
-        setIsInWaitlist(false);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    checkWaitlistStatus();
-  }, [user?.email, authLoading]);
-
-  return { isInWaitlist, loading };
+  return { isInWaitlist, loading: authLoading || isLoading };
 }
