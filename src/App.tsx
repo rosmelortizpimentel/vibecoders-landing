@@ -146,7 +146,8 @@ const App = () => {
                   <Route path="/apps/:appId/roadmap" element={<MyAppHub />} />
                   <Route path="/apps/:appId/feedback" element={<MyAppHub />} />
                   <Route path="/apps/:appId/squad" element={<MyAppHub />} />
-                  {/* Legacy routes kept for backward compat */}
+                  <Route path="/apps/:appId/banners" element={<MyAppHub />} />
+                  <Route path="/apps/:appId/banners/:bannerId" element={<MyAppHub />} />
                   <Route path="/my-apps" element={<Navigate to="/apps" replace />} />
                   <Route path="/my-apps/:appId" element={<Navigate to="/apps" replace />} />
                   <Route path="/beta-testing" element={<Navigate to="/apps" replace />} />
