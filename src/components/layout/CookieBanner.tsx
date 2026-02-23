@@ -97,23 +97,23 @@ export function CookieBanner() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[100] p-4 pointer-events-none">
       <div className={cn(
-        "container max-w-4xl mx-auto bg-white border border-slate-200 shadow-2xl rounded-[24px] pointer-events-auto transition-all duration-300 overflow-hidden",
-        isExpanded ? "max-h-[600px]" : "max-h-[200px]"
+        "max-w-4xl mx-auto bg-white border border-slate-200 shadow-2xl rounded-[24px] md:rounded-[32px] pointer-events-auto transition-all duration-500 overflow-hidden",
+        isExpanded ? "max-h-[1000px]" : "max-h-none md:max-h-[200px]"
       )}>
-        <div className="p-5 md:p-6">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6">
+        <div className="p-5 md:p-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6 lg:gap-8">
             {/* Icon & Title */}
             <div className="flex items-start gap-4 flex-1">
-              <div className="shrink-0 w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                <Cookie className="w-5 h-5" />
+              <div className="shrink-0 w-12 h-12 rounded-[20px] bg-indigo-50 flex items-center justify-center text-indigo-600 shadow-sm border border-indigo-100/50">
+                <Cookie className="w-6 h-6" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+              <div className="space-y-1.5 flex-1">
+                <h3 className="text-[15px] font-bold text-slate-900 tracking-tight">
                   {t('cookies.banner.title')}
                 </h3>
-                <p className="text-[12px] text-slate-600 leading-relaxed max-w-2xl">
+                <p className="text-[13px] text-slate-500 leading-relaxed max-w-2xl font-medium">
                   {descriptionParts[0]}
-                  <Link to="/privacy" className="text-indigo-600 hover:underline font-medium">
+                  <Link to="/privacy" className="text-indigo-600 hover:underline font-semibold ml-1">
                     {privacyPolicyLabel}
                   </Link>
                 </p>
@@ -121,31 +121,31 @@ export function CookieBanner() {
             </div>
 
             {/* Buttons */}
-            <div className="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="flex-1 md:flex-none h-10 rounded-xl text-[12px] font-semibold text-slate-700 bg-slate-50 border-slate-200"
+                className="flex-1 lg:flex-none h-11 rounded-2xl text-[12px] font-bold text-slate-700 bg-slate-50 border-slate-200 hover:bg-slate-100 transition-all px-5"
               >
-                <Shield className="w-4 h-4 mr-2 text-slate-400" />
-                {t('cookies.buttons.manage')}
-                {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                <Shield className="w-4 h-4 mr-2 text-indigo-500" />
+                <span className="truncate">{t('cookies.buttons.manage')}</span>
+                {isExpanded ? <ChevronUp className="w-4 h-4 ml-1.5" /> : <ChevronDown className="w-4 h-4 ml-1.5" />}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleEssentialOnly}
-                className="flex-1 md:flex-none h-10 rounded-xl text-[12px] font-semibold text-slate-700 border-slate-200"
+                className="flex-1 lg:flex-none h-11 rounded-2xl text-[12px] font-bold text-slate-600 border-slate-200 hover:bg-slate-50 transition-all px-5"
               >
-                {t('cookies.buttons.essentialOnly')}
+                <span className="truncate">{t('cookies.buttons.essentialOnly')}</span>
               </Button>
               <Button
                 size="sm"
                 onClick={handleAcceptAll}
-                className="flex-1 md:flex-none h-10 rounded-xl text-[12px] font-bold bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white shadow-lg shadow-indigo-200"
+                className="w-full sm:w-auto lg:flex-none h-11 rounded-2xl text-[12px] font-black bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white shadow-xl shadow-indigo-100 transition-all active:scale-[0.98] px-8"
               >
-                {t('cookies.buttons.acceptAll')}
+                <span className="truncate">{t('cookies.buttons.acceptAll')}</span>
               </Button>
             </div>
           </div>

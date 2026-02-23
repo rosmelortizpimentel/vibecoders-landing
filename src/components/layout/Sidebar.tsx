@@ -102,9 +102,10 @@ export function Sidebar() {
   
   const navLinks: NavItem[] = [];
   let lastSection = '';
+  let sepIndex = 0;
   filteredItems.forEach((item) => {
     if (lastSection && item.section !== lastSection) {
-      navLinks.push({ type: 'separator', path: `sep-${item.section}` });
+      navLinks.push({ type: 'separator', path: `sep-${sepIndex++}` });
     }
     lastSection = item.section;
     navLinks.push({

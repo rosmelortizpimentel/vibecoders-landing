@@ -31,11 +31,12 @@ import { AppEditor } from '@/components/me/AppEditor';
 import RoadmapEditor from '@/pages/RoadmapEditor';
 import { BetaManagement } from '@/components/beta/BetaManagement';
 import { UnifiedFeedbackList } from '@/components/beta/UnifiedFeedbackList';
+import { BannersTab } from '@/components/banners/BannersTab';
 
-type TabId = 'info' | 'roadmap' | 'feedback' | 'squad';
+type TabId = 'info' | 'roadmap' | 'feedback' | 'squad' | 'banners';
 
 export default function MyAppHub() {
-  const { appId } = useParams<{ appId: string }>();
+  const { appId, bannerId } = useParams<{ appId: string, bannerId: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading: authLoading } = useAuth();
@@ -118,6 +119,7 @@ export default function MyAppHub() {
   const publicFeedbackPath = `${publicBasePath}/feedback`;
 
   const activeTab: TabId = useMemo(() => {
+    if (location.pathname.includes('/banners')) return 'banners';
     if (location.pathname.endsWith('/roadmap')) return 'roadmap';
     if (location.pathname.endsWith('/feedback')) return 'feedback';
     if (location.pathname.endsWith('/squad')) return 'squad';
@@ -142,6 +144,7 @@ export default function MyAppHub() {
     { id: 'roadmap', label: t.t('hub.roadmap'), icon: Map, path: `/apps/${appId}/roadmap` },
     { id: 'feedback', label: t.t('hub.feedback'), icon: MessageSquare, path: `/apps/${appId}/feedback` },
     { id: 'squad', label: "Open for Testing", icon: FlaskConical, path: `/apps/${appId}/squad` },
+    { id: 'banners', label: "Banners", icon: Paintbrush, path: `/apps/${appId}/banners` },
   ];
 
   const [betaConfig, setBetaConfig] = useState({
@@ -336,8 +339,10 @@ export default function MyAppHub() {
 
   return (
     <div className={cn(
-      "container px-3 sm:px-4 py-2 sm:py-4 flex-1 mx-auto transition-all duration-300",
-      activeTab === 'roadmap' ? "max-w-full" : "max-w-5xl",
+      "flex-1 mx-auto transition-all duration-300",
+      activeTab === 'banners' 
+        ? "max-w-full p-0" 
+        : cn("container px-3 sm:px-4 py-2 sm:py-4", activeTab === 'roadmap' ? "max-w-full" : "max-w-5xl"),
       (activeTab === 'info' || activeTab === 'feedback') && "bg-[#f0f0f0] dark:bg-muted/5 rounded-2xl"
     )}>
 
@@ -352,6 +357,7 @@ export default function MyAppHub() {
         {activeTab === 'roadmap' && <RoadmapEditor />}
         {activeTab === 'feedback' && <UnifiedFeedbackList appId={appId!} />}
         {activeTab === 'squad' && <BetaManagement appId={appId!} config={betaConfig} onConfigChange={handleBetaConfigChange} />}
+        {activeTab === 'banners' && <BannersTab appId={appId!} appName={app?.name} bannerId={bannerId} />}
       </div>
 
       {/* Settings Sheet */}
