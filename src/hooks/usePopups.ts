@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ToggleUpProxyService } from '@/services/toggleUpProxy';
+ import { ToggleUpProxyService } from '@/services/toggleUpProxy';
+import { cleanDomain } from '@/utils/domain';
 
 // Button configuration for banners
 export interface BannerButton {
@@ -213,11 +214,11 @@ export const DEFAULT_RULES: PopupRules = {
  * Fetch all popups for a Vibecoders app.
  * The proxy auto-creates the ToggleUp project on first access.
  */
-export function usePopups(vibecodersAppId: string | undefined, appName?: string) {
+ export function usePopups(vibecodersAppId: string | undefined, appName?: string, appUrl?: string) {
   return useQuery({
     queryKey: ['popups', vibecodersAppId],
     queryFn: () => (vibecodersAppId
-      ? ToggleUpProxyService.getPopups(vibecodersAppId, appName)
+      ? ToggleUpProxyService.getPopups(vibecodersAppId, appName, cleanDomain(appUrl))
       : Promise.resolve({ popups: [], projectId: '', api_key: '' })),
     enabled: !!vibecodersAppId,
   });
@@ -226,14 +227,15 @@ export function usePopups(vibecodersAppId: string | undefined, appName?: string)
 /**
  * Create a new popup for a Vibecoders app.
  */
-export function useCreatePopup() {
+ export function useCreatePopup() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ vibecodersAppId, appName, popupData }: {
+    mutationFn: ({ vibecodersAppId, appName, appUrl, popupData }: {
       vibecodersAppId: string;
       appName?: string;
+      appUrl?: string;
       popupData: { name: string; config: PopupConfig; rules: PopupRules; is_active: boolean };
-    }) => ToggleUpProxyService.createPopup(vibecodersAppId, popupData, appName),
+    }) => ToggleUpProxyService.createPopup(vibecodersAppId, popupData, appName, cleanDomain(appUrl)),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['popups', variables.vibecodersAppId] });
     },

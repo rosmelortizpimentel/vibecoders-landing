@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface UseFollowActionResult {
   follow: (targetUserId: string) => Promise<boolean>;
@@ -11,6 +12,7 @@ interface UseFollowActionResult {
 export function useFollowAction(): UseFollowActionResult {
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const queryClient = useQueryClient();
 
   const follow = useCallback(async (targetUserId: string): Promise<boolean> => {
     if (!user) return false;
@@ -28,6 +30,11 @@ export function useFollowAction(): UseFollowActionResult {
         console.error('Error following user:', error);
         return false;
       }
+
+      // Invalidate relevant queries to keep UI in sync
+      queryClient.invalidateQueries({ queryKey: ['follow-list'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+      
       return true;
     } catch (error) {
       console.error('Error following user:', error);
@@ -35,7 +42,7 @@ export function useFollowAction(): UseFollowActionResult {
     } finally {
       setIsProcessing(false);
     }
-  }, [user]);
+  }, [user, queryClient]);
 
   const unfollow = useCallback(async (targetUserId: string): Promise<boolean> => {
     if (!user) return false;
@@ -52,6 +59,11 @@ export function useFollowAction(): UseFollowActionResult {
         console.error('Error unfollowing user:', error);
         return false;
       }
+
+      // Invalidate relevant queries to keep UI in sync
+      queryClient.invalidateQueries({ queryKey: ['follow-list'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+
       return true;
     } catch (error) {
       console.error('Error unfollowing user:', error);
@@ -59,7 +71,7 @@ export function useFollowAction(): UseFollowActionResult {
     } finally {
       setIsProcessing(false);
     }
-  }, [user]);
+  }, [user, queryClient]);
 
   return {
     follow,

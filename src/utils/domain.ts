@@ -28,4 +28,30 @@ export const isCustomDomain = (hostname: string) => {
     return subdomain === 'www' ? null : subdomain;
   };
   
+  
+  export const cleanDomain = (url: string | undefined | null) => {
+    if (!url) return '';
+    
+    try {
+      // Handle cases where the URL doesn't have a protocol
+      let domain = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        domain = 'https://' + url;
+      }
+      
+      const parsed = new URL(domain);
+      let hostname = parsed.hostname;
+      
+      // Remove www.
+      if (hostname.startsWith('www.')) {
+        hostname = hostname.slice(4);
+      }
+      
+      return hostname;
+    } catch (e) {
+      // Fallback if URL parsing fails
+      return url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+    }
+  };
+  
   export const detectedSubdomain = getSubdomain(window.location.hostname);

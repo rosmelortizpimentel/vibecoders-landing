@@ -71,7 +71,7 @@ export function useFollowList(
         name: p.name,
         avatarUrl: p.avatar_url,
         tagline: p.tagline,
-        isFollowing: p.isFollowing,
+        isFollowing: type === 'following' ? true : !!p.isFollowing,
         activeAppsCount: p.activeAppsCount
       })) as FollowerProfile[];
     },

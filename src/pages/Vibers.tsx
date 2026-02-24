@@ -215,6 +215,11 @@ function ViberCard({ user }: { user: ProfileSummary }) {
   const navigate = useNavigate();
   const { follow, unfollow, isProcessing } = useFollowAction();
   const [isFollowing, setIsFollowing] = useState(user.isFollowing);
+  
+  // Keep local state in sync with props
+  useEffect(() => {
+    setIsFollowing(user.isFollowing);
+  }, [user.isFollowing]);
   const { t } = useTranslation('vibers');
   const [showConfirm, setShowConfirm] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);

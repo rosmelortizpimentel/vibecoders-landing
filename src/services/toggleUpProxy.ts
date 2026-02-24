@@ -13,9 +13,9 @@ export const ToggleUpProxyService = {
    * Gets all popups/banners for a Vibecoders app.
    * The proxy resolves the ToggleUp project_id from the mapping.
    */
-  async getPopups(vibecodersAppId: string, appName?: string) {
+  async getPopups(vibecodersAppId: string, appName?: string, appDomain?: string) {
     const { data, error } = await supabase.functions.invoke('toggleup-proxy', {
-      body: { action: 'get_popups', payload: { vibecodersAppId, appName } }
+      body: { action: 'get_popups', payload: { vibecodersAppId, appName, appDomain } }
     });
     
     if (error) throw error;
@@ -31,9 +31,9 @@ export const ToggleUpProxyService = {
    * Creates a new popup/banner for a Vibecoders app.
    * Auto-creates the ToggleUp project on first use.
    */
-  async createPopup(vibecodersAppId: string, popupData: Record<string, unknown>, appName?: string) {
+  async createPopup(vibecodersAppId: string, popupData: Record<string, unknown>, appName?: string, appDomain?: string) {
     const { data, error } = await supabase.functions.invoke('toggleup-proxy', {
-      body: { action: 'create_popup', payload: { vibecodersAppId, appName, popupData } }
+      body: { action: 'create_popup', payload: { vibecodersAppId, appName, appDomain, popupData } }
     });
     
     if (error) throw error;

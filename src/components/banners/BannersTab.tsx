@@ -24,15 +24,16 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface BannersTabProps {
-  appId: string;
+   appId: string;
   appName?: string;
+  appUrl?: string;
   bannerId?: string;
 }
 
-export function BannersTab({ appId, appName, bannerId }: BannersTabProps) {
+ export function BannersTab({ appId, appName, appUrl, bannerId }: BannersTabProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const { data, isLoading: isLoadingPopups } = usePopups(appId, appName);
+   const { data, isLoading: isLoadingPopups } = usePopups(appId, appName, appUrl);
   const popups = data?.popups;
   const projectId = data?.projectId;
   const apiKey = data?.api_key;
@@ -95,7 +96,8 @@ export function BannersTab({ appId, appName, bannerId }: BannersTabProps) {
     try {
       const newPopupAndKey = await createPopupMutation.mutateAsync({
         vibecodersAppId: appId,
-        appName,
+         appName,
+        appUrl,
         popupData: {
           name: t('banners.new_banner'),
           config: DEFAULT_MODAL_CONFIG,
