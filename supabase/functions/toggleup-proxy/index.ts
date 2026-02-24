@@ -56,7 +56,7 @@ Deno.serve(async (req: Request) => {
     )
 
     // ── 4. Helper: Resolve vibecoders app → toggleup project (with auto-creation) ──
-    async function resolveMapping(vibecodersAppId: string, appName?: string): Promise<{ id: string, api_key: string }> {
+    async function resolveMapping(vibecodersUserId: string, vibecodersUserEmail: string, vibecodersAppId: string, appName?: string, appDomain?: string): Promise<{ id: string, api_key: string }> {
       // Look up existing mapping
       const { data: mapping } = await vibecodersAdmin
         .from('app_toggleup_mapping')
@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
 
       if (mapping) {
         // ✅ Verify ownership: mapping must belong to authenticated user
-        if (mapping.user_id !== user!.id) {
+        if (mapping.user_id !== vibecodersUserId) {
           throw { status: 403, message: 'Forbidden: you do not own this app mapping' }
         }
         
@@ -93,17 +93,17 @@ Deno.serve(async (req: Request) => {
       const { data: existingProfile } = await toggleupAdmin
         .from('profiles')
         .select('id')
-        .eq('email', user!.email)
+        .eq('email', vibecodersUserEmail)
         .maybeSingle()
 
       if (existingProfile) {
         // User already has a ToggleUp account — use their existing ID
         toggleupUserId = existingProfile.id
-        console.log('Found existing ToggleUp profile for email:', user!.email, '→', toggleupUserId)
+        console.log('Found existing ToggleUp profile for email:', vibecodersUserEmail, '→', toggleupUserId)
       } else {
         // Create new user in ToggleUp (trigger will auto-create profile)
         const { data: newUser, error: authError } = await toggleupAdmin.auth.admin.createUser({
-          email: user!.email!,
+          email: vibecodersUserEmail,
           email_confirm: true,
           user_metadata: { source: 'vibecoders_proxy' },
         })
@@ -120,12 +120,12 @@ Deno.serve(async (req: Request) => {
         await new Promise(resolve => setTimeout(resolve, 500))
       }
 
-      const { data: newProject, error: projError } = await toggleupAdmin
+       const { data: newProject, error: projError } = await toggleupAdmin
         .from('projects')
         .insert({
           user_id: toggleupUserId,
           name: projectName,
-          domain: 'vibecoders-synced',
+          domain: appDomain,
         })
         .select('id, api_key')
         .single()
@@ -139,7 +139,7 @@ Deno.serve(async (req: Request) => {
       const { error: mapError } = await vibecodersAdmin
         .from('app_toggleup_mapping')
         .insert({
-          user_id: user!.id,
+          user_id: vibecodersUserId,
           vibecoders_app_id: vibecodersAppId,
           toggleup_project_id: newProject.id,
         })
@@ -189,10 +189,10 @@ Deno.serve(async (req: Request) => {
 
     switch (action) {
       case 'get_popups': {
-        const { vibecodersAppId, appName } = payload || {}
-        if (!vibecodersAppId) throw { status: 400, message: 'vibecodersAppId is required' }
+        const { vibecodersAppId, appName, appDomain } = payload || {}
+        if (!vibecodersAppId) throw new Error('vibecodersAppId is required');
 
-        const project = await resolveMapping(vibecodersAppId, appName)
+        const project = await resolveMapping(user!.id, user!.email!, vibecodersAppId, appName, appDomain)
         const projectId = project.id
 
         const { data: popups, error: e } = await toggleupAdmin
@@ -213,10 +213,11 @@ Deno.serve(async (req: Request) => {
       }
 
       case 'create_popup': {
-        const { vibecodersAppId, appName, popupData } = payload || {}
-        if (!vibecodersAppId) throw { status: 400, message: 'vibecodersAppId is required' }
-
-        const project = await resolveMapping(vibecodersAppId, appName)
+        const { vibecodersAppId, appName, appDomain, popupData } = payload || {}
+        if (!vibecodersAppId) throw new Error('vibecodersAppId is required');
+        if (!popupData) throw new Error('popupData is required');
+        
+        const project = await resolveMapping(user!.id, user!.email!, vibecodersAppId, appName, appDomain)
         const projectId = project.id
 
         // Only allow safe fields through

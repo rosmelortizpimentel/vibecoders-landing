@@ -357,7 +357,7 @@ export default function MyAppHub() {
         {activeTab === 'roadmap' && <RoadmapEditor />}
         {activeTab === 'feedback' && <UnifiedFeedbackList appId={appId!} />}
         {activeTab === 'squad' && <BetaManagement appId={appId!} config={betaConfig} onConfigChange={handleBetaConfigChange} />}
-        {activeTab === 'banners' && <BannersTab appId={appId!} appName={app?.name} bannerId={bannerId} />}
+         {activeTab === 'banners' && <BannersTab appId={appId!} appName={app?.name} appUrl={app?.url} bannerId={bannerId} />}
       </div>
 
       {/* Settings Sheet */}
