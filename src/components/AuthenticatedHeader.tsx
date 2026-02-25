@@ -16,11 +16,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, Crown, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap, Linkedin } from 'lucide-react';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap, Linkedin } from 'lucide-react';
 import { useSidebarMenu } from '@/hooks/useSidebarMenu';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
+
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
@@ -84,7 +84,7 @@ export function AuthenticatedHeader({
   const { unreadCount } = useNotifications();
   const { t: tNotif } = useTranslation('notifications');
   const { isAdmin } = useUserRole();
-  const { isInWaitlist } = useWaitlistStatus();
+
 
   const displayName = formatDisplayName(profile?.name, tAuth('user'));
   const publicProfileUrl = profile?.username ? `/@${profile.username}` : null;
@@ -104,8 +104,7 @@ export function AuthenticatedHeader({
   };
 
   // Build mobile menu from dynamic sidebar items
-  const mobileMenuItems = sidebarMenuItems
-    .filter(item => !item.requiresWaitlist || isInWaitlist);
+  const mobileMenuItems = sidebarMenuItems;
 
   const isActive = (path: string) => {
     // For /me, match any /me/* route
@@ -115,7 +114,7 @@ export function AuthenticatedHeader({
     return location.pathname === path;
   };
 
-  // Build navigation links dynamically based on waitlist status
+  // Build navigation links dynamically
   // Include all Sidebar links here so the header can resolve the title/icon
   const navLinks: { path: string; label: string; icon: typeof User; premium: boolean; isNew?: boolean }[] = [
     { path: '/connections', label: t('navigation.vibers'), icon: User, premium: false },
@@ -124,7 +123,6 @@ export function AuthenticatedHeader({
     { path: '/public-beta-testing', label: t('navigation.publicBetaTesting'), icon: Rocket, premium: false },
     { path: '/explore', label: t('navigation.startups'), icon: Rocket, premium: false },
     { path: '/tools', label: t('navigation.tools'), icon: Wrench, premium: false },
-    ...(isInWaitlist ? [{ path: '/buildlog', label: t('navigation.buildLog'), icon: Crown, premium: true }] : []),
   ];
 
   const handleNavClick = () => {

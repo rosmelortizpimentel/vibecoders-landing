@@ -1,8 +1,4 @@
-import { Link } from 'react-router-dom';
-import { Crown } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useAuth } from '@/hooks/useAuth';
-import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 
 const WhatsAppIcon = ({ className }: { className?: string }) => (
@@ -13,8 +9,6 @@ const WhatsAppIcon = ({ className }: { className?: string }) => (
 
 const Navbar = () => {
   const t = useTranslation('common');
-  const { user } = useAuth();
-  const { isInWaitlist } = useWaitlistStatus();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-md">
@@ -31,17 +25,6 @@ const Navbar = () => {
         </a>
 
         <div className="flex items-center gap-4">
-          {/* Build Log link - only for logged in waitlist users */}
-          {user && isInWaitlist && (
-            <Link
-              to="/buildlog"
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-white/90 transition-all duration-200 hover:bg-white/10 hover:text-white"
-            >
-              <Crown className="h-4 w-4 text-amber-400" />
-              <span className="hidden sm:inline">Build Log</span>
-            </Link>
-          )}
-
           <a
             href="https://chat.whatsapp.com/KY0zyPxTQO49m6dBurRPNe"
             target="_blank"

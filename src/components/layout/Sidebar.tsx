@@ -12,7 +12,7 @@ import {
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useWaitlistStatus } from '@/hooks/useWaitlistStatus';
+
 import { useUserRole } from '@/hooks/useUserRole';
 import { useProfile } from '@/hooks/useProfile';
 import { Separator } from '@/components/ui/separator';
@@ -35,7 +35,7 @@ export function Sidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
   const { t } = useTranslation('common');
-  const { isInWaitlist } = useWaitlistStatus();
+
   const { isAdmin } = useUserRole();
   const { profile } = useProfile();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -83,8 +83,8 @@ export function Sidebar() {
     'public-beta-testing': publicSquadsCount,
   };
 
-  // Build nav links from DB items, filtering waitlist items and inserting separators between sections
-  const filteredItems = menuItems.filter(item => !item.requiresWaitlist || isInWaitlist);
+  // Build nav links from DB items, inserting separators between sections
+  const filteredItems = menuItems;
   
   // Resolve i18n labels - for notifications namespace, use a simple lookup
   const { t: tNotif } = useTranslation('notifications');
