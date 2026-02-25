@@ -89,12 +89,27 @@ export function useApps() {
   const updateApp = useCallback(async (id: string, updates: Partial<AppData>) => {
     const { stacks, ...appUpdates } = updates;
 
+    // Build update object safely - only include fields permitted for client-side update
+    const safeUpdates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    const permittedFields: (keyof AppData)[] = [
+      'url', 'name', 'tagline', 'description', 'logo_url', 
+      'category_id', 'status_id', 'hours_ideation', 'hours_building', 
+      'is_visible', 'display_order', 'beta_active', 'beta_mode', 
+      'beta_limit', 'beta_link', 'beta_instructions', 'tags', 'screenshots'
+    ];
+
+    permittedFields.forEach(field => {
+      if (appUpdates[field as keyof typeof appUpdates] !== undefined) {
+        safeUpdates[field] = appUpdates[field as keyof typeof appUpdates];
+      }
+    });
+
     const { error } = await supabase
       .from('apps')
-      .update({
-        ...appUpdates,
-        updated_at: new Date().toISOString(),
-      })
+      .update(safeUpdates)
       .eq('id', id);
 
     if (error) throw error;
