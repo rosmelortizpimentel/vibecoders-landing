@@ -200,10 +200,14 @@ Deno.serve(async (req) => {
       const lastActivityDate = latestActivityMap.get(profile.id) || null;
 
       let lastActivity: string | null = lastSignIn;
+      let lastActivityDateOnly = false;
       if (lastActivityDate) {
-        const activityTs = new Date(`${lastActivityDate}T12:00:00Z`).toISOString();
-        if (!lastActivity || activityTs > lastActivity) {
-          lastActivity = activityTs;
+        // Compare: if activity date is more recent than lastSignIn date
+        const signInDate = lastSignIn ? lastSignIn.split('T')[0] : '';
+        if (!lastActivity || lastActivityDate > signInDate) {
+          // Use the date-only value — don't fabricate a fake time
+          lastActivity = lastActivityDate;
+          lastActivityDateOnly = true;
         }
       }
 
@@ -224,6 +228,7 @@ Deno.serve(async (req) => {
         followersCount,
         followingCount,
         lastActivity,
+        lastActivityDateOnly,
         tier: sub?.tier || null,
         founder_number: sub?.founder_number || null,
         subscription_status: sub?.subscription_status || null,
