@@ -49,6 +49,7 @@ interface EnrichedUser {
   followersCount: number;
   followingCount: number;
   lastActivity: string | null;
+  lastActivityDateOnly: boolean;
   tier: string | null;
   founder_number: number | null;
   subscription_status: string | null;
@@ -491,7 +492,11 @@ export function UsersManager() {
                   {formatTorontoDate(user.created_at)}
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
-                  {user.lastActivity ? formatTorontoDate(user.lastActivity) : <span className="text-muted-foreground/50">{t('never')}</span>}
+                  {user.lastActivity ? (
+                    user.lastActivityDateOnly 
+                      ? formatShortDate(user.lastActivity) 
+                      : formatTorontoDate(user.lastActivity)
+                  ) : <span className="text-muted-foreground/50">{t('never')}</span>}
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-1">

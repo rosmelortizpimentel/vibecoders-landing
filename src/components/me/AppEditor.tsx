@@ -133,11 +133,9 @@ interface AppEditorProps {
   };
 
    const handleVerificationSuccess = () => {
-     setLocalApp(prev => ({ 
-       ...prev, 
-       is_verified: true, 
-       verified_at: new Date().toISOString() 
-     }));
+     // We don't manually set local state here because auto-save would try to persist it,
+     // which is blocked by RLS for security. The verifyApp function already
+     // invalidates the query to show the updated state from the server.
    };
  
    const formatVerifiedDate = (dateStr: string | null) => {
