@@ -220,13 +220,9 @@ const NewHeroSection = () => {
                 {tAuth('legalDisclaimer')}{' '}
                 <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">
                   {tAuth('termsOfService')}
-                </a>,{' '}
+                </a>{' & '}
                 <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">
                   {tAuth('privacyPolicy')}
-                </a>{' '}
-                {language === 'en' ? 'and' : language === 'pt' ? 'e' : 'y'}{' '}
-                <a href="/cookies" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">
-                  {tAuth('cookiePolicy')}
                 </a>.
               </div>
             </div>
