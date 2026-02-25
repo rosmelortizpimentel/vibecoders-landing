@@ -49,6 +49,19 @@ Deno.serve(async (req) => {
       // Read the actual amount from the session (in cents -> dollars)
       const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
 
+      // Fetch subscription to get current_period_end
+      let currentPeriodEnd: string | null = null;
+      if (session.subscription) {
+        try {
+          const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+          if (sub.current_period_end) {
+            currentPeriodEnd = new Date(sub.current_period_end * 1000).toISOString();
+          }
+        } catch (e) {
+          console.error("[STRIPE-WEBHOOK] Could not fetch subscription details:", (e as Error).message);
+        }
+      }
+
       await supabaseAdmin
         .from("user_subscriptions")
         .upsert({
@@ -58,6 +71,7 @@ Deno.serve(async (req) => {
           stripe_customer_id: session.customer as string,
           subscription_id: session.subscription as string,
           subscription_status: "active",
+          current_period_end: currentPeriodEnd,
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
 

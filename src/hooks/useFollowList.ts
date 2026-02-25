@@ -35,7 +35,7 @@ export function useFollowList(
   const queryClient = useQueryClient();
 
   const { data: profiles = [], isLoading: loading, error, refetch } = useQuery({
-    queryKey: ['follow-list', profileId, type],
+    queryKey: ['follow-list', profileId, type, user?.id],
     queryFn: async () => {
       if (!profileId) return [];
 
@@ -83,6 +83,6 @@ export function useFollowList(
     profiles,
     loading,
     error,
-    refetch: () => queryClient.invalidateQueries({ queryKey: ['follow-list', profileId, type] }),
+    refetch: () => queryClient.invalidateQueries({ queryKey: ['follow-list', profileId, type, user?.id] }),
   };
 }
