@@ -1093,7 +1093,7 @@ const Analytics = () => {
             <div className="space-y-3">
               <h4 className="text-[10px] uppercase tracking-[0.2em] font-black text-slate-400">Embed Code</h4>
               <div className="relative group">
-                <pre className="p-8 rounded-2xl bg-[#121212] text-white overflow-x-auto text-sm font-mono border border-white/5 leading-relaxed">
+                <pre className="p-4 sm:p-6 rounded-2xl bg-[#121212] text-white/90 text-[11px] sm:text-xs font-mono border border-white/10 leading-relaxed whitespace-pre-wrap break-all">
                   {scriptTag}
                 </pre>
               </div>
