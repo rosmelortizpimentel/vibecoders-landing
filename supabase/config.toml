@@ -107,3 +107,6 @@ entrypoint = "./functions/delete-user/index.ts"
 enabled = true
 verify_jwt = false
 entrypoint = "./functions/toggleup-proxy/index.ts"
+
+[functions.collect]
+verify_jwt = false
