@@ -153,6 +153,7 @@ const App = () => {
                   <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
                   <Route path="/test-sdk" element={<TestAnalytics />} />
                   <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/analytics/:appId" element={<Analytics />} />
                   {/* Legacy redirect */}
                   <Route path="/me/apps" element={<Navigate to="/apps" replace />} />
                 </Route>
