@@ -45,6 +45,10 @@
       "destination": "/api/og?username=:username"
     },
     {
+      "source": "/api/collect",
+      "destination": "https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/collect"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/:path*"
     },

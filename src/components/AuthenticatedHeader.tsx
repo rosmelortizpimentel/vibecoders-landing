@@ -376,3 +376,5 @@ export function AuthenticatedHeader({
     </header>
   );
 }
+
+export default AuthenticatedHeader;

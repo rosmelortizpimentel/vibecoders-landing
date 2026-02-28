@@ -47,6 +47,8 @@ import PublicRoadmap from "./pages/PublicRoadmap";
 import MyApps from "./pages/MyApps";
 import MyAppHub from "./pages/MyAppHub";
 import Settings from "./pages/Settings";
+import TestAnalytics from "./pages/TestAnalytics";
+import Analytics from "./pages/Analytics";
 
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -149,6 +151,8 @@ const App = () => {
                   <Route path="/prompts/:id/edit" element={<PromptStudio />} />
                   <Route path="/app/:appId" element={<AppDetail />} />
                   <Route path="/roadmap-editor/:appId" element={<RoadmapEditor />} />
+                  <Route path="/test-sdk" element={<TestAnalytics />} />
+                  <Route path="/analytics" element={<Analytics />} />
                   {/* Legacy redirect */}
                   <Route path="/me/apps" element={<Navigate to="/apps" replace />} />
                 </Route>

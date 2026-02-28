@@ -32,6 +32,7 @@ export interface AppData {
   beta_link: string | null;
   beta_instructions: string | null;
   tags: string[];
+  analytics_enabled: boolean;
 }
 
 export function useApps() {
@@ -98,7 +99,8 @@ export function useApps() {
       'url', 'name', 'tagline', 'description', 'logo_url', 
       'category_id', 'status_id', 'hours_ideation', 'hours_building', 
       'is_visible', 'display_order', 'beta_active', 'beta_mode', 
-      'beta_limit', 'beta_link', 'beta_instructions', 'tags', 'screenshots'
+      'beta_limit', 'beta_link', 'beta_instructions', 'tags', 'screenshots',
+      'analytics_enabled'
     ];
 
     permittedFields.forEach(field => {
