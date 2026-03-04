@@ -144,19 +144,20 @@ export function ChatThread({ conversationId }: ChatThreadProps) {
     bottomRef.current?.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant' });
   }, []);
 
-  const buildMessages = useCallback(async (msgs: any[]) => {
+  const buildMessages = useCallback(async (msgs: Omit<Message, 'reactions'>[]) => {
     if (!msgs || msgs.length === 0) return [];
-    const messageIds = msgs.map((m: any) => m.id);
+    const messageIds = msgs.map((m) => m.id);
     const { data: reactions } = await supabase
       .from('chat_message_reactions')
       .select('*')
       .in('message_id', messageIds);
     const reactionMap: Record<string, Reaction[]> = {};
-    (reactions || []).forEach((r: any) => {
-      if (!reactionMap[r.message_id]) reactionMap[r.message_id] = [];
-      reactionMap[r.message_id].push(r as Reaction);
+    (reactions || []).forEach((r) => {
+      const reaction = r as Reaction;
+      if (!reactionMap[reaction.message_id]) reactionMap[reaction.message_id] = [];
+      reactionMap[reaction.message_id].push(reaction);
     });
-    return msgs.map((m: any) => ({
+    return msgs.map((m) => ({
       ...m,
       image_urls: m.image_urls || [],
       audio_url: m.audio_url || null,
@@ -568,9 +569,13 @@ export function ChatThread({ conversationId }: ChatThreadProps) {
                           <button
                             key={i}
                             onClick={() => setViewer({ url, path: raw, messageId: msg.id, isOwn, imageIndex: i })}
-                            className="shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-xl"
+                            className="shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/50 rounded-xl bg-muted/10 overflow-hidden"
                           >
-                            <img src={url} alt={'img-'+i} className="w-28 h-28 object-cover rounded-xl hover:opacity-90 transition-opacity cursor-pointer" />
+                            <img 
+                              src={url} 
+                              alt={'img-'+i} 
+                              className="max-h-32 max-w-[200px] w-auto h-auto object-contain hover:opacity-90 transition-opacity cursor-pointer" 
+                            />
                           </button>
                         ) : (
                           <div key={i} className="shrink-0 w-28 h-28 rounded-xl bg-muted flex items-center justify-center">

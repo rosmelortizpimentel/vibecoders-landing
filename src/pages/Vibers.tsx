@@ -5,7 +5,8 @@ import {
   User, 
   Heart, 
   Rocket,
-  ShieldAlert
+  ShieldAlert,
+  MessageSquare
 } from 'lucide-react';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useDashboardStats } from '@/hooks/useDashboardStats';
@@ -325,12 +326,12 @@ function ViberCard({ user }: { user: ProfileSummary }) {
             )}
           </div>
 
-          <div className="mt-5 w-full shrink-0">
+          <div className="mt-5 w-full shrink-0 flex gap-2">
             <Button 
               size="sm" 
               variant={isFollowing ? "outline" : "default"}
               className={cn(
-                "w-full rounded-xl font-bold text-xs transition-all duration-300 h-9",
+                "flex-1 rounded-xl font-bold text-xs transition-all duration-300 h-9",
                 isFollowing ? "bg-background/50 border-primary/30 hover:bg-destructive/10 hover:border-destructive hover:text-destructive group/unfollow" : "bg-primary shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5"
               )}
               onClick={handleToggle}
@@ -351,6 +352,16 @@ function ViberCard({ user }: { user: ProfileSummary }) {
                   {t('follow')}
                 </>
               )}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-xl border-border/50 hover:bg-primary/10 hover:text-primary transition-all duration-300 h-9 w-9 p-0 shadow-sm"
+              asChild
+            >
+              <Link to={`/chat?user=${user.id}`} title="Chat">
+                <MessageSquare className="w-4 h-4" />
+              </Link>
             </Button>
           </div>
         </div>
@@ -490,9 +501,28 @@ function ConnectionsModal({ isOpen, onClose, userId, userName, type }: { isOpen:
                       </span>
                     </div>
                   </div>
-                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <User className="w-3.5 h-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-8 w-8 p-0 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all font-bold"
+                      asChild
+                    >
+                      <Link to={`/chat?user=${profile.id}`} onClick={onClose}>
+                        <MessageSquare className="w-3.5 h-3.5" />
+                      </Link>
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-8 w-8 p-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      asChild
+                    >
+                      <Link to={`/@${profile.username}`} onClick={onClose} title="Ver Perfil">
+                        <User className="w-3.5 h-3.5" />
+                      </Link>
+                    </Button>
+                  </div>
                 </Link>
               ))}
             </div>
