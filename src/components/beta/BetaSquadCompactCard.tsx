@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,8 +41,10 @@ export function BetaSquadCompactCard({ app }: BetaSquadCompactCardProps) {
             )}
           </Avatar>
           <div className="min-w-0 flex-1">
-            <h4 className="font-bold text-xs text-foreground truncate group-hover:text-primary transition-colors">
-              {app.name}
+            <h4 className="font-bold text-xs text-foreground truncate group-hover:text-primary transition-colors hover:underline">
+              <Link to={`/app/${app.id}`} onClick={(e) => e.stopPropagation()}>
+                {app.name}
+              </Link>
             </h4>
             <p className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase">
               <MessageSquare className="w-2.5 h-2.5" />

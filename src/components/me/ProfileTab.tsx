@@ -485,6 +485,29 @@ export function ProfileTab({
       {/* Divider */}
       <hr className="border-border" />
 
+      {/* Chat Availability */}
+      <section className="space-y-3">
+        <div>
+          <h3 className="text-sm font-medium text-foreground">Chat</h3>
+          <p className="text-xs text-muted-foreground mt-1">
+            Cuando estés disponible, aparecerás en el directorio de chat para que otros Vibers puedan iniciarte una conversación.
+          </p>
+        </div>
+        <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
+          <div>
+            <p className="text-sm font-medium text-foreground">Disponible para chat</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Aparecer en el directorio de mensajes</p>
+          </div>
+          <Switch
+            checked={profile.chat_available ?? false}
+            onCheckedChange={(checked) => onUpdate({ chat_available: checked })}
+          />
+        </div>
+      </section>
+
+      {/* Divider */}
+      <hr className="border-border" />
+
       {/* Typography */}
       <section className="space-y-4">
         <div>

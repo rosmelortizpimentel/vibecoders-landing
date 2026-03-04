@@ -101,7 +101,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
     try {
       const { data: publicFeedback } = await supabase
         .from('roadmap_feedback')
-        .select('id, title, description, status, created_at, author_name, is_hidden, linked_card_id, roadmap_feedback_attachments(file_url, file_name, file_type)')
+        .select('id, title, description, status, created_at, author_name, is_hidden, linked_card_id, roadmap_feedback_attachments(file_url, file_name, file_type), author:profiles!roadmap_feedback_author_id_fkey(username, avatar_url)')
         .eq('app_id', appId)
         .order('created_at', { ascending: false });
 
@@ -113,8 +113,8 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
 
       const unified: UnifiedFeedbackItem[] = [];
 
-      (publicFeedback || []).forEach(f => {
-        const atts = (f as any).roadmap_feedback_attachments || [];
+      (publicFeedback || []).forEach((f: any) => {
+        const atts = f.roadmap_feedback_attachments || [];
         unified.push({
           id: `public-${f.id}`,
           realId: f.id,
@@ -123,8 +123,8 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
           title: f.title,
           status: f.status,
           created_at: f.created_at,
-          author_name: f.author_name,
-          author_avatar: null,
+          author_name: f.author?.username || f.author_name,
+          author_avatar: f.author?.avatar_url || null,
           is_hidden: f.is_hidden ?? false,
           attachments: atts,
           linked_card_id: f.linked_card_id,
@@ -245,7 +245,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
       }
 
       setItems(prev => prev.filter(i => i.id !== deleteConfirmItem.id));
-      toast.success(t.t('hub.feedbackDeleted') || 'Feedback deleted');
+      toast.success(t.t('hub.feedbackDeleted') || 'Feedback eliminado');
       setDeleteConfirmItem(null);
     } catch (err) {
       console.error('Error deleting feedback:', err);
@@ -267,7 +267,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
 
     if (!error) {
       setItems(prev => prev.map(i => i.id === itemId ? { ...i, status: 'in_review' } : i));
-      toast.success(t.t('hub.markResolved') || 'Marked as in review');
+      toast.success(t.t('hub.markResolved') || 'Marcado como en revisión');
     } else {
       toast.error('Error updating status');
     }
@@ -281,7 +281,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
 
     if (!error) {
       setItems(prev => prev.map(i => i.id === itemId ? { ...i, status: 'closed' } : i));
-      toast.success(t.t('hub.feedbackClosed') || 'Feedback closed');
+      toast.success(t.t('hub.feedbackClosed') || 'Feedback cerrado');
     } else {
       toast.error('Error updating status');
     }
@@ -426,7 +426,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     {item.title && <h4 className="font-medium text-sm text-foreground mb-1">{item.title}</h4>}
-                    <p className="text-sm text-foreground">{item.content}</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap break-words">{item.content}</p>
                   </div>
                   {item.source === 'public' && (
                     <div className="flex items-center gap-1 shrink-0">
@@ -584,13 +584,13 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
       <AlertDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t.t('hub.deleteFeedback') || 'Delete Feedback'}</AlertDialogTitle>
+            <AlertDialogTitle>{t.t('hub.deleteFeedback') || 'Eliminar Feedback'}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t.t('hub.deleteFeedbackConfirm') || 'Are you sure you want to delete this feedback? This action cannot be undone.'}
+              {t.t('hub.deleteFeedbackConfirm') || '¿Estás seguro de que quieres eliminar este feedback? Esta acción no se puede deshacer.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>{t.t('hub.cancel') || 'Cancel'}</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>{t.t('hub.cancel') || 'Cancelar'}</AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
                 e.preventDefault();
@@ -600,7 +600,7 @@ export function UnifiedFeedbackList({ appId }: UnifiedFeedbackListProps) {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isDeleting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              {t.t('hub.delete') || 'Delete'}
+              {t.t('hub.delete') || 'Eliminar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

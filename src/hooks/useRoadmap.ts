@@ -50,8 +50,11 @@ export interface RoadmapFeedback {
   linked_card_id: string | null;
   title: string;
   description: string;
+  author_id: string | null;
   author_name: string | null;
   author_email: string | null;
+  author_username?: string | null;
+  author_avatar_url?: string | null;
   status: string;
   owner_response: string | null;
   owner_response_at: string | null;
@@ -256,6 +259,7 @@ export function useRoadmap(appId: string | undefined) {
 // Separate hook for public feedback
 export function useRoadmapFeedback(appId: string | undefined) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: feedback = [], isLoading: loading, error } = useQuery({
     queryKey: ['roadmap-feedback', appId],
@@ -270,6 +274,7 @@ export function useRoadmapFeedback(appId: string | undefined) {
       if (error) throw error;
       return (data || []).map(f => ({
         ...f,
+        author_id: (f as any).author_id || null,
         attachments: f.roadmap_feedback_attachments || [],
       })) as RoadmapFeedback[];
     },
@@ -287,7 +292,14 @@ export function useRoadmapFeedback(appId: string | undefined) {
     if (!appId) return;
     const { data: fb, error } = await supabase
       .from('roadmap_feedback')
-      .insert({ app_id: appId, title: data.title, description: data.description, author_name: data.author_name, author_email: data.author_email })
+      .insert({ 
+        app_id: appId, 
+        title: data.title, 
+        description: data.description, 
+        author_name: data.author_name, 
+        author_email: data.author_email,
+        author_id: user?.id || null
+      })
       .select()
       .single();
     if (error) throw error;
