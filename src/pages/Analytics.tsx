@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { InfoIcon, RefreshCw, Copy, CheckCircle2, BarChart3, Rocket, Zap, Plus, ChevronLeft, ChevronRight, Calendar, LayoutDashboard, Settings, ExternalLink, MoreHorizontal, Search, Settings2, Trash2, LucideIcon, Maximize2, Minimize2, Video, Flame, Cpu, Smartphone, Monitor, Tablet, Globe2, MapPin, Eye, MousePointerClick, X, Share2, Link, Mail, MessageSquare, Instagram, Facebook, Youtube, Twitter, ChevronUp, ChevronDown } from "lucide-react";
+import { InfoIcon, RefreshCw, Copy, CheckCircle2, BarChart3, Rocket, Zap, Plus, ChevronLeft, ChevronRight, Calendar, LayoutDashboard, Settings, ExternalLink, MoreHorizontal, Search, Settings2, Trash2, LucideIcon, Maximize2, Minimize2, Video, Flame, Cpu, Smartphone, Monitor, Tablet, Globe2, MapPin, Eye, MousePointerClick, X, Share2, Link, Mail, MessageSquare, Instagram, Facebook, Youtube, Twitter, ChevronUp, ChevronDown, Sparkles, Crown, ArrowRight } from "lucide-react";
 import { formatDistanceToNow, format, differenceInDays, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, subMonths, startOfYear, parseISO, isSameDay, isSameHour, isSameWeek, eachHourOfInterval, eachDayOfInterval, eachWeekOfInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { useParams, useNavigate } from "react-router-dom";
@@ -44,6 +44,10 @@ import { getCountryCode } from '@/utils/countryMapping';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import WorldMap from "@/components/analytics/WorldMap";
+import { useFounderStatus } from "@/hooks/useFounderStatus";
+import { useGeneralSettings } from "@/hooks/useGeneralSettings";
+import { useSubscription } from "@/hooks/useSubscription";
+import { Loader2 } from "lucide-react";
 
 const CountryWithFlag = ({ country }: { country: string }) => {
   const code = getCountryCode(country);
@@ -238,7 +242,26 @@ const Analytics = () => {
   const { apps, loading: loadingApps, updateApp } = useApps();
   const { setHeaderContent } = usePageHeader();
   const tCommon = useTranslation('common');
+  const { data: founderStatus, isLoading: isLoadingTier } = useFounderStatus();
+  const { data: generalSettings, isLoading: isLoadingSettings } = useGeneralSettings();
+  const { createCheckout } = useSubscription();
+  
+  const isPremium = founderStatus?.tier === 'pro' || founderStatus?.tier === 'founder';
+  
+  const planPrice = generalSettings?.find(s => s.key === 'stripe_active_price_amount')?.value || "9.90";
+  const planName = generalSettings?.find(s => s.key === 'stripe_active_product_name')?.value || "Pro";
   const [selectedAppId, setSelectedAppId] = useState<string | null>(appId || null);
+  
+  const handlePro = async () => {
+    try {
+      const result = await createCheckout.mutateAsync();
+      if (result.url) {
+        window.location.href = result.url;
+      }
+    } catch (e) {
+      toast.error('No se pudo crear la sesión de pago.');
+    }
+  };
   
   // If we have an appId in the URL, we're in the project view
   const view = appId ? 'project' : 'dashboard';
@@ -401,6 +424,12 @@ const Analytics = () => {
   const fetchEvents = async (appId: string) => {
     if (!appId) return;
     setLoadingEvents(true);
+
+    if (founderStatus && !isPremium) {
+      setEvents([]);
+      setLoadingEvents(false);
+      return;
+    }
 
     const { startDate, endDate } = getDateBoundaries(dateRange);
 
@@ -1131,7 +1160,39 @@ const Analytics = () => {
             )}
 
             {/* New Analytics Layout */}
-            <div className="flex flex-col gap-4">
+            <div className="relative">
+              {!isPremium && !isLoadingTier && (
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-start pt-24 pb-6 px-6 bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <div className="max-w-md w-full p-8 relative flex flex-col items-center text-center bg-zinc-950 dark:bg-zinc-950 rounded-[2rem] shadow-2xl overflow-hidden border border-zinc-800">
+                    <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-inner mb-5 border border-zinc-800 relative z-10">
+                      <Crown className="h-6 w-6 text-white" />
+                    </div>
+                    
+                    <h3 className="text-xl font-medium tracking-tight text-white mb-2 relative z-10">
+                      El arma secreta de +100 Founders
+                    </h3>
+                    <p className="text-sm leading-relaxed text-zinc-400 mb-6 font-normal relative z-10">
+                      Únete a los usuarios de la versión Pro y toma decisiones basadas en datos reales. Entiende a tu audiencia, mide tu impacto y crece de forma predecible.
+                    </p>
+                    
+                    <Button 
+                      onClick={handlePro}
+                      disabled={createCheckout.isPending}
+                      className="w-full h-14 bg-white hover:bg-zinc-200 text-zinc-950 rounded-xl text-[16px] font-bold shadow-lg transition-all active:scale-[0.98] flex flex-col items-center justify-center relative z-10 leading-tight disabled:opacity-50"
+                    >
+                      {createCheckout.isPending ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-zinc-900" />
+                      ) : (
+                        <>
+                          <span>Suscribirme al plan {planName}</span>
+                          <span className="text-xs text-zinc-600 font-medium">Por solo ${planPrice} al año</span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div className={`flex flex-col gap-4 ${!isPremium && !isLoadingTier ? 'opacity-30 pointer-events-none select-none blur-[2px] transition-all' : ''}`}>
               {/* Main Chart Card */}
               <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] overflow-hidden">
                 <div className="flex items-center justify-between gap-1 sm:gap-6 p-4 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-[#1C1C1E]/50 overflow-x-auto no-scrollbar">
@@ -1805,6 +1866,7 @@ const Analytics = () => {
                 Los datos de analíticas son anónimos por defecto. No vinculamos ninguna visita con cuentas de usuario específicas de tu plataforma para mantener el cumplimiento de privacidad.
               </AlertDescription>
             </Alert>
+            </div>
           </div>
         )}
       </main>
