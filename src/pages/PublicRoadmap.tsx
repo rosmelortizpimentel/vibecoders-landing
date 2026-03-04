@@ -408,7 +408,7 @@ export default function PublicRoadmap() {
         .order('likes_count', { ascending: false });
       
       if (refreshed) {
-        setFeedback(refreshed.map((f: any) => ({ 
+        setFeedback(refreshed.map((f: Partial<RoadmapFeedback> & { roadmap_feedback_attachments?: RoadmapFeedbackAttachment[], author?: { username: string, avatar_url: string } }) => ({ 
           ...f, 
           attachments: f.roadmap_feedback_attachments || [],
           author_username: f.author?.username || null,
@@ -578,6 +578,24 @@ export default function PublicRoadmap() {
                               <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border-l-[3px]" style={{ borderLeftColor: lane.color }}>
                                 <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font || undefined }}>{card.title}</p>
                                 {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
+                                {card.tags && card.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-2">
+                                    {card.tags.map((tag, i) => (
+                                      <Badge 
+                                        key={i} 
+                                        variant="secondary" 
+                                        className="text-[9px] px-1.5 py-0 h-4 font-medium border-0"
+                                        style={{ 
+                                          backgroundColor: settings?.primary_button_color || '#3D5AFE',
+                                          color: settings?.primary_button_text_color || '#FFFFFF',
+                                          opacity: 0.9
+                                        }}
+                                      >
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
                                 <div className="flex items-center justify-between mt-2">
                                   <div className="flex items-center gap-1.5">
                                     {card.completed_at && (
@@ -617,6 +635,24 @@ export default function PublicRoadmap() {
                             <div key={card.id} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border-l-[3px]" style={{ borderLeftColor: lane.color }}>
                               <p className="font-medium text-sm text-gray-800" style={{ fontFamily: lane.font || undefined }}>{card.title}</p>
                               {card.description && <p className="text-xs text-gray-500 mt-1">{card.description}</p>}
+                              {card.tags && card.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-2">
+                                  {card.tags.map((tag, i) => (
+                                    <Badge 
+                                      key={i} 
+                                      variant="secondary" 
+                                      className="text-[9px] px-1.5 py-0 h-4 font-medium border-0"
+                                      style={{ 
+                                        backgroundColor: settings?.primary_button_color || '#3D5AFE',
+                                        color: settings?.primary_button_text_color || '#FFFFFF',
+                                        opacity: 0.9
+                                      }}
+                                    >
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
                               <div className="flex items-center justify-between mt-2">
                                 <div className="flex items-center gap-1.5">
                                   {card.completed_at && (

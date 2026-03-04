@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Eye, EyeOff, FlaskConical, ArrowUpDown, Monitor, Globe } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface AppRow {
   id: string;
@@ -33,12 +34,20 @@ type SortField = 'name' | 'clicks_count' | 'hours_ideation' | 'hours_building' |
 type SortDir = 'asc' | 'desc';
 
 export function AppsMonitor() {
+  const navigate = useNavigate();
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [visibilityFilter, setVisibilityFilter] = useState('all');
   const [betaFilter, setBetaFilter] = useState('all');
   const [sortField, setSortField] = useState<SortField>('created_at');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  useEffect(() => {
+    if (!roleLoading && !isAdmin) {
+      navigate('/', { replace: true });
+    }
+  }, [isAdmin, roleLoading, navigate]);
 
   // Fetch statuses for filter dropdown
   const { data: statuses } = useQuery({
@@ -81,17 +90,17 @@ export function AppsMonitor() {
         .select('app_id');
 
       const clicksMap: Record<string, number> = {};
-      (clicksData || []).forEach((c: any) => {
+      (clicksData || []).forEach((c) => {
         clicksMap[c.app_id] = (clicksMap[c.app_id] || 0) + 1;
       });
 
       const stacksMap: Record<string, { name: string; logo_url: string }[]> = {};
-      (stacksData || []).forEach((s: any) => {
+      (stacksData || []).forEach((s) => {
         if (!stacksMap[s.app_id]) stacksMap[s.app_id] = [];
-        if (s.tech_stacks) stacksMap[s.app_id].push(s.tech_stacks);
+        if (s.tech_stacks) stacksMap[s.app_id].push(s.tech_stacks as { name: string; logo_url: string });
       });
 
-      return (appsData || []).map((app: any) => ({
+      return (appsData || []).map((app) => ({
         id: app.id,
         name: app.name,
         url: app.url,
@@ -151,13 +160,14 @@ export function AppsMonitor() {
 
     // Sort
     result.sort((a, b) => {
-      let av: any, bv: any;
+      let av: string | number, bv: string | number;
       switch (sortField) {
         case 'name': av = (a.name || '').toLowerCase(); bv = (b.name || '').toLowerCase(); break;
         case 'clicks_count': av = a.clicks_count; bv = b.clicks_count; break;
         case 'hours_ideation': av = a.hours_ideation || 0; bv = b.hours_ideation || 0; break;
         case 'hours_building': av = a.hours_building || 0; bv = b.hours_building || 0; break;
         case 'created_at': av = a.created_at; bv = b.created_at; break;
+        default: av = 0; bv = 0;
       }
       if (av < bv) return sortDir === 'asc' ? -1 : 1;
       if (av > bv) return sortDir === 'asc' ? 1 : -1;

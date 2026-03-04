@@ -104,9 +104,10 @@ function ResponsiveModal({ open, onOpenChange, title, children, footer, isMobile
 }
 
 // Sortable card component
-function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
+function SortableCard({ card, lane, settings, onEdit, onMove, onDelete, t }: {
   card: RoadmapCard;
   lane: RoadmapLane;
+  settings: RoadmapSettings | null;
   onEdit: () => void;
   onMove: () => void;
   onDelete: () => void;
@@ -143,6 +144,24 @@ function SortableCard({ card, lane, onEdit, onMove, onDelete, t }: {
                 </p>
                 {card.description && (
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-5">{card.description}</p>
+                )}
+                {card.tags && card.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {card.tags.map((tag, i) => (
+                      <Badge 
+                        key={i} 
+                        variant="secondary" 
+                        className="text-[9px] px-1.5 py-0 h-4 font-medium"
+                        style={{ 
+                          backgroundColor: settings?.primary_button_color || '#3D5AFE',
+                          color: settings?.primary_button_text_color || '#FFFFFF',
+                          opacity: 0.9
+                        }}
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
                 )}
                 {card.completed_at && (
                   <Badge variant="secondary" className="text-[10px] mt-1.5 h-5">
@@ -239,7 +258,8 @@ export default function RoadmapEditor() {
 
   // Form states
   const [laneForm, setLaneForm] = useState({ name: '', color: '#3D5AFE', font: '' });
-  const [cardForm, setCardForm] = useState({ title: '', description: '' });
+  const [cardForm, setCardForm] = useState<{ title: string; description: string; tags: string[] }>({ title: '', description: '', tags: [] });
+  const [tagInput, setTagInput] = useState('');
   const [userProfileLanguage, setUserProfileLanguage] = useState<string>('es');
 
   // Feedback management
@@ -401,13 +421,20 @@ export default function RoadmapEditor() {
   const handleSaveCard = async () => {
     try {
       if (editingCard) {
-        await roadmap.updateCard(editingCard.id, { title: cardForm.title, description: cardForm.description || null });
+        await roadmap.updateCard(editingCard.id, { 
+          title: cardForm.title, 
+          description: cardForm.description || null,
+          tags: cardForm.tags 
+        });
       } else if (addingCardToLane) {
-        await roadmap.createCard(addingCardToLane, cardForm.title, cardForm.description || undefined);
+        await roadmap.updateCard((await roadmap.createCard(addingCardToLane, cardForm.title, cardForm.description || undefined)).id, {
+          tags: cardForm.tags
+        });
       }
       setEditingCard(null);
       setAddingCardToLane(null);
-      setCardForm({ title: '', description: '' });
+      setCardForm({ title: '', description: '', tags: [] });
+      setTagInput('');
     } catch { toast.error('Error saving card'); }
   };
 
@@ -483,7 +510,7 @@ export default function RoadmapEditor() {
                             size="icon"
                             className="h-6 w-6"
                             onClick={() => {
-                              setCardForm({ title: '', description: '' });
+                              setCardForm({ title: '', description: '', tags: [] });
                               setAddingCardToLane(lane.id);
                             }}
                           >
@@ -508,9 +535,14 @@ export default function RoadmapEditor() {
                             key={card.id}
                             card={card}
                             lane={lane}
+                            settings={roadmap.settings}
                             t={t}
                             onEdit={() => {
-                              setCardForm({ title: card.title, description: card.description || '' });
+                              setCardForm({ 
+                                title: card.title, 
+                                description: card.description || '', 
+                                tags: card.tags || [] 
+                              });
                               setEditingCard(card);
                             }}
                             onMove={() => setMovingCard(card)}
@@ -578,7 +610,7 @@ export default function RoadmapEditor() {
                           className="h-7 w-7"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setCardForm({ title: '', description: '' });
+                            setCardForm({ title: '', description: '', tags: [] });
                             setAddingCardToLane(lane.id);
                           }}
                         >
@@ -632,7 +664,11 @@ export default function RoadmapEditor() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => {
-                                    setCardForm({ title: card.title, description: card.description || '' });
+                                    setCardForm({ 
+                                      title: card.title, 
+                                      description: card.description || '', 
+                                      tags: card.tags || [] 
+                                    });
                                     setEditingCard(card);
                                   }}>
                                     <Pencil className="w-4 h-4 mr-2" /> {t('editor.editCard')}
@@ -730,6 +766,45 @@ export default function RoadmapEditor() {
         <div className="space-y-2">
           <Label>{t('editor.cardDescription')}</Label>
           <Textarea value={cardForm.description} onChange={e => setCardForm(prev => ({ ...prev, description: e.target.value }))} rows={4} />
+        </div>
+        <div className="space-y-2">
+          <Label>Tags (Max 3)</Label>
+          <div className="flex gap-2">
+            <Input 
+              value={tagInput} 
+              onChange={e => setTagInput(e.target.value)} 
+              placeholder="Add a tag..."
+              onKeyDown={e => {
+                if (e.key === 'Enter' && tagInput.trim() && cardForm.tags.length < 3) {
+                  setCardForm(prev => ({ ...prev, tags: [...prev.tags, tagInput.trim()] }));
+                  setTagInput('');
+                }
+              }}
+            />
+            <Button 
+              type="button" 
+              variant="outline" 
+              size="sm"
+              disabled={!tagInput.trim() || cardForm.tags.length >= 3}
+              onClick={() => {
+                setCardForm(prev => ({ ...prev, tags: [...prev.tags, tagInput.trim()] }));
+                setTagInput('');
+              }}
+            >
+              Add
+            </Button>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {cardForm.tags.map((tag, i) => (
+              <Badge key={i} variant="secondary" className="flex items-center gap-1 py-1">
+                {tag}
+                <X 
+                  className="w-3 h-3 cursor-pointer hover:text-destructive" 
+                  onClick={() => setCardForm(prev => ({ ...prev, tags: prev.tags.filter((_, j) => i !== j) }))} 
+                />
+              </Badge>
+            ))}
+          </div>
         </div>
       </ResponsiveModal>
 

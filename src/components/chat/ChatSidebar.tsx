@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -71,18 +71,39 @@ export function ChatSidebar({ selectedConversationId, onSelectConversation }: Ch
 
   const loadAvailableUsers = useCallback(async () => {
     if (!user) return;
+
+    // 1. Fetch users I follow or who follow me
+    const [{ data: following }, { data: followers }] = await Promise.all([
+      supabase.from('follows').select('following_id').eq('follower_id', user.id),
+      supabase.from('follows').select('follower_id').eq('following_id', user.id)
+    ]);
+
+    const networkIds = Array.from(new Set([
+      ...(following?.map(f => f.following_id) || []),
+      ...(followers?.map(f => f.follower_id) || [])
+    ]));
+
+    if (networkIds.length === 0) {
+      setAvailableUsers([]);
+      return;
+    }
+
+    // 2. Query profiles within that network
     let query = supabase
       .from('profiles')
       .select('id, username, name, avatar_url')
       .eq('chat_available', true)
       .neq('id', user.id)
-      .limit(50);
+      .in('id', networkIds);
 
     if (search.trim()) {
       query = query.or(`username.ilike.%${search.trim()}%,name.ilike.%${search.trim()}%`);
     }
 
-    const { data } = await query;
+    const { data } = await query
+      .order('name', { ascending: true })
+      .limit(10);
+
     setAvailableUsers((data as ChatUser[]) || []);
   }, [user, search]);
 
@@ -107,7 +128,7 @@ export function ChatSidebar({ selectedConversationId, onSelectConversation }: Ch
     loadAvailableUsers();
   }, [user, tab, loadAvailableUsers]);
 
-  async function startConversation(otherUserId: string) {
+  const startConversation = useCallback(async (otherUserId: string) => {
     if (!user) return;
     const [userA, userB] = [user.id, otherUserId].sort();
 
@@ -136,7 +157,19 @@ export function ChatSidebar({ selectedConversationId, onSelectConversation }: Ch
     if (data) onSelectConversation(data.id);
     setTab('conversations');
     await loadConversations();
-  }
+  }, [user, onSelectConversation, loadConversations]);
+
+  // Handle deep-linking from connections or other pages
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const targetUserId = searchParams.get('user');
+    if (targetUserId && user) {
+      startConversation(targetUserId);
+      // Clear the param after handling it to prevent infinite loops or re-triggers
+      searchParams.delete('user');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [user, searchParams, setSearchParams, startConversation]); // Run when user is ready
 
   const filteredConversations = conversations.filter(c => {
     if (!search.trim()) return true;
@@ -267,9 +300,10 @@ export function ChatSidebar({ selectedConversationId, onSelectConversation }: Ch
               </div>
             ) : (
               availableUsers.map(u => (
-                <div
+                <button
                   key={u.id}
-                  className="flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors group"
+                  onClick={() => startConversation(u.id)}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors group text-left"
                 >
                   <Avatar className="w-9 h-9 shrink-0">
                     <AvatarImage src={u.avatar_url || undefined} />
@@ -296,14 +330,15 @@ export function ChatSidebar({ selectedConversationId, onSelectConversation }: Ch
                       <p className="text-[10px] text-muted-foreground truncate">@{u.username}</p>
                     )}
                   </div>
-                  <button
-                    onClick={() => startConversation(u.id)}
-                    className="shrink-0 text-xs bg-primary text-white px-2.5 py-1 rounded-full hover:bg-primary/80 transition-colors"
-                  >
-                    Chat
-                  </button>
-                </div>
+                </button>
               ))
+            )}
+            {availableUsers.length > 0 && (
+              <div className="px-4 py-3 text-center border-t border-border/40">
+                <p className="text-[10px] text-muted-foreground italic">
+                  Mostrando solo 10 usuarios. Usa el buscador para encontrar más.
+                </p>
+              </div>
             )}
           </>
         )}

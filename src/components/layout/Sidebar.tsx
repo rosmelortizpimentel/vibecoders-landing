@@ -8,6 +8,8 @@ import {
   ChevronsUpDown,
   LayoutDashboard,
   Settings,
+  MessageSquare,
+  BarChart3,
 } from 'lucide-react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useAuth } from '@/hooks/useAuth';
@@ -115,6 +117,22 @@ export function Sidebar() {
       className: item.cssClass || undefined,
       badge: badgeMap[item.key] || undefined,
     });
+
+    // Inject requested options for local validation
+    if (item.path === '/apps') {
+      navLinks.push({
+        path: '/analytics',
+        label: t('navigation.analytics'),
+        icon: BarChart3,
+      });
+    }
+    if (item.path === '/connections') {
+      navLinks.push({
+        path: '/chat',
+        label: t('navigation.chat'),
+        icon: MessageSquare,
+      });
+    }
   });
 
   return (

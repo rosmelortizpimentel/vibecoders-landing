@@ -40,6 +40,7 @@ export interface RoadmapCard {
   display_order: number;
   completed_at: string | null;
   likes_count: number;
+  tags: string[];
   created_at: string;
   updated_at: string;
 }

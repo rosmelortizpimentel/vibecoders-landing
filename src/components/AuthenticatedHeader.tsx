@@ -16,8 +16,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap, Linkedin } from 'lucide-react';
-import { useSidebarMenu } from '@/hooks/useSidebarMenu';
+import { Loader2, Check, AlertCircle, ExternalLink, LogOut, ChevronDown, Shield, Menu, Rocket, Wrench, User, LayoutDashboard, MessageCircle, FlaskConical, Lightbulb, Globe, X, Zap, Linkedin, MessageSquare, BarChart3 } from 'lucide-react';
+import { useSidebarMenu, SidebarMenuItem } from '@/hooks/useSidebarMenu';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -256,7 +256,30 @@ export function AuthenticatedHeader({
                 <nav className="flex flex-col px-5 py-6 flex-1 overflow-y-auto">
                   {(() => {
                     let lastSection = '';
-                    return mobileMenuItems.map((item) => {
+                    const itemsWithInjections: any[] = [];
+                    mobileMenuItems.forEach((item) => {
+                      itemsWithInjections.push(item);
+                      if (item.path === '/apps') {
+                        itemsWithInjections.push({
+                          path: '/analytics',
+                          labelKey: 'navigation.analytics',
+                          icon: BarChart3,
+                          section: 'maker',
+                          key: 'analytics'
+                        });
+                      }
+                      if (item.path === '/connections') {
+                        itemsWithInjections.push({
+                          path: '/chat',
+                          labelKey: 'navigation.chat',
+                          icon: MessageSquare,
+                          section: 'community',
+                          key: 'chat'
+                        });
+                      }
+                    });
+
+                    return itemsWithInjections.map((item) => {
                       const showSeparator = lastSection && item.section !== lastSection;
                       lastSection = item.section;
                       const Icon = item.icon;
