@@ -1,17 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { InfoIcon, RefreshCw, Copy, CheckCircle2, BarChart3, Rocket, Zap, Plus, ChevronLeft, ChevronRight, Calendar, LayoutDashboard, Settings, ExternalLink, MoreHorizontal, Search, Settings2, Trash2, Smartphone, Monitor, Tablet, Globe2, MapPin, Eye, MousePointerClick } from "lucide-react";
+import { InfoIcon, RefreshCw, Copy, CheckCircle2, BarChart3, Rocket, Zap, Plus, ChevronLeft, ChevronRight, Calendar, LayoutDashboard, Settings, ExternalLink, MoreHorizontal, Search, Settings2, Trash2, LucideIcon, Maximize2, Minimize2, Video, Flame, Cpu, Smartphone, Monitor, Tablet, Globe2, MapPin, Eye, MousePointerClick, X, Share2, Link, Mail, MessageSquare, Instagram, Facebook, Youtube, Twitter, ChevronUp, ChevronDown } from "lucide-react";
+import { formatDistanceToNow, format, differenceInDays, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, subMonths, startOfYear, parseISO, isSameDay, isSameHour, isSameWeek, eachHourOfInterval, eachDayOfInterval, eachWeekOfInterval } from "date-fns";
+import { es } from "date-fns/locale";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useApps } from "@/hooks/useApps";
 import { toast } from "sonner";
+import { DateRange, DayPicker } from "react-day-picker";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from "recharts";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,18 +32,18 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uniqueNamesGenerator, colors, animals } from 'unique-names-generator';
-import { 
-  format, formatDistanceToNow, subDays, startOfDay, endOfDay, subMonths, 
-  startOfWeek, startOfMonth, startOfYear, eachHourOfInterval, 
-  eachDayOfInterval, eachWeekOfInterval, isSameHour, isSameDay, 
-  isSameWeek, parseISO 
-} from 'date-fns';
 import { getCountryCode } from '@/utils/countryMapping';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import WorldMap from "@/components/analytics/WorldMap";
 
 const CountryWithFlag = ({ country }: { country: string }) => {
   const code = getCountryCode(country);
@@ -55,30 +58,74 @@ const CountryWithFlag = ({ country }: { country: string }) => {
   );
 };
 
-const BrowserIcon = ({ name }: { name: string }) => {
+const BrowserIcon = ({ name, size = 16 }: { name: string, size?: number }) => {
   const iconName = name?.toLowerCase() || '';
-  if (iconName.includes('chrome')) return <img src="/chrome-logo.png" alt="Chrome" className="w-4 h-4 mr-2" />;
-  if (iconName.includes('firefox')) return <img src="https://cdnjs.cloudflare.com/ajax/libs/browser-logos/7.0.4/firefox/firefox_128x128.png" alt="Firefox" className="w-4 h-4 mr-2" />;
-  if (iconName.includes('safari')) return <img src="/safari-logo.png" alt="Safari" className="w-4 h-4 mr-2" />;
-  if (iconName.includes('edge')) return <img src="https://cdnjs.cloudflare.com/ajax/libs/browser-logos/7.0.4/edge/edge_128x128.png" alt="Edge" className="w-4 h-4 mr-2" />;
-  if (iconName.includes('opera')) return <img src="https://cdnjs.cloudflare.com/ajax/libs/browser-logos/7.0.4/opera/opera_128x128.png" alt="Opera" className="w-4 h-4 mr-2" />;
+  const imgClass = `mr-2 object-contain`;
+  const style = { width: size, height: size };
+  
+  if (iconName.includes('chrome')) return <img src="/chrome-logo.png" alt="Chrome" className={imgClass} style={style} />;
+  if (iconName.includes('firefox')) return <img src="https://cdnjs.cloudflare.com/ajax/libs/browser-logos/7.0.4/firefox/firefox_128x128.png" alt="Firefox" className={imgClass} style={style} />;
+  if (iconName.includes('safari')) return <img src="/safari-logo.png" alt="Safari" className={imgClass} style={style} />;
+  if (iconName.includes('edge')) return <img src="/edge-logo.png" alt="Edge" className={imgClass} style={style} />;
+  if (iconName.includes('opera')) return <img src="https://cdnjs.cloudflare.com/ajax/libs/browser-logos/7.0.4/opera/opera_128x128.png" alt="Opera" className={imgClass} style={style} />;
+  if (iconName.includes('samsung')) return <img src="/samsung-logo.png" alt="Samsung" className={imgClass} style={style} />;
+  if (iconName.includes('in-app')) return <Smartphone size={size} className="mr-2 text-slate-400" />;
+  return <Globe2 size={size} className="mr-2 text-slate-400" />;
+}
+
+const OsIcon = ({ name, size = 16 }: { name: string, size?: number }) => {
+  const iconName = name?.toLowerCase() || '';
+  const imgClass = `mr-2 object-contain`;
+  const style = { width: size, height: size };
+
+  if (iconName.includes('wind') || iconName.includes('pc')) return <img src="https://img.icons8.com/color/48/windows-10.png" alt="Windows" className={imgClass} style={style} />;
+  if (iconName.includes('mac') || iconName.includes('ios') || iconName.includes('apple')) return <img src="https://img.icons8.com/ios-filled/50/mac-os.png" alt="Apple" className={`${imgClass} dark:invert`} style={style} />;
+  if (iconName.includes('android')) return <img src="https://img.icons8.com/color/48/android-os.png" alt="Android" className={imgClass} style={style} />;
+  if (iconName.includes('linux') || iconName.includes('cros')) return <img src="https://img.icons8.com/color/48/linux.png" alt="Linux" className={imgClass} style={style} />;
+  return <Monitor size={size} className="mr-2 text-slate-400" />;
+}
+
+const DeviceIcon = ({ name, size = 16 }: { name: string, size?: number }) => {
+  const iconName = name?.toLowerCase() || '';
+  if (iconName === 'mobile' || iconName.includes('phone')) return <Smartphone size={size} className="mr-2 text-blue-500" />;
+  if (iconName === 'tablet') return <Tablet size={size} className="mr-2 text-purple-500" />;
+  return <Monitor size={size} className="mr-2 text-slate-600 dark:text-slate-400" />;
+}
+
+const cleanUrl = (url: string) => {
+  if (!url) return "";
+  return url.replace(/^https?:\/\//, "").replace(/^www\./, "");
+};
+
+const AcquisitionIcon = ({ name, type, appLogo }: { name: string, type: 'channel' | 'source' | 'referrer', appLogo?: string | null }) => {
+  const lowerName = name?.toLowerCase() || '';
+  
+  if (type === 'channel') {
+    if (lowerName.includes('direct')) return <Zap className="w-4 h-4 mr-2 text-yellow-500" />;
+    if (lowerName.includes('search')) return <Search className="w-4 h-4 mr-2 text-blue-500" />;
+    if (lowerName.includes('social')) return <Share2 className="w-4 h-4 mr-2 text-purple-500" />;
+    if (lowerName.includes('referral')) return <Link className="w-4 h-4 mr-2 text-emerald-500" />;
+    if (lowerName.includes('email')) return <Mail className="w-4 h-4 mr-2 text-rose-500" />;
+    return <Globe2 className="w-4 h-4 mr-2 text-slate-400" />;
+  }
+
+  // Handle dynamic app logo for yaku.today or direct/internal domains
+  if (appLogo && (lowerName.includes('yaku.today') || lowerName.includes('localhost') || lowerName.includes('vibecoders'))) {
+    return <img src={appLogo} alt="App Logo" className="w-4 h-4 mr-2 rounded-sm object-cover" />;
+  }
+
+  // Source specific icons
+  if (lowerName.includes('google')) return <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 mr-2 rounded-sm" />;
+  if (lowerName.includes('facebook')) return <Facebook className="w-4 h-4 mr-2 text-[#1877F2]" />;
+  if (lowerName.includes('instagram')) return <Instagram className="w-4 h-4 mr-2 text-[#E4405F]" />;
+  if (lowerName.includes('youtube')) return <Youtube className="w-4 h-4 mr-2 text-[#FF0000]" />;
+  if (lowerName.includes('linkedin')) return <img src="https://www.linkedin.com/favicon.ico" alt="LinkedIn" className="w-4 h-4 mr-2 rounded-sm" />;
+  if (lowerName.includes('twitter') || lowerName.includes('x.com')) return <Twitter className="w-4 h-4 mr-2 text-[#1DA1F2]" />;
+  if (lowerName.includes('tiktok')) return <img src="https://tiktok.com/favicon.ico" alt="TikTok" className="w-4 h-4 mr-2 rounded-sm" />;
+  if (lowerName.includes('whatsapp')) return <img src="https://whatsapp.com/favicon.ico" alt="WhatsApp" className="w-4 h-4 mr-2 rounded-sm" />;
+  if (lowerName.includes('reddit')) return <img src="https://reddit.com/favicon.ico" alt="Reddit" className="w-4 h-4 mr-2 rounded-sm" />;
+
   return <Globe2 className="w-4 h-4 mr-2 text-slate-400" />;
-}
-
-const OsIcon = ({ name }: { name: string }) => {
-  const iconName = name?.toLowerCase() || '';
-  if (iconName.includes('wind') || iconName.includes('pc')) return <img src="https://img.icons8.com/color/48/windows-10.png" alt="Windows" className="w-4 h-4 mr-2" />;
-  if (iconName.includes('mac') || iconName.includes('ios') || iconName.includes('apple')) return <img src="https://img.icons8.com/ios-filled/50/mac-os.png" alt="Apple" className="w-4 h-4 mr-2 dark:invert" />;
-  if (iconName.includes('android')) return <img src="https://img.icons8.com/color/48/android-os.png" alt="Android" className="w-4 h-4 mr-2" />;
-  if (iconName.includes('linux') || iconName.includes('cros')) return <img src="https://img.icons8.com/color/48/linux.png" alt="Linux" className="w-4 h-4 mr-2" />;
-  return <Monitor className="w-4 h-4 mr-2 text-slate-400" />;
-}
-
-const DeviceIcon = ({ name }: { name: string }) => {
-  const iconName = name?.toLowerCase() || '';
-  if (iconName === 'mobile' || iconName.includes('phone')) return <Smartphone className="w-4 h-4 mr-2 text-blue-500" />;
-  if (iconName === 'tablet') return <Tablet className="w-4 h-4 mr-2 text-purple-500" />;
-  return <Monitor className="w-4 h-4 mr-2 text-slate-600 dark:text-slate-400" />;
 }
 
 interface AnalyticsEvent {
@@ -87,6 +134,13 @@ interface AnalyticsEvent {
   page_path: string;
   referrer: string;
   user_hash: string;
+  // Legacy root properties support
+  region?: string;
+  country?: string;
+  city?: string;
+  browser?: string;
+  os?: string;
+  device?: string;
   browser_info?: {
     country?: string;
     region?: string;
@@ -95,18 +149,92 @@ interface AnalyticsEvent {
     os?: string;
     device?: string;
     screen_width?: number;
+    screen_height?: number;
     visitor_id?: string;
     session_id?: string;
     event_type?: string;
-    extra_data?: any;
+    extra_data?: Record<string, unknown>;
   };
+  event_type?: string;
+  custom_event_name?: string;
+  target_url?: string;
+}
+
+const IN_APP_BROWSERS = ['linkedin', 'instagram', 'facebook', 'tiktok', 'twitter', 'pinterest', 'snapchat', 'fban', 'fbav'];
+
+// Helper to adjust percentages to sum exactly to 100.0%
+const adjustDataWithPercentages = <T extends { name?: string; path?: string; count?: number; value?: number; views?: number }>(
+  data: T[],
+  valueKey: string = 'count'
+) => {
+  const total = data.reduce((acc, item) => acc + (Number(item[valueKey]) || 0), 0);
+  if (total === 0) return data.map(item => ({ ...item, percentage: 0 }));
+
+  const rawItems = data.map(item => ({
+    ...item,
+    percentage: ((Number(item[valueKey]) || 0) / total) * 100
+  })) as (T & { percentage: number })[];
+
+  // Adjust to sum exactly to 100% using 1 decimal place
+  const roundedTotal = rawItems.reduce((acc, item) => acc + Math.round(item.percentage * 10) / 10, 0);
+  const diff = 100 - roundedTotal;
+  
+  if (Math.abs(diff) > 0.01 && rawItems.length > 0) {
+    rawItems[0].percentage = Number((rawItems[0].percentage + diff).toFixed(1));
+  }
+  
+  return rawItems;
+};
+
+// Generic expandable list component
+function ExpandableList<T>({ 
+  items, 
+  limit = 10, 
+  renderItem, 
+  emptyMessage,
+  listClassName = "flex flex-col gap-1 w-full"
+}: { 
+  items: T[], 
+  limit?: number, 
+  renderItem: (item: T, index: number, isExpanded: boolean) => React.ReactNode, 
+  emptyMessage?: React.ReactNode,
+  listClassName?: string
+}) {
+  const [expanded, setExpanded] = useState(false);
+  
+  if (!items || items.length === 0) {
+    return <>{emptyMessage}</>;
+  }
+
+  const hasMore = items.length > limit;
+  const visibleItems = expanded ? items : items.slice(0, limit);
+  const hiddenCount = items.length - limit;
+
+  return (
+    <div className={listClassName}>
+      {visibleItems.map((item, index) => renderItem(item, index, expanded))}
+      
+      {hasMore && (
+        <div 
+          onClick={() => setExpanded(!expanded)}
+          className="relative flex items-center justify-center text-[11px] py-1.5 px-2 rounded cursor-pointer transition-colors bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-medium"
+        >
+          {expanded ? (
+            <span className="flex items-center gap-1"><ChevronUp className="w-3 h-3" /> Ver menos</span>
+          ) : (
+            <span className="flex items-center gap-1">Otros ({hiddenCount}) <ChevronDown className="w-3 h-3" /></span>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 const Analytics = () => {
   const { appId } = useParams<{ appId: string }>();
   const navigate = useNavigate();
 
-  const { profile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { apps, loading: loadingApps, updateApp } = useApps();
   const { setHeaderContent } = usePageHeader();
   const tCommon = useTranslation('common');
@@ -123,10 +251,88 @@ const Analytics = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [dateRange, setDateRange] = useState("today");
-  const [granularity, setGranularity] = useState("hourly");
+  const [dateRange, setDateRange] = useState(() => localStorage.getItem('vibe_analytics_dateRange') || "today");
+  const [granularity, setGranularity] = useState(() => localStorage.getItem('vibe_analytics_granularity') || "hourly");
+  const [lastXDays, setLastXDays] = useState(() => Number(localStorage.getItem('vibe_analytics_lastXDays')) || 3);
+  const [customRange, setCustomRange] = useState<DateRange | undefined>(() => {
+    const saved = localStorage.getItem('vibe_analytics_customRange');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          from: parsed.from ? new Date(parsed.from) : undefined,
+          to: parsed.to ? new Date(parsed.to) : undefined,
+        };
+      } catch (e) {
+        return undefined;
+      }
+    }
+    return undefined;
+  });
+  const [tempRangeType, setTempRangeType] = useState("today");
+  const [tempDays, setTempDays] = useState(3);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  
+  // Global Cross-Filtering State
+  const [filters, setFilters] = useState<{ key: string, value: string, label: string }[]>([]);
 
-  const isHourlyAllowed = ["today", "yesterday", "24hours", "7days", "week_to_date"].includes(dateRange);
+  const addFilter = (key: string, value: string, label: string) => {
+    setFilters(prev => {
+      // If filter already exists for this exact key and value, remove it (toggle off)
+      if (prev.some(f => f.key === key && f.value === value)) {
+        return prev.filter(f => !(f.key === key && f.value === value));
+      }
+      // Remove any existing filter for the same key to avoid contradictory AND logic which yields 0 results
+      const withoutKey = prev.filter(f => f.key !== key);
+      return [...withoutKey, { key, value, label }];
+    });
+  };
+
+  const removeFilter = (key: string, value: string) => {
+    setFilters(prev => prev.filter(f => !(f.key === key && f.value === value)));
+  };
+
+  const clearFilters = () => setFilters([]);
+
+  const filteredEvents = useMemo(() => {
+    if (filters.length === 0) return events;
+    return events.filter(e => {
+      // AND logic: event must match ALL active filters
+      return filters.every(f => {
+        if (f.key === 'browser') return (e.browser_info?.browser || 'Unknown') === f.value;
+        if (f.key === 'os') return (e.browser_info?.os || 'Unknown') === f.value;
+        if (f.key === 'device') return (e.browser_info?.device || 'Unknown') === f.value;
+        if (f.key === 'country') return (e.browser_info?.country || 'Unknown') === f.value;
+        if (f.key === 'region') return (e.browser_info?.region || e.region || 'Unknown') === f.value;
+        if (f.key === 'city') return (e.browser_info?.city || e.city || 'Unknown') === f.value;
+        if (f.key === 'page_path') return e.page_path === f.value;
+        if (f.key === 'channel') return getReferrerClassification(e.referrer).channel === f.value;
+        if (f.key === 'source') return getReferrerClassification(e.referrer).source === f.value;
+        if (f.key === 'referrer') return getReferrerClassification(e.referrer).referrer === f.value;
+        return true;
+      });
+    });
+  }, [events, filters]);
+
+  // Persistence effects
+  useEffect(() => {
+    localStorage.setItem('vibe_analytics_dateRange', dateRange);
+  }, [dateRange]);
+
+  useEffect(() => {
+    localStorage.setItem('vibe_analytics_granularity', granularity);
+  }, [granularity]);
+
+  useEffect(() => {
+    localStorage.setItem('vibe_analytics_lastXDays', lastXDays.toString());
+  }, [lastXDays]);
+
+  useEffect(() => {
+    if (customRange) {
+      localStorage.setItem('vibe_analytics_customRange', JSON.stringify(customRange));
+    }
+  }, [customRange]);
+
 
   const handleDateRangeChange = (value: string) => {
     setDateRange(value);
@@ -136,7 +342,7 @@ const Analytics = () => {
     }
   };
 
-  const getDateBoundaries = (range: string) => {
+  const getDateBoundaries = useCallback((range: string) => {
     const now = new Date();
     let startDate: Date;
     let endDate: Date = now;
@@ -148,6 +354,13 @@ const Analytics = () => {
       case "yesterday":
         startDate = startOfDay(subDays(now, 1));
         endDate = endOfDay(subDays(now, 1));
+        break;
+      case "last_x_days":
+        startDate = startOfDay(subDays(now, lastXDays));
+        break;
+      case "custom":
+        startDate = customRange?.from ? startOfDay(customRange.from) : subDays(now, 7);
+        endDate = customRange?.to ? endOfDay(customRange.to) : now;
         break;
       case "24hours":
         startDate = subDays(now, 1);
@@ -176,7 +389,14 @@ const Analytics = () => {
         break;
     }
     return { startDate, endDate };
-  };
+  }, [lastXDays, customRange]);
+
+  const isHourlyAllowed = useMemo(() => {
+    if (["today", "yesterday", "24hours"].includes(dateRange)) return true;
+    const { startDate, endDate } = getDateBoundaries(dateRange);
+    const diffDays = Math.abs(differenceInDays(endDate, startDate));
+    return diffDays <= 7;
+  }, [dateRange, getDateBoundaries]);
 
   const fetchEvents = async (appId: string) => {
     if (!appId) return;
@@ -196,7 +416,7 @@ const Analytics = () => {
     const { data, error } = await query;
 
     if (!error && data) {
-      setEvents(data);
+      setEvents(data as AnalyticsEvent[]);
     }
     setLoadingEvents(false);
   };
@@ -205,7 +425,7 @@ const Analytics = () => {
   
   // --- User Journey Data ---
   const usersMap = new Map<string, AnalyticsEvent[]>();
-  events.forEach(e => {
+  filteredEvents.forEach(e => {
     // try to use visitor_id from new payload, fallback to user_hash
     const uid = e.browser_info?.visitor_id || e.user_hash;
     if (!uid) return;
@@ -234,6 +454,7 @@ const Analytics = () => {
       uid,
       fakeName: fakeName.replace(/-/g, ' '),
       source,
+      referrer: lastEvent.referrer,
       lastSeen: new Date(lastEvent.created_at),
       firstSeen: new Date(firstEvent.created_at),
       events: userEvents,
@@ -246,8 +467,8 @@ const Analytics = () => {
   });
 
   const totalVisitors = uniqueUsers.length;
-  const pageViews = events.length;
-  const onlineNow = events.filter(e => new Date(e.created_at).getTime() > Date.now() - 5 * 60 * 1000).length;
+  const pageViews = filteredEvents.length;
+  const onlineNow = filteredEvents.filter(e => new Date(e.created_at).getTime() > Date.now() - 5 * 60 * 1000).length;
 
   const { startDate, endDate } = getDateBoundaries(dateRange);
 
@@ -265,7 +486,7 @@ const Analytics = () => {
   }
 
   const chartData = intervals.map(intervalDate => {
-    const bucketEvents = events.filter(e => {
+    const bucketEvents = filteredEvents.filter(e => {
       const eventDate = parseISO(e.created_at);
       if (granularity === 'hourly') return isSameHour(eventDate, intervalDate);
       if (granularity === 'daily') return isSameDay(eventDate, intervalDate);
@@ -273,56 +494,206 @@ const Analytics = () => {
     });
     
     let timeLabel = '';
+    let fullDateLabel = '';
+    
     if (granularity === 'hourly') {
-      timeLabel = format(intervalDate, "h a");
-      if (!["today", "yesterday", "24hours"].includes(dateRange)) {
-        timeLabel = format(intervalDate, "MMM d, h a");
-      }
+      timeLabel = format(intervalDate, "h a"); // Short label for X-Axis
+      fullDateLabel = format(intervalDate, "MMM d, h:mm a"); // Detailed for Tooltip
     } else if (granularity === 'daily') {
       timeLabel = format(intervalDate, "MMM d");
+      fullDateLabel = format(intervalDate, "MMMM d, yyyy");
     } else {
       timeLabel = 'W' + format(intervalDate, "wo, MMM d");
+      fullDateLabel = 'Week of ' + format(intervalDate, "MMM d, yyyy");
     }
 
     return {
       time: timeLabel,
+      fullDate: fullDateLabel,
       unique: new Set(bucketEvents.map(e => e.browser_info?.visitor_id || e.user_hash).filter(Boolean)).size,
       visitors: bucketEvents.length
     };
   });
 
-  const referrersData = Object.entries(events.reduce((acc, curr) => {
-    let source = curr.referrer || 'Direct';
+  const getReferrerClassification = (referrer: string | undefined | null) => {
+    const urlString = referrer || '';
+    if (!urlString || urlString === 'Direct/None' || urlString === 'Direct' || urlString === 'null' || urlString.trim() === '') {
+      return { channel: 'Direct', source: 'Direct', referrer: 'Direct' };
+    }
+    
+    let hostname = urlString;
     try {
-      if (source !== 'Direct') source = new URL(source).hostname;
+      hostname = new URL(urlString).hostname;
     } catch (e) {
       // Ignore URL parsing errors and use Raw Referrer
     }
-    acc[source] = (acc[source] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>)).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
 
-  const pagesData = Object.entries(events.reduce((acc, curr) => {
+    const lowerHost = hostname.toLowerCase();
+
+    // Social
+    if (lowerHost.includes('linkedin')) return { channel: 'Social', source: 'LinkedIn', referrer: hostname };
+    if (lowerHost.includes('instagram')) return { channel: 'Social', source: 'Instagram', referrer: hostname };
+    if (lowerHost.includes('facebook') || lowerHost.includes('fb.me')) return { channel: 'Social', source: 'Facebook', referrer: hostname };
+    if (lowerHost.includes('twitter') || lowerHost.includes('t.co') || lowerHost.includes('x.com')) return { channel: 'Social', source: 'X / Twitter', referrer: hostname };
+    if (lowerHost.includes('tiktok')) return { channel: 'Social', source: 'TikTok', referrer: hostname };
+    if (lowerHost.includes('youtube')) return { channel: 'Social', source: 'YouTube', referrer: hostname };
+    if (lowerHost.includes('reddit')) return { channel: 'Social', source: 'Reddit', referrer: hostname };
+    if (lowerHost.includes('whatsapp')) return { channel: 'Social', source: 'WhatsApp', referrer: hostname };
+
+    // Organic Search
+    if (lowerHost.includes('google')) return { channel: 'Organic Search', source: 'Google', referrer: hostname };
+    if (lowerHost.includes('bing')) return { channel: 'Organic Search', source: 'Bing', referrer: hostname };
+    if (lowerHost.includes('yahoo')) return { channel: 'Organic Search', source: 'Yahoo', referrer: hostname };
+    if (lowerHost.includes('duckduckgo')) return { channel: 'Organic Search', source: 'DuckDuckGo', referrer: hostname };
+    if (lowerHost.includes('yandex')) return { channel: 'Organic Search', source: 'Yandex', referrer: hostname };
+    if (lowerHost.includes('ecosia')) return { channel: 'Organic Search', source: 'Ecosia', referrer: hostname };
+
+    // Default to Referral
+    return { channel: 'Referral', source: hostname, referrer: hostname };
+  };
+
+  const channelCounts: Record<string, number> = {};
+  const sourceCounts: Record<string, number> = {};
+  const referrerCounts: Record<string, number> = {};
+
+  filteredEvents.forEach(e => {
+    const { channel, source, referrer } = getReferrerClassification(e.referrer);
+    channelCounts[channel] = (channelCounts[channel] || 0) + 1;
+    sourceCounts[source] = (sourceCounts[source] || 0) + 1;
+    referrerCounts[referrer] = (referrerCounts[referrer] || 0) + 1;
+  });
+
+  const channelsData = Object.entries(channelCounts)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+
+  const sourcesData = Object.entries(sourceCounts)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+
+  const referrersData = Object.entries(referrerCounts)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
+
+  const pagesData = Object.entries(filteredEvents.reduce((acc, curr) => {
     acc[curr.page_path] = (acc[curr.page_path] || 0) + 1;
     return acc;
   }, {} as Record<string, number>)).map(([path, views]) => ({ path, views })).sort((a,b) => b.views - a.views);
 
-  const countOccurrences = (keyExtract: (e: AnalyticsEvent) => string | undefined) => {
-    return Object.entries(events.reduce((acc, curr) => {
-      const val = keyExtract(curr) || 'Unknown';
-      acc[val] = (acc[val] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>))
+  // Group events by session to find entry and exit pages
+  const sessions = new Map<string, AnalyticsEvent[]>();
+  filteredEvents.forEach(e => {
+    const sid = e.browser_info?.session_id;
+    if (!sid) return;
+    if (!sessions.has(sid)) sessions.set(sid, []);
+    sessions.get(sid)!.push(e);
+  });
+
+  const entryPagesRaw: Record<string, number> = {};
+  const exitPagesRaw: Record<string, number> = {};
+
+  sessions.forEach(sessionEvents => {
+    // events are sorted desc by created_at from DB
+    // so last event in array is entry, first is exit
+    const entryPath = sessionEvents[sessionEvents.length - 1].page_path;
+    const exitPath = sessionEvents[0].page_path;
+    
+    entryPagesRaw[entryPath] = (entryPagesRaw[entryPath] || 0) + 1;
+    exitPagesRaw[exitPath] = (exitPagesRaw[exitPath] || 0) + 1;
+  });
+
+  const entryPagesData = Object.entries(entryPagesRaw)
+    .map(([path, views]) => ({ path, views }))
+    .sort((a, b) => b.views - a.views);
+
+  const exitPagesData = Object.entries(exitPagesRaw)
+    .map(([path, views]) => ({ path, views }))
+    .sort((a, b) => b.views - a.views);
+
+  const countSessionOccurrences = (keyExtract: (e: AnalyticsEvent) => string | undefined) => {
+    // Group events by session first
+    const sessionAttributes = new Map<string, string>();
+    filteredEvents.forEach(e => {
+      const sid = e.browser_info?.session_id;
+      if (!sid) return;
+      if (!sessionAttributes.has(sid)) {
+        const val = keyExtract(e);
+        if (val) sessionAttributes.set(sid, val);
+      }
+    });
+
+    const counts: Record<string, number> = {};
+    sessionAttributes.forEach(val => {
+      counts[val] = (counts[val] || 0) + 1;
+    });
+
+    return Object.entries(counts)
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count);
   };
 
-  const countriesData = countOccurrences(e => e.browser_info?.country);
-  const regionsData = countOccurrences(e => e.browser_info?.region);
-  const citiesData = countOccurrences(e => e.browser_info?.city);
-  const browsersData = countOccurrences(e => e.browser_info?.browser);
-  const osData = countOccurrences(e => e.browser_info?.os);
-  const devicesData = countOccurrences(e => e.browser_info?.device);
+  const countriesData = countSessionOccurrences(e => e.browser_info?.country);
+  const countriesWithPercentages = useMemo(() => adjustDataWithPercentages(countriesData), [countriesData]);
+
+  const regionsData = useMemo(() => {
+    const counts: Record<string, { count: number; country: string }> = {};
+    const sessions = new Set<string>();
+    filteredEvents.forEach(e => {
+      const sid = e.browser_info?.session_id || e.user_hash || e.browser_info?.visitor_id;
+      if (!sid || sessions.has(sid)) return;
+      sessions.add(sid);
+      // Fallback to root properties if browser_info is missing data
+      const r = e.browser_info?.region || e.region || 'Unknown';
+      const c = e.browser_info?.country || e.country || 'Unknown';
+      if (!counts[r]) counts[r] = { count: 0, country: c as string };
+      counts[r].count++;
+    });
+    return Object.entries(counts)
+      .map(([name, data]) => ({ name, count: data.count, country: data.country }))
+      .sort((a, b) => b.count - a.count);
+  }, [filteredEvents]);
+
+  const regionsWithPercentages = useMemo(() => adjustDataWithPercentages(regionsData), [regionsData]);
+
+  const citiesData = useMemo(() => {
+    const counts: Record<string, { count: number; country: string }> = {};
+    const sessions = new Set<string>();
+    filteredEvents.forEach(e => {
+      const sid = e.browser_info?.session_id || e.user_hash || e.browser_info?.visitor_id;
+      if (!sid || sessions.has(sid)) return;
+      sessions.add(sid);
+      // Fallback to root properties if browser_info is missing data
+      const city = e.browser_info?.city || e.city || 'Unknown';
+      const country = e.browser_info?.country || e.country || 'Unknown';
+      if (!counts[city as string]) counts[city as string] = { count: 0, country: country as string };
+      counts[city as string].count++;
+    });
+    return Object.entries(counts)
+      .map(([name, data]) => ({ name, count: data.count, country: data.country }))
+      .sort((a, b) => b.count - a.count);
+  }, [filteredEvents]);
+
+  const citiesWithPercentages = useMemo(() => adjustDataWithPercentages(citiesData), [citiesData]);
+
+  const IN_APP_BROWSERS = ['linkedin', 'instagram', 'facebook', 'tiktok', 'twitter', 'pinterest', 'snapchat', 'fban', 'fbav'];
+  const browsersData = countSessionOccurrences(e => {
+    const raw = e.browser_info?.browser;
+    if (!raw) return undefined;
+    const lower = raw.toLowerCase();
+    if (IN_APP_BROWSERS.some(app => lower.includes(app))) return 'In-App Browser';
+    return raw;
+  });
+  const osData = countSessionOccurrences(e => e.browser_info?.os);
+  const devicesData = countSessionOccurrences(e => e.browser_info?.device);
+
+  const browsersWithPercentages = useMemo(() => adjustDataWithPercentages(browsersData), [browsersData]);
+  const osWithPercentages = useMemo(() => adjustDataWithPercentages(osData), [osData]);
+  const devicesWithPercentages = useMemo(() => adjustDataWithPercentages(devicesData), [devicesData]);
+
+  const pagesWithPercentages = useMemo(() => adjustDataWithPercentages(pagesData, 'views'), [pagesData]);
+  const entryPagesWithPercentages = useMemo(() => adjustDataWithPercentages(entryPagesData, 'views'), [entryPagesData]);
+  const exitPagesWithPercentages = useMemo(() => adjustDataWithPercentages(exitPagesData, 'views'), [exitPagesData]);
+
 
   // Colors for Donut Chart
   const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'];
@@ -348,10 +719,17 @@ const Analytics = () => {
           ) : (
             <BarChart3 className="h-4 w-4 text-primary shrink-0" />
           )}
-          <span className="font-semibold text-foreground truncate">Analytics / {selectedApp.name}</span>
-          <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 text-[10px] font-bold uppercase tracking-wider ml-2 shrink-0">
-            Live
+          <span className="font-semibold text-foreground truncate flex items-center gap-1.5">
+            Analytics 
+            <span className="text-slate-300 dark:text-slate-600 font-normal">|</span> 
+            {cleanUrl(selectedApp.url || selectedApp.name)}
           </span>
+          {onlineNow > 0 && (
+            <span className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider ml-1 shrink-0">
+              <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+              {onlineNow} {onlineNow === 1 ? 'usuario' : 'usuarios'} en línea
+            </span>
+          )}
         </div>
       );
     } else {
@@ -363,7 +741,7 @@ const Analytics = () => {
       );
     }
     return () => setHeaderContent(null);
-  }, [setHeaderContent, selectedApp]);
+  }, [setHeaderContent, selectedApp, onlineNow]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -379,7 +757,7 @@ const Analytics = () => {
       toast.success("Analytics activado para este proyecto");
       setShowAddModal(false);
       setSelectedAppId(appId);
-      setView('project');
+      navigate(`/analytics/${appId}`);
     } catch (error) {
       toast.error("Error al activar analytics");
     } finally {
@@ -402,6 +780,66 @@ const Analytics = () => {
     }
   };
 
+  const renderAcquisitionTab = (data: {name: string, value: number}[], type: 'channel' | 'source' | 'referrer', labelPrefix: string) => {
+    const total = data.reduce((acc, item) => acc + item.value, 0);
+    
+    // Calculate raw percentages
+    const itemsWithPercentages = data.map(item => ({
+      ...item,
+      percentage: total > 0 ? (item.value / total) * 100 : 0
+    }));
+
+    // Adjust percentages to sum exactly to 100% using Largest Remainder Method or simple adjustment
+    if (itemsWithPercentages.length > 0 && total > 0) {
+      const roundedTotal = itemsWithPercentages.reduce((acc, item) => acc + Math.round(item.percentage * 10) / 10, 0);
+      const diff = 100 - roundedTotal;
+      if (Math.abs(diff) > 0.01) {
+        // Apply adjustment to the largest item
+        itemsWithPercentages[0].percentage += diff;
+      }
+    }
+
+    return (
+      <TabsContent value={type} className="m-0 data-[state=inactive]:hidden flex-1 flex flex-col min-h-0 md:min-h-[300px]" forceMount>
+        <ExpandableList
+          items={itemsWithPercentages}
+          limit={10}
+          listClassName="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1 w-full"
+          emptyMessage={
+            <div className="p-12 text-center flex flex-col items-center justify-center text-slate-400 text-xs gap-2">
+              <BarChart3 className="h-8 w-8 opacity-20" />
+              Sin datos disponibles
+            </div>
+          }
+          renderItem={(item, i) => {
+            const max = itemsWithPercentages[0]?.value || 1;
+            const barPct = (item.value / max) * 100;
+            const displayPct = (Math.round(item.percentage * 10) / 10).toFixed(1);
+            
+            return (
+              <div 
+                key={i} 
+                className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === type && f.value === item.name) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                onClick={() => addFilter(type, item.name, `${labelPrefix}: ${item.name}`)}
+              >
+                <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                <div className="flex items-center gap-2 relative z-10 min-w-0 pl-4">
+                  {filters.some(f => f.key === type && f.value === item.name) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1" />}
+                  <AcquisitionIcon name={item.name} type={type} appLogo={selectedApp?.logo_url} />
+                  <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{item.name}</span>
+                </div>
+                <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{item.value}</span>
+                </div>
+              </div>
+            );
+          }}
+        />
+      </TabsContent>
+    );
+  };
+
   if (loadingApps) {
     return (
       <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex items-center justify-center">
@@ -416,32 +854,14 @@ const Analytics = () => {
       <main className="w-full">
         {view === 'dashboard' ? (
           <div className="space-y-8">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-1">
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  Proyectos
-                </h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Gestiona las analíticas de tus sitios web y aplicaciones.
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-3 w-full md:w-auto">
-                <div className="relative flex-1 md:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input 
-                    placeholder="Buscar proyectos..." 
-                    className="pl-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 rounded-lg"
-                  />
-                </div>
-                <Button 
-                  onClick={() => setShowAddModal(true)}
-                  className="rounded-lg px-4 h-10 bg-blue-600 hover:bg-blue-700 font-semibold shadow-sm"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Project
-                </Button>
-              </div>
+            <header className="flex justify-end">
+              <Button 
+                onClick={() => setShowAddModal(true)}
+                className="rounded-lg px-4 h-9 text-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Proyecto
+              </Button>
             </header>
 
             {enabledApps.length === 0 ? (
@@ -466,7 +886,7 @@ const Analytics = () => {
                   <div 
                     key={app.id}
                     onClick={() => navigate(`/analytics/${app.id}`)}
-                    className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer"
+                    className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer"
                   >
                     <div className="flex items-center gap-4">
                       <div className="h-12 w-12 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
@@ -480,10 +900,10 @@ const Analytics = () => {
                       </div>
                       <div className="flex flex-col">
                         <span className="font-semibold text-slate-900 dark:text-white text-sm">
-                          {app.name || app.url}
+                          {app.name || cleanUrl(app.url)}
                         </span>
                         <span className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px] sm:max-w-xs">
-                          {app.url}
+                          {cleanUrl(app.url)}
                         </span>
                       </div>
                     </div>
@@ -543,10 +963,35 @@ const Analytics = () => {
                   Atrás
                 </Button>
                 <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
-                <div className="text-xs font-medium text-slate-500 truncate flex-1 flex items-center gap-1.5">
-                  <Globe2 className="w-3.5 h-3.5 shrink-0" />
-                  {selectedApp?.url}
-                </div>
+                <Select
+                  value={appId}
+                  onValueChange={(val) => navigate(`/analytics/${val}`)}
+                >
+                  <SelectTrigger className="h-8 border-0 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg text-xs font-semibold px-2 gap-2 focus:ring-0 focus:ring-offset-0 transition-colors shadow-none w-auto max-w-none">
+                    <div className="flex items-center gap-1.5 truncate">
+                      {selectedApp?.logo_url ? (
+                        <img src={selectedApp.logo_url} alt={selectedApp.name || ''} className="w-4 h-4 rounded-sm object-cover shrink-0" />
+                      ) : (
+                        <Globe2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                      )}
+                        <span className="truncate">{cleanUrl(selectedApp?.url || selectedApp?.name)}</span>
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {enabledApps.map(app => (
+                      <SelectItem key={app.id} value={app.id} className="text-xs">
+                        <div className="flex items-center gap-2">
+                          {app.logo_url ? (
+                            <img src={app.logo_url} alt={app.name || ''} className="w-4 h-4 rounded-sm object-cover shrink-0" />
+                          ) : (
+                            <Globe2 className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                          )}
+                          <span>{app.name || cleanUrl(app.url)}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
@@ -554,26 +999,84 @@ const Analytics = () => {
                     <Button variant="ghost" size="icon" className="h-full w-8 rounded-none border-r border-slate-200 dark:border-slate-800 hidden sm:flex text-slate-400 hover:text-slate-600" disabled>
                         <ChevronLeft className="h-3.5 w-3.5" />
                     </Button>
-                    <Select value={dateRange} onValueChange={handleDateRangeChange}>
-                      <SelectTrigger className="h-full border-0 bg-transparent rounded-none text-xs font-medium w-[130px] sm:w-[150px] focus:ring-0 focus:ring-offset-0 px-3">
-                        <SelectValue placeholder="Date range" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="today">Today</SelectItem>
-                        <SelectItem value="yesterday">Yesterday</SelectItem>
-                        <SelectItem value="24hours">Last 24 hours</SelectItem>
-                        <SelectItem value="7days">Last 7 days</SelectItem>
-                        <SelectItem value="30days">Last 30 days</SelectItem>
-                        <SelectItem value="12months">Last 12 months</SelectItem>
-                        <SelectItem value="week_to_date">Week to date</SelectItem>
-                        <SelectItem value="month_to_date">Month to date</SelectItem>
-                        <SelectItem value="year_to_date">Year to date</SelectItem>
-                        <SelectItem value="all_time">All time</SelectItem>
-                        <SelectItem value="custom" disabled className="flex items-center justify-between">
-                          <span>Custom</span> <Calendar className="h-3 w-3 opacity-50 ml-2 inline-block" />
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" className="h-full border-0 bg-transparent rounded-none text-xs font-medium w-[140px] sm:w-[150px] justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          {dateRange === "today" && "Hoy"}
+                          {dateRange === "yesterday" && "Ayer"}
+                          {dateRange === "last_x_days" && `Últimos ${lastXDays} días`}
+                          {dateRange === "custom" && "Personalizado"}
+                          {dateRange === "7days" && "Últimos 7 días"}
+                          {dateRange === "30days" && "Últimos 30 días"}
+                          {dateRange === "12months" && "Últimos 12 meses"}
+                          <Calendar className="h-3.5 w-3.5 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[280px] p-4" align="start">
+                        <RadioGroup 
+                          value={tempRangeType} 
+                          onValueChange={setTempRangeType}
+                          className="space-y-3"
+                        >
+                          <div className="flex items-center space-x-3 cursor-pointer">
+                            <RadioGroupItem value="today" id="today" />
+                            <Label htmlFor="today" className="text-sm font-medium cursor-pointer flex-1">Hoy</Label>
+                          </div>
+                          <div className="flex items-center space-x-3 cursor-pointer">
+                            <RadioGroupItem value="yesterday" id="yesterday" />
+                            <Label htmlFor="yesterday" className="text-sm font-medium cursor-pointer flex-1">Ayer</Label>
+                          </div>
+                          <div className="flex items-center space-x-3 cursor-pointer">
+                            <RadioGroupItem value="last_x_days" id="last_x_days" />
+                            <div className="flex items-center gap-2 flex-1">
+                              <Label htmlFor="last_x_days" className="text-sm font-medium cursor-pointer">Últimos</Label>
+                              <Input 
+                                type="number" 
+                                value={tempDays} 
+                                onChange={(e) => setTempDays(parseInt(e.target.value) || 1)}
+                                className="w-16 h-8 text-center font-bold"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setTempRangeType("last_x_days");
+                                }}
+                              />
+                              <span className="text-sm font-medium">días</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col space-y-2">
+                             <div className="flex items-center space-x-3 cursor-pointer">
+                                <RadioGroupItem value="custom" id="custom" />
+                                <Label htmlFor="custom" className="text-sm font-medium cursor-pointer flex-1">Personalizado</Label>
+                             </div>
+                             {tempRangeType === "custom" && (
+                               <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                                 <CalendarComponent
+                                    initialFocus
+                                    mode="range"
+                                    defaultMonth={customRange?.from || new Date()}
+                                    selected={customRange}
+                                    onSelect={setCustomRange}
+                                    numberOfMonths={1}
+                                    className="scale-90 origin-top"
+                                 />
+                               </div>
+                             )}
+                          </div>
+                        </RadioGroup>
+                        <div className="flex justify-end mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                          <Button 
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-9 px-6 rounded-lg"
+                            onClick={() => {
+                              setLastXDays(tempDays);
+                              handleDateRangeChange(tempRangeType);
+                              setIsPopoverOpen(false);
+                            }}
+                          >
+                            Aplicar
+                          </Button>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                     <Button variant="ghost" size="icon" className="h-full w-8 rounded-none border-l border-slate-200 dark:border-slate-800 hidden sm:flex text-slate-400 hover:text-slate-600" disabled>
                         <ChevronRight className="h-3.5 w-3.5" />
                     </Button>
@@ -598,63 +1101,82 @@ const Analytics = () => {
                     <Zap className="h-3.5 w-3.5 sm:mr-1.5 text-blue-500 fill-blue-500" />
                     <span className="hidden sm:inline">Script</span>
                   </Button>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg">
-                        <Settings className="h-4 w-4 text-slate-500" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Configuración de Analytics</DialogTitle>
-                        <DialogDescription>
-                          Gestiona la integración de analíticas para este proyecto.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="py-6 border-t border-b border-slate-100 dark:border-slate-800">
-                        <h4 className="text-sm font-bold text-red-600 mb-2">Zona de Peligro</h4>
-                        <p className="text-xs text-slate-500 mb-4">
-                          Si desactivas las analíticas, dejarás de recibir datos de este proyecto en tu dashboard, aunque conservaremos tu historial.
-                        </p>
-                        <Button 
-                          variant="destructive" 
-                          className="w-full"
-                          onClick={() => handleDisableAnalytics(selectedAppId!)}
-                          disabled={isUpdating}
-                        >
-                          {isUpdating ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : null}
-                          Desactivar Analytics
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
                 </div>
             </header>
+
+            {/* Active Filters Badges */}
+            {filters.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mt-2 mb-4">
+                <span className="text-xs font-medium text-slate-500 mr-1 flex items-center gap-1">
+                   Filtros activos:
+                </span>
+                {filters.map((f, i) => (
+                  <div key={i} className="flex items-center gap-1 px-2.5 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium border border-blue-200 dark:border-blue-800">
+                    <span>{f.label}</span>
+                    <button 
+                      onClick={() => removeFilter(f.key, f.value)}
+                      className="ml-1 text-blue-500 hover:text-blue-600 hover:bg-blue-200 dark:hover:bg-blue-800 dark:text-blue-400 p-0.5 rounded-full transition-colors"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+                <button 
+                  onClick={clearFilters}
+                  className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline ml-2"
+                >
+                  Limpiar todo
+                </button>
+              </div>
+            )}
 
             {/* New Analytics Layout */}
             <div className="flex flex-col gap-4">
               {/* Main Chart Card */}
               <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] overflow-hidden">
-                <div className="flex items-center gap-6 p-4 border-b border-slate-100 dark:border-slate-800/50 overflow-x-auto bg-slate-50/50 dark:bg-[#1C1C1E]/50">
-                  <div className="flex flex-col gap-1 min-w-max cursor-pointer text-blue-600 border-b-2 border-blue-600 pb-2 transition-all px-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-sm bg-blue-600 flex items-center justify-center">
-                            <CheckCircle2 className="h-2 w-2 text-white" />
-                        </div>
-                        Unique Visitors
-                    </span>
-                    <span className="text-3xl font-black">{totalVisitors}</span>
+                <div className="flex items-center justify-between gap-1 sm:gap-6 p-4 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-[#1C1C1E]/50 overflow-x-auto no-scrollbar">
+                  <div className="flex flex-col gap-1 min-w-[100px] cursor-pointer text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 p-2 px-3 rounded-xl transition-all">
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-slate-500 flex items-center gap-2 cursor-help">
+                              <div className="h-3 w-3 rounded-sm bg-blue-600 flex items-center justify-center shrink-0">
+                                  <CheckCircle2 className="h-2 w-2 text-white" />
+                              </div>
+                              <span className="truncate">Visitantes</span>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                          Personas distintas que visitaron tu proyecto. Una misma persona cuenta solo 1 vez sin importar cuántas veces entre.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <span className="text-2xl sm:text-3xl font-semibold">{totalVisitors}</span>
                   </div>
-                  <div className="flex flex-col gap-1 min-w-max cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 p-2 px-3 rounded-xl transition-colors">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-                        <div className="h-3 w-3 rounded-sm border border-slate-300 dark:border-slate-600 bg-transparent"></div>
-                        Total Views
-                    </span>
-                    <span className="text-3xl font-black text-slate-700 dark:text-slate-300">{pageViews}</span>
+                  <div className="flex flex-col gap-1 min-w-[80px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 p-2 px-3 rounded-xl transition-all">
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-slate-500 flex items-center gap-2 cursor-help">
+                              <div className="h-3 w-3 rounded-sm bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                                  <Eye className="h-2.5 w-2.5 text-slate-500 dark:text-slate-400" />
+                              </div>
+                              <span className="truncate">Vistas</span>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-[250px] text-xs">
+                          El número total de veces que alguna página fue cargada. Cada recarga cuenta como 1 vista extra.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <span className="text-2xl sm:text-3xl font-semibold text-slate-700 dark:text-slate-300">{pageViews}</span>
                   </div>
-                  <div className="flex flex-col gap-1 min-w-max pl-6 ml-auto border-l border-slate-200 dark:border-slate-700">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">Online <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div></span>
-                    <span className="text-3xl font-black text-slate-800 dark:text-slate-100">{onlineNow}</span>
+                  <div className="flex flex-col gap-1 min-w-[100px] sm:pl-6 ml-auto sm:border-l border-slate-200 dark:border-slate-700 p-2 sm:p-0">
+                    <span className="text-[10px] sm:text-xs font-medium uppercase tracking-wider text-slate-500 flex items-center gap-2">
+                      <span className="truncate">En línea</span>
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></div>
+                    </span>
+                    <span className="text-2xl sm:text-3xl font-semibold text-slate-800 dark:text-slate-100">{onlineNow}</span>
                   </div>
                 </div>
                 <CardContent className="p-0 pt-4 pb-2">
@@ -668,9 +1190,21 @@ const Analytics = () => {
                           </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
-                        <XAxis dataKey="time" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
+                        <XAxis 
+                          dataKey="time" 
+                          axisLine={false} 
+                          tickLine={false} 
+                          tick={{ fontSize: 10, fill: '#64748b' }} 
+                          dy={10} 
+                          interval="preserveStartEnd"
+                          minTickGap={30}
+                        />
                         <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
                         <RechartsTooltip 
+                          labelFormatter={(_label, payload) => {
+                            if (payload && payload[0]) return payload[0].payload.fullDate;
+                            return _label;
+                          }}
                           contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
                           itemStyle={{ color: '#fff' }}
                         />
@@ -682,182 +1216,371 @@ const Analytics = () => {
               </Card>
 
               {/* Bottom Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                {/* Acquisition Donut */}
+              {/* Combined Demographics Row */}
+              {/* Combined Demographics Row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-4">
+                {/* Geography (Single Card with Tabs inside) */}
                 <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] flex flex-col">
-                  <CardHeader className="p-4 pb-0 border-b border-slate-100 dark:border-slate-800/50">
-                    <Tabs defaultValue="referrer" className="w-full">
-                      <div className="flex items-center justify-between">
-                        <TabsList className="bg-transparent p-0 h-auto">
-                          <TabsTrigger value="channel" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-blue-600 p-0 mr-4 text-slate-500">Channel</TabsTrigger>
-                          <TabsTrigger value="referrer" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-foreground p-0 mr-4">Referrer</TabsTrigger>
-                          <TabsTrigger value="campaign" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-foreground p-0 mr-4 text-slate-500">Campaign</TabsTrigger>
-                        </TabsList>
-                      </div>
-                    </Tabs>
-                  </CardHeader>
-                  <CardContent className="flex-1 flex flex-col items-center justify-center p-6 min-h-[300px]">
-                    {referrersData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height={250}>
-                        <PieChart>
-                          <Pie
-                            data={referrersData}
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={70}
-                            outerRadius={100}
-                            paddingAngle={2}
-                            dataKey="value"
-                            stroke="none"
-                          >
-                            {referrersData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <RechartsTooltip 
-                            contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                            itemStyle={{ color: '#fff' }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <span className="text-slate-500 text-sm py-20 flex flex-col items-center gap-2">
-                        <BarChart3 className="h-8 w-8 opacity-20" />
-                        No data available
-                      </span>
-                    )}
-                    <div className="flex flex-wrap gap-4 mt-4 justify-center">
-                      {referrersData.map((entry, index) => (
-                        <div key={entry.name} className="flex items-center gap-2 text-xs">
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                          <span className="text-slate-600 dark:text-slate-300 font-medium">{entry.name}</span>
+                  <Tabs defaultValue="country" className="w-full">
+                    <CardHeader className="p-4 py-3 border-b border-slate-100 dark:border-slate-800/50 flex flex-row items-center justify-between space-y-0">
+                      <TabsList className="bg-transparent p-0 h-auto justify-start border-none">
+                        <TabsTrigger value="country" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold p-0 mr-4 border-none text-slate-500 data-[state=active]:text-foreground">País</TabsTrigger>
+                        <TabsTrigger value="region" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold p-0 mr-4 border-none text-slate-500 data-[state=active]:text-foreground">Estado</TabsTrigger>
+                        <TabsTrigger value="city" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold p-0 mr-4 border-none text-slate-500 data-[state=active]:text-foreground">Ciudad</TabsTrigger>
+                        <TabsTrigger value="map" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold p-0 border-none text-slate-500 data-[state=active]:text-foreground">Mapa</TabsTrigger>
+                      </TabsList>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <TabsContent value="country" className="m-0">
+                        {countriesData.length > 0 ? (
+                          <div className="w-full flex flex-col items-center">
+                            {/* Pie chart hidden */}
+                            <div className="w-full flex flex-col px-4 py-3 gap-1 max-h-[350px] overflow-y-auto custom-scrollbar">
+                              {countriesWithPercentages.map((item, i) => {
+                                const max = countriesWithPercentages[0]?.count || 1;
+                                const barPct = (item.count / max) * 100;
+                                const displayPct = item.percentage.toFixed(1);
+                                return (
+                                  <div 
+                                    key={i} 
+                                    className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'country' && f.value === item.name) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                                    onClick={() => addFilter('country', item.name, `País: ${item.name}`)}
+                                  >
+                                    <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                                    <div className="flex items-center gap-2 relative z-10 min-w-0">
+                                      {filters.some(f => f.key === 'country' && f.value === item.name) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1 -ml-4" />}
+                                      <CountryWithFlag country={item.name} />
+                                    </div>
+                                    <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                                      <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{item.count}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="p-8 text-center text-slate-400 text-xs py-20">Sin datos de región</div>
+                        )}
+                      </TabsContent>
+                      <TabsContent value="region" className="m-0 data-[state=inactive]:hidden" forceMount>
+                        <div className="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1">
+                          {regionsWithPercentages.length > 0 ? regionsWithPercentages.map((item, i) => {
+                            const max = regionsWithPercentages[0]?.count || 1;
+                            const barPct = (item.count / max) * 100;
+                            const displayPct = item.percentage.toFixed(1);
+                            return (
+                              <div 
+                                key={i} 
+                                className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'region' && f.value === item.name) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                                onClick={() => addFilter('region', item.name, `Estado: ${item.name}`)}
+                              >
+                                <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                                <div className="flex items-center gap-2 relative z-10 min-w-0">
+                                  {filters.some(f => f.key === 'region' && f.value === item.name) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1 -ml-4" />}
+                                  {(() => { const code = getCountryCode(item.country); return code ? <img src={`https://flagcdn.com/w20/${code}.png`} width="14" alt={item.country} className="shadow-sm rounded-sm shrink-0" /> : <MapPin className="w-3 h-3 shrink-0 text-slate-400" />; })()}
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{item.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{item.count}</span>
+                                </div>
+                              </div>
+                            );
+                          }) : (
+                            <div className="p-12 text-center text-slate-400 text-xs">
+                              Sin datos de estado
+                            </div>
+                          )}
                         </div>
-                      ))}
-                    </div>
+                      </TabsContent>
+                      <TabsContent value="city" className="m-0 data-[state=inactive]:hidden" forceMount>
+                        <ExpandableList
+                          items={citiesWithPercentages}
+                          limit={10}
+                          listClassName="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1"
+                          emptyMessage={<div className="p-12 text-center text-slate-400 text-xs">Sin datos de ciudad</div>}
+                          renderItem={(item, i) => {
+                            const max = citiesWithPercentages[0]?.count || 1;
+                            const barPct = (item.count / max) * 100;
+                            const displayPct = item.percentage.toFixed(1);
+                            return (
+                              <div 
+                                key={i} 
+                                className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'city' && f.value === item.name) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                                onClick={() => addFilter('city', item.name, `Ciudad: ${item.name}`)}
+                              >
+                                <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                                <div className="flex items-center gap-2 relative z-10 min-w-0">
+                                  {filters.some(f => f.key === 'city' && f.value === item.name) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1 -ml-4" />}
+                                  {(() => { const code = getCountryCode(item.country); return code ? <img src={`https://flagcdn.com/w20/${code}.png`} width="14" alt={item.country} className="shadow-sm rounded-sm shrink-0" /> : <MapPin className="w-3 h-3 shrink-0 text-slate-400" />; })()}
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{item.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{item.count}</span>
+                                </div>
+                              </div>
+                            );
+                          }}
+                        />
+                      </TabsContent>
+                      <TabsContent value="map" className="m-0 pt-0 h-[350px]">
+                        <WorldMap 
+                          data={countriesData} 
+                          onCountryClick={(name) => addFilter('country', name, `País: ${name}`)} 
+                        />
+                      </TabsContent>
+                    </CardContent>
+                  </Tabs>
+                </Card>
+
+                {/* Browsers */}
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] flex flex-col h-auto md:h-[400px]">
+                  <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-row items-center justify-between space-y-0">
+                    <span className="text-xs font-medium text-slate-800 dark:text-slate-200">Navegadores</span>
+                    <BarChart3 className="h-3.5 w-3.5 text-slate-400" />
+                  </CardHeader>
+                  <CardContent className="p-0 overflow-hidden">
+                    <ExpandableList
+                      items={browsersWithPercentages}
+                      limit={10}
+                      listClassName="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1"
+                      emptyMessage={<div className="p-8 text-center text-slate-400 text-xs">Sin datos de navegador</div>}
+                      renderItem={(item, i) => {
+                        const max = browsersWithPercentages[0]?.count || 1;
+                        const barPct = (item.count / max) * 100;
+                        const displayPct = item.percentage.toFixed(1);
+                        return (
+                          <div 
+                            key={i} 
+                            className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'browser' && f.value === item.name) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                            onClick={() => addFilter('browser', item.name, `Navegador: ${item.name}`)}
+                          >
+                            <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                            <div className="flex items-center gap-2 relative z-10 min-w-0 pl-4">
+                              {filters.some(f => f.key === 'browser' && f.value === item.name) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1" />}
+                              <BrowserIcon name={item.name} />
+                              <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{item.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{item.count}</span>
+                            </div>
+                          </div>
+                        );
+                      }}
+                    />
                   </CardContent>
                 </Card>
 
-                {/* Geolocation and Technology Cards */}
-                <div className="flex flex-col gap-4">
-                    {/* Geolocation Card */}
-                    <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] flex flex-col">
-                    <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/50 pb-0">
-                        <Tabs defaultValue="country" className="w-full">
-                        <div className="flex items-center justify-between">
-                            <TabsList className="bg-transparent p-0 h-auto">
-                            <TabsTrigger value="country" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-foreground p-0 mr-4">Country</TabsTrigger>
-                            <TabsTrigger value="region" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-foreground p-0 mr-4 text-slate-500">Region</TabsTrigger>
-                            <TabsTrigger value="city" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-foreground p-0 mr-4 text-slate-500">City</TabsTrigger>
-                            <TabsTrigger value="page" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-foreground p-0 mr-4 text-slate-500">Page</TabsTrigger>
-                            </TabsList>
-                        </div>
-                        <TabsContent value="country" className="m-0 pt-2 pb-2">
-                            <div className="flex flex-col max-h-[250px] overflow-y-auto">
-                            {countriesData.map((item, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 px-4 border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <span className="text-sm font-medium truncate max-w-[70%] text-slate-800 dark:text-slate-200"><CountryWithFlag country={item.name} /></span>
-                                <span className="text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">{item.count}</span>
-                                </div>
-                            ))}
-                            {countriesData.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No location data available</div>}
+                {/* Devices */}
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] flex flex-col">
+                  <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-row items-center justify-between space-y-0">
+                    <span className="text-xs font-medium text-slate-800 dark:text-slate-200">Dispositivos</span>
+                    <Smartphone className="h-3.5 w-3.5 text-slate-400" />
+                  </CardHeader>
+                  <CardContent className="p-0 overflow-hidden">
+                    <ExpandableList
+                      items={devicesWithPercentages}
+                      limit={10}
+                      listClassName="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1"
+                      emptyMessage={<div className="p-8 text-center text-slate-400 text-xs">Sin datos de dispositivo</div>}
+                      renderItem={(item, i) => {
+                        const max = devicesWithPercentages[0]?.count || 1;
+                        const barPct = (item.count / max) * 100;
+                        const displayPct = item.percentage.toFixed(1);
+                        return (
+                          <div 
+                            key={i} 
+                            className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'device' && f.value === item.name) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                            onClick={() => addFilter('device', item.name, `Dispositivo: ${item.name}`)}
+                          >
+                            <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                            <div className="flex items-center gap-2 relative z-10 min-w-0 pl-4">
+                              {filters.some(f => f.key === 'device' && f.value === item.name) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1" />}
+                              <DeviceIcon name={item.name} />
+                              <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{item.name}</span>
                             </div>
-                        </TabsContent>
-                        <TabsContent value="region" className="m-0 pt-2 pb-2">
-                            <div className="flex flex-col max-h-[250px] overflow-y-auto">
-                            {regionsData.map((item, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 px-4 border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <span className="text-sm font-medium truncate max-w-[70%] text-slate-800 dark:text-slate-200">{item.name}</span>
-                                <span className="text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">{item.count}</span>
-                                </div>
-                            ))}
-                            {regionsData.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No location data available</div>}
+                            <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{item.count}</span>
                             </div>
-                        </TabsContent>
-                        <TabsContent value="city" className="m-0 pt-2 pb-2">
-                            <div className="flex flex-col max-h-[250px] overflow-y-auto">
-                            {citiesData.map((item, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 px-4 border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <span className="text-sm font-medium truncate max-w-[70%] text-slate-800 dark:text-slate-200">{item.name}</span>
-                                <span className="text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">{item.count}</span>
-                                </div>
-                            ))}
-                            {citiesData.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No location data available</div>}
-                            </div>
-                        </TabsContent>
-                        <TabsContent value="page" className="m-0 pt-2 pb-2">
-                            <div className="flex flex-col max-h-[250px] overflow-y-auto">
-                            {pagesData.map((p, i) => (
-                                <div key={i} className="flex items-center justify-between p-3 px-4 border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                <span className="text-sm font-medium truncate max-w-[70%] text-slate-800 dark:text-slate-200">{p.path}</span>
-                                <span className="text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">{p.views}</span>
-                                </div>
-                            ))}
-                            {pagesData.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No page data available</div>}
-                            </div>
-                        </TabsContent>
-                        </Tabs>
-                    </CardHeader>
-                    </Card>
+                          </div>
+                        );
+                      }}
+                    />
+                  </CardContent>
+                </Card>
 
-                    {/* Technology Card */}
-                    <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] flex flex-col">
-                    <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/50 pb-0">
-                        <Tabs defaultValue="browser" className="w-full">
-                        <div className="flex items-center justify-between">
-                            <TabsList className="bg-transparent p-0 h-auto">
-                            <TabsTrigger value="browser" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold p-0 mr-4">Browser</TabsTrigger>
-                            <TabsTrigger value="os" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold p-0 mr-4 text-slate-500">OS</TabsTrigger>
-                            <TabsTrigger value="device" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold p-0 mr-4 text-slate-500">Device</TabsTrigger>
-                            </TabsList>
-                        </div>
-                        <TabsContent value="browser" className="m-0 pt-2 pb-2">
-                            <div className="flex flex-col max-h-[250px] overflow-y-auto">
-                                {browsersData.map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between p-3 px-4 border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                    <div className="flex items-center">
-                                      <BrowserIcon name={item.name} />
-                                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{item.name}</span>
-                                    </div>
-                                    <span className="text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">{item.count}</span>
-                                    </div>
-                                ))}
-                                {browsersData.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No browser data</div>}
+                {/* Operating Systems */}
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] flex flex-col">
+                  <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-row items-center justify-between space-y-0">
+                    <span className="text-xs font-medium text-slate-800 dark:text-slate-200">Sistemas operativos</span>
+                    <Cpu className="h-3.5 w-3.5 text-slate-400" />
+                  </CardHeader>
+                  <CardContent className="p-0 overflow-hidden">
+                    <ExpandableList
+                      items={osWithPercentages}
+                      limit={10}
+                      listClassName="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1"
+                      emptyMessage={<div className="p-8 text-center text-slate-400 text-xs">Sin datos de SO</div>}
+                      renderItem={(item, i) => {
+                        const max = osWithPercentages[0]?.count || 1;
+                        const barPct = (item.count / max) * 100;
+                        const displayPct = item.percentage.toFixed(1);
+                        return (
+                          <div 
+                            key={i} 
+                            className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'os' && f.value === item.name) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                            onClick={() => addFilter('os', item.name, `SO: ${item.name}`)}  
+                          >
+                            <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                            <div className="flex items-center gap-2 relative z-10 min-w-0 pl-4">
+                              {filters.some(f => f.key === 'os' && f.value === item.name) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1" />}
+                              <OsIcon name={item.name} />
+                              <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{item.name}</span>
                             </div>
-                        </TabsContent>
-                        <TabsContent value="os" className="m-0 pt-2 pb-2">
-                            <div className="flex flex-col max-h-[250px] overflow-y-auto">
-                                {osData.map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between p-3 px-4 border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                    <div className="flex items-center">
-                                      <OsIcon name={item.name} />
-                                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{item.name}</span>
-                                    </div>
-                                    <span className="text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">{item.count}</span>
-                                    </div>
-                                ))}
-                                {osData.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No OS data</div>}
+                            <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{item.count}</span>
                             </div>
-                        </TabsContent>
-                        <TabsContent value="device" className="m-0 pt-2 pb-2">
-                            <div className="flex flex-col max-h-[250px] overflow-y-auto">
-                                {devicesData.map((item, i) => (
-                                    <div key={i} className="flex items-center justify-between p-3 px-4 border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                                    <div className="flex items-center">
-                                      <DeviceIcon name={item.name} />
-                                      <span className="text-sm font-medium text-slate-800 dark:text-slate-200">{item.name}</span>
-                                    </div>
-                                    <span className="text-sm font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded">{item.count}</span>
-                                    </div>
-                                ))}
-                                {devicesData.length === 0 && <div className="p-8 text-center text-slate-500 text-sm">No device data</div>}
-                            </div>
-                        </TabsContent>
-                        </Tabs>
-                    </CardHeader>
-                    </Card>
-                </div>
+                          </div>
+                        );
+                      }}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
 
+              {/* Acquisition Card Row (Moved down) */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Tabs defaultValue="channel" className="w-full flex flex-col">
+                  <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] flex flex-col h-full">
+                    <CardHeader className="p-4 pb-0 border-b border-slate-100 dark:border-slate-800/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <TabsList className="bg-transparent p-0 h-auto justify-start">
+                          <TabsTrigger value="channel" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold data-[state=active]:text-blue-600 p-0 pr-6 border-none text-slate-500">Canales</TabsTrigger>
+                          <TabsTrigger value="source" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold data-[state=active]:text-blue-600 p-0 pr-6 border-none text-slate-500">Fuentes</TabsTrigger>
+                          <TabsTrigger value="referrer" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold data-[state=active]:text-blue-600 p-0 border-none text-slate-500">URLs</TabsTrigger>
+                        </TabsList>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 p-0 flex flex-col">
+                      {renderAcquisitionTab(channelsData, 'channel', 'Canal')}
+                      {renderAcquisitionTab(sourcesData, 'source', 'Fuente')}
+                      {renderAcquisitionTab(referrersData, 'referrer', 'URL Referente')}
+                    </CardContent>
+                  </Card>
+                </Tabs>
+
+                {/* Top Pages Card - Side by side with Channels */}
+                <Tabs defaultValue="all" className="w-full flex flex-col">
+                  <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-[#1C1C1E] flex flex-col h-full">
+                    <CardHeader className="p-4 pb-0 border-b border-slate-100 dark:border-slate-800/50">
+                      <div className="flex items-center justify-between mb-2">
+                        <TabsList className="bg-transparent p-0 h-auto justify-start">
+                          <TabsTrigger value="all" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold data-[state=active]:text-blue-600 p-0 pr-6 border-none">Páginas principales</TabsTrigger>
+                          <TabsTrigger value="entry" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold data-[state=active]:text-blue-600 p-0 pr-6 border-none text-slate-500">Páginas de entrada</TabsTrigger>
+                          <TabsTrigger value="exit" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold data-[state=active]:text-blue-600 p-0 border-none text-slate-500">Páginas de salida</TabsTrigger>
+                        </TabsList>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="flex-1 p-0 flex flex-col">
+                      <TabsContent value="all" className="m-0 data-[state=inactive]:hidden flex-1 flex flex-col min-h-0 md:min-h-[300px]" forceMount>
+                        <ExpandableList
+                          items={pagesWithPercentages}
+                          limit={10}
+                          listClassName="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1"
+                          emptyMessage={<div className="p-12 text-center text-slate-400 text-xs">Sin datos de páginas</div>}
+                          renderItem={(p, i) => {
+                            const max = pagesWithPercentages[0]?.views ?? 1;
+                            const barPct = (p.views / max) * 100;
+                            const displayPct = p.percentage.toFixed(1);
+                            return (
+                              <div 
+                                key={i} 
+                                className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'page_path' && f.value === (p.path || '/')) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                                onClick={() => addFilter('page_path', p.path || '/', `Página: ${p.path || '/'}`)}
+                              >
+                                <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                                <div className="flex items-center gap-2 relative z-10 min-w-0 pl-4">
+                                  {filters.some(f => f.key === 'page_path' && f.value === (p.path || '/')) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1" />}
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{p.path || '/'}</span>
+                                </div>
+                                <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{p.views}</span>
+                                </div>
+                              </div>
+                            );
+                          }}
+                        />
+                      </TabsContent>
+                      <TabsContent value="entry" className="m-0 data-[state=inactive]:hidden flex-1 flex flex-col min-h-0 md:min-h-[300px]" forceMount>
+                        <ExpandableList
+                          items={entryPagesWithPercentages}
+                          limit={10}
+                          listClassName="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1"
+                          emptyMessage={<div className="p-12 text-center text-slate-400 text-xs">Sin datos de páginas de entrada</div>}
+                          renderItem={(p, i) => {
+                            const max = entryPagesWithPercentages[0]?.views ?? 1;
+                            const barPct = (p.views / max) * 100;
+                            const displayPct = p.percentage.toFixed(1);
+                            return (
+                              <div 
+                                key={i} 
+                                className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'page_path' && f.value === (p.path || '/')) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                                onClick={() => addFilter('page_path', p.path || '/', `Página: ${p.path || '/'}`)}
+                              >
+                                <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                                <div className="flex items-center gap-2 relative z-10 min-w-0 pl-4">
+                                  {filters.some(f => f.key === 'page_path' && f.value === (p.path || '/')) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1" />}
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{p.path || '/'}</span>
+                                </div>
+                                <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{p.views}</span>
+                                </div>
+                              </div>
+                            );
+                          }}
+                        />
+                      </TabsContent>
+                      <TabsContent value="exit" className="m-0 data-[state=inactive]:hidden flex-1 flex flex-col min-h-0 md:min-h-[300px]" forceMount>
+                        <ExpandableList
+                          items={exitPagesWithPercentages}
+                          limit={10}
+                          listClassName="flex flex-col max-h-[350px] overflow-y-auto custom-scrollbar px-4 py-2 gap-1"
+                          emptyMessage={<div className="p-12 text-center text-slate-400 text-xs">Sin datos de páginas de salida</div>}
+                          renderItem={(p, i) => {
+                            const max = exitPagesWithPercentages[0]?.views ?? 1;
+                            const barPct = (p.views / max) * 100;
+                            const displayPct = p.percentage.toFixed(1);
+                            return (
+                              <div 
+                                key={i} 
+                                className={`relative flex items-center justify-between text-xs py-2 px-2 rounded cursor-pointer transition-colors ${filters.some(f => f.key === 'page_path' && f.value === (p.path || '/')) ? 'bg-blue-50 dark:bg-blue-900/40 ring-1 ring-blue-500/30' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
+                                onClick={() => addFilter('page_path', p.path || '/', `Página: ${p.path || '/'}`)}
+                              >
+                                <div className="absolute inset-0 rounded bg-blue-100 dark:bg-blue-900/30" style={{ width: `${barPct}%` }}></div>
+                                <div className="flex items-center gap-2 relative z-10 min-w-0 pl-4">
+                                  {filters.some(f => f.key === 'page_path' && f.value === (p.path || '/')) && <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 absolute -left-1" />}
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 truncate tracking-tight">{p.path || '/'}</span>
+                                </div>
+                                <div className="flex items-center gap-2 relative z-10 shrink-0 ml-2">
+                                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{displayPct}%</span>
+                                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">{p.views}</span>
+                                </div>
+                              </div>
+                            );
+                          }}
+                        />
+                      </TabsContent>
+                    </CardContent>
+                  </Card>
+                </Tabs>
               </div>
             </div>
 
@@ -867,12 +1590,11 @@ const Analytics = () => {
                 <Tabs defaultValue="user" className="w-full">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <TabsList className="bg-transparent p-0 h-auto w-full justify-start overflow-x-auto">
-                      <TabsTrigger value="user" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-foreground p-0 mr-4">User</TabsTrigger>
-                      <TabsTrigger value="journey" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-bold data-[state=active]:text-foreground p-0 mr-4 text-slate-500">Journey</TabsTrigger>
+                      <TabsTrigger value="user" className="text-xs data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:font-semibold data-[state=active]:text-foreground p-0 mr-4">Usuarios</TabsTrigger>
                     </TabsList>
                     <div className="relative shrink-0 w-full sm:w-auto">
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                      <Input placeholder="Search user..." className="h-9 pl-9 text-sm bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800/50 w-full sm:w-48 ml-auto" />
+                      <Input placeholder="Buscar usuario..." className="h-9 pl-9 text-sm bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800/50 w-full sm:w-48 ml-auto" />
                     </div>
                   </div>
                 </Tabs>
@@ -882,124 +1604,187 @@ const Analytics = () => {
                   <Table>
                     <TableHeader className="bg-transparent">
                       <TableRow className="hover:bg-transparent border-b border-slate-100 dark:border-slate-800/50">
-                        <TableHead className="w-[400px] text-xs font-semibold text-slate-500">Visitor</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-500">Source</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-500">Last seen</TableHead>
+                        <TableHead className="w-[400px] text-xs font-medium text-slate-500">Visitante Anónimo</TableHead>
+                        <TableHead className="text-xs font-medium text-slate-500">Fuente</TableHead>
+                        <TableHead className="text-xs font-medium text-slate-500">Última visita</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {uniqueUsers.map((user, i) => (
+                      {uniqueUsers.map((user, i) => {
+                        const isOnline = new Date(user.lastSeen).getTime() > Date.now() - 5 * 60 * 1000;
+                        return (
                         <Sheet key={user.uid}>
                           <SheetTrigger asChild>
-                            <TableRow className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/50">
-                              <TableCell className="py-4">
-                                <div className="flex items-center gap-4 min-w-[300px]">
-                                  <Avatar className="h-10 w-10 border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
-                                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.fakeName.replace(/\s+/g, '')}&backgroundColor=transparent`} alt={user.fakeName} />
-                                    <AvatarFallback>{user.fakeName.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex flex-col gap-1.5">
-                                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 capitalize">{user.fakeName}</span>
-                                    <div className="flex items-center gap-3 text-xs text-slate-500">
-                                      {user.country && user.country !== 'Unknown' && <CountryWithFlag country={user.country} />}
-                                      {user.device && user.device !== 'Unknown' && <span className="flex items-center"><DeviceIcon name={user.device} /> {user.device}</span>}
-                                      {user.os && user.os !== 'Unknown' && <span className="flex items-center"><OsIcon name={user.os} /> {user.os}</span>}
-                                      {user.browser && <span className="flex items-center text-slate-500"><BrowserIcon name={user.browser} /> <span className="ml-[2px]">{user.browser}</span></span>}
+                            <TableRow className="cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors border-b border-slate-100 dark:border-slate-800/50 group">
+                              <TableCell className="py-2.5">
+                                <div className="flex items-center gap-3">
+                                  <div className="relative">
+                                    <Avatar className="h-8 w-8 border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 group-hover:ring-2 ring-blue-500/20 transition-all">
+                                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.fakeName.replace(/\s+/g, '')}&backgroundColor=transparent`} alt={user.fakeName} />
+                                      <AvatarFallback>{user.fakeName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                    </Avatar>
+                                    {isOnline && (
+                                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-[#1C1C1E] shadow-sm"></div>
+                                    )}
+                                  </div>
+                                  <div className="flex flex-col gap-0.5 overflow-hidden">
+                                    <span className="text-[13px] font-normal text-slate-700 dark:text-slate-300 capitalize truncate">{user.fakeName}</span>
+                                    <div className="flex items-center gap-3">
+                                      {user.country && user.country !== 'Unknown' && (
+                                        <div className="text-[11px] text-slate-500 flex items-center">
+                                          <CountryWithFlag country={user.country} />
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-1.5 opacity-60">
+                                        <DeviceIcon name={user.device || 'Unknown'} size={11} />
+                                        <OsIcon name={user.os || 'Unknown'} size={11} />
+                                        <BrowserIcon name={user.browser || 'Unknown'} size={11} />
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell className="py-4 align-top pt-5 min-w-[200px]">
-                                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                  <ExternalLink className="h-3.5 w-3.5 opacity-70" />
-                                  {user.source}
-                                </div>
+                              <TableCell className="py-2.5">
+                                {(() => {
+                                  const classification = getReferrerClassification(user.referrer);
+                                  return (
+                                    <div className="flex items-center gap-1.5 text-[13px] font-normal text-slate-600 dark:text-slate-400">
+                                      <AcquisitionIcon name={classification.source} type="source" appLogo={selectedApp?.logo_url} />
+                                      <span className="truncate max-w-[120px]">{classification.source}</span>
+                                    </div>
+                                  );
+                                })()}
                               </TableCell>
-                              <TableCell className="py-4 align-top pt-5">
-                                <div className="flex flex-col gap-2">
-                                  <span className="text-sm text-slate-900 dark:text-slate-100">
-                                    {formatDistanceToNow(user.lastSeen, { addSuffix: true })}
+                              <TableCell className="py-2.5 text-right">
+                                <div className="flex flex-col items-end gap-1">
+                                  <span className="text-[13px] font-normal text-slate-500 dark:text-slate-400">
+                                    {formatDistanceToNow(user.lastSeen, { addSuffix: true, locale: es })}
                                   </span>
-                                  <div className="flex items-center gap-1 opacity-50">
-                                    {/* Timeline dots representing pageviews/events */}
-                                    {[...Array(Math.min(user.pageviews, 8))].map((_, idx) => (
-                                      <div key={idx} className={`w-1.5 h-1.5 rounded-full ${idx === 0 ? 'bg-blue-500' : 'bg-slate-400 dark:bg-slate-600'}`}></div>
+                                  <div className="flex items-center gap-1">
+                                    {[...Array(Math.min(user.pageviews, 5))].map((_, idx) => (
+                                      <div key={idx} className={`w-1 h-1 rounded-full ${idx === 0 ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700'}`}></div>
                                     ))}
-                                    {user.pageviews > 8 && <span className="text-[10px] text-slate-400 ml-1">+{user.pageviews - 8}</span>}
+                                    {user.pageviews > 5 && <span className="text-[9px] text-slate-300 font-mono">+{user.pageviews - 5}</span>}
                                   </div>
                                 </div>
                               </TableCell>
                             </TableRow>
                           </SheetTrigger>
-                          <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-                            <SheetHeader className="text-left space-y-4 mb-8">
-                              <div className="flex items-center gap-4 pt-4">
-                                <Avatar className="h-16 w-16 border-2 border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
-                                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.fakeName.replace(/\s+/g, '')}&backgroundColor=transparent`} alt={user.fakeName} />
-                                  <AvatarFallback>{user.fakeName.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <SheetTitle className="text-xl capitalize">{user.fakeName}</SheetTitle>
-                                  <p className="text-sm text-slate-500 flex items-center gap-1 mt-1">
-                                    <CountryWithFlag country={user.country || 'Unknown Location'} />
+                          <SheetContent className="w-full sm:max-w-md overflow-hidden flex flex-col p-0 border-l border-slate-200 dark:border-slate-800">
+                            <div className="p-6 pb-4 border-b border-slate-100 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                              <SheetHeader className="text-left">
+                                <div className="flex items-center gap-4">
+                                  <Avatar className="h-14 w-14 border-2 border-primary/10 bg-slate-100 dark:bg-slate-800 ring-4 ring-slate-100 dark:ring-slate-900 shadow-sm">
+                                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.fakeName.replace(/\s+/g, '')}&backgroundColor=transparent`} alt={user.fakeName} />
+                                    <AvatarFallback>{user.fakeName.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <SheetTitle className="text-lg capitalize font-medium tracking-tight">{user.fakeName}</SheetTitle>
+                                    <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                      <span className="flex items-center gap-1.5 font-medium">
+                                        <MapPin className="w-3.5 h-3.5 opacity-70" />
+                                        {user.country || 'Unknown'}, {user.events[0].browser_info?.city || 'Unknown'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </SheetHeader>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-8 custom-scrollbar">
+                              {/* Attributes Matrix */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-sm flex flex-col justify-center">
+                                  <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Fuente</p>
+                                  {(() => {
+                                    const classification = getReferrerClassification(user.referrer);
+                                    return (
+                                      <div className="flex items-center gap-1.5 text-[13px] font-medium text-slate-800 dark:text-slate-200">
+                                        <AcquisitionIcon name={classification.source} type="source" appLogo={selectedApp?.logo_url} />
+                                        <span className="truncate">{classification.source}</span>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-sm flex flex-col justify-center">
+                                  <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Interacciones</p>
+                                  <p className="text-[13px] font-medium text-slate-800 dark:text-slate-200">{user.pageviews} eventos</p>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-sm flex flex-col justify-center">
+                                  <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Dispositivo</p>
+                                  <p className="text-[13px] font-medium flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                                    <span className="opacity-70 flex items-center"><DeviceIcon name={user.device || 'Unknown'} size={14} /></span>
+                                    {user.device}
+                                  </p>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-sm flex flex-col justify-center">
+                                  <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-1">S. O.</p>
+                                  <p className="text-[13px] font-medium flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                                    <span className="opacity-70 flex items-center"><OsIcon name={user.os || 'Unknown'} size={14} /></span>
+                                    {user.os}
+                                  </p>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-sm flex flex-col justify-center">
+                                  <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Navegador</p>
+                                  <p className="text-[13px] font-medium flex items-center gap-1.5 capitalize text-slate-800 dark:text-slate-200">
+                                    <span className="opacity-70 flex items-center"><BrowserIcon name={user.browser || 'Unknown'} size={14} /></span>
+                                    {user.browser}
+                                  </p>
+                                </div>
+                                <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 shadow-sm flex flex-col justify-center">
+                                  <p className="text-[10px] uppercase tracking-widest text-slate-400 font-semibold mb-1">Resolución</p>
+                                  <p className="text-[13px] font-medium flex items-center gap-1.5 text-slate-800 dark:text-slate-200">
+                                    <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+                                    {user.events[0].browser_info?.screen_width || '---'} x {user.events[0].browser_info?.screen_height || user.events.find(e => e.browser_info?.screen_height)?.browser_info?.screen_height || '---'}
                                   </p>
                                 </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-4 text-sm mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl">
-                                <div>
-                                  <p className="text-slate-500 mb-1">Acquisition Source</p>
-                                  <p className="font-medium text-slate-900 dark:text-slate-100 truncate">{user.source}</p>
+
+                              {/* Navigation Timeline */}
+                              <div className="space-y-5 pb-6">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">Ruta de navegación</h4>
+                                  <span className="text-[10px] font-mono bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500">
+                                    {user.events.length} pasos
+                                  </span>
                                 </div>
-                                <div>
-                                  <p className="text-slate-500 mb-1">Total Events</p>
-                                  <p className="font-medium text-slate-900 dark:text-slate-100">{user.pageviews}</p>
-                                </div>
-                                <div>
-                                  <p className="text-slate-500 mb-1">Operating Sys</p>
-                                  <div className="flex items-center font-medium text-slate-900 dark:text-slate-100">
-                                    {user.os && <OsIcon name={user.os} />} {user.os}
-                                  </div>
-                                </div>
-                                <div>
-                                  <p className="text-slate-500 mb-1">Browser</p>
-                                  <div className="flex items-center font-medium text-slate-900 dark:text-slate-100">
-                                    {user.browser && <BrowserIcon name={user.browser} />} <span className={user.browser ? "ml-1" : ""}>{user.browser}</span>
-                                  </div>
+                                <div className="relative pl-6 space-y-6 before:absolute before:left-[3px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-100 dark:before:bg-slate-800">
+                                  {user.events.map((evt, idx) => {
+                                    const eventType = evt.browser_info?.event_type || 'pageview';
+                                    const isCustom = eventType !== 'pageview';
+                                    return (
+                                      <div key={evt.id} className="relative group/step">
+                                        <div className={`absolute -left-[26px] top-1.5 w-2 h-2 rounded-full border-2 border-white dark:border-[#1C1C1E] z-10 transition-transform group-hover/step:scale-125 ${isCustom ? 'bg-amber-500 ring-2 ring-amber-500/20' : 'bg-blue-500 ring-2 ring-blue-500/20'}`}></div>
+                                        <div className="flex flex-col gap-1.5">
+                                          <div className="flex items-center justify-between gap-4">
+                                            <span className={`text-[13px] font-medium transition-colors ${isCustom ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300'}`}>
+                                              {isCustom ? (evt.custom_event_name as string || 'Evento personalizado') : (evt.page_path || '/')}
+                                            </span>
+                                            <span className="text-[10px] font-mono text-slate-400 font-medium">
+                                              {format(new Date(evt.created_at), 'HH:mm:ss')}
+                                            </span>
+                                          </div>
+                                          {isCustom && (
+                                            <div className="flex items-center gap-1.5">
+                                              <div className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/30 text-[10px] text-amber-600 dark:text-amber-500 font-semibold uppercase tracking-tight">
+                                                {eventType.replace('_', ' ')}
+                                              </div>
+                                              <span className="text-[11px] text-slate-500 font-medium truncate italic max-w-[200px]">
+                                                en {evt.page_path}
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
-                            </SheetHeader>
-                            
-                            <div className="space-y-6 relative border-l-2 border-slate-100 dark:border-slate-800 ml-3 pl-4 pb-8">
-                              {user.events.map((evt, idx) => {
-                                const type = evt.browser_info?.event_type || 'pageview';
-                                return (
-                                  <div key={evt.id} className="relative">
-                                    <div className="absolute -left-[23px] top-1 h-3 w-3 rounded-full bg-white dark:bg-slate-950 border-2 border-blue-500"></div>
-                                    <div className="text-xs font-semibold text-slate-500 mb-1.5 flex justify-between">
-                                      <span>{format(new Date(evt.created_at), 'MMM d, h:mm a')}</span>
-                                      {idx === 0 && <span className="text-blue-500">Latest</span>}
-                                    </div>
-                                    <div className="bg-white dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                                      <div className="flex items-center gap-2 mb-2">
-                                        {type === 'pageview' ? <Eye className="w-4 h-4 text-blue-500" /> : type === 'external_link' ? <ExternalLink className="w-4 h-4 text-orange-500" /> : <MousePointerClick className="w-4 h-4 text-purple-500" />}
-                                        <span className="font-bold text-sm capitalize text-slate-800 dark:text-slate-200">{type.replace('_', ' ')}</span>
-                                      </div>
-                                      <p className="text-sm font-medium text-slate-600 dark:text-slate-400 break-all">
-                                        {type === 'pageview' ? evt.page_path : (evt.browser_info?.extra_data?.custom_event_name || evt.browser_info?.extra_data?.target_url || 'Custom Interaction')}
-                                      </p>
-                                      {type !== 'pageview' && evt.browser_info?.extra_data && (
-                                        <pre className="mt-3 text-[10px] bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-2 rounded-lg text-slate-500 overflow-x-auto">
-                                          {JSON.stringify(evt.browser_info.extra_data, null, 2)}
-                                        </pre>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
                             </div>
                           </SheetContent>
                         </Sheet>
-                      ))}
+                        );
+                      })}
                       {uniqueUsers.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={3} className="h-24 text-center text-slate-500">
@@ -1040,7 +1825,7 @@ const Analytics = () => {
                 <Button variant="link" onClick={() => window.location.href='/dashboard'}>Crear nueva app</Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-3 max-h-[40vh] overflow-y-auto pr-2">
+              <div className="grid grid-cols-1 gap-3 max-h-[40vh] overflow-y-auto custom-scrollbar pr-2">
                 {availableApps.map(app => (
                   <button
                     key={app.id}
@@ -1048,8 +1833,27 @@ const Analytics = () => {
                     disabled={isUpdating}
                     className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-500/5 transition-all text-left"
                   >
-                    <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                      <Rocket className="h-5 w-5 text-slate-400" />
+                    <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                      {app.logo_url ? (
+                        <img src={app.logo_url} alt={app.name || ''} className="w-full h-full object-cover" />
+                      ) : app.url ? (
+                        <img
+                          src={`https://www.google.com/s2/favicons?domain=${encodeURIComponent(app.url)}&sz=64`}
+                          alt={app.name || ''}
+                          className="w-7 h-7 object-contain"
+                          onError={e => {
+                            const t = e.currentTarget;
+                            t.style.display = 'none';
+                            if (t.nextSibling) (t.nextSibling as HTMLElement).style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <span
+                        className="w-full h-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm"
+                        style={{ display: 'none' }}
+                      >
+                        {app.name?.charAt(0).toUpperCase() || '?'}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold truncate">{app.name || app.url}</div>

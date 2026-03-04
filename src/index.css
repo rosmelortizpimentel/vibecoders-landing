@@ -250,3 +250,44 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ── Chat bubble shadows (WhatsApp-style radius in component) ── */
+
+/* Own message */
+.bubble-own {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.18);
+}
+
+/* Received message */
+.bubble-other {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+
+/* Elegant Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.3);
+}
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.5);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(71, 85, 105, 0.3) transparent;
+}

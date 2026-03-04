@@ -39,6 +39,7 @@ export interface ProfileData {
   show_contributor_badge: boolean;
   allow_analytics: boolean;
   allow_marketing: boolean;
+  chat_available: boolean;
 }
 
 const DEFAULT_PROFILE: Partial<ProfileData> = {
@@ -52,6 +53,7 @@ const DEFAULT_PROFILE: Partial<ProfileData> = {
   show_contributor_badge: false,
   allow_analytics: false,
   allow_marketing: false,
+  chat_available: false,
 };
 
 export function useProfileEditor() {
@@ -90,7 +92,7 @@ export function useProfileEditor() {
       'lovable', 'twitter', 'github', 'tiktok', 'instagram', 'youtube', 
       'linkedin', 'email_public', 'font_family', 'primary_color', 
       'accent_color', 'card_style', 'avatar_position', 'banner_position',
-      'allow_analytics', 'allow_marketing'
+      'allow_analytics', 'allow_marketing', 'chat_available'
     ];
 
     fields.forEach(field => {

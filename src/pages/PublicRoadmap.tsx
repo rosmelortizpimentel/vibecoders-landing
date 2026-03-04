@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { detectedSubdomain, isCustomDomain } from '@/utils/domain';
 import { useRoadmapFeedback, RoadmapLane, RoadmapCard, RoadmapSettings, RoadmapFeedback, RoadmapFeedbackAttachment } from '@/hooks/useRoadmap';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Loader2, ThumbsUp, MessageSquare, Paperclip, X, Send, Calendar, Heart, Link2, LogIn, ChevronLeft, ChevronRight, FileText, Download } from 'lucide-react';
@@ -376,7 +377,14 @@ export default function PublicRoadmap() {
       }
 
       const { data: newFb, error } = await supabase.from('roadmap_feedback')
-        .insert({ app_id: app.id, title: fbTitle.trim(), description: fbDesc.trim(), author_name: fbName.trim() || null, author_email: fbEmail.trim() || null })
+        .insert({ 
+          app_id: app.id, 
+          title: fbTitle.trim(), 
+          description: fbDesc.trim(), 
+          author_name: fbName.trim() || null, 
+          author_email: fbEmail.trim() || null,
+          author_id: currentUser?.id || null 
+        })
         .select().single();
       if (error) throw error;
 
@@ -390,8 +398,23 @@ export default function PublicRoadmap() {
       setShowFeedbackForm(false);
 
       const { data: refreshed } = await supabase.from('roadmap_feedback')
-        .select('*, roadmap_feedback_attachments(*)').eq('app_id', app.id).eq('is_hidden', false).order('likes_count', { ascending: false });
-      if (refreshed) setFeedback(refreshed.map(f => ({ ...f, attachments: f.roadmap_feedback_attachments || [] })) as RoadmapFeedback[]);
+        .select(`
+          *,
+          roadmap_feedback_attachments(*),
+          author:profiles!roadmap_feedback_author_id_fkey(username, avatar_url)
+        `)
+        .eq('app_id', app.id)
+        .eq('is_hidden', false)
+        .order('likes_count', { ascending: false });
+      
+      if (refreshed) {
+        setFeedback(refreshed.map((f: any) => ({ 
+          ...f, 
+          attachments: f.roadmap_feedback_attachments || [],
+          author_username: f.author?.username || null,
+          author_avatar_url: f.author?.avatar_url || null,
+        })) as RoadmapFeedback[]);
+      }
     } catch {
       toast.error(l.error);
     } finally {
@@ -653,8 +676,27 @@ export default function PublicRoadmap() {
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 mt-1">{fb.description}</p>
-                        {fb.author_name && <p className="text-xs text-gray-400 mt-1">— {fb.author_name}</p>}
+                         <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">{fb.description}</p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <Avatar className="!w-6 !h-6 shrink-0">
+                          <AvatarImage src={fb.author_avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                            {fb.author_username?.charAt(0).toUpperCase() || fb.author_name?.charAt(0) || '?'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-muted-foreground">
+                          — {fb.author_username ? (
+                            <Link 
+                              to={`/@${fb.author_username}`}
+                              className="hover:text-primary transition-colors font-medium"
+                            >
+                              @{fb.author_username}
+                            </Link>
+                          ) : (
+                            fb.author_name || 'Anonymous'
+                          )}
+                        </span>
+                      </div>
                       </div>
                       <button
                         onClick={() => handleToggleFeedbackLike(fb.id)}

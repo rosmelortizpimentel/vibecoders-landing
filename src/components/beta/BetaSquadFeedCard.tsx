@@ -177,7 +177,12 @@ export function BetaSquadFeedCard({ app }: BetaSquadFeedCardProps) {
                   </Avatar>
                   <div className="min-w-0">
                     <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 truncate">
-                      {app.name || 'Untitled App'}
+                      <Link 
+                        to={`/app/${app.id}`} 
+                        className="hover:text-primary transition-colors underline decoration-primary/30 underline-offset-4 hover:decoration-primary"
+                      >
+                        {app.name || 'Untitled App'}
+                      </Link>
                     </h3>
                   </div>
                 </div>

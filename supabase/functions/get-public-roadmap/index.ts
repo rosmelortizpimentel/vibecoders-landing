@@ -105,8 +105,14 @@ serve(async (req) => {
     const [lanes, cards, feedback] = await Promise.all([
       supabaseClient.from('roadmap_lanes').select('*').eq('app_id', appId).order('display_order'),
       supabaseClient.from('roadmap_cards').select('*').eq('app_id', appId).order('display_order'),
-      supabaseClient.from('roadmap_feedback').select('*, roadmap_feedback_attachments(*)').eq('app_id', appId).eq('is_hidden', false).order('likes_count', { ascending: false })
+      supabaseClient.from('roadmap_feedback').select(`
+        *,
+        roadmap_feedback_attachments(*),
+        author:author_id(username, avatar_url)
+      `).eq('app_id', appId).eq('is_hidden', false).order('likes_count', { ascending: false })
     ])
+
+    console.log(`Found ${feedback.data?.length} feedback items. First item author: ${JSON.stringify(feedback.data?.[0]?.author || 'N/A')}`)
 
     // Optional: Fetch user likes if fingerprint provided
     let likedCardIds = []
@@ -128,9 +134,11 @@ serve(async (req) => {
         settings: settingsData,
         lanes: lanes.data || [],
         cards: cards.data || [],
-        feedback: (feedback.data || []).map(f => ({
+        feedback: (feedback.data || []).map((f: any) => ({
           ...f,
           attachments: f.roadmap_feedback_attachments || [],
+          author_username: f.author?.username || null,
+          author_avatar_url: f.author?.avatar_url || null,
         })),
         userLikes: {
           cards: likedCardIds,

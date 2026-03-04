@@ -223,22 +223,6 @@ export function AuthenticatedHeader({
               </div>
             )}
 
-            {/* Upgrade Button - only for free tier */}
-            {isFree && !subLoading && (
-              <div className="relative group">
-                {/* Subtle ping animation on the subtle border background */}
-                <div className="absolute -inset-[1px] bg-amber-500/30 rounded-full animate-ping opacity-75 group-hover:opacity-100 transition-opacity"></div>
-                <Link
-                  to="/choose-plan"
-                  className="relative flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-b from-stone-800 to-stone-900 hover:from-stone-700 hover:to-stone-800 text-white transition-all duration-300 border border-amber-500/50 hover:border-amber-400/80 shadow-md hover:shadow-[0_0_15px_rgba(245,158,11,0.2)] hover:-translate-y-0.5 overflow-hidden"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
-                  <span className="relative z-10 text-[11px] sm:text-xs font-bold tracking-wide">
-                    {t('upgradeOffer') || '🔥 Oferta expira 28 Feb'}
-                  </span>
-                </Link>
-              </div>
-            )}
 
             {/* Share Button - Desktop */}
             <div className="hidden md:flex items-center border-l border-border/50 pl-3 sm:pl-4">

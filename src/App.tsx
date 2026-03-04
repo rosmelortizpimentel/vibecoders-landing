@@ -49,6 +49,7 @@ import MyAppHub from "./pages/MyAppHub";
 import Settings from "./pages/Settings";
 import TestAnalytics from "./pages/TestAnalytics";
 import Analytics from "./pages/Analytics";
+import Chat from "./pages/Chat";
 
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -154,6 +155,9 @@ const App = () => {
                   <Route path="/test-sdk" element={<TestAnalytics />} />
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/analytics/:appId" element={<Analytics />} />
+                  {/* Chat — hidden from menu */}
+                  <Route path="/chat" element={<Chat />} />
+                  <Route path="/chat/:conversationId" element={<Chat />} />
                   {/* Legacy redirect */}
                   <Route path="/me/apps" element={<Navigate to="/apps" replace />} />
                 </Route>
