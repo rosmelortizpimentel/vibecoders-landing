@@ -24,6 +24,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
+import { useFeatures } from '@/hooks/useFeatures';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -84,6 +85,7 @@ export function AuthenticatedHeader({
   const { unreadCount } = useNotifications();
   const { t: tNotif } = useTranslation('notifications');
   const { isAdmin } = useUserRole();
+  const { data: userFeatures } = useFeatures();
 
 
   const displayName = formatDisplayName(profile?.name, tAuth('user'));
@@ -103,8 +105,12 @@ export function AuthenticatedHeader({
     return t(labelKey);
   };
 
-  // Build mobile menu from dynamic sidebar items
-  const mobileMenuItems = sidebarMenuItems;
+  // Build mobile menu from dynamic sidebar items, filtering by features and roles
+  const mobileMenuItems = sidebarMenuItems.filter(item => {
+    if (item.requiredFeatureKey && !userFeatures?.includes(item.requiredFeatureKey)) return false;
+    if (item.requiredRole && item.requiredRole === 'admin' && !isAdmin) return false;
+    return true;
+  });
 
   const isActive = (path: string) => {
     // For /me, match any /me/* route
@@ -256,25 +262,33 @@ export function AuthenticatedHeader({
                 <nav className="flex flex-col px-5 py-6 flex-1 overflow-y-auto">
                   {(() => {
                     let lastSection = '';
-                    const itemsWithInjections: any[] = [];
+                    const itemsWithInjections: SidebarMenuItem[] = [];
                     mobileMenuItems.forEach((item) => {
                       itemsWithInjections.push(item);
                       if (item.path === '/apps') {
                         itemsWithInjections.push({
+                          id: 'injected-analytics',
                           path: '/analytics',
                           labelKey: 'navigation.analytics',
                           icon: BarChart3,
                           section: 'maker',
-                          key: 'analytics'
+                          key: 'analytics',
+                          isActive: true,
+                          requiresWaitlist: false,
+                          displayOrder: item.displayOrder + 0.1
                         });
                       }
                       if (item.path === '/connections') {
                         itemsWithInjections.push({
+                          id: 'injected-chat',
                           path: '/chat',
                           labelKey: 'navigation.chat',
                           icon: MessageSquare,
                           section: 'community',
-                          key: 'chat'
+                          key: 'chat',
+                          isActive: true,
+                          requiresWaitlist: false,
+                          displayOrder: item.displayOrder + 0.1
                         });
                       }
                     });

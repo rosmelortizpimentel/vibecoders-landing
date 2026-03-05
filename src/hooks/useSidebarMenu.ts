@@ -13,6 +13,8 @@ export interface SidebarMenuItem {
   displayOrder: number;
   isActive: boolean;
   requiresWaitlist: boolean;
+  requiredFeatureKey?: string | null;
+  requiredRole?: string | null;
   cssClass?: string;
 }
 
@@ -26,11 +28,13 @@ interface SidebarMenuItemRow {
   display_order: number;
   is_active: boolean;
   requires_waitlist: boolean;
+  required_feature_key?: string | null;
+  required_role?: string | null;
   css_class?: string;
 }
 
 const mapItem = (item: SidebarMenuItemRow): SidebarMenuItem => {
-  const IconComponent = (Icons as any)[item.icon] || Icons.LayoutDashboard;
+  const IconComponent = (Icons as Record<string, unknown>)[item.icon] as LucideIcon || Icons.LayoutDashboard;
   return {
     id: item.id,
     key: item.key,
@@ -41,6 +45,8 @@ const mapItem = (item: SidebarMenuItemRow): SidebarMenuItem => {
     displayOrder: item.display_order,
     isActive: item.is_active,
     requiresWaitlist: item.requires_waitlist,
+    requiredFeatureKey: item.required_feature_key,
+    requiredRole: item.required_role,
     cssClass: item.css_class,
   };
 };

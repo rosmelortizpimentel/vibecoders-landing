@@ -44,7 +44,7 @@ import { getCountryCode } from '@/utils/countryMapping';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import WorldMap from "@/components/analytics/WorldMap";
-import { useFounderStatus } from "@/hooks/useFounderStatus";
+import { useHasFeature } from "@/hooks/useFeatures";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Loader2 } from "lucide-react";
@@ -242,12 +242,9 @@ const Analytics = () => {
   const { apps, loading: loadingApps, updateApp } = useApps();
   const { setHeaderContent } = usePageHeader();
   const tCommon = useTranslation('common');
-  const { data: founderStatus, isLoading: isLoadingTier } = useFounderStatus();
+  const { hasFeature: isPremium, isLoading: isLoadingTier } = useHasFeature('analytics_advanced');
   const { data: generalSettings, isLoading: isLoadingSettings } = useGeneralSettings();
   const { createCheckout } = useSubscription();
-  
-  const isPremium = founderStatus?.tier === 'pro' || founderStatus?.tier === 'founder';
-  
   const planPrice = generalSettings?.find(s => s.key === 'stripe_active_price_amount')?.value || "9.90";
   const planName = generalSettings?.find(s => s.key === 'stripe_active_product_name')?.value || "Pro";
   const [selectedAppId, setSelectedAppId] = useState<string | null>(appId || null);
@@ -425,7 +422,7 @@ const Analytics = () => {
     if (!appId) return;
     setLoadingEvents(true);
 
-    if (founderStatus && !isPremium) {
+    if (!isLoadingTier && !isPremium) {
       setEvents([]);
       setLoadingEvents(false);
       return;

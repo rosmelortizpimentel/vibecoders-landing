@@ -31,6 +31,7 @@ import { useBetaBadges } from '@/hooks/useBetaBadges';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useSidebarMenu } from '@/hooks/useSidebarMenu';
+import { useFeatures } from '@/hooks/useFeatures';
 import type { LucideIcon } from 'lucide-react';
 
 export function Sidebar() {
@@ -45,6 +46,7 @@ export function Sidebar() {
   const { ownedAppsCount, publicSquadsCount } = useBetaBadges();
   const { unreadCount } = useNotifications();
   const { items: menuItems } = useSidebarMenu();
+  const { data: userFeatures } = useFeatures();
   
   // Initialize collapsed state from localStorage if available
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -85,9 +87,12 @@ export function Sidebar() {
     'public-beta-testing': publicSquadsCount,
   };
 
-  // Build nav links from DB items, inserting separators between sections
-  const filteredItems = menuItems;
-  
+  // Build nav links from DB items, filtering by features and roles, inserting separators between sections
+  const filteredItems = menuItems.filter(item => {
+    if (item.requiredFeatureKey && !userFeatures?.includes(item.requiredFeatureKey)) return false;
+    if (item.requiredRole && item.requiredRole === 'admin' && !isAdmin) return false;
+    return true;
+  });
   // Resolve i18n labels - for notifications namespace, use a simple lookup
   const { t: tNotif } = useTranslation('notifications');
   const { t: tHero } = useTranslation('hero');
