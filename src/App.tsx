@@ -136,6 +136,7 @@ const App = () => {
                   <Route path="/apps/:appId/roadmap" element={<MyAppHub />} />
                   <Route path="/apps/:appId/feedback" element={<MyAppHub />} />
                   <Route path="/apps/:appId/squad" element={<MyAppHub />} />
+                  <Route path="/apps/:appId/founders" element={<MyAppHub />} />
                   <Route path="/apps/:appId/banners" element={<MyAppHub />} />
                   <Route path="/apps/:appId/banners/:bannerId" element={<MyAppHub />} />
                   <Route path="/my-apps" element={<Navigate to="/apps" replace />} />

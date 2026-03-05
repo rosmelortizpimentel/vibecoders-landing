@@ -34,6 +34,7 @@ import {
   LogOut,
   BadgeCheck,
   Globe,
+  UserPlus,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -42,6 +43,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import { useAppFounders } from '@/hooks/useAppFounders';
+import { FounderSearchDialog } from '@/components/profile/FounderSearchDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +71,7 @@ export default function AppDetail() {
   const navigate = useNavigate();
   const { t } = useTranslation('beta');
   const { t: tCommon } = useTranslation('common');
+  const { t: tProfile } = useTranslation('publicProfile');
   const { user } = useAuth();
   const { app, loading, error, refetch } = useAppDetail(appId);
   const { feedback } = useTesterFeedback(appId);
@@ -72,6 +82,13 @@ export default function AppDetail() {
   const [followDialogOpen, setFollowDialogOpen] = useState(false);
   const [followDialogTab, setFollowDialogTab] = useState<'followers' | 'following'>('followers');
   const [showPublicDetail, setShowPublicDetail] = useState(false);
+  const [isFounderSearchOpen, setIsFounderSearchOpen] = useState(false);
+  const { 
+    founders, 
+    inviteFounder, 
+    removeFounder,
+    canManageFounders 
+  } = useAppFounders(appId || '');
 
   const handleCopyLink = () => {
     if (app?.beta_link) {
@@ -98,6 +115,15 @@ export default function AppDetail() {
   const openFollowingDialog = () => {
     setFollowDialogTab('following');
     setFollowDialogOpen(true);
+  };
+
+  const handleInviteFounder = async (userId: string) => {
+    try {
+      await inviteFounder.mutateAsync({ userId });
+      setIsFounderSearchOpen(false);
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   if (loading) {
@@ -159,6 +185,7 @@ export default function AppDetail() {
     status: app.status,
     category: app.category,
     tags: app.tags || [],
+    beta_active: app.beta_active || false,
     stacks: app.stacks,
     owner: {
       id: app.owner.id,
@@ -276,223 +303,310 @@ export default function AppDetail() {
             </div>
           ) : (
             /* PUBLIC/OWNER VIEW - Upgraded to match PublicProfile detail style */
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column (2/3) - Main App Content */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* App Hero Card */}
-                <Card className="overflow-hidden border-none shadow-sm bg-white">
-                  <div className="p-6">
-                    <div className="flex flex-col md:flex-row gap-6 items-start">
-                      {/* Logo */}
-                      <div className="shrink-0 mx-auto md:mx-0">
-                        {app.logo_url ? (
-                          <img 
-                            src={app.logo_url} 
-                            alt={app.name || ''} 
-                            className="w-24 h-24 rounded-2xl object-cover shadow-sm ring-1 ring-gray-100"
-                          />
-                        ) : (
-                          <div className="w-24 h-24 rounded-2xl bg-gray-50 flex items-center justify-center ring-1 ring-gray-100">
-                            <span className="text-3xl font-bold text-gray-300">
-                              {app.name?.charAt(0) || '?'}
-                            </span>
+            <Tabs defaultValue="app" className="w-full">
+              <div className="flex items-center justify-between mb-6">
+                <TabsList className="bg-transparent border-b border-gray-100 w-full justify-start rounded-none h-auto p-0 gap-8">
+                  <TabsTrigger 
+                    value="app" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-sm font-bold text-gray-400 data-[state=active]:text-gray-900"
+                  >
+                    Proyecto
+                  </TabsTrigger>
+                  <TabsTrigger 
+                    value="founders" 
+                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-sm font-bold text-gray-400 data-[state=active]:text-gray-900"
+                  >
+                    Founders
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <TabsContent value="app" className="mt-0">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Left Column (2/3) - Main App Content */}
+                  <div className="lg:col-span-2 space-y-8">
+                    {/* App Hero Card */}
+                    <Card className="overflow-hidden border-none shadow-sm bg-white">
+                      <div className="p-6">
+                        <div className="flex flex-col md:flex-row gap-6 items-start">
+                          {/* Logo */}
+                          <div className="shrink-0 mx-auto md:mx-0">
+                            {app.logo_url ? (
+                              <img 
+                                src={app.logo_url} 
+                                alt={app.name || ''} 
+                                className="w-24 h-24 rounded-2xl object-cover shadow-sm ring-1 ring-gray-100"
+                              />
+                            ) : (
+                              <div className="w-24 h-24 rounded-2xl bg-gray-50 flex items-center justify-center ring-1 ring-gray-100">
+                                <span className="text-3xl font-bold text-gray-300">
+                                  {app.name?.charAt(0) || '?'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Info */}
+                          <div className="flex-1 text-center md:text-left min-w-0">
+                            <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
+                              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
+                                {app.name}
+                              </h1>
+                              {app.is_verified && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <BadgeCheck className="h-6 w-6 text-primary flex-shrink-0" />
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      {t('verifiedOwner')}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
+                            <p className="text-lg text-gray-500 font-medium mb-4">
+                              {app.tagline}
+                            </p>
+                            
+                            <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                              <Button 
+                                asChild 
+                                size="sm"
+                                className="rounded-full bg-gray-900 hover:bg-gray-800"
+                              >
+                                <a 
+                                  href={app.url.startsWith('http') ? app.url : `https://${app.url}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer" 
+                                  className="flex items-center gap-2"
+                                >
+                                  {tCommon('visitWebsite')}
+                                  <ExternalLink className="w-4 h-4" />
+                                </a>
+                              </Button>
+                              
+                              {app.status && (
+                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/5 text-primary border border-primary/10">
+                                   {app.status.name}
+                                 </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Description */}
+                        {app.description && (
+                          <div className="mt-8 pt-8 border-t border-gray-50">
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
+                              {t('aboutApp')}
+                            </h3>
+                            <div 
+                              className="prose prose-sm max-w-none text-gray-600 leading-relaxed dark:prose-invert"
+                              dangerouslySetInnerHTML={{ __html: parseMarkdown(app.description) }}
+                            />
+                          </div>
+                        )}
+
+
+                        {/* Tech Stack */}
+                        {app.stacks && app.stacks.length > 0 && (
+                          <div className="mt-8 pt-8 border-t border-gray-50">
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
+                              {t('techStack')}
+                            </h3>
+                            <div className="flex flex-wrap gap-3">
+                              {app.stacks.map(stack => (
+                                <div 
+                                  key={stack.id}
+                                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 border border-gray-100"
+                                >
+                                  <img src={stack.logo_url} alt={stack.name} className="w-5 h-5 object-contain" />
+                                  <span className="text-xs font-semibold text-gray-700">{stack.name}</span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>
+                    </Card>
 
-                      {/* Info */}
-                      <div className="flex-1 text-center md:text-left min-w-0">
-                        <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
-                          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
-                            {app.name}
-                          </h1>
-                          {app.is_verified && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <BadgeCheck className="h-6 w-6 text-primary flex-shrink-0" />
-                                </TooltipTrigger>
-                                <TooltipContent side="top">
-                                  {t('verifiedOwner')}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
-                        </div>
-                        <p className="text-lg text-gray-500 font-medium mb-4">
-                          {app.tagline}
-                        </p>
-                        
-                        <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                          <Button 
-                            asChild 
-                            size="sm"
-                            className="rounded-full bg-gray-900 hover:bg-gray-800"
-                          >
-                            <a 
-                              href={app.url.startsWith('http') ? app.url : `https://${app.url}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="flex items-center gap-2"
-                            >
-                              {tCommon('visitWebsite')}
-                              <ExternalLink className="w-4 h-4" />
-                            </a>
-                          </Button>
-                          
-                          {app.status && (
-                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/5 text-primary border border-primary/10">
-                               {app.status.name}
-                             </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    {app.description && (
-                      <div className="mt-8 pt-8 border-t border-gray-50">
-                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
-                          {t('aboutApp')}
-                        </h3>
-                        <div 
-                          className="prose prose-sm max-w-none text-gray-600 leading-relaxed dark:prose-invert"
-                          dangerouslySetInnerHTML={{ __html: parseMarkdown(app.description) }}
-                        />
-                      </div>
-                    )}
-
-                    {/* ADN Section */}
-                    {(app.hours_ideation || app.hours_building) && (
-                      <div className="mt-8 pt-8 border-t border-gray-50">
-                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
-                          {t('projectDNA')}
-                        </h3>
-                        <ProjectDNA 
-                          ideationHours={app.hours_ideation || 0} 
-                          buildHours={app.hours_building || 0}
-                          className="h-2 mb-4"
-                        />
-                        <div className="grid grid-cols-2 gap-4">
-                          {app.hours_ideation !== null && app.hours_ideation > 0 && (
-                            <div>
-                              <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">{t('ideation')}</p>
-                              <p className="text-xl font-bold text-gray-900">{app.hours_ideation}h</p>
-                            </div>
-                          )}
-                          {app.hours_building !== null && app.hours_building > 0 && (
-                            <div>
-                              <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">{t('construction')}</p>
-                              <p className="text-xl font-bold text-gray-900">{app.hours_building}h</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Tech Stack */}
-                    {app.stacks && app.stacks.length > 0 && (
-                      <div className="mt-8 pt-8 border-t border-gray-50">
-                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
-                          {t('techStack')}
-                        </h3>
-                        <div className="flex flex-wrap gap-3">
-                          {app.stacks.map(stack => (
-                            <div 
-                              key={stack.id}
-                              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 border border-gray-100"
-                            >
-                              <img src={stack.logo_url} alt={stack.name} className="w-5 h-5 object-contain" />
-                              <span className="text-xs font-semibold text-gray-700">{stack.name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                    {/* Contributors / Testers Hall of Fame */}
+                    {app.testers && app.testers.length > 0 && (
+                       <div className="space-y-4">
+                          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">
+                            {t('contributors')}
+                          </h3>
+                          <Card className="border-none shadow-sm bg-white">
+                            <CardContent className="p-6">
+                               <BetaHallOfFame 
+                                testers={app.testers} 
+                                totalCount={app.testers_count} 
+                              />
+                            </CardContent>
+                          </Card>
+                       </div>
                     )}
                   </div>
-                </Card>
 
-                {/* Contributors / Testers Hall of Fame */}
-                {app.testers && app.testers.length > 0 && (
-                   <div className="space-y-4">
+                  {/* Right Column (1/3) - Sidebar (Beta Squad + Founder) */}
+                  <div className="lg:col-span-1 space-y-6">
+                    {/* Squad Card */}
+                    {app.beta_active && !app.is_owner && !isAcceptedTester && (
+                      <BetaSquadCard
+                        appId={app.id}
+                        betaLimit={app.beta_limit}
+                        testersCount={app.testers_count}
+                        userTesterStatus={app.user_tester_status}
+                        isOwner={app.is_owner}
+                        betaInstructions={app.beta_instructions}
+                        onJoined={() => refetch()}
+                        onAccessMission={() => refetch()}
+                      />
+                    )}
+
+                    {/* Founder Card */}
+                    <div className="space-y-4">
                       <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">
-                        {t('contributors')}
+                        {founders.length > 1 ? tProfile('founders') : tProfile('founder')}
                       </h3>
-                      <Card className="border-none shadow-sm bg-white">
-                        <CardContent className="p-6">
-                           <BetaHallOfFame 
-                            testers={app.testers} 
-                            totalCount={app.testers_count} 
-                          />
-                        </CardContent>
-                      </Card>
-                   </div>
-                )}
-              </div>
+                      <div className="space-y-4">
+                        {founders.map((founder) => (
+                           <div key={founder.id} className="relative group">
+                              <FounderCard profile={{
+                                id: founder.user_id,
+                                username: founder.profile?.username || '',
+                                full_name: founder.profile?.name || '',
+                                avatar_url: founder.profile?.avatar_url,
+                                tagline: founder.profile?.username || ''
+                              }} />
+                              
+                              <div className="absolute top-4 right-4 flex items-center gap-2">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                  founder.role === 'owner' 
+                                    ? 'bg-primary/5 text-primary border-primary/20' 
+                                    : 'bg-gray-50 text-gray-500 border-gray-200'
+                                }`}>
+                                  {founder.role === 'owner' ? 'Owner' : 'Co-founder'}
+                                </span>
+                              </div>
+                           </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
 
-              {/* Right Column (1/3) - Sidebar (Beta Squad + Founder) */}
-              <div className="lg:col-span-1 space-y-6">
-                {/* Squad Card */}
-                {app.beta_active && !app.is_owner && !isAcceptedTester && (
-                  <BetaSquadCard
-                    appId={app.id}
-                    betaLimit={app.beta_limit}
-                    testersCount={app.testers_count}
-                    userTesterStatus={app.user_tester_status}
-                    isOwner={app.is_owner}
-                    betaInstructions={app.beta_instructions}
-                    onJoined={() => refetch()}
-                    onAccessMission={() => refetch()}
-                  />
-                )}
-
-                {/* Founder Card */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">
-                    {t('founder')}
-                  </h3>
-                  <Card className="border-none shadow-sm bg-white overflow-hidden">
-                    <CardContent className="p-0">
-                      <Link 
-                        to={app.owner?.username ? `/@${app.owner.username}` : '#'}
-                        className="block p-5 bg-gradient-to-br from-gray-50 to-white hover:bg-gray-100/50 transition-colors"
+              <TabsContent value="founders" className="mt-0">
+                <div className="max-w-4xl mx-auto space-y-8">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">Equipo Fundador</h2>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Las personas que construyen y dan vida a este proyecto.
+                      </p>
+                    </div>
+                    {canManageFounders && (
+                      <Button 
+                        onClick={() => setIsFounderSearchOpen(true)}
+                        className="rounded-full gap-2"
                       >
-                        <div className="flex items-center gap-4">
-                          <Avatar className="w-16 h-16 border-2 border-white shadow-sm ring-1 ring-gray-100">
-                            <AvatarImage src={app.owner?.avatar_url || undefined} />
-                            <AvatarFallback className="text-xl font-bold">
-                              {(app.owner?.name || 'U').charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-bold text-gray-900 truncate">
-                              {app.owner?.name || app.owner?.username || 'Unknown'}
-                            </p>
-                            {app.owner?.tagline && (
+                        <UserPlus className="w-4 h-4" />
+                        Invitar Co-founder
+                      </Button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {founders.map((founder) => (
+                      <Card key={founder.id} className="border-none shadow-sm bg-white overflow-hidden group">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-4">
+                            <Avatar className="w-16 h-16 border-2 border-white shadow-sm ring-1 ring-gray-100">
+                              <AvatarImage src={founder.profile?.avatar_url || undefined} />
+                              <AvatarFallback className="text-xl font-bold">
+                                {(founder.profile?.name || 'U').charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <Link 
+                                to={`/@${founder.profile?.username}`}
+                                className="font-bold text-gray-900 hover:text-primary transition-colors truncate block"
+                              >
+                                {founder.profile?.name || founder.profile?.username || 'Unknown'}
+                                {founder.role === 'owner' && (
+                                  <BadgeCheck className="inline-block h-4 w-4 text-primary ml-1.5 align-text-bottom" />
+                                )}
+                              </Link>
                               <p className="text-xs text-gray-500 line-clamp-2 mt-0.5 leading-relaxed">
-                                {app.owner.tagline}
+                                @{founder.profile?.username}
                               </p>
+                              
+                              <div className="mt-3 flex items-center gap-2">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                                  founder.role === 'owner' 
+                                    ? 'bg-primary/5 text-primary border-primary/20' 
+                                    : 'bg-gray-50 text-gray-500 border-gray-200'
+                                }`}>
+                                  {founder.role === 'owner' ? 'Owner' : 'Co-founder'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {canManageFounders && founder.role === 'co-founder' && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <LogOut className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remover Co-founder</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      ¿Estás seguro que deseas remover a <strong>{founder.profile?.name || founder.profile?.username}</strong> como co-founder? 
+                                      Perderá todos los privilegios de edición sobre este proyecto.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => removeFounder.mutate(founder.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Remover
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             )}
                           </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100">
-                           <div className="text-center flex-1">
-                              <p className="text-lg font-bold text-gray-900">{ownerStats.followersCount}</p>
-                              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">{t('followers')}</p>
-                           </div>
-                           <div className="w-px h-8 bg-gray-100" />
-                           <div className="text-center flex-1">
-                              <p className="text-lg font-bold text-gray-900">{ownerStats.followingCount}</p>
-                              <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tight">{t('following')}</p>
-                           </div>
-                        </div>
-                      </Link>
-                    </CardContent>
-                  </Card>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {!canManageFounders && (
+                     <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3 text-sm text-gray-500">
+                        <Shield className="w-4 h-4 text-primary" />
+                        Solo el dueño original puede gestionar el equipo de founders.
+                     </div>
+                  )}
                 </div>
-              </div>
-            </div>
+
+                <FounderSearchDialog
+                  isOpen={isFounderSearchOpen}
+                  onClose={() => setIsFounderSearchOpen(false)}
+                  onSelect={handleInviteFounder}
+                  existingFounderIds={founders.map(f => f.user_id)}
+                />
+              </TabsContent>
+            </Tabs>
           )}
         </div>
       </main>

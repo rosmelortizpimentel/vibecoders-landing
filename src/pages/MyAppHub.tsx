@@ -19,7 +19,30 @@ import { Separator } from '@/components/ui/separator';
 import { HexColorPicker } from 'react-colorful';
 import { FontSelector } from '@/components/me/FontSelector';
 import { ColorPicker } from '@/components/me/ColorPicker';
-import { Loader2, ArrowLeft, ExternalLink, Info, Map, MessageSquare, Users, Paintbrush, Eye, Settings, User, Lock, Crown, Check, Upload, FlaskConical, X, Send } from 'lucide-react';
+import { 
+  Loader2, 
+  ArrowLeft, 
+  ExternalLink, 
+  Info, 
+  Map, 
+  MessageSquare, 
+  Users, 
+  Paintbrush, 
+  Eye, 
+  Settings, 
+  User, 
+  Lock, 
+  Crown, 
+  Check, 
+  Upload, 
+  FlaskConical, 
+  X, 
+  Send,
+  Shield,
+  UserPlus,
+  LogOut,
+  BadgeCheck,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { VerificationBadge } from '@/components/me/VerificationBadge';
 import { DomainSettingsInput } from '@/components/me/DomainSettingsInput';
@@ -35,7 +58,24 @@ import { BetaManagement } from '@/components/beta/BetaManagement';
 import { UnifiedFeedbackList } from '@/components/beta/UnifiedFeedbackList';
 import { BannersTab } from '@/components/banners/BannersTab';
 
-type TabId = 'info' | 'roadmap' | 'feedback' | 'squad' | 'banners';
+import { useAppFounders } from '@/hooks/useAppFounders';
+import { FounderSearchDialog } from '@/components/profile/FounderSearchDialog';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Link } from 'react-router-dom';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from '@/components/ui/alert-dialog';
+import { Card, CardContent } from '@/components/ui/card';
+
+type TabId = 'info' | 'roadmap' | 'feedback' | 'squad' | 'banners' | 'founders';
 
 export default function MyAppHub() {
   const { appId, bannerId } = useParams<{ appId: string, bannerId: string }>();
@@ -53,6 +93,27 @@ export default function MyAppHub() {
   const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [isFounderSearchOpen, setIsFounderSearchOpen] = useState(false);
+
+  // Founders logic
+  const { 
+    founders, 
+    isLoading: foundersLoading, 
+    inviteFounder, 
+    removeFounder,
+    canManageFounders
+  } = useAppFounders(appId);
+
+  const handleInviteFounder = async (userId: string) => {
+    try {
+      await inviteFounder.mutateAsync({ userId });
+      setIsFounderSearchOpen(false);
+      toast.success('Co-founder invitado correctamente');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error al invitar co-founder';
+      toast.error(message);
+    }
+  };
 
   // Settings form for the sheet
   const [settingsAuthMode, setSettingsAuthMode] = useState<'anonymous' | 'authenticated'>('anonymous');
@@ -125,6 +186,7 @@ export default function MyAppHub() {
     if (location.pathname.endsWith('/roadmap')) return 'roadmap';
     if (location.pathname.endsWith('/feedback')) return 'feedback';
     if (location.pathname.endsWith('/squad')) return 'squad';
+    if (location.pathname.endsWith('/founders')) return 'founders';
     return 'info';
   }, [location.pathname]);
 
@@ -147,6 +209,7 @@ export default function MyAppHub() {
     { id: 'feedback', label: t.t('hub.feedback'), icon: MessageSquare, path: `/apps/${appId}/feedback` },
     { id: 'squad', label: "Open for Testing", icon: FlaskConical, path: `/apps/${appId}/squad` },
     { id: 'banners', label: "Banners", icon: Paintbrush, path: `/apps/${appId}/banners` },
+    { id: 'founders', label: "Founders", icon: Users, path: `/apps/${appId}/founders` },
   ];
 
   const [betaConfig, setBetaConfig] = useState({
@@ -359,6 +422,121 @@ export default function MyAppHub() {
         {activeTab === 'roadmap' && <RoadmapEditor />}
         {activeTab === 'feedback' && <UnifiedFeedbackList appId={appId!} />}
         {activeTab === 'squad' && <BetaManagement appId={appId!} config={betaConfig} onConfigChange={handleBetaConfigChange} />}
+         {activeTab === 'founders' && (
+           <div className="space-y-8 animate-in fade-in duration-500">
+             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+               <div>
+                 <h2 className="text-2xl font-bold text-gray-900">Equipo Fundador</h2>
+                 <p className="text-sm text-gray-500 mt-1">
+                   Gestiona el equipo que construye y da vida a este proyecto.
+                 </p>
+               </div>
+               {canManageFounders && (
+                 <Button 
+                   onClick={() => setIsFounderSearchOpen(true)}
+                   className="rounded-full gap-2 w-full sm:w-auto shadow-lg shadow-primary/20"
+                 >
+                   <UserPlus className="w-4 h-4" />
+                   Invitar Co-founder
+                 </Button>
+               )}
+             </div>
+
+             {foundersLoading ? (
+               <div className="flex items-center justify-center py-20">
+                 <Loader2 className="h-8 w-8 animate-spin text-primary opacity-20" />
+               </div>
+             ) : (
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+                 {founders.map((founder) => (
+                   <Card key={founder.id} className="border-none shadow-sm bg-white overflow-hidden group hover:shadow-md transition-shadow">
+                     <CardContent className="p-6">
+                       <div className="flex items-center gap-4">
+                         <Avatar className="w-16 h-16 border-2 border-white shadow-sm ring-1 ring-gray-100 shrink-0">
+                           <AvatarImage src={founder.profile?.avatar_url || undefined} />
+                           <AvatarFallback className="text-xl font-bold bg-primary/5 text-primary">
+                             {(founder.profile?.name || 'U').charAt(0).toUpperCase()}
+                           </AvatarFallback>
+                         </Avatar>
+                         <div className="min-w-0 flex-1">
+                           <Link 
+                             to={`/@${founder.profile?.username}`}
+                             className="font-bold text-gray-900 hover:text-primary transition-colors truncate block"
+                           >
+                             {founder.profile?.name || founder.profile?.username || 'Unknown'}
+                             {founder.role === 'owner' && (
+                               <BadgeCheck className="inline-block h-4 w-4 text-primary ml-1.5 align-text-bottom" />
+                             )}
+                           </Link>
+                           <p className="text-xs text-gray-500 line-clamp-2 mt-0.5 leading-relaxed">
+                             @{founder.profile?.username}
+                           </p>
+                           
+                           <div className="mt-3 flex items-center gap-2">
+                             <span className={cn(
+                               "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                               founder.role === 'owner' 
+                                 ? 'bg-primary/5 text-primary border-primary/20' 
+                                 : 'bg-gray-50 text-gray-500 border-gray-200'
+                             )}>
+                               {founder.role === 'owner' ? 'Owner' : 'Co-founder'}
+                             </span>
+                           </div>
+                         </div>
+
+                         {canManageFounders && founder.role === 'co-founder' && (
+                           <AlertDialog>
+                             <AlertDialogTrigger asChild>
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                               >
+                                 <LogOut className="w-4 h-4" />
+                               </Button>
+                             </AlertDialogTrigger>
+                             <AlertDialogContent>
+                               <AlertDialogHeader>
+                                 <AlertDialogTitle>Remover Co-founder</AlertDialogTitle>
+                                 <AlertDialogDescription>
+                                   ¿Estás seguro que deseas remover a <strong>{founder.profile?.name || founder.profile?.username}</strong> como co-founder? 
+                                   Perderá todos los privilegios de edición sobre este proyecto.
+                                 </AlertDialogDescription>
+                               </AlertDialogHeader>
+                               <AlertDialogFooter>
+                                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                 <AlertDialogAction 
+                                   onClick={() => removeFounder.mutate(founder.id)}
+                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                 >
+                                   Remover
+                                 </AlertDialogAction>
+                               </AlertDialogFooter>
+                             </AlertDialogContent>
+                           </AlertDialog>
+                         )}
+                       </div>
+                     </CardContent>
+                   </Card>
+                 ))}
+               </div>
+             )}
+
+             {!canManageFounders && (
+               <div className="p-4 rounded-xl bg-muted/30 border border-border/50 flex items-center gap-3 text-sm text-muted-foreground">
+                 <Shield className="w-4 h-4 text-primary" />
+                 Solo el dueño original puede gestionar el equipo de founders.
+               </div>
+             )}
+
+             <FounderSearchDialog
+               isOpen={isFounderSearchOpen}
+               onClose={() => setIsFounderSearchOpen(false)}
+               onSelect={handleInviteFounder}
+               existingFounderIds={founders.map(f => f.user_id)}
+             />
+           </div>
+         )}
          {activeTab === 'banners' && <BannersTab appId={appId!} appName={app?.name} appUrl={app?.url} bannerId={bannerId} />}
       </div>
 

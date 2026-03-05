@@ -73,6 +73,15 @@ export interface AppDetailData {
   testers_count: number;
   testers: BetaTester[];
   user_tester_status: { status: string; id: string } | null;
+  founders: {
+    id: string;
+    user_id: string;
+    role: string;
+    created_at: string;
+    profile: AppOwner;
+  }[];
+  is_founder: boolean;
+  user_founder_role: string | null;
   is_owner: boolean;
   likes_count: number;
   user_liked: boolean;

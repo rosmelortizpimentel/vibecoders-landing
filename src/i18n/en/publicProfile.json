@@ -24,5 +24,9 @@
   "share": "Share",
   "copyLink": "Copy link",
   "copied": "Copied!",
-  "shareOn": "Share on {{platform}}"
+  "shareOn": "Share on {{platform}}",
+  "founder": "Founder",
+  "founders": "Founders",
+  "coFounder": "Co-founder",
+  "contributors": "Contributors"
 }

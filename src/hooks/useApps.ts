@@ -44,7 +44,8 @@ export function useApps() {
     queryFn: async () => {
       if (!user) return [];
 
-      const { data, error } = await supabase
+      // Get apps where user is owner
+      const { data: ownedApps, error: ownedError } = await supabase
         .from('apps')
         .select(`
           *,
@@ -53,9 +54,34 @@ export function useApps() {
         .eq('user_id', user.id)
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (ownedError) throw ownedError;
 
-      return data?.map(app => ({
+      // Get apps where user is co-founder
+      const { data: foundedApps, error: founderError } = await supabase
+        .from('app_founders')
+        .select(`
+          app_id,
+          app:apps(
+            *,
+            app_stacks(stack_id)
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (founderError) throw founderError;
+
+      const coFoundedApps = (foundedApps || [])
+        .map(f => f.app)
+        .filter((app): app is NonNullable<typeof app> => app !== null)
+        .map(app => app as unknown as typeof ownedApps[number]);
+      
+      // Combine and filter duplicates
+      const allApps = [...(ownedApps || []), ...coFoundedApps];
+      const uniqueApps = allApps.filter((app, index, self) =>
+        index === self.findIndex((t) => t.id === app.id)
+      );
+
+      return uniqueApps.map(app => ({
         ...app,
         stacks: app.app_stacks?.map((s: { stack_id: string }) => s.stack_id) || [],
         screenshots: app.screenshots || [],

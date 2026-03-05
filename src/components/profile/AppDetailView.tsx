@@ -6,7 +6,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PublicApp } from '@/hooks/usePublicProfile';
 import { parseMarkdown } from '@/lib/markdown';
-import { ProjectDNA } from '@/components/ProjectDNA';
 import { Button } from '@/components/ui/button';
 import { 
   Sheet, 
@@ -49,12 +48,27 @@ interface Contributor {
   };
 }
 
+interface Founder {
+  id: string;
+  user_id: string;
+  role: string;
+  profile: {
+    id: string;
+    username: string;
+    name: string | null;
+    avatar_url: string | null;
+    tagline: string | null;
+  };
+}
+
 export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaultOwner }: AppDetailViewProps) {
   const isMobile = useIsMobile();
   const { t } = useTranslation('publicProfile');
   const [screenshotIndex, setScreenshotIndex] = React.useState(0);
   const [contributors, setContributors] = React.useState<Contributor[]>([]);
   const [loadingContributors, setLoadingContributors] = React.useState(false);
+  const [foundersList, setFoundersList] = React.useState<Founder[]>([]);
+  const [loadingFounders, setLoadingFounders] = React.useState(false);
 
   // Fetch contributors when app changes
   React.useEffect(() => {
@@ -83,7 +97,31 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
       setLoadingContributors(false);
     };
 
+    const fetchFounders = async () => {
+      setLoadingFounders(true);
+      
+      const { data: foundersData } = await supabase
+        .from('app_founders')
+        .select(`
+          id,
+          user_id,
+          role,
+          profile:profiles(id, username, name, avatar_url, tagline)
+        `)
+        .eq('app_id', app.id)
+        .order('role', { ascending: false }); // 'owner' comes before 'co-founder'
+
+      if (foundersData) {
+        setFoundersList(foundersData);
+      } else {
+        setFoundersList([]);
+      }
+
+      setLoadingFounders(false);
+    };
+
     fetchContributors();
+    fetchFounders();
   }, [selectedIndex, apps]);
 
   React.useEffect(() => {
@@ -302,33 +340,6 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
         </div>
 
 
-        {/* Project DNA Section */}
-        {(currentApp.hours_ideation > 0 || currentApp.hours_building > 0) && (
-          <div className="mb-8 p-4 rounded-xl bg-gray-50 border border-gray-100">
-            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
-              {t('projectDNA')}
-            </h3>
-            <ProjectDNA 
-              ideationHours={currentApp.hours_ideation} 
-              buildHours={currentApp.hours_building}
-              className="h-2 mb-4"
-            />
-            <div className={`grid gap-4 ${currentApp.hours_ideation > 0 && currentApp.hours_building > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              {currentApp.hours_ideation > 0 && (
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">{t('ideation')}</p>
-                  <p className="text-lg font-bold text-gray-900">{currentApp.hours_ideation}h</p>
-                </div>
-              )}
-              {currentApp.hours_building > 0 && (
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase font-bold mb-1">{t('construction')}</p>
-                  <p className="text-lg font-bold text-gray-900">{currentApp.hours_building}h</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Tech Stack */}
         {currentApp.stacks.length > 0 && (
@@ -385,27 +396,50 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
           </div>
         )}
         
-        {/* Founder Card */}
-        {(() => {
-          const owner = currentApp.owner || (defaultOwner ? {
-            id: defaultOwner.id,
-            username: defaultOwner.username,
-            full_name: defaultOwner.name || '',
-            avatar_url: defaultOwner.avatar_url,
-            tagline: defaultOwner.tagline
-          } : null);
-
-          if (!owner) return null;
-
-          return (
-            <div className="mb-8">
-              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
-                FOUNDER
-              </h3>
-              <FounderCard profile={owner} />
+        {/* Founders Section */}
+        {foundersList.length > 0 ? (
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+              {foundersList.length > 1 ? t('founders') : t('founder')}
+            </h3>
+            <div className="space-y-4">
+              {foundersList.map((founder) => (
+                <FounderCard 
+                  key={founder.id} 
+                  profile={{
+                    id: founder.profile.id,
+                    username: founder.profile.username,
+                    full_name: founder.profile.name || founder.profile.username || 'Unknown',
+                    avatar_url: founder.profile.avatar_url,
+                    tagline: founder.profile.tagline
+                  }} 
+                />
+              ))}
             </div>
-          );
-        })()}
+          </div>
+        ) : (
+          /* Fallback to defaultOwner if foundersList is not yet loaded or empty */
+          (() => {
+            const owner = currentApp.owner || (defaultOwner ? {
+              id: defaultOwner.id,
+              username: defaultOwner.username,
+              full_name: defaultOwner.name || '',
+              avatar_url: defaultOwner.avatar_url,
+              tagline: defaultOwner.tagline
+            } : null);
+
+            if (!owner) return null;
+
+            return (
+              <div className="mb-8">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+                  {t('founder')}
+                </h3>
+                <FounderCard profile={owner} />
+              </div>
+            );
+          })()
+        )}
       </div>
 
       {/* Footer CTA - only on desktop (mobile has its own fixed version) */}
