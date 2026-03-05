@@ -500,13 +500,7 @@ export default function AppDetail() {
 
               <TabsContent value="founders" className="mt-0">
                 <div className="max-w-4xl mx-auto space-y-8">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h2 className="text-2xl font-bold text-gray-900">Equipo Fundador</h2>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Las personas que construyen y dan vida a este proyecto.
-                      </p>
-                    </div>
+                  <div className="flex items-center justify-end">
                     {canManageFounders && (
                       <Button 
                         onClick={() => setIsFounderSearchOpen(true)}

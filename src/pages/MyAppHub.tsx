@@ -424,13 +424,7 @@ export default function MyAppHub() {
         {activeTab === 'squad' && <BetaManagement appId={appId!} config={betaConfig} onConfigChange={handleBetaConfigChange} />}
          {activeTab === 'founders' && (
            <div className="space-y-8 animate-in fade-in duration-500">
-             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-               <div>
-                 <h2 className="text-2xl font-bold text-gray-900">Equipo Fundador</h2>
-                 <p className="text-sm text-gray-500 mt-1">
-                   Gestiona el equipo que construye y da vida a este proyecto.
-                 </p>
-               </div>
+             <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
                {canManageFounders && (
                  <Button 
                    onClick={() => setIsFounderSearchOpen(true)}
