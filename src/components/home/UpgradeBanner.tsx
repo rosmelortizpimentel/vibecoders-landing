@@ -27,7 +27,7 @@ export function UpgradeBanner() {
             🚀 Upgrade a Builder Pro
           </h3>
           <p className="text-xs text-muted-foreground">
-            Desbloquea apps ilimitadas y más — Solo $24/año
+            Desbloquea apps ilimitadas y más — Solo $19.90/año
           </p>
         </div>
       </div>

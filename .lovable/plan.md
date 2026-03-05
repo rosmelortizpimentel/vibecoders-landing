@@ -1,38 +1,46 @@
 
-# Clean Subdomain URLs for Public Roadmap/Feedback
 
-## Problem
-When visiting `blanquiazul.vibecoders.la`, the current logic rewrites the URL to `/roadmap/blanquiazul`, and then tab switching appends more segments, resulting in ugly URLs like `/roadmap/blanquiazul/roadmap` or `/roadmap/blanquiazul/feedback`.
+# Analysis: OG Preview Failing - 307 Redirect + 404
+
+## What the screenshots show
+
+The debug tools reveal the exact problem chain:
+
+```text
+vibecoders.la/@rosmelortiz
+  → 307 Redirect → www.vibecoders.la/@rosmelortiz
+    → 404 Failure
+```
+
+## Root cause
+
+There are **two separate issues**:
+
+### Issue 1: Domain redirect (307)
+`vibecoders.la` (apex) is redirecting to `www.vibecoders.la` with a 307. This redirect happens **before** Vercel's rewrite rules in `vercel.json` can process the bot user-agent match. So the bot never hits `/api/og` -- it follows the redirect to `www.` instead.
+
+### Issue 2: 404 on www
+After the redirect, `www.vibecoders.la/@rosmelortiz` returns 404. This means either:
+- The `www.vibecoders.la` domain is not properly connected to the same Vercel project, OR
+- The latest deployment with `api/og.ts` hasn't been pushed to Vercel yet (we just restored this file)
 
 ## Solution
-Make subdomain URLs clean and short:
-- `blanquiazul.vibecoders.la/` --> shows roadmap (default)
-- `blanquiazul.vibecoders.la/roadmap` --> roadmap tab
-- `blanquiazul.vibecoders.la/feedback` --> feedback tab
 
-## Technical Steps
+### Step 1: Verify Vercel deployment
+The `api/og.ts` file was just restored in Lovable. You need to **deploy this to Vercel** (push to GitHub / redeploy) for the serverless function to be available.
 
-### 1. App.tsx - Change subdomain rewrite logic
-- Instead of rewriting to `/roadmap/blanquiazul`, rewrite to just `/roadmap` (or keep `/` as-is and let new routes handle it).
-- Export a global helper or use a simple global variable so `PublicRoadmap` can access the detected subdomain.
-- Add new routes for subdomain mode: `/roadmap` and `/feedback` (without slug param) that render `PublicRoadmap`.
-- On subdomain root (`/`), redirect to `/roadmap`.
+### Step 2: Fix domain configuration in Vercel
+In your **Vercel dashboard** > Project Settings > Domains:
+- Make sure both `vibecoders.la` and `www.vibecoders.la` point to the **same project**
+- Set the **primary domain** to `vibecoders.la` (without www), and let `www` redirect to it -- OR vice versa, but both must be on the same Vercel project
+- The 307 redirect must happen **within** Vercel (not at DNS level) so that Vercel's rewrite rules process first for bot user-agents
 
-### 2. PublicRoadmap.tsx - Use subdomain as slug
-- Import/access the detected subdomain.
-- In the data-fetching logic, use the subdomain value as the app slug when no URL param is present.
-- Update `switchTab` to use clean paths (`/roadmap`, `/feedback`) when on a subdomain, instead of appending to a base path.
-- Update the initial `activeTab` detection to work with these clean paths.
+### Step 3 (optional): Add www handling to vercel.json
+As a safety net, we can duplicate the bot rewrite rules to also match `www.` requests. But this only works if `www.vibecoders.la` is actually connected to the Vercel project (currently it seems it's not, given the 404).
 
-### Summary of URL behavior
+## Summary
+**No code changes needed.** The fix is operational:
+1. Deploy the latest code (with `api/og.ts`) to Vercel
+2. Verify that both `vibecoders.la` and `www.vibecoders.la` are configured as domains on the same Vercel project
+3. Test with `https://vibecoders.la/@rosmelortiz?og=1` in a browser to confirm the proxy returns HTML with OG tags
 
-| Access | URL shown |
-|---|---|
-| `blanquiazul.vibecoders.la` | Redirects to `blanquiazul.vibecoders.la/roadmap` |
-| Click "Feedback" tab | `blanquiazul.vibecoders.la/feedback` |
-| Click "Roadmap" tab | `blanquiazul.vibecoders.la/roadmap` |
-| Invalid subdomain | Redirects to `vibecoders.la` (existing logic) |
-
-### Files to modify
-- `src/App.tsx` -- subdomain rewrite + new routes
-- `src/pages/PublicRoadmap.tsx` -- subdomain-aware slug resolution + clean tab switching
