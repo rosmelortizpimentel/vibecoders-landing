@@ -507,7 +507,7 @@ export default function AppDetail() {
                         className="rounded-full gap-2"
                       >
                         <UserPlus className="w-4 h-4" />
-                        Invitar Co-founder
+                        Agregar Co-Founder
                       </Button>
                     )}
                   </div>

@@ -431,7 +431,7 @@ export default function MyAppHub() {
                    className="rounded-full gap-2 w-full sm:w-auto shadow-lg shadow-primary/20"
                  >
                    <UserPlus className="w-4 h-4" />
-                   Invitar Co-founder
+                   Agregar Co-Founder
                  </Button>
                )}
              </div>
