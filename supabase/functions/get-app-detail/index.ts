@@ -80,7 +80,11 @@ Deno.serve(async (req) => {
 
     // Get current user's tester status if authenticated
     let userTesterStatus: { status: string; id: string } | null = null
+    let isFounder = false
+    let userFounderRole: string | null = null
+
     if (currentUserId) {
+      // Check tester status
       const { data: testerRecord } = await supabase
         .from('beta_testers')
         .select('id, status')
@@ -89,10 +93,55 @@ Deno.serve(async (req) => {
         .single()
       
       userTesterStatus = testerRecord
+
+      // Check if user is a founder
+      if (currentUserId === app.user_id) {
+        isFounder = true
+        userFounderRole = 'owner'
+      } else {
+        const { data: founderRecord } = await supabase
+          .from('app_founders')
+          .select('role')
+          .eq('app_id', appId)
+          .eq('user_id', currentUserId)
+          .single()
+        
+        if (founderRecord) {
+          isFounder = true
+          userFounderRole = founderRecord.role
+        }
+      }
     }
 
-    // Check if current user is the owner
+    // Check if current user is the original owner
     const isOwner = currentUserId === app.user_id
+
+    // Fetch all founders
+    const { data: founders } = await supabase
+      .from('app_founders')
+      .select(`
+        id,
+        user_id,
+        role,
+        created_at,
+        profile:profiles(id, username, name, avatar_url, tagline)
+      `)
+      .eq('app_id', appId)
+      .order('created_at', { ascending: true })
+
+    const allFounders = [
+      {
+        id: 'owner',
+        user_id: app.user_id,
+        role: 'owner',
+        created_at: app.created_at,
+        profile: app.owner
+      },
+      ...(founders || []).map((f: { profile: any }) => ({
+        ...f,
+        profile: f.profile
+      }))
+    ]
 
     // Get likes count
     const { count: likesCount } = await supabase
@@ -112,13 +161,16 @@ Deno.serve(async (req) => {
       userLiked = !!likeRecord
     }
 
-    const response = {
+     const response = {
       ...app,
-      stacks: app.app_stacks?.map((s: any) => s.tech_stacks) || [],
+      stacks: app.app_stacks?.map((s: { tech_stacks: any }) => s.tech_stacks) || [],
       testers_count: testersCount || 0,
       testers: testers || [],
       user_tester_status: userTesterStatus,
       is_owner: isOwner,
+      is_founder: isFounder,
+      user_founder_role: userFounderRole,
+      founders: allFounders,
       likes_count: likesCount || 0,
       user_liked: userLiked,
     }
