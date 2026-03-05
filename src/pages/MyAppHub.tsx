@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useApps } from '@/hooks/useApps';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useHasFeature } from '@/hooks/useFeatures';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useRoadmap } from '@/hooks/useRoadmap';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
@@ -57,6 +58,7 @@ import RoadmapEditor from '@/pages/RoadmapEditor';
 import { BetaManagement } from '@/components/beta/BetaManagement';
 import { UnifiedFeedbackList } from '@/components/beta/UnifiedFeedbackList';
 import { BannersTab } from '@/components/banners/BannersTab';
+import { PremiumComparisonModal } from "@/components/ui/PremiumComparisonModal";
 
 import { useAppFounders } from '@/hooks/useAppFounders';
 import { FounderSearchDialog } from '@/components/profile/FounderSearchDialog';
@@ -90,6 +92,7 @@ export default function MyAppHub() {
   const app = apps.find(a => a.id === appId);
   const roadmap = useRoadmap(appId);
   const { isFounder, isPro } = useSubscription();
+  const isFree = !isPro && !isFounder;
   const [ownerUsername, setOwnerUsername] = useState<string | null>(null);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
@@ -103,6 +106,9 @@ export default function MyAppHub() {
     removeFounder,
     canManageFounders
   } = useAppFounders(appId);
+
+  const { hasFeature: hasPremiumFeature, isLoading: isLoadingTier } = useHasFeature('co_founders_management');
+  const isPremium = hasPremiumFeature || isPro || isFounder;
 
   const handleInviteFounder = async (userId: string) => {
     try {
@@ -422,19 +428,39 @@ export default function MyAppHub() {
         {activeTab === 'roadmap' && <RoadmapEditor />}
         {activeTab === 'feedback' && <UnifiedFeedbackList appId={appId!} />}
         {activeTab === 'squad' && <BetaManagement appId={appId!} config={betaConfig} onConfigChange={handleBetaConfigChange} />}
-         {activeTab === 'founders' && (
-           <div className="space-y-8 animate-in fade-in duration-500">
-             <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
-               {canManageFounders && (
-                 <Button 
-                   onClick={() => setIsFounderSearchOpen(true)}
-                   className="rounded-full gap-2 w-full sm:w-auto shadow-lg shadow-primary/20"
-                 >
-                   <UserPlus className="w-4 h-4" />
-                   Agregar Co-Founder
-                 </Button>
-               )}
-             </div>
+          {activeTab === 'founders' && (
+            <div className="relative min-h-[400px]">
+              <div className="space-y-8 animate-in fade-in duration-500">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
+                {canManageFounders && (
+                  <div className="flex items-center gap-3">
+                    {!isPremium ? (
+                      <PremiumComparisonModal>
+                        <Button 
+                          className="rounded-full gap-2 w-full sm:w-auto shadow-lg shadow-primary/20"
+                        >
+                          <UserPlus className="w-4 h-4" />
+                          Agregar Co-Founder
+                          <ProBadge className="ml-1" />
+                        </Button>
+                      </PremiumComparisonModal>
+                    ) : (
+                      <Button 
+                        onClick={() => setIsFounderSearchOpen(true)}
+                        className="rounded-full gap-2 w-full sm:w-auto shadow-lg shadow-primary/20"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                        Agregar Co-Founder
+                        <ProBadge className="ml-1" />
+                      </Button>
+                    )}
+
+                    {isFree && !isLoadingTier && (
+                      <UpgradeBadge className="ml-0" />
+                    )}
+                  </div>
+                )}
+              </div>
 
              {foundersLoading ? (
                <div className="flex items-center justify-center py-20">
@@ -530,7 +556,8 @@ export default function MyAppHub() {
                existingFounderIds={founders.map(f => f.user_id)}
              />
            </div>
-         )}
+         </div>
+       )}
          {activeTab === 'banners' && <BannersTab appId={appId!} appName={app?.name} appUrl={app?.url} bannerId={bannerId} />}
       </div>
 

@@ -35,7 +35,14 @@ import {
   BadgeCheck,
   Globe,
   UserPlus,
+  Users,
 } from 'lucide-react';
+import { ProBadge } from '@/components/ui/ProBadge';
+import { UpgradeBadge } from '@/components/ui/UpgradeBadge';
+import { PremiumComparisonModal } from '@/components/ui/PremiumComparisonModal';
+import { useHasFeature } from '@/hooks/useFeatures';
+import { useSubscription } from '@/hooks/useSubscription';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Tooltip,
@@ -90,6 +97,10 @@ export default function AppDetail() {
     canManageFounders 
   } = useAppFounders(appId || '');
 
+  const { hasFeature: hasPremiumFeature, isLoading: isLoadingTier } = useHasFeature('co_founders_management');
+  const { isPro, isFounder, isFree } = useSubscription();
+  const isPremium = hasPremiumFeature || isPro || isFounder;
+  
   const handleCopyLink = () => {
     if (app?.beta_link) {
       navigator.clipboard.writeText(app.beta_link);
@@ -498,17 +509,36 @@ export default function AppDetail() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="founders" className="mt-0">
+              <TabsContent value="founders" className="mt-0 relative min-h-[400px]">
                 <div className="max-w-4xl mx-auto space-y-8">
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-end gap-3 flex-wrap">
                     {canManageFounders && (
-                      <Button 
-                        onClick={() => setIsFounderSearchOpen(true)}
-                        className="rounded-full gap-2"
-                      >
-                        <UserPlus className="w-4 h-4" />
-                        Agregar Co-Founder
-                      </Button>
+                      <div className="flex items-center gap-3">
+                        {!isPremium ? (
+                          <PremiumComparisonModal>
+                            <Button 
+                              className="rounded-full gap-2 shadow-sm"
+                            >
+                              <UserPlus className="w-4 h-4" />
+                              Agregar Co-Founder
+                              <ProBadge className="ml-1" />
+                            </Button>
+                          </PremiumComparisonModal>
+                        ) : (
+                          <Button 
+                            onClick={() => setIsFounderSearchOpen(true)}
+                            className="rounded-full gap-2 shadow-sm"
+                          >
+                            <UserPlus className="w-4 h-4" />
+                            Agregar Co-Founder
+                            <ProBadge className="ml-1" />
+                          </Button>
+                        )}
+                        
+                        {isFree && !isLoadingTier && (
+                          <UpgradeBadge className="ml-0" />
+                        )}
+                      </div>
                     )}
                   </div>
 
