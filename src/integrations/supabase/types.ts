@@ -189,13 +189,39 @@ export type Database = {
         }
         Relationships: []
       }
+      app_toggleup_mapping: {
+        Row: {
+          created_at: string | null
+          id: string
+          toggleup_project_id: string
+          user_id: string
+          vibecoders_app_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          toggleup_project_id: string
+          user_id: string
+          vibecoders_app_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          toggleup_project_id?: string
+          user_id?: string
+          vibecoders_app_id?: string
+        }
+        Relationships: []
+      }
       apps: {
         Row: {
+          analytics_enabled: boolean | null
           beta_active: boolean
           beta_instructions: string | null
           beta_limit: number
           beta_link: string | null
           beta_mode: string
+          beta_updated_at: string | null
           category_id: string | null
           created_at: string
           description: string | null
@@ -220,11 +246,13 @@ export type Database = {
           verified_url: string | null
         }
         Insert: {
+          analytics_enabled?: boolean | null
           beta_active?: boolean
           beta_instructions?: string | null
           beta_limit?: number
           beta_link?: string | null
           beta_mode?: string
+          beta_updated_at?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -249,11 +277,13 @@ export type Database = {
           verified_url?: string | null
         }
         Update: {
+          analytics_enabled?: boolean | null
           beta_active?: boolean
           beta_instructions?: string | null
           beta_limit?: number
           beta_link?: string | null
           beta_mode?: string
+          beta_updated_at?: string | null
           category_id?: string | null
           created_at?: string
           description?: string | null
@@ -444,6 +474,132 @@ export type Database = {
           },
         ]
       }
+      chat_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          last_message_preview: string | null
+          user_a_id: string
+          user_b_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          user_a_id: string
+          user_b_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          user_a_id?: string
+          user_b_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_conversations_user_a_id_fkey"
+            columns: ["user_a_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_conversations_user_b_id_fkey"
+            columns: ["user_b_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_message_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          reaction: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          reaction: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          reaction?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_messages: {
+        Row: {
+          audio_url: string | null
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          image_urls: string[]
+          sender_id: string
+        }
+        Insert: {
+          audio_url?: string | null
+          content?: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          image_urls?: string[]
+          sender_id: string
+        }
+        Update: {
+          audio_url?: string | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          image_urls?: string[]
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           description: string | null
@@ -461,6 +617,33 @@ export type Database = {
           description?: string | null
           enabled?: boolean | null
           key?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      features: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          key: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          key?: string
+          name?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -728,6 +911,39 @@ export type Database = {
           },
         ]
       }
+      plan_features: {
+        Row: {
+          created_at: string | null
+          feature_id: string
+          plan_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          feature_id: string
+          plan_id: string
+        }
+        Update: {
+          created_at?: string | null
+          feature_id?: string
+          plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_features_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_features_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_views: {
         Row: {
           created_at: string
@@ -776,6 +992,8 @@ export type Database = {
       profiles: {
         Row: {
           accent_color: string | null
+          allow_analytics: boolean | null
+          allow_marketing: boolean | null
           avatar_position: string | null
           avatar_url: string | null
           banner_position: string | null
@@ -784,6 +1002,7 @@ export type Database = {
           booking_button_text: string | null
           booking_url: string | null
           card_style: string | null
+          chat_available: boolean
           created_at: string | null
           display_order: number | null
           email_public: string | null
@@ -814,6 +1033,8 @@ export type Database = {
         }
         Insert: {
           accent_color?: string | null
+          allow_analytics?: boolean | null
+          allow_marketing?: boolean | null
           avatar_position?: string | null
           avatar_url?: string | null
           banner_position?: string | null
@@ -822,6 +1043,7 @@ export type Database = {
           booking_button_text?: string | null
           booking_url?: string | null
           card_style?: string | null
+          chat_available?: boolean
           created_at?: string | null
           display_order?: number | null
           email_public?: string | null
@@ -852,6 +1074,8 @@ export type Database = {
         }
         Update: {
           accent_color?: string | null
+          allow_analytics?: boolean | null
+          allow_marketing?: boolean | null
           avatar_position?: string | null
           avatar_url?: string | null
           banner_position?: string | null
@@ -860,6 +1084,7 @@ export type Database = {
           booking_button_text?: string | null
           booking_url?: string | null
           card_style?: string | null
+          chat_available?: boolean
           created_at?: string | null
           display_order?: number | null
           email_public?: string | null
@@ -1069,6 +1294,7 @@ export type Database = {
           id: string
           lane_id: string
           likes_count: number
+          tags: string[] | null
           title: string
           updated_at: string
         }
@@ -1081,6 +1307,7 @@ export type Database = {
           id?: string
           lane_id: string
           likes_count?: number
+          tags?: string[] | null
           title: string
           updated_at?: string
         }
@@ -1093,6 +1320,7 @@ export type Database = {
           id?: string
           lane_id?: string
           likes_count?: number
+          tags?: string[] | null
           title?: string
           updated_at?: string
         }
@@ -1117,6 +1345,7 @@ export type Database = {
         Row: {
           app_id: string
           author_email: string | null
+          author_id: string | null
           author_name: string | null
           created_at: string
           description: string
@@ -1133,6 +1362,7 @@ export type Database = {
         Insert: {
           app_id: string
           author_email?: string | null
+          author_id?: string | null
           author_name?: string | null
           created_at?: string
           description: string
@@ -1149,6 +1379,7 @@ export type Database = {
         Update: {
           app_id?: string
           author_email?: string | null
+          author_id?: string | null
           author_name?: string | null
           created_at?: string
           description?: string
@@ -1168,6 +1399,13 @@ export type Database = {
             columns: ["app_id"]
             isOneToOne: false
             referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadmap_feedback_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1291,6 +1529,7 @@ export type Database = {
         Row: {
           app_id: string
           created_at: string
+          custom_domain: string | null
           custom_title: string | null
           default_language: string | null
           favicon_url: string | null
@@ -1299,11 +1538,15 @@ export type Database = {
           id: string
           is_feedback_public: boolean
           is_public: boolean
+          primary_button_color: string | null
+          primary_button_text_color: string | null
+          primary_color: string | null
           updated_at: string
         }
         Insert: {
           app_id: string
           created_at?: string
+          custom_domain?: string | null
           custom_title?: string | null
           default_language?: string | null
           favicon_url?: string | null
@@ -1312,11 +1555,15 @@ export type Database = {
           id?: string
           is_feedback_public?: boolean
           is_public?: boolean
+          primary_button_color?: string | null
+          primary_button_text_color?: string | null
+          primary_color?: string | null
           updated_at?: string
         }
         Update: {
           app_id?: string
           created_at?: string
+          custom_domain?: string | null
           custom_title?: string | null
           default_language?: string | null
           favicon_url?: string | null
@@ -1325,6 +1572,9 @@ export type Database = {
           id?: string
           is_feedback_public?: boolean
           is_public?: boolean
+          primary_button_color?: string | null
+          primary_button_text_color?: string | null
+          primary_color?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1429,6 +1679,8 @@ export type Database = {
           key: string
           label_key: string
           path: string
+          required_feature_key: string | null
+          required_role: string | null
           requires_waitlist: boolean
           section: string
           updated_at: string
@@ -1443,6 +1695,8 @@ export type Database = {
           key: string
           label_key: string
           path: string
+          required_feature_key?: string | null
+          required_role?: string | null
           requires_waitlist?: boolean
           section?: string
           updated_at?: string
@@ -1457,9 +1711,47 @@ export type Database = {
           key?: string
           label_key?: string
           path?: string
+          required_feature_key?: string | null
+          required_role?: string | null
           requires_waitlist?: boolean
           section?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          key: string
+          name: string
+          price_yearly: number | null
+          stripe_product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key: string
+          name: string
+          price_yearly?: number | null
+          stripe_product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          key?: string
+          name?: string
+          price_yearly?: number | null
+          stripe_product_id?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1875,6 +2167,36 @@ export type Database = {
         }
         Relationships: []
       }
+      vibe_analytics_events: {
+        Row: {
+          browser_info: Json | null
+          created_at: string | null
+          id: string
+          page_path: string | null
+          project_id: string
+          referrer: string | null
+          user_hash: string | null
+        }
+        Insert: {
+          browser_info?: Json | null
+          created_at?: string | null
+          id?: string
+          page_path?: string | null
+          project_id: string
+          referrer?: string | null
+          user_hash?: string | null
+        }
+        Update: {
+          browser_info?: Json | null
+          created_at?: string | null
+          id?: string
+          page_path?: string | null
+          project_id?: string
+          referrer?: string | null
+          user_hash?: string | null
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           browser_name: string | null
@@ -1972,6 +2294,7 @@ export type Database = {
           status: Json
         }[]
       }
+      get_user_features: { Args: { p_user_id: string }; Returns: string[] }
       get_verified_founders: {
         Args: never
         Returns: {
@@ -1991,6 +2314,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_chat_participant: { Args: { conv_id: string }; Returns: boolean }
       is_notification_enabled: { Args: { p_type: string }; Returns: boolean }
     }
     Enums: {
