@@ -686,9 +686,6 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
             </span>
           </div>
 
-          <p className="text-sm sm:text-base text-white/35 max-w-lg mx-auto leading-relaxed">
-            {t('pricing.closed.joinSubheadline')}
-          </p>
         </div>
 
         {/* Pricing Grid */}
