@@ -316,8 +316,8 @@ interface AppEditorProps {
             </div>
           </div>
 
-          {/* Hours */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* Hours - Hidden as requested */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 hidden">
             <div className="space-y-2">
               <Label className="flex items-center gap-2 text-foreground text-xs font-semibold">
                 <Lightbulb className="h-3.5 w-3.5 text-muted-foreground" />

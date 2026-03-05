@@ -1,4 +1,4 @@
- // Force deploy: 2026-02-05-v1
+ // Force deploy: 2026-03-05-v2
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -98,16 +98,38 @@ Deno.serve(async (req) => {
 
     console.log(`[get-public-profile] Found profile with id: ${profile.id}`)
 
-    // 2. Get visible apps for this user
-    const { data: appsData, error: appsError } = await supabaseAdmin
+    // 2. Get apps where user is owner OR co-founder
+    // First, get IDs of apps where user is co-founder
+    const { data: foundedApps, error: founderError } = await supabaseAdmin
+      .from('app_founders')
+      .select('app_id')
+      .eq('user_id', profile.id)
+
+    if (founderError) {
+      console.error(`[get-public-profile] Founders query error:`, founderError)
+    }
+
+    const coFoundedAppIds = (foundedApps || []).map(f => f.app_id)
+    console.log(`[get-public-profile] Co-founded apps for ${username}:`, coFoundedAppIds)
+
+    let appsQuery = supabaseAdmin
       .from('apps')
       .select(`
         id, url, name, tagline, description, logo_url, category_id, status_id, display_order, is_verified,
-        hours_ideation, hours_building, screenshots, tags, beta_active,
+        hours_ideation, hours_building, screenshots, tags, beta_active, user_id,
         app_stacks(stack_id)
       `)
-      .eq('user_id', profile.id)
       .eq('is_visible', true)
+
+    if (coFoundedAppIds.length > 0) {
+      // Use quotes for UUIDs in .in() filter inside .or()
+      const formattedIds = coFoundedAppIds.map(id => `"${id}"`).join(',')
+      appsQuery = appsQuery.or(`user_id.eq.${profile.id},id.in.(${formattedIds})`)
+    } else {
+      appsQuery = appsQuery.eq('user_id', profile.id)
+    }
+
+    const { data: appsData, error: appsError } = await appsQuery
       .order('display_order', { ascending: true })
 
     if (appsError) {
