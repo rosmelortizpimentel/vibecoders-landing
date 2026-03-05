@@ -24,6 +24,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAuth } from '@/hooks/useAuth';
+import { useFeatures } from '@/hooks/useFeatures';
 import { cn } from '@/lib/utils';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -34,6 +35,7 @@ import { useBetaBadges } from '@/hooks/useBetaBadges';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ProBadge } from '@/components/ui/ProBadge';
 
 interface AuthenticatedHeaderProps {
   profile: {
@@ -72,6 +74,7 @@ export function AuthenticatedHeader({
   const location = useLocation();
   const { user } = useAuth();
   const { isPro, isFounder, isFree, loading: subLoading } = useSubscription();
+  const hasPremium = isPro || isFounder;
   const { t: tAuth } = useTranslation('auth');
   const { t: tProfile } = useTranslation('profile');
   const { t } = useTranslation('common');
@@ -84,6 +87,7 @@ export function AuthenticatedHeader({
   const { unreadCount } = useNotifications();
   const { t: tNotif } = useTranslation('notifications');
   const { isAdmin } = useUserRole();
+  const { data: userFeatures } = useFeatures();
 
 
   const displayName = formatDisplayName(profile?.name, tAuth('user'));
@@ -103,8 +107,12 @@ export function AuthenticatedHeader({
     return t(labelKey);
   };
 
-  // Build mobile menu from dynamic sidebar items
-  const mobileMenuItems = sidebarMenuItems;
+  // Build mobile menu from dynamic sidebar items, filtering by features and roles
+  const mobileMenuItems = sidebarMenuItems.filter(item => {
+    if (item.requiredFeatureKey && !userFeatures?.includes(item.requiredFeatureKey)) return false;
+    if (item.requiredRole && item.requiredRole === 'admin' && !isAdmin) return false;
+    return true;
+  });
 
   const isActive = (path: string) => {
     // For /me, match any /me/* route
@@ -256,25 +264,34 @@ export function AuthenticatedHeader({
                 <nav className="flex flex-col px-5 py-6 flex-1 overflow-y-auto">
                   {(() => {
                     let lastSection = '';
-                    const itemsWithInjections: any[] = [];
+                    const itemsWithInjections: SidebarMenuItem[] = [];
                     mobileMenuItems.forEach((item) => {
                       itemsWithInjections.push(item);
                       if (item.path === '/apps') {
                         itemsWithInjections.push({
+                          id: 'injected-analytics',
                           path: '/analytics',
                           labelKey: 'navigation.analytics',
                           icon: BarChart3,
                           section: 'maker',
-                          key: 'analytics'
+                          key: 'analytics',
+                          isActive: true,
+                          requiresWaitlist: false,
+                          displayOrder: item.displayOrder + 0.1,
+                          isPro: true,
                         });
                       }
                       if (item.path === '/connections') {
                         itemsWithInjections.push({
+                          id: 'injected-chat',
                           path: '/chat',
                           labelKey: 'navigation.chat',
                           icon: MessageSquare,
                           section: 'community',
-                          key: 'chat'
+                          key: 'chat',
+                          isActive: true,
+                          requiresWaitlist: false,
+                          displayOrder: item.displayOrder + 0.1
                         });
                       }
                     });
@@ -299,6 +316,11 @@ export function AuthenticatedHeader({
                           >
                             <Icon className="h-4 w-4" />
                             <span className="flex-1">{resolveLabel(item.labelKey)}</span>
+                            {item.isPro && (
+                              <div className="mr-1 flex items-center">
+                                <ProBadge />
+                              </div>
+                            )}
                             {badge > 0 && (
                               <Badge variant="secondary" className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-[10px] font-bold border-none">
                                 {badge}

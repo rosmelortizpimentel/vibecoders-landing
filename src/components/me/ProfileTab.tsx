@@ -16,6 +16,7 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { ProBadge } from '@/components/ui/ProBadge';
+import { UpgradeBadge } from '@/components/ui/UpgradeBadge';
 import { BannerCropDialog } from './BannerCropDialog';
 import { ColorPicker } from './ColorPicker';
 import { FontSelector } from './FontSelector';
@@ -47,6 +48,7 @@ export function ProfileTab({
 }: ProfileTabProps) {
   const { user } = useAuth();
   const { isPro, isFounder } = useSubscription();
+  const hasPremium = isPro || isFounder;
   const { t } = useTranslation('profile');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -392,6 +394,7 @@ export function ProfileTab({
             <Calendar className="h-4 w-4 text-muted-foreground" />
             {t('fields.bookingUrl')}
             <ProBadge />
+            {!hasPremium && <UpgradeBadge className="ml-1" />}
           </Label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-start">
             {/* URL input */}
@@ -486,23 +489,17 @@ export function ProfileTab({
       <hr className="border-border" />
 
       {/* Chat Availability */}
-      <section className="space-y-3">
+      <section className="flex items-center justify-between gap-4">
         <div>
-          <h3 className="text-sm font-medium text-foreground">Chat</h3>
+          <h3 className="text-sm font-medium text-foreground">Disponible para chat</h3>
           <p className="text-xs text-muted-foreground mt-1">
-            Cuando estés disponible, aparecerás en el directorio de chat para que otros Vibers puedan iniciarte una conversación.
+            Aparecerás en el directorio de chat. Solo podrás enviar y recibir mensajes con Vibe Coders con los que te sigues mutuamente.
           </p>
         </div>
-        <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
-          <div>
-            <p className="text-sm font-medium text-foreground">Disponible para chat</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Aparecer en el directorio de mensajes</p>
-          </div>
-          <Switch
-            checked={profile.chat_available ?? false}
-            onCheckedChange={(checked) => onUpdate({ chat_available: checked })}
-          />
-        </div>
+        <Switch
+          checked={profile.chat_available ?? false}
+          onCheckedChange={(checked) => onUpdate({ chat_available: checked })}
+        />
       </section>
 
       {/* Divider */}

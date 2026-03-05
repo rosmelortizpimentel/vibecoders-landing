@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { usePopups, useCreatePopup, useUpdatePopup, useDeletePopup, type PopupConfig, type PopupRules, DEFAULT_MODAL_CONFIG, DEFAULT_BANNER_CONFIG, DEFAULT_RULES, type Popup } from "@/hooks/usePopups";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useDomainScrape, useUpdateDomainBranding } from "@/hooks/useDomainBranding";
-import { useFounderStatus } from "@/hooks/useFounderStatus";
+import { useUpdateDomainBranding, useDomainScrape } from "@/hooks/useDomainBranding";
+import { useHasFeature } from "@/hooks/useFeatures";
 import { SidebarEditor } from "@/components/banners-editor/SidebarEditor";
 import { Loader2, Plus, Code, Monitor, Smartphone, Layout, Settings2, ExternalLink, ShieldCheck, Sparkles, Crown, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -33,12 +33,12 @@ interface BannersTabProps {
  export function BannersTab({ appId, appName, appUrl, bannerId }: BannersTabProps) {
   const navigate = useNavigate();
   const { t } = useLanguage();
-   const { data, isLoading: isLoadingPopups } = usePopups(appId, appName, appUrl);
+  const { data, isLoading: isLoadingPopups } = usePopups(appId, appName, appUrl);
   const popups = data?.popups;
   const projectId = data?.projectId;
   const apiKey = data?.api_key;
   
-  const { data: founderStatus } = useFounderStatus();
+  const { hasFeature: isPremium } = useHasFeature('banners_activate');
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   
   const [selectedPopupId, setSelectedPopupId] = useState<string | null>(bannerId || null);
@@ -138,8 +138,6 @@ interface BannersTabProps {
     if (e) e.stopPropagation();
 
     if (!currentActive) {
-      const tier = founderStatus?.tier;
-      const isPremium = tier === 'pro' || tier === 'founder';
       if (!isPremium) {
         setIsPremiumModalOpen(true);
         return;
@@ -160,8 +158,6 @@ interface BannersTabProps {
 
   const handleSetIsActive = (newActive: boolean) => {
     if (newActive) {
-      const tier = founderStatus?.tier;
-      const isPremium = tier === 'pro' || tier === 'founder';
       if (!isPremium) {
         setIsPremiumModalOpen(true);
         return;

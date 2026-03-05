@@ -77,7 +77,7 @@ const App = () => {
         <Toaster />
         <Sonner />
         <InAppBrowserWarning />
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AnalyticsProvider>
             <CookieBanner />
             <SurveyPopup />

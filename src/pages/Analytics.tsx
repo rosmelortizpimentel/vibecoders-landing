@@ -44,10 +44,12 @@ import { getCountryCode } from '@/utils/countryMapping';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import WorldMap from "@/components/analytics/WorldMap";
-import { useFounderStatus } from "@/hooks/useFounderStatus";
+import { useHasFeature } from "@/hooks/useFeatures";
 import { useGeneralSettings } from "@/hooks/useGeneralSettings";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Loader2 } from "lucide-react";
+import { ProBadge } from "@/components/ui/ProBadge";
+import { UpgradeBadge } from "@/components/ui/UpgradeBadge";
 
 const CountryWithFlag = ({ country }: { country: string }) => {
   const code = getCountryCode(country);
@@ -242,12 +244,9 @@ const Analytics = () => {
   const { apps, loading: loadingApps, updateApp } = useApps();
   const { setHeaderContent } = usePageHeader();
   const tCommon = useTranslation('common');
-  const { data: founderStatus, isLoading: isLoadingTier } = useFounderStatus();
+  const { hasFeature: isPremium, isLoading: isLoadingTier } = useHasFeature('analytics_advanced');
   const { data: generalSettings, isLoading: isLoadingSettings } = useGeneralSettings();
   const { createCheckout } = useSubscription();
-  
-  const isPremium = founderStatus?.tier === 'pro' || founderStatus?.tier === 'founder';
-  
   const planPrice = generalSettings?.find(s => s.key === 'stripe_active_price_amount')?.value || "9.90";
   const planName = generalSettings?.find(s => s.key === 'stripe_active_product_name')?.value || "Pro";
   const [selectedAppId, setSelectedAppId] = useState<string | null>(appId || null);
@@ -425,7 +424,7 @@ const Analytics = () => {
     if (!appId) return;
     setLoadingEvents(true);
 
-    if (founderStatus && !isPremium) {
+    if (!isLoadingTier && !isPremium) {
       setEvents([]);
       setLoadingEvents(false);
       return;
@@ -753,6 +752,12 @@ const Analytics = () => {
             <span className="text-slate-300 dark:text-slate-600 font-normal">|</span> 
             {cleanUrl(selectedApp.url || selectedApp.name)}
           </span>
+          {!isPremium && !isLoadingTier && (
+            <div className="flex items-center gap-1.5 ml-1">
+              <ProBadge />
+              <UpgradeBadge />
+            </div>
+          )}
           {onlineNow > 0 && (
             <span className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold uppercase tracking-wider ml-1 shrink-0">
               <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -766,11 +771,17 @@ const Analytics = () => {
         <div className="flex items-center gap-2 min-w-0">
           <BarChart3 className="h-4 w-4 text-primary shrink-0" />
           <span className="font-semibold text-foreground truncate">Analytics</span>
+          {!isPremium && !isLoadingTier && (
+            <div className="flex items-center gap-1.5 ml-1">
+              <ProBadge />
+              <UpgradeBadge />
+            </div>
+          )}
         </div>
       );
     }
     return () => setHeaderContent(null);
-  }, [setHeaderContent, selectedApp, onlineNow]);
+  }, [setHeaderContent, selectedApp, onlineNow, isPremium, isLoadingTier]);
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -1162,33 +1173,30 @@ const Analytics = () => {
             {/* New Analytics Layout */}
             <div className="relative">
               {!isPremium && !isLoadingTier && (
-                <div className="absolute inset-0 z-50 flex flex-col items-center justify-start pt-24 pb-6 px-6 bg-white/60 dark:bg-[#1C1C1E]/60 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <div className="max-w-md w-full p-8 relative flex flex-col items-center text-center bg-zinc-950 dark:bg-zinc-950 rounded-[2rem] shadow-2xl overflow-hidden border border-zinc-800">
-                    <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-inner mb-5 border border-zinc-800 relative z-10">
-                      <Crown className="h-6 w-6 text-white" />
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-start pt-32 pb-6 px-6 bg-white/40 dark:bg-[#1C1C1E]/40 backdrop-blur-md rounded-2xl border border-slate-200/50 dark:border-slate-800/50 transition-all duration-500">
+                  <div className="bg-zinc-950 px-8 py-10 rounded-[2.5rem] shadow-2xl border border-white/10 flex flex-col items-center text-center max-w-[320px] w-full animate-in zoom-in-95 duration-300">
+                    <div className="w-12 h-12 bg-zinc-900 rounded-2xl flex items-center justify-center border border-white/5 mb-6">
+                      <BarChart3 className="h-6 w-6 text-white" />
                     </div>
                     
-                    <h3 className="text-xl font-medium tracking-tight text-white mb-2 relative z-10">
-                      El arma secreta de +100 Founders
+                    <div className="flex items-center gap-2 mb-4 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+                      <ProBadge />
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-white mb-3 tracking-tight">
+                      Analíticas avanzadas
                     </h3>
-                    <p className="text-sm leading-relaxed text-zinc-400 mb-6 font-normal relative z-10">
-                      Únete a los usuarios de la versión Pro y toma decisiones basadas en datos reales. Entiende a tu audiencia, mide tu impacto y crece de forma predecible.
+                    
+                    <p className="text-xs leading-relaxed text-zinc-500 mb-8 font-medium">
+                      Entiende a tu audiencia con datos detallados. Upgrade para desbloquear.
                     </p>
                     
-                    <Button 
-                      onClick={handlePro}
-                      disabled={createCheckout.isPending}
-                      className="w-full h-14 bg-white hover:bg-zinc-200 text-zinc-950 rounded-xl text-[16px] font-bold shadow-lg transition-all active:scale-[0.98] flex flex-col items-center justify-center relative z-10 leading-tight disabled:opacity-50"
-                    >
-                      {createCheckout.isPending ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-zinc-900" />
-                      ) : (
-                        <>
-                          <span>Suscribirme al plan {planName}</span>
-                          <span className="text-xs text-zinc-600 font-medium">Por solo ${planPrice} al año</span>
-                        </>
-                      )}
-                    </Button>
+                    <div className="w-full">
+                      <UpgradeBadge 
+                        text="Quiero escalar con Pro →"
+                        className="w-full h-12 bg-white hover:bg-zinc-200 text-zinc-950 rounded-2xl text-sm font-bold transition-all shadow-xl active:scale-[0.98] inline-flex items-center justify-center no-underline" 
+                      />
+                    </div>
                   </div>
                 </div>
               )}

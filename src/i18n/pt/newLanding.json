@@ -109,7 +109,7 @@
         "f2": "Networking com +100 fundadores",
         "f3": "Crie seu perfil e mostre o que voce esta construindo",
         "f3_example": "Veja um exemplo",
-        "f4": "Pronto para crescer? Desbloqueie a Pro Suite por $9,90/ano",
+        "f4": "Pronto para crescer? Desbloqueie Builder Pro por $19,90/ano",
         "cta": "Entrar Grátis",
         "ctaGoogle": "Entrar Grátis"
       },
@@ -118,7 +118,7 @@
         "title": "Pro Builder + Suite",
         "desc": "Foque nas funcionalidades core. Nos cuidamos do resto.",
         "oldPrice": "$59.90",
-        "price": "$9.90",
+        "price": "$19.90",
         "priceLabel": "/ ano",
         "f1": "Tudo incluido no Gratuito",
         "f2": "Roadmap publico pronto: Nao gaste um commit com isso",
@@ -128,10 +128,10 @@
         "f4": "Banners sem Deploy: Lance alertas sem tocar no codigo",
         "f5": "Venda seus Servicos: Botao \"Book Call\" integrado ao seu Perfil",
         "f5_example": "Ver exemplo",
-        "f6": "Preco de $9.90 congelado para sempre",
-        "cta": "Reservar por $9.90",
-        "ctaGoogle": "Reservar por $9.90",
-        "footer": "O preco sobe para $24.00 em 1 de Marco."
+        "f6": "Preco de $19.90 congelado para sempre",
+        "cta": "Reservar por $19.90",
+        "ctaGoogle": "Reservar por $19.90",
+        "footer": "Seu preço é congelado para toda a vida no momento da assinatura"
       }
     },
     "freemium": {
