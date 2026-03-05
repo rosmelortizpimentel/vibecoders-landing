@@ -555,7 +555,7 @@ export default function RoadmapEditor() {
                         size="icon"
                         className="w-full h-7 text-muted-foreground border-dashed"
                         onClick={() => {
-                          setCardForm({ title: '', description: '' });
+                          setCardForm({ title: '', description: '', tags: [] });
                           setAddingCardToLane(lane.id);
                         }}
                       >
@@ -690,7 +690,7 @@ export default function RoadmapEditor() {
                         size="icon"
                         className="w-full h-7 text-muted-foreground border-dashed"
                         onClick={() => {
-                          setCardForm({ title: '', description: '' });
+                          setCardForm({ title: '', description: '', tags: [] });
                           setAddingCardToLane(lane.id);
                         }}
                       >
