@@ -19,5 +19,9 @@
   "ideation": "Idéation",
   "construction": "Construction",
   "totalHours": "Heures totales",
-  "openBetaTooltip": "Cette application recherche des testeurs"
+  "openBetaTooltip": "Cette application recherche des testeurs",
+  "share": "Partager",
+  "copyLink": "Copier le lien",
+  "copied": "Copié !",
+  "shareOn": "Partager sur {{platform}}"
 }

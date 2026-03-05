@@ -20,5 +20,9 @@
   "construction": "Construction",
   "projectDNA": "Project DNA",
   "totalHours": "Total hours",
-  "openBetaTooltip": "This app is looking for testers"
+  "openBetaTooltip": "This app is looking for testers",
+  "share": "Share",
+  "copyLink": "Copy link",
+  "copied": "Copied!",
+  "shareOn": "Share on {{platform}}"
 }
