@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck, Calendar, Share2, Globe, Twitter, ArrowLeft, MousePointerClick, Heart, UserPlus, UserCheck, Zap } from 'lucide-react';
+import { MapPin, Link as LinkIcon, Github, Instagram, Youtube, Linkedin, Mail, ExternalLink, BadgeCheck, Calendar, Share2, Globe, Twitter, ArrowLeft, MousePointerClick, Heart, UserPlus, UserCheck, Zap, Copy, Check, Facebook, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useGeneralSettings } from '@/hooks/useGeneralSettings';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { toast } from 'sonner';
 import type { PublicProfile, PublicApp } from '@/hooks/usePublicProfile';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PioneerBadge } from '@/components/PioneerBadge';
@@ -253,7 +262,11 @@ function PublicAppCard({
 
 export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfileCardProps) {
   const { user } = useAuth();
+  const { t } = useTranslation('publicProfile');
+  const { language } = useLanguage();
+  const { data: settings } = useGeneralSettings();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { isFollowing, isLoading: followLoading, followersCount, followingCount, toggleFollow, refetch: refetchFollowData } = useFollow(profile.id);
   const [viewMode, setViewMode] = useState<ViewMode>('apps');
   const [selectedAppIndex, setSelectedAppIndex] = useState<number | null>(null);
@@ -331,6 +344,55 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
     }
   };
 
+  const profileUrl = `https://vibecoders.la/@${username}`;
+  
+  const getShareText = () => {
+    const customPhrase = settings?.find(s => s.key === `share_profile_phrase_${language}`)?.value;
+    if (customPhrase) {
+      return customPhrase.replace('{{url}}', profileUrl);
+    }
+    
+    // Fallbacks
+    const fallbacks: Record<string, string> = {
+      es: `¡Hola! Mira mi perfil en VibeCoders: ${profileUrl}`,
+      en: `Hi! Check out my profile on VibeCoders: ${profileUrl}`,
+      pt: `Olá! Confira meu perfil no VibeCoders: ${profileUrl}`,
+      fr: `Salut! Regardez mon profil sur VibeCoders: ${profileUrl}`
+    };
+    
+    return fallbacks[language] || fallbacks.en;
+  };
+
+  const shareLinks = [
+    { 
+      name: 'WhatsApp', 
+      icon: <MessageCircle className="h-4 w-4" />,
+      getUrl: (text: string) => `https://wa.me/?text=${encodeURIComponent(text)}` 
+    },
+    { 
+      name: 'LinkedIn', 
+      icon: <Linkedin className="h-4 w-4" />, 
+      getUrl: () => `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(profileUrl)}` 
+    },
+    { 
+      name: 'X (Twitter)', 
+      icon: <Twitter className="h-4 w-4" />, 
+      getUrl: (text: string) => `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}` 
+    },
+    { 
+      name: 'Facebook', 
+      icon: <Facebook className="h-4 w-4" />, 
+      getUrl: () => `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(profileUrl)}` 
+    }
+  ];
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(profileUrl);
+    setCopied(true);
+    toast.success(t('copied'));
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div 
       className="w-full bg-white flex flex-col flex-1"
@@ -382,22 +444,67 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
               )}
             </div>
 
-            {profile.booking_url && (
-              <a
-                href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleBookingClick}
-                style={{
-                  backgroundColor: profile.primary_color || '#3D5AFE',
-                  color: profile.accent_color || '#FFFFFF',
-                }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap shadow-sm hover:opacity-90 transition-opacity"
-              >
-                <span className="hidden sm:inline">{profile.booking_button_text || 'Book a call'}</span>
-                <Calendar className="h-3.5 w-3.5" style={{ color: profile.accent_color || '#FFFFFF' }} />
-              </a>
-            )}
+            <div className="flex items-center gap-2">
+              {profile.booking_url && (
+                <a
+                  href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={handleBookingClick}
+                  style={{
+                    backgroundColor: profile.primary_color || '#3D5AFE',
+                    color: profile.accent_color || '#FFFFFF',
+                  }}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold whitespace-nowrap shadow-sm hover:opacity-90 transition-opacity"
+                >
+                  <span className="hidden sm:inline">{profile.booking_button_text || 'Book a call'}</span>
+                  <Calendar className="h-3.5 w-3.5" style={{ color: profile.accent_color || '#FFFFFF' }} />
+                </a>
+              )}
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: profile.name || username,
+                          text: getShareText(),
+                          url: profileUrl,
+                        }).catch(() => {
+                          // Fallback to dropdown handled by DropdownMenuTrigger if share fails or is cancelled
+                        });
+                      }
+                    }}
+                    className="rounded-full h-8 w-8 p-0 flex items-center justify-center border-gray-200 text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 bg-white border-gray-100 shadow-lg rounded-xl p-1">
+                  {shareLinks.map((platform) => (
+                    <DropdownMenuItem 
+                      key={platform.name}
+                      onClick={() => window.open(platform.getUrl(getShareText()), '_blank')}
+                      className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                    >
+                      <span className="text-gray-400 group-hover:text-gray-900 transition-colors">{platform.icon}</span>
+                      {t('shareOn', { platform: platform.name })}
+                    </DropdownMenuItem>
+                  ))}
+                  <div className="h-px bg-gray-100 my-1 mx-2" />
+                  <DropdownMenuItem 
+                    onClick={handleCopyLink}
+                    className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                  >
+                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4 text-gray-400" />}
+                    {t('copyLink')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           <AuthModal
