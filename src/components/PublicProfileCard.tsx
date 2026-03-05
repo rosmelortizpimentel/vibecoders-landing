@@ -354,10 +354,10 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
     
     // Fallbacks
     const fallbacks: Record<string, string> = {
-      es: `¡Hola! Mira mi perfil en Vibecoders: ${profileUrl}`,
-      en: `Hi! Check out my profile on Vibecoders: ${profileUrl}`,
-      pt: `Olá! Confira meu perfil no Vibecoders: ${profileUrl}`,
-      fr: `Salut! Regardez mon profil sur Vibecoders: ${profileUrl}`
+      es: `¡Hola! Mira mi perfil en VibeCoders: ${profileUrl}`,
+      en: `Hi! Check out my profile on VibeCoders: ${profileUrl}`,
+      pt: `Olá! Confira meu perfil no VibeCoders: ${profileUrl}`,
+      fr: `Salut! Regardez mon profil sur VibeCoders: ${profileUrl}`
     };
     
     return fallbacks[language] || fallbacks.en;
