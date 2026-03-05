@@ -443,10 +443,7 @@ export default function MyAppHub() {
                   {(isFounder || isPro) ? (
                     <ProBadge />
                   ) : (
-                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                      <Crown className="w-2.5 h-2.5 text-amber-600" />
-                      <span className="text-[8px] font-bold text-amber-700 uppercase">Pro</span>
-                    </div>
+                    <ProBadge />
                   )}
                 </div>
                 

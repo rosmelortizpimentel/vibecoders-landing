@@ -12,6 +12,7 @@ import { TimezonePicker } from "@/components/ui/TimezonePicker";
 import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
+import { ProBadge } from "@/components/ui/ProBadge";
 
 interface RulesTriggersAccordionProps {
   rulesConfig: PopupRules;
@@ -278,7 +279,7 @@ export const RulesTriggersAccordion = ({
             <Monitor className="w-3 h-3 flex-shrink-0" />
             {t('editor.rules.devices')}
             {!limits.can_device_target && (
-              <Crown className="w-3 h-3 text-amber-500 flex-shrink-0" />
+              <ProBadge />
             )}
           </span>
         </AccordionTrigger>
@@ -426,7 +427,7 @@ export const RulesTriggersAccordion = ({
             <Calendar className="w-3 h-3 flex-shrink-0" />
             {t('editor.rules.schedule')}
             {!limits.can_schedule && (
-              <Crown className="w-3 h-3 text-amber-500 flex-shrink-0" />
+              <ProBadge />
             )}
           </span>
         </AccordionTrigger>
