@@ -35,6 +35,7 @@ import { useBetaBadges } from '@/hooks/useBetaBadges';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { ProBadge } from '@/components/ui/ProBadge';
 
 interface AuthenticatedHeaderProps {
   profile: {
@@ -73,6 +74,7 @@ export function AuthenticatedHeader({
   const location = useLocation();
   const { user } = useAuth();
   const { isPro, isFounder, isFree, loading: subLoading } = useSubscription();
+  const hasPremium = isPro || isFounder;
   const { t: tAuth } = useTranslation('auth');
   const { t: tProfile } = useTranslation('profile');
   const { t } = useTranslation('common');
@@ -275,7 +277,8 @@ export function AuthenticatedHeader({
                           key: 'analytics',
                           isActive: true,
                           requiresWaitlist: false,
-                          displayOrder: item.displayOrder + 0.1
+                          displayOrder: item.displayOrder + 0.1,
+                          isPro: true,
                         });
                       }
                       if (item.path === '/connections') {
@@ -313,6 +316,11 @@ export function AuthenticatedHeader({
                           >
                             <Icon className="h-4 w-4" />
                             <span className="flex-1">{resolveLabel(item.labelKey)}</span>
+                            {item.isPro && (
+                              <div className="mr-1 flex items-center">
+                                <ProBadge />
+                              </div>
+                            )}
                             {badge > 0 && (
                               <Badge variant="secondary" className="h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-[10px] font-bold border-none">
                                 {badge}

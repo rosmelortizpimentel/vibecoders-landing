@@ -13,6 +13,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useNavigate } from "react-router-dom";
 import { ProBadge } from "@/components/ui/ProBadge";
+import { UpgradeBadge } from "@/components/ui/UpgradeBadge";
 
 interface RulesTriggersAccordionProps {
   rulesConfig: PopupRules;
@@ -279,7 +280,10 @@ export const RulesTriggersAccordion = ({
             <Monitor className="w-3 h-3 flex-shrink-0" />
             {t('editor.rules.devices')}
             {!limits.can_device_target && (
-              <ProBadge />
+              <>
+                <ProBadge />
+                <UpgradeBadge />
+              </>
             )}
           </span>
         </AccordionTrigger>
@@ -427,7 +431,10 @@ export const RulesTriggersAccordion = ({
             <Calendar className="w-3 h-3 flex-shrink-0" />
             {t('editor.rules.schedule')}
             {!limits.can_schedule && (
-              <ProBadge />
+              <>
+                <ProBadge />
+                <UpgradeBadge />
+              </>
             )}
           </span>
         </AccordionTrigger>

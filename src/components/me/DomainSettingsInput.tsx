@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle2, X, Globe, RefreshCw, Crown, Copy } from 'lucide-react';
 import { ProBadge } from "@/components/ui/ProBadge";
+import { UpgradeBadge } from "@/components/ui/UpgradeBadge";
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSubscription } from '@/hooks/useSubscription';
 import { cn } from '@/lib/utils';
@@ -262,6 +263,7 @@ export const DomainSettingsInput: React.FC<DomainSettingsInputProps> = ({
                     <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-4 text-xs space-y-3 shadow-sm">
                       <div className="flex items-center gap-2">
                         <ProBadge />
+                        <UpgradeBadge className="ml-1" />
                       </div>
                       <p className="text-muted-foreground">Actualiza para conectar tu propia marca.</p>
                       <Button onClick={handleCheckout} disabled={checkoutLoading} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold h-9">

@@ -26,6 +26,11 @@ import {
   MessageSquare,
   Megaphone,
   Phone,
+  BarChart3,
+  Globe,
+  ShoppingBag,
+  Activity,
+  FileText,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -567,9 +572,10 @@ const FeatureGrid = () => {
 /* ─── Closed Access Section (shown when spots run out) ─── */
 const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: { totalBuilders: number; onLinkedInClick: (signupSource?: string) => void; onGoogleClick: (signupSource?: string) => void }) => {
   const { t } = useTranslation('newLanding');
+  const { language } = useLanguage();
 
   const [timeLeft, setTimeLeft] = useState(() => {
-    const difference = +new Date("2026-02-28T23:59:59") - +new Date();
+    const difference = +new Date("2026-03-31T23:59:59") - +new Date();
     if (difference > 0) {
       return {
         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -583,7 +589,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const difference = +new Date("2026-02-28T23:59:59") - +new Date();
+      const difference = +new Date("2026-03-31T23:59:59") - +new Date();
       if (difference > 0) {
         setTimeLeft({
           days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -619,6 +625,15 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
     { key: 'f4', included: true },
     { key: 'f5', included: true },
     { key: 'f6', included: true },
+    { key: 'f7', included: true },
+    { key: 'f8', included: true },
+    { key: 'f9', included: true, isSoon: true },
+    { key: 'f10', included: true, isSoon: true },
+    { key: 'f11', included: true, isSoon: true },
+    { key: 'f12', included: true, isSoon: true },
+    { key: 'f13', included: true, isSoon: true },
+    { key: 'f14', included: true, isSoon: true },
+    { key: 'f15', included: true },
   ];
 
   const proFeatureIcons: Record<string, React.ReactNode> = {
@@ -627,7 +642,16 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
     f3: <MessageSquare className="h-4 w-4 text-[#3D5AFE]" />,
     f4: <Megaphone className="h-4 w-4 text-[#3D5AFE]" />,
     f5: <Phone className="h-4 w-4 text-[#3D5AFE]" />,
-    f6: <ShieldCheck className="h-4 w-4 text-[#3D5AFE]" />,
+    f6: <BarChart3 className="h-4 w-4 text-[#3D5AFE]" />,
+    f7: <Globe className="h-4 w-4 text-[#3D5AFE]" />,
+    f8: <Globe className="h-4 w-4 text-[#3D5AFE]" />,
+    f9: <Users className="h-4 w-4 text-stone-500" />,
+    f10: <Briefcase className="h-4 w-4 text-stone-500" />,
+    f11: <Clock className="h-4 w-4 text-stone-500" />,
+    f12: <ShoppingBag className="h-4 w-4 text-stone-500" />,
+    f13: <Activity className="h-4 w-4 text-stone-500" />,
+    f14: <FileText className="h-4 w-4 text-stone-500" />,
+    f15: <ShieldCheck className="h-4 w-4 text-[#3D5AFE]" />,
   };
 
   return (
@@ -682,7 +706,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
             </div>
 
             <div className="mb-6 md:mb-10">
-              <span className="text-5xl font-black tracking-tighter text-stone-900">$0</span>
+              <span className="text-5xl font-black tracking-tighter text-stone-900">{t('pricing.plans.free.price')}</span>
               <span className="ml-2 text-stone-400 font-bold uppercase text-xs tracking-widest">
                 {t('pricing.plans.free.priceLabel')}
               </span>
@@ -755,7 +779,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
           <div className="relative rounded-2xl border-2 border-stone-900 bg-stone-900 p-6 sm:p-8 md:p-10 flex flex-col">
             {/* Badge */}
             <div className="absolute -top-3.5 left-6 sm:left-10 rounded-md bg-[#3D5AFE] px-3 py-1 text-[10px] font-black uppercase tracking-[0.15em] text-white shadow-sm">
-              OFERTA EXPIRA EN 7 DÍAS
+              {t('pricing.plans.pro.badge', { days: timeLeft.days })}
             </div>
 
             <div className="mb-6 md:mb-8 mt-2">
@@ -783,7 +807,7 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
               <span className="ml-2 text-white/35 font-bold uppercase text-xs tracking-widest">
                 {t('pricing.plans.pro.priceLabel')}
               </span>
-              <div className="text-xs text-yellow-400 mt-2 font-medium">Precio especial válido hasta el 28 de Feb</div>
+              <div className="text-xs text-yellow-400 mt-2 font-medium">{t('pricing.plans.pro.priceUrgency')}</div>
             </div>
 
             <ul className="mb-8 md:mb-10 space-y-4 text-left flex-grow">
@@ -793,8 +817,11 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
                     {proFeatureIcons[key] || <Check className="h-4 w-4 text-[#3D5AFE]" />}
                   </div>
                   <div>
-                    <span className={`font-medium text-white/75 ${key === 'f5' ? 'font-bold text-white/90' : ''}`}>
+                    <span className={`font-medium transition-colors ${language === 'es' && key.match(/f(9|10|11|12|13|14)/) ? 'text-white/40' : 'text-white/75'} ${key === 'f15' ? 'font-bold text-white/90' : ''}`}>
                       {t(`pricing.plans.pro.${key}`)}
+                      {language === 'es' && key.match(/f(9|10|11|12|13|14)/) && (
+                        <span className="ml-1.5 italic opacity-80">(próximamente)</span>
+                      )}
                     </span>
                     {['f2', 'f3', 'f5'].includes(key) && (
                       <a
@@ -864,10 +891,59 @@ const ClosedAccessSection = ({ totalBuilders, onLinkedInClick, onGoogleClick }: 
 
 /* ─── Pricing Section - Lifetime Deal ─── */
 const PricingSection = () => {
-  const { t, pricing } = useTranslation('newLanding');
+  const { t } = useTranslation('newLanding');
+  const { language } = useLanguage();
+
+  const proFeaturesList = [
+    { key: 'f1', included: true },
+    { key: 'f2', included: true },
+    { key: 'f3', included: true },
+    { key: 'f4', included: true },
+    { key: 'f5', included: true },
+    { key: 'f6', included: true },
+    { key: 'f7', included: true },
+    { key: 'f8', included: true },
+    { key: 'f9', included: true },
+    { key: 'f10', included: true },
+    { key: 'f11', included: true },
+    { key: 'f12', included: true },
+    { key: 'f13', included: true },
+    { key: 'f14', included: true },
+    { key: 'f15', included: true },
+  ];
+
+  const proFeatureIconsLocal: Record<string, React.ReactNode> = {
+    f1: <Check className="h-5 w-5 text-stone-900" />,
+    f2: <Map className="h-5 w-5 text-stone-900" />,
+    f3: <MessageSquare className="h-5 w-5 text-stone-900" />,
+    f4: <Megaphone className="h-5 w-5 text-stone-900" />,
+    f5: <Phone className="h-5 w-5 text-stone-900" />,
+    f6: <BarChart3 className="h-5 w-5 text-stone-900" />,
+    f7: <Globe className="h-5 w-5 text-stone-900" />,
+    f8: <Globe className="h-5 w-5 text-stone-900" />,
+    f9: <Users className="h-5 w-5 text-stone-400" />,
+    f10: <Briefcase className="h-5 w-5 text-stone-400" />,
+    f11: <Clock className="h-5 w-5 text-stone-400" />,
+    f12: <ShoppingBag className="h-5 w-5 text-stone-400" />,
+    f13: <Activity className="h-5 w-5 text-stone-400" />,
+    f14: <FileText className="h-5 w-5 text-stone-400" />,
+    f15: <Check className="h-5 w-5 text-stone-900" strokeWidth={2.5} />,
+  };
   const { signInWithGoogle, signInWithLinkedIn } = useAuth();
   const [spotsLeft, setSpotsLeft] = useState(37);
   const [totalBuilders, setTotalBuilders] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const difference = +new Date("2026-03-31T23:59:59") - +new Date();
+    if (difference > 0) {
+      return {
+        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((difference / 1000 / 60) % 60),
+        seconds: Math.floor((difference / 1000) % 60)
+      };
+    }
+    return { days: 0, hours: 0, minutes: 0, seconds: 0 };
+  });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -878,6 +954,19 @@ const PricingSection = () => {
       }
     };
     fetchStats();
+
+    const timer = setInterval(() => {
+      const difference = +new Date("2026-03-31T23:59:59") - +new Date();
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        });
+      }
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
   const handleGoogleSignIn = async (signupSource?: string) => {
@@ -905,14 +994,6 @@ const PricingSection = () => {
 
   // Use the dynamic spotsLeft in the urgency text
   const urgencyText = t('pricing.urgency', { count: spotsLeft });
-  interface PricingFeature {
-    title: string;
-    desc?: string;
-    included: boolean;
-  }
-
-  const visitorFeatures = (pricing?.visitor?.features || []) as PricingFeature[];
-  const founderFeatures = (pricing?.founder?.features || []) as PricingFeature[];
 
   return (
     <section className="bg-white py-28 px-4 sm:px-6 overflow-hidden border-t border-stone-100">
@@ -938,45 +1019,44 @@ const PricingSection = () => {
 
         <div className="grid gap-6 md:gap-10 md:grid-cols-2 lg:gap-16 md:items-stretch">
           {/* Card 1: PRIMER LANZAMIENTO */}
-          <div className="relative rounded-2xl border border-stone-200 bg-stone-50/50 p-5 sm:p-8 shadow-sm transition-all md:p-10 flex flex-col opacity-60">
+          <div className="relative rounded-2xl border border-stone-200 bg-stone-50/50 p-5 sm:p-8 shadow-sm transition-all md:p-10 flex flex-col">
             <div className="mb-4 md:mb-8">
               <h3 className="mb-2 text-xs font-black uppercase tracking-[0.2em] text-stone-400">
-                {t('pricing.visitor.title')}
+                {t('pricing.plans.free.title')}
               </h3>
               <p className="text-sm text-stone-500 font-medium">
-                {t('pricing.visitor.subtitle')}
+                {t('pricing.plans.free.desc')}
               </p>
             </div>
             
             <div className="mb-6 md:mb-10">
               <span className="text-5xl font-black tracking-tighter text-stone-900">
-                $0
+                {t('pricing.plans.free.price')}
               </span>
-              <span className="ml-2 text-stone-400 font-bold uppercase text-xs tracking-widest">/ año</span>
+              <span className="ml-2 text-stone-400 font-bold uppercase text-xs tracking-widest">{t('pricing.plans.free.priceLabel')}</span>
             </div>
             
             <ul className="mb-6 md:mb-12 w-full space-y-4 md:space-y-6 text-left">
-              {visitorFeatures.map((feature, i) => (
-                <li key={i} className={`flex items-start gap-3 text-sm ${!feature.included ? 'opacity-40' : ''}`}>
+              {['f1', 'f2', 'f3'].map((key) => (
+                <li key={key} className="flex items-start gap-3 text-sm">
                   <div className="mt-1 shrink-0">
-                    {feature.included ? (
-                      <Check className="h-4 w-4 text-stone-400" />
-                    ) : (
-                      <X className="h-4 w-4 text-stone-300" />
-                    )}
+                    <Check className="h-4 w-4 text-stone-400" />
                   </div>
                   <div>
-                    <p className={`font-bold ${feature.included ? 'text-stone-600' : 'text-stone-400'}`}>
-                      {feature.title}
+                    <p className="font-bold text-stone-600">
+                      {t(`pricing.plans.free.${key}`)}
                     </p>
-                    {feature.desc && (
-                      <p className="mt-0.5 text-xs text-stone-400 leading-snug">
-                        {feature.desc}
-                      </p>
-                    )}
                   </div>
                 </li>
               ))}
+              <li className="flex items-start gap-3 text-sm">
+                <div className="mt-1 shrink-0">
+                  <ArrowRight className="h-4 w-4 text-[#3D5AFE]" />
+                </div>
+                <p className="font-bold text-[#3D5AFE] text-[13px]">
+                  {t('pricing.plans.free.f4')}
+                </p>
+              </li>
             </ul>
 
             <Button variant="outline" disabled className="mt-auto w-full border-stone-200 text-stone-400 h-14 rounded-xl font-bold uppercase tracking-widest bg-white">
@@ -986,49 +1066,33 @@ const PricingSection = () => {
 
           {/* Card 2: BUILDER FUNDADOR */}
           <div className="relative rounded-2xl border-2 border-stone-900 bg-white p-5 sm:p-8 shadow-xl md:p-10 flex flex-col">
-            {/* Professional EXCLUSIVE Tag - Black */}
-            <div className="absolute -top-3.5 left-10 rounded-md bg-stone-900 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-sm">
-              {t('pricing.founder.tag')}
+            {/* Urgency Badge */}
+            <div className="absolute -top-3.5 left-10 rounded-md bg-[#3D5AFE] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-white shadow-sm">
+              {t('pricing.plans.pro.badge', { days: timeLeft.days })}
             </div>
 
             <div className="mb-4 md:mb-8">
               <h3 className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-stone-900">
-                {t('pricing.founder.title')}
+                {t('pricing.plans.pro.title')}
               </h3>
               <p className="text-sm text-stone-500 font-medium">
-                {t('pricing.founder.subtitle')}
-              </p>
-            </div>
-            
-            <div className="mb-5 md:mb-8">
-              <div className="mb-2">
-                <span className="text-xl sm:text-2xl font-bold text-stone-400 line-through decoration-stone-400/50 decoration-2">
-                  {t('pricing.founder.oldPrice')}
-                </span>
-                <span className="ml-3 text-6xl sm:text-7xl font-black tracking-tighter text-stone-900">
-                  $0
-                </span>
-              </div>
-              <p className="text-sm font-bold text-stone-900 uppercase tracking-widest pl-1">
-                {t('pricing.founder.priceText')}
+                {t('pricing.plans.pro.desc')}
               </p>
             </div>
             
             <ul className="mb-6 md:mb-10 w-full space-y-4 md:space-y-5 text-left flex-grow">
-              {founderFeatures.map((feature, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm">
+              {proFeaturesList.map(({ key }) => (
+                <li key={key} className="flex items-start gap-3 text-sm">
                   <div className="mt-1 shrink-0">
-                    <Check className="h-5 w-5 text-stone-900" strokeWidth={2.5} />
+                    {proFeatureIconsLocal[key] || <Check className="h-5 w-5 text-stone-900" strokeWidth={2.5} />}
                   </div>
                   <div>
-                    <p className="font-bold text-stone-700 text-[15px]">
-                      {feature.title}
+                    <p className={`font-bold transition-colors ${language === 'es' && key.match(/f(9|10|11|12|13|14)/) ? 'text-stone-400' : 'text-stone-700'} text-[15px] ${key === 'f15' ? 'text-[#3D5AFE]' : ''}`}>
+                      {t(`pricing.plans.pro.${key}`)}
+                      {language === 'es' && key.match(/f(9|10|11|12|13|14)/) && (
+                        <span className="ml-1.5 italic font-medium opacity-80">(próximamente)</span>
+                      )}
                     </p>
-                    {feature.desc && (
-                      <p className="mt-0.5 text-xs text-stone-500 font-medium leading-relaxed">
-                        {feature.desc}
-                      </p>
-                    )}
                   </div>
                 </li>
               ))}
@@ -1060,7 +1124,7 @@ const PricingSection = () => {
                 className="w-full h-14 rounded-xl bg-[#0A66C2] hover:bg-[#004182] text-white font-bold text-base shadow-md transition-all hover:scale-[1.01] flex items-center justify-center gap-3"
               >
                 <Linkedin className="h-5 w-5 fill-white" />
-                {t('pricing.founder.ctaLinkedIn')}
+                {t('pricing.plans.pro.cta')}
               </Button>
 
               {/* Secondary: Google (White/Border) */}
@@ -1075,12 +1139,12 @@ const PricingSection = () => {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.26.81-.58z" fill="#FBBC05" />
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                 </svg>
-                {t('pricing.founder.ctaGoogle')}
+                {t('pricing.plans.pro.ctaGoogle')}
               </Button>
               
               {/* Trust Features */}
               <p className="text-center text-[10px] text-stone-400 font-medium">
-                {t('pricing.founder.trustText')}
+                {t('pricing.plans.pro.footer')}
               </p>
             </div>
           </div>
@@ -1090,8 +1154,9 @@ const PricingSection = () => {
   );
 };/* ─── Footer with Manifesto ─── */
 const NewFooter = () => {
-  const tc = useTranslation('common');
+  const { t: tCommon } = useTranslation('common');
   const { t } = useTranslation('newLanding');
+  const { language } = useLanguage();
 
   return (
     <footer className="bg-[#1c1c1c] px-4 py-12 sm:py-14">
@@ -1107,34 +1172,34 @@ const NewFooter = () => {
         {/* Standard footer content */}
         <div className="flex flex-col-reverse items-center justify-between gap-4 text-xs sm:flex-row sm:text-sm w-full">
           <div className="flex flex-col items-center gap-2 sm:flex-row sm:gap-4">
-            <p className="text-white/70">{tc.footer.copyright}</p>
+            <p className="text-white/70">{tCommon('footer.copyright')}</p>
             <div className="flex items-center gap-3">
               <Link to="/privacy" className="text-white/70 hover:text-white transition-colors">
-                {tc.footer.privacy}
+                {tCommon('footer.privacy')}
               </Link>
               <span className="text-white/40">&middot;</span>
               <Link to="/terms" className="text-white/70 hover:text-white transition-colors">
-                {tc.footer.terms}
+                {tCommon('footer.terms')}
               </Link>
             </div>
           </div>
 
           <div className="flex flex-col items-center gap-1 text-center sm:flex-row sm:gap-1.5">
             <p className="flex items-center gap-1.5 text-white/70">
-              {tc.footer.builtWith}{' '}
+              {tCommon('footer.builtWith')}{' '}
               <Heart className="h-3.5 w-3.5 text-pink-500 fill-pink-500" />
-              {' '}{tc.footer.in}{' '}
+              {' '}{tCommon('footer.in')}{' '}
               <img src={canadaFlag} alt="Canada" className="inline-block h-4 w-auto" />
             </p>
             <p className="flex items-center gap-1.5 text-white/70">
-              {tc.footer.by}{' '}
+              {tCommon('footer.by')}{' '}
               <a
                 href="https://www.vibecoders.la/@rosmelortiz"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-medium text-white underline underline-offset-4 transition-colors hover:text-white/80"
               >
-                {tc.footer.authorName}
+                {tCommon('footer.authorName')}
               </a>
             </p>
           </div>

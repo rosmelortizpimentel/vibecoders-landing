@@ -1,6 +1,6 @@
 {
-  "badge": "PRO",
-  "title": "Vibe Coder Pro",
+  "badge": "BUILDER PRO",
+  "title": "Vibe Coder Builder Pro",
   "subtitle": "Desbloqueie todo o potencial do seu perfil e leve seus projetos ao proximo nivel.",
   "benefits": {
     "unlimitedApps": {
@@ -30,6 +30,114 @@
   },
   "price": "$24",
   "priceUnit": "/ ano",
-  "cta": "Quero ser Pro",
-  "close": "Agora nao"
+  "cta": "Quero ser Builder Pro",
+  "close": "Agora nao",
+  "comparison": {
+    "title": "Experimente <1>Vibe Builder Pro</1> para escalar.",
+    "subtitle": "Seu projeto merece mais do que existir — merece crescer. Builder Pro te dá tudo o que você precisa para conseguir isso.",
+    "badgeText": "Preço Early Adopter — apenas por tempo limitado",
+    "cta": "Quero escalar com Builder Pro →",
+    "guarantee": "Sem compromissos. Sem complicações.",
+    "colBenefits": "Benefícios Premium",
+    "colFree": "Builder",
+    "colPro": "Builder Pro",
+    "priceFreeze": "Seu preço é congelado para toda a vida no momento da assinatura.",
+    "groups": [
+      {
+        "title": "Para começar",
+        "features": [
+          {
+            "label": "Comunidade Vibe Coders",
+            "free": true,
+            "pro": true
+          },
+          {
+            "label": "Perfil Público",
+            "free": true,
+            "pro": true
+          },
+          {
+            "label": "Converse com outros Vibe Coders",
+            "free": true,
+            "pro": true
+          },
+          {
+            "label": "Publique seus Apps",
+            "free": true,
+            "pro": true
+          },
+          {
+            "label": "Publique seus Apps para Testing",
+            "free": "Apenas se tiver contribuído como testador",
+            "pro": "Acesso total sem pré-requisitos"
+          }
+        ]
+      },
+      {
+        "title": "Para crescer",
+        "features": [
+          {
+            "label": "Analytics dos seus Apps",
+            "free": false,
+            "pro": "Visitantes, visualizações, países e fontes em um só lugar"
+          },
+          {
+            "label": "Banners ao vivo",
+            "free": false,
+            "pro": "Comunique mudanças aos seus usuários sem mexer no código"
+          },
+          {
+            "label": "Gerenciamento de Feedback",
+            "free": false,
+            "pro": "Página pública com seu próprio domínio"
+          },
+          {
+            "label": "Gerenciamento de Roadmap",
+            "free": "Apenas privado",
+            "pro": "Público com domínio personalizado"
+          },
+          {
+            "label": "Botão 'Book a Call' no perfil",
+            "free": false,
+            "pro": "Clientes e parceiros agendam diretamente do seu perfil"
+          }
+        ]
+      },
+      {
+        "title": "Em breve",
+        "features": [
+          {
+            "label": "Open to Partnerships",
+            "free": false,
+            "pro": "Conecte-se com investidores, Tech Partners e Growth Partners"
+          },
+          {
+            "label": "Multi-fundadores",
+            "free": false,
+            "pro": "Gerencie apps em equipe com outros cofundadores"
+          },
+          {
+            "label": "Waitlist",
+            "free": false,
+            "pro": "Capture leads antes de lançar"
+          },
+          {
+            "label": "Marketplace de Apps",
+            "free": "Compre",
+            "pro": "Compre e venda seus apps"
+          },
+          {
+            "label": "Status Page",
+            "free": false,
+            "pro": "Mostre o status do app em tempo real"
+          },
+          {
+            "label": "Change Logs",
+            "free": false,
+            "pro": "Documente cada melhoria do seu produto"
+          }
+        ]
+      }
+    ]
+  }
 }

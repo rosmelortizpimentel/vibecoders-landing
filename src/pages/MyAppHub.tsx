@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { UpgradeBadge } from '@/components/ui/UpgradeBadge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
@@ -182,9 +184,9 @@ export default function MyAppHub() {
     try {
       await roadmap.updateSettings({
         feedback_auth_mode: settingsAuthMode,
-        is_public: settingsIsPublic,
+        is_public: (isFounder || isPro) ? settingsIsPublic : false,
         is_feedback_public: settingsIsFeedbackPublic,
-        custom_domain: settingsCustomDomain,
+        custom_domain: (isFounder || isPro) ? settingsCustomDomain : null,
         custom_title: settingsCustomTitle,
       });
       setShowSettingsDialog(false);
@@ -389,12 +391,17 @@ export default function MyAppHub() {
                   <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <span className="text-sm font-semibold">{tR.t('editor.roadmapPublic') || 'Public Roadmap'}</span>
+                        <span className="text-sm font-semibold flex items-center">
+                          {tR.t('editor.roadmapPublic') || 'Public Roadmap'}
+                          <ProBadge className="ml-2" />
+                          {!(isFounder || isPro) && <UpgradeBadge className="ml-1" />}
+                        </span>
                         <p className="text-xs text-muted-foreground/80">{tR.t('editor.publicOnHint')}</p>
                       </div>
                       <Switch
                         checked={settingsIsPublic}
                         onCheckedChange={setSettingsIsPublic}
+                        disabled={!(isFounder || isPro)}
                       />
                     </div>
                     {settingsIsPublic && (
@@ -412,12 +419,17 @@ export default function MyAppHub() {
                   <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <span className="text-sm font-semibold">{tR.t('editor.feedbackPublicLabel') || 'Public Feedback'}</span>
+                        <span className="text-sm font-semibold flex items-center">
+                          {tR.t('editor.feedbackPublicLabel') || 'Public Feedback'}
+                          <ProBadge className="ml-2" />
+                          {!(isFounder || isPro) && <UpgradeBadge className="ml-1" />}
+                        </span>
                         <p className="text-xs text-muted-foreground/80">{tR.t('editor.feedbackPublicOnHint')}</p>
                       </div>
                       <Switch
                         checked={settingsIsFeedbackPublic}
                         onCheckedChange={setSettingsIsFeedbackPublic}
+                        disabled={!(isFounder || isPro)}
                       />
                     </div>
                     {settingsIsFeedbackPublic && (
@@ -443,7 +455,10 @@ export default function MyAppHub() {
                   {(isFounder || isPro) ? (
                     <ProBadge />
                   ) : (
-                    <ProBadge />
+                    <div className="flex items-center">
+                      <ProBadge />
+                      <UpgradeBadge className="ml-2" />
+                    </div>
                   )}
                 </div>
                 

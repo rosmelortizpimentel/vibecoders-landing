@@ -16,6 +16,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import { useUserRole } from '@/hooks/useUserRole';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ProBadge } from "@/components/ui/ProBadge";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useProfile } from '@/hooks/useProfile';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -58,6 +61,9 @@ export function Sidebar() {
     localStorage.setItem('sidebarCollapsed', String(isCollapsed));
     window.dispatchEvent(new CustomEvent('sidebar-resize', { detail: { isCollapsed } }));
   }, [isCollapsed]);
+
+  const { isPro, isFounder } = useSubscription();
+  const hasPremium = isPro || isFounder;
 
   // Listen for external sidebar-collapse commands (e.g. from roadmap auto-collapse)
   useEffect(() => {
@@ -105,7 +111,7 @@ export function Sidebar() {
     return t(labelKey);
   };
 
-  type NavItem = { path: string; label: string; icon: typeof LayoutDashboard; className?: string; badge?: number } | { type: 'separator'; path: string };
+  type NavItem = { path: string; label: string; icon: typeof LayoutDashboard; className?: string; badge?: number; isPro?: boolean } | { type: 'separator'; path: string };
   
   const navLinks: NavItem[] = [];
   let lastSection = '';
@@ -129,6 +135,7 @@ export function Sidebar() {
         path: '/analytics',
         label: t('navigation.analytics'),
         icon: BarChart3,
+        isPro: true,
       });
     }
     if (item.path === '/connections') {
@@ -186,7 +193,7 @@ export function Sidebar() {
           
 
           // Cast safely because we checked for separator
-          const item = link as { path: string; label: string; icon: LucideIcon; className?: string; badge?: number };
+          const item = link as { path: string; label: string; icon: LucideIcon; className?: string; badge?: number; isPro?: boolean };
           const Icon = item.icon;
           const active = isActive(item.path);
           
@@ -220,6 +227,11 @@ export function Sidebar() {
               {!isCollapsed && (
                 <>
                   <span className="truncate animate-in fade-in duration-200 flex-1">{item.label}</span>
+                  {item.isPro && (
+                    <div className="ml-auto mr-1 flex items-center">
+                      <ProBadge />
+                    </div>
+                  )}
                   {item.badge && item.badge > 0 ? (
                     <Badge variant="secondary" className="ml-auto h-5 min-w-[1.25rem] px-1 flex items-center justify-center rounded-full text-[10px] font-bold shadow-sm border-none">
                       {item.badge}

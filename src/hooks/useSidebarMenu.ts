@@ -16,6 +16,7 @@ export interface SidebarMenuItem {
   requiredFeatureKey?: string | null;
   requiredRole?: string | null;
   cssClass?: string;
+  isPro?: boolean;
 }
 
 interface SidebarMenuItemRow {
