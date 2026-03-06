@@ -38,34 +38,27 @@ export function useFollowList(
     queryKey: ['follow-list', profileId, type, user?.id],
     queryFn: async () => {
       if (!profileId) return [];
-
-      const params = new URLSearchParams({
+      
+      const queryParams = new URLSearchParams({
         profileId,
         type,
       });
-      
-      if (user?.id) {
-        params.append('currentUserId', user.id);
+      if (user?.id) queryParams.append('currentUserId', user.id);
+
+      const { data, error } = await supabase.functions.invoke(`get-follow-list?${queryParams.toString()}`, {
+        method: 'GET',
+      });
+
+      if (error) {
+        throw error;
       }
 
-      const response = await fetch(
-        `https://zkotnnmrehzqonlyeorv.supabase.co/functions/v1/get-follow-list?${params}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Error fetching follow list');
+      if (!data.success) {
+        throw new Error(data.error || 'Error fetching follow list');
       }
 
       // Map snake_case to camelCase
-      return (result.profiles || []).map((p: RawFollowerProfile) => ({
+      return (data.profiles || []).map((p: RawFollowerProfile) => ({
         id: p.id,
         username: p.username,
         name: p.name,

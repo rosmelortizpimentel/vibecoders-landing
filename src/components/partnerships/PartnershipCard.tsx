@@ -1,16 +1,18 @@
 import { UserPlus } from 'lucide-react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useTranslation } from '@/hooks/useTranslation';
-import { PartnershipApp } from '@/hooks/usePartnerships';
+import { PublicApp } from '@/hooks/usePublicApps';
+import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 
 interface PartnershipCardProps {
-  app: PartnershipApp;
-  onContactClick: (app: PartnershipApp) => void;
+  app: PublicApp;
+  onContactClick: (app: PublicApp) => void;
 }
 
 export function PartnershipCard({ app, onContactClick }: PartnershipCardProps) {
   const { t: tPartner } = useTranslation('partnerships');
+  const { user } = useAuth();
 
   return (
     <article className="group bg-card border border-border rounded-lg overflow-hidden transition-all duration-200 hover:border-primary hover:shadow-md flex flex-col h-full ring-1 ring-border/50">
@@ -28,7 +30,7 @@ export function PartnershipCard({ app, onContactClick }: PartnershipCardProps) {
             <h3 className="text-lg font-bold text-foreground leading-tight truncate group-hover/header:text-primary transition-colors">
               {app.name}
             </h3>
-            <p className="text-sm font-medium text-muted-foreground truncate mt-0.5">
+            <p className="text-sm font-light text-muted-foreground mt-0.5">
               {app.tagline}
             </p>
           </div>
@@ -67,13 +69,15 @@ export function PartnershipCard({ app, onContactClick }: PartnershipCardProps) {
             </div>
           </Link>
 
-          <button
-            onClick={() => onContactClick(app)}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-bold shrink-0 shadow-sm"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span className="hidden sm:inline">{tPartner('card.interested', { defaultValue: 'Me interesa' })}</span>
-          </button>
+          {app.open_to_partnerships && user?.id !== app.owner?.id && (
+            <button
+              onClick={() => onContactClick(app)}
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-bold shrink-0 shadow-sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span className="hidden sm:inline">{tPartner('card.interested', { defaultValue: 'Me interesa' })}</span>
+            </button>
+          )}
         </div>
       </div>
     </article>

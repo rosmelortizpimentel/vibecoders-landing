@@ -24,7 +24,7 @@
   "chatMessage": "Hola, vi tu app {{appName}} en el directorio de partnerships y me interesa conectar como {{role}}.",
   "detail": {
     "title": "Open to Partnerships",
-    "description": "Este proyecto busca partners. Si te interesa colaborar, contacta al builder.",
+    "description": "El founder está abierto a colaborar. ¿Eres el partner que este proyecto necesita?",
     "contactButton": "Me interesa"
   }
 }

@@ -23,7 +23,7 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Me from "./pages/Me";
 import BuildLog from "./pages/BuildLog";
-import PartnershipsDirectory from "./pages/PartnershipsDirectory";
+import AppsDirectory from "./pages/AppsDirectory";
 import BuildLogOgDynamic from "./pages/BuildLogOgDynamic";
 import Admin from "./pages/Admin";
 import PublicProfile from "./pages/PublicProfile";
@@ -118,7 +118,6 @@ const App = () => {
                 <Route element={<MenuRouteGuard />}>
                   <Route path="/home" element={<Home />} />
                   <Route path="/explore" element={<Projects />} />
-                  <Route path="/public-beta-testing" element={<BetaSquads />} />
                   <Route path="/tools" element={<Tools />} />
                   <Route path="/buildlog" element={<BuildLog />} />
                   <Route path="/buildlog/og-dynamic" element={<BuildLogOgDynamic />} />
@@ -129,27 +128,33 @@ const App = () => {
                   <Route path="/me/profile" element={<Me />} />
                   <Route path="/me/branding" element={<Me />} />
                   <Route path="/settings" element={<Settings />} />
-                  {/* New: Apps hub */}
-                  <Route path="/apps" element={<MyApps />} />
-                  <Route path="/apps/:appId" element={<MyAppHub />} />
-                  <Route path="/apps/:appId/roadmap" element={<MyAppHub />} />
-                  <Route path="/apps/:appId/feedback" element={<MyAppHub />} />
-                  <Route path="/apps/:appId/squad" element={<MyAppHub />} />
-                  <Route path="/apps/:appId/founders" element={<MyAppHub />} />
-                  <Route path="/apps/:appId/banners" element={<MyAppHub />} />
-                  <Route path="/apps/:appId/banners/:bannerId" element={<MyAppHub />} />
                   
-                  {/* Partnerships Directory - Not in Sidebar but inside App */}
-                  <Route path="/partnerships" element={<PartnershipsDirectory />} />
+                  {/* Private Apps Management - Moved to /me/apps */}
+                  <Route path="/me/apps" element={<MyApps />} />
+                  <Route path="/me/apps/:appId" element={<MyAppHub />} />
+                  <Route path="/me/apps/:appId/roadmap" element={<MyAppHub />} />
+                  <Route path="/me/apps/:appId/feedback" element={<MyAppHub />} />
+                  <Route path="/me/apps/:appId/squad" element={<MyAppHub />} />
+                  <Route path="/me/apps/:appId/founders" element={<MyAppHub />} />
+                  <Route path="/me/apps/:appId/banners" element={<MyAppHub />} />
+                  <Route path="/me/apps/:appId/banners/:bannerId" element={<MyAppHub />} />
 
-                  <Route path="/my-apps" element={<Navigate to="/apps" replace />} />
-                  <Route path="/my-apps/:appId" element={<Navigate to="/apps" replace />} />
-                  <Route path="/beta-testing" element={<Navigate to="/apps" replace />} />
-                  <Route path="/beta-testing/:appId" element={<Navigate to="/apps" replace />} />
+                  {/* Public Apps Discovery - New /apps route */}
+                  <Route path="/apps" element={<AppsDirectory />} />
+                  <Route path="/apps/:filter" element={<AppsDirectory />} />
+                  
+                  {/* Redirects for legacy app management and partnerships */}
+                  <Route path="/partnerships" element={<Navigate to="/apps/open-to-partnerships" replace />} />
+                  <Route path="/public-beta-testing" element={<BetaSquads />} />
+
+                  <Route path="/my-apps" element={<Navigate to="/me/apps" replace />} />
+                  <Route path="/my-apps/:appId" element={<Navigate to="/me/apps" replace />} />
+                  <Route path="/beta-testing" element={<Navigate to="/me/apps" replace />} />
+                  <Route path="/beta-testing/:appId" element={<Navigate to="/me/apps" replace />} />
                   <Route path="/ideas" element={<Ideas />} />
                   <Route path="/ideas/new" element={<Ideas />} />
                   <Route path="/ideas/:ideaId" element={<Ideas />} />
-                  <Route path="/roadmap" element={<Navigate to="/apps" replace />} />
+                  <Route path="/roadmap" element={<Navigate to="/me/apps" replace />} />
                   <Route path="/prompts" element={<Prompts />} />
                   <Route path="/prompts/new" element={<PromptStudio />} />
                   <Route path="/prompts/:id" element={<PromptViewer />} />
@@ -163,7 +168,6 @@ const App = () => {
                   <Route path="/chat" element={<Chat />} />
                   <Route path="/chat/:conversationId" element={<Chat />} />
                   {/* Legacy redirect */}
-                  <Route path="/me/apps" element={<Navigate to="/apps" replace />} />
                 </Route>
               </Route>
               

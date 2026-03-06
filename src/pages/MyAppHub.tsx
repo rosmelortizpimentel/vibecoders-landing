@@ -210,12 +210,12 @@ export default function MyAppHub() {
   }, [activeTab]);
 
   const tabs: { id: TabId; label: string; icon: typeof Info; path: string }[] = [
-    { id: 'info', label: t.t('hub.info'), icon: Info, path: `/apps/${appId}` },
-    { id: 'roadmap', label: t.t('hub.roadmap'), icon: Map, path: `/apps/${appId}/roadmap` },
-    { id: 'feedback', label: t.t('hub.feedback'), icon: MessageSquare, path: `/apps/${appId}/feedback` },
-    { id: 'squad', label: "Open for Testing", icon: FlaskConical, path: `/apps/${appId}/squad` },
-    { id: 'banners', label: "Banners", icon: Paintbrush, path: `/apps/${appId}/banners` },
-    { id: 'founders', label: "Founders", icon: Users, path: `/apps/${appId}/founders` },
+    { id: 'info', label: t.t('hub.info'), icon: Info, path: `/me/apps/${appId}` },
+    { id: 'roadmap', label: t.t('hub.roadmap'), icon: Map, path: `/me/apps/${appId}/roadmap` },
+    { id: 'feedback', label: t.t('hub.feedback'), icon: MessageSquare, path: `/me/apps/${appId}/feedback` },
+    { id: 'squad', label: "Open for Testing", icon: FlaskConical, path: `/me/apps/${appId}/squad` },
+    { id: 'banners', label: "Banners", icon: Paintbrush, path: `/me/apps/${appId}/banners` },
+    { id: 'founders', label: "Founders", icon: Users, path: `/me/apps/${appId}/founders` },
   ];
 
   const [betaConfig, setBetaConfig] = useState({
@@ -307,7 +307,7 @@ export default function MyAppHub() {
     // Header Info Bar
     const headerElement = (
       <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8 -ml-1">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/me/apps')} className="text-muted-foreground hover:text-foreground shrink-0 h-8 w-8 -ml-1">
           <ArrowLeft className="w-4 h-4" />
         </Button>
         {app.logo_url ? (
@@ -393,7 +393,7 @@ export default function MyAppHub() {
     return (
       <div className="text-center py-20">
         <p className="text-muted-foreground">App not found</p>
-        <Button variant="ghost" onClick={() => navigate('/apps')} className="mt-4">
+        <Button variant="ghost" onClick={() => navigate('/me/apps')} className="mt-4">
           <ArrowLeft className="w-4 h-4 mr-2" /> {t.t('hub.backToApps')}
         </Button>
       </div>
@@ -423,7 +423,7 @@ export default function MyAppHub() {
       {/* Content */}
       <div>
         {activeTab === 'info' && (
-          <AppEditor app={app} onUpdate={updateApp} onUploadLogo={uploadAppLogo} onUploadScreenshot={appsHook.uploadAppScreenshot} onDelete={async () => { await appsHook.deleteApp(app.id); navigate('/apps'); }} onVerify={handleVerify} />
+          <AppEditor app={app} onUpdate={updateApp} onUploadLogo={uploadAppLogo} onUploadScreenshot={appsHook.uploadAppScreenshot} onDelete={async () => { await appsHook.deleteApp(app.id); navigate('/me/apps'); }} onVerify={handleVerify} />
         )}
         {activeTab === 'roadmap' && <RoadmapEditor />}
         {activeTab === 'feedback' && <UnifiedFeedbackList appId={appId!} />}

@@ -174,10 +174,12 @@ function PublicAppCard({
             {app.is_verified && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <BadgeCheck className="h-4 w-4 text-black flex-shrink-0" />
+                  <div className="flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[#1C1C1C] text-white shrink-0">
+                    <Check className="w-2 h-2 stroke-[4]" />
+                  </div>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="text-xs">
-                  Verificado
+                <TooltipContent side="top" className="text-[10px] px-2 py-1">
+                  App Verificada por VibeCoders
                 </TooltipContent>
               </Tooltip>
             )}

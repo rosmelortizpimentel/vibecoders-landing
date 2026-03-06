@@ -60,14 +60,14 @@ export default function PartnershipsDirectory() {
       {/* Search Bar */}
 
       {/* Search Bar */}
-      <div className="flex items-center gap-4 px-1">
-        <div className="relative w-full max-w-md">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 px-1">
+        <div className="relative w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
             placeholder={tPartner('filters.searchPlaceholder', { defaultValue: 'Buscar app...' })}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-card border-border shadow-sm focus-visible:ring-primary"
+            className="pl-9 bg-card border-border shadow-sm focus-visible:ring-primary h-10"
           />
         </div>
       </div>

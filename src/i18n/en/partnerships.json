@@ -21,5 +21,10 @@
     "description": "Activate this option to appear in the public directory and connect with investors or partners.",
     "selectRoles": "Select what you are looking for:"
   },
-  "chatMessage": "Hi, I saw your app {{appName}} in the partnerships directory and I'm interested in connecting as a {{role}}."
+  "chatMessage": "Hi, I saw your app {{appName}} in the partnerships directory and I'm interested in connecting as a {{role}}.",
+  "detail": {
+    "title": "Open to Partnerships",
+    "description": "The founder is open to collaborate. Are you the partner this project needs?",
+    "contactButton": "I'm interested"
+  }
 }

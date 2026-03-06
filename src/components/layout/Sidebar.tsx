@@ -79,17 +79,17 @@ export function Sidebar() {
 
   const isActive = (path: string) => {
     if (path === '/me') {
-      // Strict check for /me and /me/ subroutes, BUT excluding the new top-level routes if they happened to share prefix (they don't anymore)
-      // Also ensure we don't match on /me if we are on /megaphones (example)
-      return location.pathname === '/me' || (location.pathname.startsWith('/me/') && location.pathname !== '/me');
+      // Highlight "Mi Perfil" for /me, /me/profile, etc. BUT exclude /me/apps which is a separate menu item
+      return (location.pathname === '/me' || location.pathname.startsWith('/me/')) && !location.pathname.startsWith('/me/apps');
     }
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   // Badge map: key -> runtime count
-  const badgeMap: Record<string, number> = {
+  // Map sidebar item keys to their respective badge counts from hooks
+  const badgeMapping: Record<string, number> = {
     'notifications': unreadCount,
-    'beta-testing': ownedAppsCount,
+    'my-apps': ownedAppsCount,
     'public-beta-testing': publicSquadsCount,
   };
 
@@ -121,17 +121,18 @@ export function Sidebar() {
       navLinks.push({ type: 'separator', path: `sep-${sepIndex++}` });
     }
     lastSection = item.section;
+    const badgeCount = item.key ? badgeMapping[item.key] : 0;
     navLinks.push({
       path: item.path,
       label: resolveLabel(item.labelKey),
       icon: item.icon,
       className: item.cssClass || undefined,
-      badge: badgeMap[item.key] || undefined,
+      badge: badgeCount > 0 ? badgeCount : undefined,
       badgeText: item.badgeText,
     });
 
     // Inject requested options for local validation
-    if (item.path === '/apps') {
+    if (item.path === '/me/apps') {
       navLinks.push({
         path: '/analytics',
         label: t('navigation.analytics'),

@@ -74,22 +74,25 @@ export function AppLikeButton({ appId, showCount = false, isOwner = false, owner
       <button
         onClick={handleClick}
         disabled={isLoading}
-         className={cn(
-          "flex items-center gap-1 transition-all duration-200",
+        className={cn(
+          "flex items-center gap-1 transition-colors duration-200 ease-in-out",
           isLiked 
-            ? "text-pink-500" 
-            : "text-gray-400 hover:text-pink-500",
+            ? "text-[#EF4444]" 
+            : "text-[#D1D5DB] hover:text-[#EF4444]",
           isLoading && "opacity-50 cursor-not-allowed"
         )}
       >
         <Heart 
           className={cn(
-            "w-3.5 h-3.5 transition-transform",
+            "w-3.5 h-3.5 transition-all duration-200 ease-in-out",
             isLiked && "fill-current scale-110"
           )} 
         />
         {showCount && likeCount > 0 && (
-          <span className="text-xs font-medium">{likeCount}</span>
+          <span className={cn(
+            "text-xs font-medium",
+            isLiked ? "text-[#EF4444]" : "text-[#9CA3AF]"
+          )}>{likeCount}</span>
         )}
       </button>
 
