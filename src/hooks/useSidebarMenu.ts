@@ -17,6 +17,7 @@ export interface SidebarMenuItem {
   requiredRole?: string | null;
   cssClass?: string;
   isPro?: boolean;
+  badgeText?: string | null;
 }
 
 interface SidebarMenuItemRow {
@@ -32,6 +33,7 @@ interface SidebarMenuItemRow {
   required_feature_key?: string | null;
   required_role?: string | null;
   css_class?: string;
+  badge_text?: string | null;
 }
 
 const mapItem = (item: SidebarMenuItemRow): SidebarMenuItem => {
@@ -49,6 +51,7 @@ const mapItem = (item: SidebarMenuItemRow): SidebarMenuItem => {
     requiredFeatureKey: item.required_feature_key,
     requiredRole: item.required_role,
     cssClass: item.css_class,
+    badgeText: item.badge_text,
   };
 };
 
