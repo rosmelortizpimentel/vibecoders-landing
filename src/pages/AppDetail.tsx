@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppDetail } from '@/hooks/useAppDetail';
@@ -23,6 +23,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { parseMarkdown } from '@/lib/markdown';
+import { cn } from '@/lib/utils';
 import { ProjectDNA } from '@/components/ProjectDNA';
 import { 
   ArrowLeft, 
@@ -37,6 +38,9 @@ import {
   UserPlus,
   Users,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
+  X
 } from 'lucide-react';
 import { ProBadge } from '@/components/ui/ProBadge';
 import { UpgradeBadge } from '@/components/ui/UpgradeBadge';
@@ -63,6 +67,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 
 import { AppDetailView } from '@/components/profile/AppDetailView';
 import { PublicApp } from '@/hooks/usePublicProfile';
@@ -92,9 +100,29 @@ export default function AppDetail() {
     canManageFounders 
   } = useAppFounders(appId || '');
 
+  const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState<number | null>(null);
+
   const { hasFeature: hasPremiumFeature, isLoading: isLoadingTier } = useHasFeature('co_founders_management');
   const { isPro, isFounder, isFree } = useSubscription();
   const isPremium = hasPremiumFeature || isPro || isFounder;
+  
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedScreenshotIndex === null) return;
+      
+      if (e.key === 'ArrowLeft') {
+        setSelectedScreenshotIndex(prev => (prev !== null ? (prev - 1 + (app?.screenshots?.length || 0)) % (app?.screenshots?.length || 1) : null));
+      } else if (e.key === 'ArrowRight') {
+        setSelectedScreenshotIndex(prev => (prev !== null ? (prev + 1) % (app?.screenshots?.length || 1) : null));
+      } else if (e.key === 'Escape') {
+        setSelectedScreenshotIndex(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedScreenshotIndex, app?.screenshots]);
   
   const handleCopyLink = () => {
     if (app?.beta_link) {
@@ -131,6 +159,21 @@ export default function AppDetail() {
       // Error handled by mutation
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (selectedScreenshotIndex === null || !app.screenshots) return;
+      
+      if (e.key === 'ArrowLeft') {
+        setSelectedScreenshotIndex((prev) => (prev !== null ? (prev - 1 + app!.screenshots!.length) % app!.screenshots!.length : null));
+      } else if (e.key === 'ArrowRight') {
+        setSelectedScreenshotIndex((prev) => (prev !== null ? (prev + 1) % app!.screenshots!.length : null));
+      } 
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedScreenshotIndex, app]);
 
   if (loading) {
     return (
@@ -242,7 +285,7 @@ export default function AppDetail() {
                             <h3 className="text-lg font-bold text-gray-900 leading-tight truncate group-hover:text-primary transition-colors">
                               {app.name}
                             </h3>
-                            <p className="text-sm text-gray-500 font-medium line-clamp-2 mt-0.5">
+                            <p className="text-sm text-gray-500 font-light line-clamp-2 mt-0.5">
                               {app.tagline}
                             </p>
                          </div>
@@ -324,11 +367,11 @@ export default function AppDetail() {
                           {/* Logo */}
                           <div className="shrink-0 mx-auto md:mx-0">
                             {app.logo_url ? (
-                              <img 
-                                src={app.logo_url} 
-                                alt={app.name || ''} 
-                                className="w-24 h-24 rounded-2xl object-cover shadow-sm ring-1 ring-gray-100"
-                              />
+                                <img 
+                                  src={app.logo_url} 
+                                  alt={app.name || ''} 
+                                  className="w-24 h-24 rounded-2xl object-contain bg-white shadow-sm ring-1 ring-gray-100"
+                                />
                             ) : (
                               <div className="w-24 h-24 rounded-2xl bg-gray-50 flex items-center justify-center ring-1 ring-gray-100">
                                 <span className="text-3xl font-bold text-gray-300">
@@ -341,23 +384,25 @@ export default function AppDetail() {
                           {/* Info */}
                           <div className="flex-1 text-center md:text-left min-w-0">
                             <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
-                              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
-                                {app.name}
-                              </h1>
-                              {app.is_verified && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <BadgeCheck className="h-6 w-6 text-primary flex-shrink-0" />
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top">
-                                      {t('verifiedOwner')}
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
+                               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
+                                 {app.name}
+                               </h1>
+                               {app.is_verified && (
+                                 <TooltipProvider>
+                                   <Tooltip>
+                                     <TooltipTrigger asChild>
+                                       <div className="flex items-center justify-center w-5 h-5 rounded-full bg-[#1C1C1C] text-white shrink-0">
+                                         <Check className="w-3 h-3 stroke-[4]" />
+                                       </div>
+                                     </TooltipTrigger>
+                                     <TooltipContent side="top">
+                                       App Verificada por VibeCoders
+                                     </TooltipContent>
+                                   </Tooltip>
+                                 </TooltipProvider>
+                               )}
                             </div>
-                            <p className="text-lg text-gray-500 font-medium mb-4">
+                            <p className="text-lg text-gray-500 font-light mb-4 text-left">
                               {app.tagline}
                             </p>
                             
@@ -387,50 +432,63 @@ export default function AppDetail() {
                           </div>
                         </div>
 
-                        {/* Description */}
-                        {app.description && (
-                          <div className="mt-8 pt-8 border-t border-gray-50">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
-                              {t('aboutApp')}
-                            </h3>
+                        {/* Description Section - Now "Sobre esta app" */}
+                        <div className="mt-4 pt-6 border-t border-[#f0f0f0]">
+                          <h3 className="text-[12px] font-bold text-[#555] uppercase tracking-[0.1em] mb-4">
+                            {t('aboutApp', { defaultValue: 'Sobre esta app' })}
+                          </h3>
+                          {app.description ? (
                             <div 
                               className="prose prose-sm max-w-none text-gray-600 leading-relaxed dark:prose-invert"
                               dangerouslySetInnerHTML={{ __html: parseMarkdown(app.description) }}
                             />
-                          </div>
-                        )}
+                          ) : (
+                            <p className="text-sm text-gray-400 italic">
+                              El founder aún no ha agregado una descripción detallada.
+                            </p>
+                          )}
+                        </div>
 
                         {/* Screenshot Gallery */}
                         {app.screenshots && app.screenshots.length > 0 && (
-                          <div className="mt-8 pt-8 border-t border-gray-50">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-5">
-                              {tCommon('screenshots', { defaultValue: 'Screenshots' })}
+                          <div className="mt-6 pt-6 border-t border-[#f0f0f0]">
+                            <h3 className="text-[12px] font-bold text-[#555] uppercase tracking-[0.1em] mb-5">
+                              {tCommon('screenshots', { defaultValue: 'SCREENSHOTS' })}
                             </h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                              {app.screenshots.map((url, index) => (
-                                <div 
-                                  key={index}
-                                  className="aspect-video relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 group/img cursor-zoom-in shadow-xs transition-all hover:shadow-md hover:border-primary/20"
-                                  onClick={() => window.open(url, '_blank')}
-                                >
-                                  <img 
-                                    src={url} 
-                                    alt={`${app.name} screenshot ${index + 1}`}
-                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105"
-                                  />
-                                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors" />
-                                </div>
-                              ))}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                              {app.screenshots.slice(0, 3).map((url, index) => {
+                                const isLast = index === 2 && app.screenshots!.length > 3;
+                                return (
+                                  <div 
+                                    key={index}
+                                    className="aspect-video relative rounded-[8px] overflow-hidden bg-gray-50 border border-gray-100 group/img cursor-zoom-in shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all hover:shadow-md hover:border-primary/20"
+                                    onClick={() => setSelectedScreenshotIndex(index)}
+                                  >
+                                    <img 
+                                      src={url} 
+                                      alt={`${app.name} screenshot ${index + 1}`}
+                                      className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                                    />
+                                    {isLast && (
+                                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center transition-colors group-hover/img:bg-black/70">
+                                        <span className="text-white font-bold text-sm">
+                                          Ver todas (+{app.screenshots!.length - 3})
+                                        </span>
+                                      </div>
+                                    )}
+                                    {!isLast && <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors" />}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         )}
 
-
                         {/* Tech Stack */}
                         {app.stacks && app.stacks.length > 0 && (
-                          <div className="mt-8 pt-8 border-t border-gray-50">
-                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">
-                              {t('techStack')}
+                          <div className="mt-6 pt-6 border-t border-[#f0f0f0]">
+                            <h3 className="text-[12px] font-bold text-[#555] uppercase tracking-[0.1em] mb-4">
+                              {t('techStack', { defaultValue: 'STACK TECNOLÓGICO' })}
                             </h3>
                             <div className="flex flex-wrap gap-3">
                               {app.stacks.map(stack => (
@@ -448,48 +506,6 @@ export default function AppDetail() {
                       </div>
                     </Card>
 
-                    {/* Partnership section */}
-                    {app.open_to_partnerships && (
-                      <div className="p-5 bg-primary/[0.03] border border-primary/10 rounded-2xl shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                          <UserPlus className="w-12 h-12 text-primary" />
-                        </div>
-                        
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="p-1.5 bg-primary/10 rounded-lg">
-                            <UserPlus className="w-4 h-4 text-primary" />
-                          </div>
-                          <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">
-                            {tPartner('detail.title')}
-                          </h3>
-                        </div>
-                        
-                        <p className="text-sm text-gray-600 mb-4 leading-relaxed pr-8">
-                          {tPartner('detail.description')}
-                        </p>
-
-                        <div className="flex flex-wrap gap-1.5 mb-5">
-                          {app.partnership_types?.map((type: string) => (
-                            <span 
-                              key={type}
-                              className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white border border-primary/10 text-primary shadow-xs"
-                            >
-                              {tPartner(`types.${type}`)}
-                            </span>
-                          ))}
-                        </div>
-
-                        <Button 
-                          onClick={() => {
-                            navigate(`/chat?user=${app.owner?.id}`);
-                          }}
-                          className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-xs font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98]"
-                        >
-                          {tPartner('detail.contactButton')}
-                        </Button>
-                      </div>
-                    )}
-
                     {/* Contributors / Testers Hall of Fame */}
                     {app.testers && app.testers.length > 0 && (
                        <div className="space-y-4">
@@ -501,29 +517,15 @@ export default function AppDetail() {
                                <BetaHallOfFame 
                                 testers={app.testers} 
                                 totalCount={app.testers_count} 
-                              />
+                               />
                             </CardContent>
                           </Card>
                        </div>
                     )}
                   </div>
 
-                  {/* Right Column (1/3) - Sidebar (Beta Squad + Founder) */}
+                  {/* Right Column (1/3) - Sidebar (Founder + Partnership + Beta Squad) */}
                   <div className="lg:col-span-1 space-y-6">
-                    {/* Squad Card */}
-                    {app.beta_active && !app.is_owner && !isAcceptedTester && (
-                      <BetaSquadCard
-                        appId={app.id}
-                        betaLimit={app.beta_limit}
-                        testersCount={app.testers_count}
-                        userTesterStatus={app.user_tester_status}
-                        isOwner={app.is_owner}
-                        betaInstructions={app.beta_instructions}
-                        onJoined={() => refetch()}
-                        onAccessMission={() => refetch()}
-                      />
-                    )}
-
                     {/* Founder Card */}
                     <div className="space-y-4">
                       <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">
@@ -553,6 +555,77 @@ export default function AppDetail() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Partnership section */}
+                    {app.open_to_partnerships && (
+                      <div className="p-4 bg-primary/[0.03] border border-primary/10 rounded-2xl shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <UserPlus className="w-12 h-12 text-primary" />
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="p-1.5 bg-primary/10 rounded-lg">
+                            <UserPlus className="w-4 h-4 text-primary" />
+                          </div>
+                          <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">
+                            {tPartner('detail.title')}
+                          </h3>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-4 leading-relaxed pr-6">
+                          {tPartner('detail.description')}
+                        </p>
+                        
+                        <div className="flex flex-wrap gap-1.5 mb-4">
+                          {app.partnership_types?.map((type: string) => {
+                            const colors = type === 'investor' 
+                              ? "bg-purple-100 text-purple-700 border-purple-200" 
+                              : type === 'tech_partner'
+                                ? "bg-blue-100 text-blue-700 border-blue-200"
+                                : "bg-orange-100 text-orange-700 border-orange-200";
+                            
+                            return (
+                              <span 
+                                key={type}
+                                className={cn("px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border shadow-xs", colors)}
+                              >
+                                {tPartner(`types.${type}`)}
+                              </span>
+                            );
+                          })}
+                        </div>
+
+                        {user?.id !== app.owner?.id && (
+                          <Button 
+                            onClick={() => {
+                              navigate(`/chat?user=${app.owner?.id}`);
+                            }}
+                            className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-xs font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98]"
+                          >
+                            {tPartner('detail.contactButton')}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Beta Squad Section */}
+                    {app.beta_active && !app.is_owner && !isAcceptedTester && (
+                      <div className="space-y-4">
+                        <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider ml-1">
+                          {t('openForTesting', { defaultValue: 'OPEN FOR TESTING' })}
+                        </h3>
+                        <BetaSquadCard
+                          appId={app.id}
+                          betaLimit={app.beta_limit}
+                          testersCount={app.testers_count}
+                          userTesterStatus={app.user_tester_status}
+                          isOwner={app.is_owner}
+                          betaInstructions={app.beta_instructions}
+                          onJoined={() => refetch()}
+                          onAccessMission={() => refetch()}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -561,6 +634,62 @@ export default function AppDetail() {
         </div>
       </main>
 
+      {/* Lightbox UI */}
+      {selectedScreenshotIndex !== null && app.screenshots && (
+        <Dialog open={selectedScreenshotIndex !== null} onOpenChange={() => setSelectedScreenshotIndex(null)}>
+          <DialogContent 
+            overlayClassName="bg-black/90"
+            className="max-w-7xl border-none bg-transparent p-0 overflow-hidden shadow-none flex items-center justify-center pointer-events-none"
+            hideClose
+          >
+            <div className="relative w-full h-[90vh] flex items-center justify-center p-4 pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+              {/* Close button */}
+              <button 
+                onClick={() => setSelectedScreenshotIndex(null)}
+                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Navigation arrows */}
+              {app.screenshots.length > 1 && (
+                <>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedScreenshotIndex((prev) => (prev !== null ? (prev - 1 + app.screenshots!.length) % app.screenshots!.length : null));
+                    }}
+                    className="absolute left-4 z-50 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+                  >
+                    <ChevronLeft className="w-8 h-8" />
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedScreenshotIndex((prev) => (prev !== null ? (prev + 1) % app.screenshots!.length : null));
+                    }}
+                    className="absolute right-4 z-50 p-3 rounded-full bg-black/40 text-white hover:bg-black/60 transition-colors"
+                  >
+                    <ChevronRight className="w-8 h-8" />
+                  </button>
+                </>
+              )}
+
+              {/* Image */}
+              <img 
+                src={app.screenshots[selectedScreenshotIndex]} 
+                alt={`Screenshot ${selectedScreenshotIndex + 1}`}
+                className="max-w-full max-h-full object-contain select-none shadow-2xl"
+              />
+
+              {/* Index Indicator */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/40 text-white text-xs font-medium">
+                {selectedScreenshotIndex + 1} / {app.screenshots.length}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
       {/* Author Follow Dialog */}
       <AuthorFollowDialog
         open={followDialogOpen}

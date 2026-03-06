@@ -55,11 +55,27 @@
        );
      }
  
-     // Fetch profiles for these user IDs
-     const { data: profilesData } = await supabaseAdmin
-       .from("profiles")
-       .select("id, username, name, avatar_url, tagline")
-       .in("id", userIds);
+     // Fetch profiles for these user IDs with app counts
+     const { data: profilesData, error: profilesError } = await supabaseAdmin
+       .from('profiles')
+       .select(`
+         id, 
+         username, 
+         name, 
+         avatar_url, 
+         tagline,
+         apps:apps(count),
+         co_founded:app_founders(app_id, apps!inner(user_id))
+       `)
+       .in('id', userIds);
+ 
+     if (profilesError) {
+       console.error("Error fetching profiles:", profilesError);
+       return new Response(
+         JSON.stringify({ success: false, error: "Database error fetching profiles" }),
+         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+       );
+     }
  
      if (!profilesData || profilesData.length === 0) {
        return new Response(
@@ -73,7 +89,7 @@
        (p) => !p.name || !p.avatar_url
      );
      
-     let authUsersMap: Record<string, { name: string | null; avatar_url: string | null }> = {};
+     const authUsersMap: Record<string, { name: string | null; avatar_url: string | null }> = {};
      
      if (profilesNeedingAuthData.length > 0) {
        const { data: authData } = await supabaseAdmin.auth.admin.listUsers({
@@ -108,14 +124,26 @@
      // Build the final profiles list with fallback to auth.users data
      const enrichedProfiles = profilesData.map((p) => {
        const authData = authUsersMap[p.id];
-       return {
-         id: p.id,
-         username: p.username,
-         name: p.name || authData?.name || null,
-         avatar_url: p.avatar_url || authData?.avatar_url || null,
-         tagline: p.tagline,
-         isFollowing: currentUserFollowing.includes(p.id),
-       };
+       
+        // Calculate active apps count (owned + co-founded, deduplicated)
+        const ownedCount = Array.isArray(p.apps) ? (p.apps[0]?.count || 0) : ((p.apps as any)?.count || 0);
+        const coFoundedApps = p.co_founded || [];
+        // Only count co-founded apps where the user is NOT the owner
+        const uniqueCoFoundedCount = Array.isArray(coFoundedApps) 
+          ? coFoundedApps.filter((cf: any) => cf.apps?.user_id !== p.id).length 
+          : 0;
+          
+        const activeAppsCount = ownedCount + uniqueCoFoundedCount;
+        
+        return {
+          id: p.id,
+          username: p.username,
+          name: p.name || authData?.name || null,
+          avatar_url: p.avatar_url || authData?.avatar_url || null,
+          tagline: p.tagline,
+          isFollowing: currentUserFollowing.includes(p.id),
+          activeAppsCount: activeAppsCount
+        };
      });
  
      return new Response(

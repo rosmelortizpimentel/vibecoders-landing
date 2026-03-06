@@ -117,7 +117,7 @@ export function useDashboardStats() {
       // until the user actually follows them.
       const { data: communityData } = await supabase
         .from('profiles')
-        .select('id, name, username, avatar_url, banner_url, tagline, apps(count)')
+        .select('id, name, username, avatar_url, banner_url, tagline, apps(count), app_founders(count)')
         .not('id', 'eq', user.id)
         .not('username', 'is', null)
         .order('created_at', { ascending: false })
@@ -131,6 +131,7 @@ export function useDashboardStats() {
         banner_url: string | null;
         tagline: string | null;
         apps?: { count: number }[];
+        app_founders?: { count: number }[];
       }) => ({
         id: p.id,
         name: p.name || 'User',
@@ -138,7 +139,7 @@ export function useDashboardStats() {
         avatarUrl: p.avatar_url || undefined,
         bannerUrl: p.banner_url || undefined,
         tagline: p.tagline || undefined,
-        activeAppsCount: p.apps?.[0]?.count || 0,
+        activeAppsCount: (p.apps?.[0]?.count || 0) + (p.app_founders?.[0]?.count || 0),
         isFollowing: false,
       }));
 

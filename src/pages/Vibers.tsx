@@ -284,8 +284,11 @@ function ViberCard({ user }: { user: ProfileSummary }) {
             </div>
           </Link>
 
-          <div className="mt-3 flex flex-col items-center text-center w-full">
-            <h3 className="text-base font-bold text-foreground leading-tight truncate w-full px-2">
+          <Link 
+            to={`/@${user.username}`}
+            className="mt-3 flex flex-col items-center text-center w-full group/name"
+          >
+            <h3 className="text-base font-bold text-foreground leading-tight truncate w-full px-2 group-hover/name:text-primary group-hover/name:underline underline-offset-4 transition-all">
               {user.name}
             </h3>
             {user.tagline && (
@@ -296,8 +299,8 @@ function ViberCard({ user }: { user: ProfileSummary }) {
             <p className="mt-1 text-xs text-muted-foreground/60 font-medium truncate w-full px-2">
               @{user.username}
             </p>
-          </div>
-
+          </Link>
+          
           <div className="mt-4 flex flex-col items-center gap-2 w-full flex-1 justify-center">
             {(user.activeAppsCount || 0) > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
@@ -484,7 +487,7 @@ function ConnectionsModal({ isOpen, onClose, userId, userName, type }: { isOpen:
                     </Avatar>
                     <div className="flex flex-col min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
+                        <span className="text-sm font-semibold truncate group-hover:text-primary group-hover:underline underline-offset-4 transition-all">
                           {profile.name}
                         </span>
                         {(profile.activeAppsCount || 0) > 0 && (

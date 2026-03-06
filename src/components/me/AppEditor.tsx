@@ -26,7 +26,7 @@ import { Camera, Trash2, ChevronUp, Clock, Lightbulb, Hammer, Shield } from 'luc
 import * as LucideIcons from 'lucide-react';
 import { VerificationBadge } from './VerificationBadge';
 import { VerifyDomainModal } from './VerifyDomainModal';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { TagInput } from '@/components/ui/tag-input';
 import { MarkdownEditor } from '@/components/beta/MarkdownEditor';
 import {
@@ -421,7 +421,9 @@ interface AppEditorProps {
             {!isPremium && (
               <div className="flex items-center gap-2">
                 <ProBadge />
-                <UpgradeBadge />
+                <Link to="/choose-plan">
+                  <UpgradeBadge />
+                </Link>
               </div>
             )}
             {isPremium && <ProBadge />}
@@ -549,25 +551,47 @@ interface AppEditorProps {
           </div>
         </div>
 
-        {/* Verification & Action Bar */}
-        <div className="bg-background border border-border/60 shadow-sm rounded-xl p-6">
+        {/* 6. Verification & Action Bar */}
+        <div className={cn(
+          "bg-background border border-border/60 shadow-sm rounded-xl p-6 transition-all duration-500",
+          localApp.is_verified && isPremium ? "border-primary/20 bg-primary/[0.02]" : ""
+        )}>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-4 bg-primary rounded-full" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Verificación de App</h3>
+            </div>
+            {!isPremium && (
+              <div className="flex items-center gap-2">
+                <ProBadge />
+                <Link to="/choose-plan">
+                  <UpgradeBadge />
+                </Link>
+              </div>
+            )}
+            {isPremium && <ProBadge />}
+          </div>
+
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
               <div className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center border-2 transition-colors",
-                localApp.is_verified ? "bg-primary/10 border-primary/20 text-primary" : "bg-muted border-border text-muted-foreground"
+                localApp.is_verified ? "bg-primary/10 border-primary/20 text-primary" : "bg-muted border-border text-muted-foreground",
+                !isPremium && "opacity-50"
               )}>
                 <Shield className={cn("h-6 w-6", localApp.is_verified ? "animate-in zoom-in-50 duration-500" : "")} />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-bold">Verificación de App</h4>
+                  <h4 className={cn("text-sm font-bold", !isPremium && "text-muted-foreground")}>Verificación de App</h4>
                   <VerificationBadge isVerified={localApp.is_verified} />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {localApp.is_verified 
-                    ? `Verificado correctamente el ${formatVerifiedDate(localApp.verified_at)}`
-                    : 'Verifica la propiedad de este dominio para obtener el distintivo de confianza.'
+                  {!isPremium 
+                    ? 'Esta es una función exclusiva para miembros PRO.'
+                    : localApp.is_verified 
+                      ? `Verificado correctamente el ${formatVerifiedDate(localApp.verified_at)}`
+                      : 'Verifica la propiedad de este dominio para obtener el distintivo de confianza.'
                   }
                 </p>
               </div>
@@ -579,7 +603,13 @@ interface AppEditorProps {
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowVerifyModal(true)}
-                  className="flex-1 sm:flex-none border-primary text-primary hover:bg-primary/5 font-bold text-xs h-9 px-4 rounded-lg"
+                  disabled={!isPremium}
+                  className={cn(
+                    "flex-1 sm:flex-none font-bold text-xs h-9 px-4 rounded-lg transition-all",
+                    isPremium 
+                      ? "border-primary text-primary hover:bg-primary/5 shadow-sm shadow-primary/5" 
+                      : "border-border text-muted-foreground bg-muted/20"
+                  )}
                 >
                   Verificar Propiedad
                 </Button>
