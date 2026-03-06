@@ -66,6 +66,7 @@ export function useTechStacks() {
       'Mobile': [],
       'AI/ML': [],
       'Vibe Coding': [],
+      'Otros': [],
     };
 
     stacks.forEach(stack => {
@@ -84,6 +85,8 @@ export function useTechStacks() {
         groups['Backend'].push(stack);
       } else if (tags.includes('frontend') || tags.includes('framework')) {
         groups['Frontend'].push(stack);
+      } else {
+        groups['Otros'].push(stack);
       }
     });
 

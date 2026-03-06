@@ -62,6 +62,8 @@ export interface AppDetailData {
   beta_active: boolean;
   beta_mode: string;
   beta_limit: number;
+  open_to_partnerships: boolean;
+  partnership_types: string[];
   beta_link: string | null;
   beta_instructions: string | null;
   owner: AppOwner;

@@ -1,5 +1,6 @@
-import * as React from 'react';
-import { X, ChevronLeft, ChevronRight, ExternalLink, Heart, Upload, ImageIcon, BadgeCheck, AlertCircle, Trash2, Calendar, LayoutTemplate, Zap } from 'lucide-react';
+import React from 'react';
+import { X, ChevronLeft, ChevronRight, ExternalLink, Heart, Upload, ImageIcon, BadgeCheck, AlertCircle, Trash2, Calendar, LayoutTemplate, Zap, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -63,7 +64,9 @@ interface Founder {
 
 export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaultOwner }: AppDetailViewProps) {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const { t } = useTranslation('publicProfile');
+  const { t: tPartner } = useTranslation('partnerships');
   const [screenshotIndex, setScreenshotIndex] = React.useState(0);
   const [contributors, setContributors] = React.useState<Contributor[]>([]);
   const [loadingContributors, setLoadingContributors] = React.useState(false);
@@ -264,6 +267,23 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
         <div className="flex flex-col items-center text-center">
           {/* Custom Badges Layer */}
           <div className="flex items-center gap-1.5 mb-3 justify-center">
+            {currentApp.open_to_partnerships && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-[#00C853]/10 text-[#00C853] flex-shrink-0 cursor-help border border-[#00C853]/20">
+                      <UserPlus className="w-2.5 h-2.5" />
+                      Partnerships
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-xs">
+                      {currentApp.partnership_types?.map((type: string) => tPartner(`types.${type}`)).join(', ')}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {currentApp.beta_active && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
@@ -341,6 +361,31 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
 
 
 
+        {/* Screenshots */}
+        {currentApp.screenshots && currentApp.screenshots.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+              Screenshots
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {currentApp.screenshots.map((url, index) => (
+                <div 
+                  key={index}
+                  className="aspect-video relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 group/img cursor-zoom-in shadow-xs transition-all hover:shadow-md hover:border-primary/20"
+                  onClick={() => window.open(url, '_blank')}
+                >
+                  <img 
+                    src={url} 
+                    alt={`${currentApp.name} screenshot ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Tech Stack */}
         {currentApp.stacks.length > 0 && (
           <div className="mb-8">
@@ -396,6 +441,50 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
           </div>
         )}
         
+
+        {/* Partnership section */}
+        {currentApp.open_to_partnerships && (
+          <div className="mb-8 p-5 bg-primary/[0.03] border border-primary/10 rounded-2xl shadow-sm relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+              <UserPlus className="w-12 h-12 text-primary" />
+            </div>
+            
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 bg-primary/10 rounded-lg">
+                <UserPlus className="w-4 h-4 text-primary" />
+              </div>
+              <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">
+                {tPartner('detail.title')}
+              </h3>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed pr-8">
+              {tPartner('detail.description')}
+            </p>
+
+            <div className="flex flex-wrap gap-1.5 mb-5">
+              {currentApp.partnership_types?.map((type: string) => (
+                <span 
+                  key={type}
+                  className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white border border-primary/10 text-primary shadow-xs"
+                >
+                  {tPartner(`types.${type}`)}
+                </span>
+              ))}
+            </div>
+
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/chat?user=${currentApp.owner?.id}`);
+              }}
+              className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-xs font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98]"
+            >
+              {tPartner('detail.contactButton')}
+            </Button>
+          </div>
+        )}
+
         {/* Founders Section */}
         {foundersList.length > 0 ? (
           <div className="mb-8">

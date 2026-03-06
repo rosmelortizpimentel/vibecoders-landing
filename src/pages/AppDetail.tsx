@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAppDetail } from '@/hooks/useAppDetail';
 import { useOwnerStats } from '@/hooks/useOwnerStats';
@@ -36,13 +36,13 @@ import {
   Globe,
   UserPlus,
   Users,
+  Loader2,
 } from 'lucide-react';
 import { ProBadge } from '@/components/ui/ProBadge';
 import { UpgradeBadge } from '@/components/ui/UpgradeBadge';
 import { PremiumComparisonModal } from '@/components/ui/PremiumComparisonModal';
 import { useHasFeature } from '@/hooks/useFeatures';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Tooltip,
@@ -50,12 +50,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import { useAppFounders } from '@/hooks/useAppFounders';
 import { FounderSearchDialog } from '@/components/profile/FounderSearchDialog';
 import {
@@ -79,6 +73,7 @@ export default function AppDetail() {
   const { t } = useTranslation('beta');
   const { t: tCommon } = useTranslation('common');
   const { t: tProfile } = useTranslation('publicProfile');
+  const { t: tPartner } = useTranslation('partnerships');
   const { user } = useAuth();
   const { app, loading, error, refetch } = useAppDetail(appId);
   const { feedback } = useTesterFeedback(appId);
@@ -197,6 +192,8 @@ export default function AppDetail() {
     category: app.category,
     tags: app.tags || [],
     beta_active: app.beta_active || false,
+    open_to_partnerships: app.open_to_partnerships || false,
+    partnership_types: app.partnership_types || [],
     stacks: app.stacks,
     owner: {
       id: app.owner.id,
@@ -314,25 +311,9 @@ export default function AppDetail() {
             </div>
           ) : (
             /* PUBLIC/OWNER VIEW - Upgraded to match PublicProfile detail style */
-            <Tabs defaultValue="app" className="w-full">
-              <div className="flex items-center justify-between mb-6">
-                <TabsList className="bg-transparent border-b border-gray-100 w-full justify-start rounded-none h-auto p-0 gap-8">
-                  <TabsTrigger 
-                    value="app" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-sm font-bold text-gray-400 data-[state=active]:text-gray-900"
-                  >
-                    Proyecto
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="founders" 
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-0 py-3 text-sm font-bold text-gray-400 data-[state=active]:text-gray-900"
-                  >
-                    Founders
-                  </TabsTrigger>
-                </TabsList>
-              </div>
+            <div className="w-full">
 
-              <TabsContent value="app" className="mt-0">
+              <div className="mt-0">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Left Column (2/3) - Main App Content */}
                   <div className="lg:col-span-2 space-y-8">
@@ -419,6 +400,31 @@ export default function AppDetail() {
                           </div>
                         )}
 
+                        {/* Screenshot Gallery */}
+                        {app.screenshots && app.screenshots.length > 0 && (
+                          <div className="mt-8 pt-8 border-t border-gray-50">
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-5">
+                              {tCommon('screenshots', { defaultValue: 'Screenshots' })}
+                            </h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              {app.screenshots.map((url, index) => (
+                                <div 
+                                  key={index}
+                                  className="aspect-video relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 group/img cursor-zoom-in shadow-xs transition-all hover:shadow-md hover:border-primary/20"
+                                  onClick={() => window.open(url, '_blank')}
+                                >
+                                  <img 
+                                    src={url} 
+                                    alt={`${app.name} screenshot ${index + 1}`}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors" />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
 
                         {/* Tech Stack */}
                         {app.stacks && app.stacks.length > 0 && (
@@ -441,6 +447,48 @@ export default function AppDetail() {
                         )}
                       </div>
                     </Card>
+
+                    {/* Partnership section */}
+                    {app.open_to_partnerships && (
+                      <div className="p-5 bg-primary/[0.03] border border-primary/10 rounded-2xl shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <UserPlus className="w-12 h-12 text-primary" />
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="p-1.5 bg-primary/10 rounded-lg">
+                            <UserPlus className="w-4 h-4 text-primary" />
+                          </div>
+                          <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">
+                            {tPartner('detail.title')}
+                          </h3>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-4 leading-relaxed pr-8">
+                          {tPartner('detail.description')}
+                        </p>
+
+                        <div className="flex flex-wrap gap-1.5 mb-5">
+                          {app.partnership_types?.map((type: string) => (
+                            <span 
+                              key={type}
+                              className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white border border-primary/10 text-primary shadow-xs"
+                            >
+                              {tPartner(`types.${type}`)}
+                            </span>
+                          ))}
+                        </div>
+
+                        <Button 
+                          onClick={() => {
+                            navigate(`/chat?user=${app.owner?.id}`);
+                          }}
+                          className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-xs font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98]"
+                        >
+                          {tPartner('detail.contactButton')}
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Contributors / Testers Hall of Fame */}
                     {app.testers && app.testers.length > 0 && (
@@ -507,130 +555,8 @@ export default function AppDetail() {
                     </div>
                   </div>
                 </div>
-              </TabsContent>
-
-              <TabsContent value="founders" className="mt-0 relative min-h-[400px]">
-                <div className="max-w-4xl mx-auto space-y-8">
-                  <div className="flex items-center justify-end gap-3 flex-wrap">
-                    {canManageFounders && (
-                      <div className="flex items-center gap-3">
-                        {!isPremium ? (
-                          <PremiumComparisonModal>
-                            <Button 
-                              className="rounded-full gap-2 shadow-sm"
-                            >
-                              <UserPlus className="w-4 h-4" />
-                              Agregar Co-Founder
-                              <ProBadge className="ml-1" />
-                            </Button>
-                          </PremiumComparisonModal>
-                        ) : (
-                          <Button 
-                            onClick={() => setIsFounderSearchOpen(true)}
-                            className="rounded-full gap-2 shadow-sm"
-                          >
-                            <UserPlus className="w-4 h-4" />
-                            Agregar Co-Founder
-                            <ProBadge className="ml-1" />
-                          </Button>
-                        )}
-                        
-                        {isFree && !isLoadingTier && (
-                          <UpgradeBadge className="ml-0" />
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {founders.map((founder) => (
-                      <Card key={founder.id} className="border-none shadow-sm bg-white overflow-hidden group">
-                        <CardContent className="p-6">
-                          <div className="flex items-center gap-4">
-                            <Avatar className="w-16 h-16 border-2 border-white shadow-sm ring-1 ring-gray-100">
-                              <AvatarImage src={founder.profile?.avatar_url || undefined} />
-                              <AvatarFallback className="text-xl font-bold">
-                                {(founder.profile?.name || 'U').charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <Link 
-                                to={`/@${founder.profile?.username}`}
-                                className="font-bold text-gray-900 hover:text-primary transition-colors truncate block"
-                              >
-                                {founder.profile?.name || founder.profile?.username || 'Unknown'}
-                                {founder.role === 'owner' && (
-                                  <BadgeCheck className="inline-block h-4 w-4 text-primary ml-1.5 align-text-bottom" />
-                                )}
-                              </Link>
-                              <p className="text-xs text-gray-500 line-clamp-2 mt-0.5 leading-relaxed">
-                                @{founder.profile?.username}
-                              </p>
-                              
-                              <div className="mt-3 flex items-center gap-2">
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                                  founder.role === 'owner' 
-                                    ? 'bg-primary/5 text-primary border-primary/20' 
-                                    : 'bg-gray-50 text-gray-500 border-gray-200'
-                                }`}>
-                                  {founder.role === 'owner' ? 'Owner' : 'Co-founder'}
-                                </span>
-                              </div>
-                            </div>
-
-                            {canManageFounders && founder.role === 'co-founder' && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8 text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                                  >
-                                    <LogOut className="w-4 h-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Remover Co-founder</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      ¿Estás seguro que deseas remover a <strong>{founder.profile?.name || founder.profile?.username}</strong> como co-founder? 
-                                      Perderá todos los privilegios de edición sobre este proyecto.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                      onClick={() => removeFounder.mutate(founder.id)}
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    >
-                                      Remover
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  {!canManageFounders && (
-                     <div className="p-4 rounded-xl bg-gray-50 border border-gray-100 flex items-center gap-3 text-sm text-gray-500">
-                        <Shield className="w-4 h-4 text-primary" />
-                        Solo el dueño original puede gestionar el equipo de founders.
-                     </div>
-                  )}
-                </div>
-
-                <FounderSearchDialog
-                  isOpen={isFounderSearchOpen}
-                  onClose={() => setIsFounderSearchOpen(false)}
-                  onSelect={handleInviteFounder}
-                  existingFounderIds={founders.map(f => f.user_id)}
-                />
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           )}
         </div>
       </main>

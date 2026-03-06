@@ -273,6 +273,8 @@ export type Database = {
           is_visible: boolean
           logo_url: string | null
           name: string | null
+          open_to_partnerships: boolean | null
+          partnership_types: string[] | null
           screenshots: string[] | null
           status_id: string | null
           tagline: string | null
