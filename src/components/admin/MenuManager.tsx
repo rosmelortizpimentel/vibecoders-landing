@@ -35,6 +35,7 @@ interface MenuItem {
   is_active: boolean;
   requires_waitlist: boolean;
   css_class: string | null;
+  badge_text: string | null;
 }
 
 function resolveTranslatedLabel(labelKey: string, tCommon: (key: string) => string, tNotif: (key: string) => string): string {

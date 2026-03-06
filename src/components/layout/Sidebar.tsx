@@ -111,7 +111,7 @@ export function Sidebar() {
     return t(labelKey);
   };
 
-  type NavItem = { path: string; label: string; icon: typeof LayoutDashboard; className?: string; badge?: number; isPro?: boolean } | { type: 'separator'; path: string };
+  type NavItem = { path: string; label: string; icon: typeof LayoutDashboard; className?: string; badge?: number; isPro?: boolean; badgeText?: string | null } | { type: 'separator'; path: string };
   
   const navLinks: NavItem[] = [];
   let lastSection = '';
@@ -127,6 +127,7 @@ export function Sidebar() {
       icon: item.icon,
       className: item.cssClass || undefined,
       badge: badgeMap[item.key] || undefined,
+      badgeText: item.badgeText,
     });
 
     // Inject requested options for local validation
@@ -193,7 +194,7 @@ export function Sidebar() {
           
 
           // Cast safely because we checked for separator
-          const item = link as { path: string; label: string; icon: LucideIcon; className?: string; badge?: number; isPro?: boolean };
+          const item = link as { path: string; label: string; icon: LucideIcon; className?: string; badge?: number; isPro?: boolean; badgeText?: string | null };
           const Icon = item.icon;
           const active = isActive(item.path);
           
@@ -237,6 +238,11 @@ export function Sidebar() {
                       {item.badge}
                     </Badge>
                   ) : null}
+                  {item.badgeText && (
+                    <Badge variant="outline" className="ml-auto h-5 px-1.5 flex items-center justify-center rounded-full text-[10px] font-bold shadow-sm border-none bg-black text-white hover:bg-black/90">
+                      {item.badgeText}
+                    </Badge>
+                  )}
                 </>
               )}
               
