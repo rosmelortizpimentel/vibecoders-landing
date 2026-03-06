@@ -1,3 +1,4 @@
+import React from 'react';
 import { X, ChevronLeft, ChevronRight, ExternalLink, Heart, Upload, ImageIcon, BadgeCheck, AlertCircle, Trash2, Calendar, LayoutTemplate, Zap, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -359,6 +360,31 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
         </div>
 
 
+
+        {/* Screenshots */}
+        {currentApp.screenshots && currentApp.screenshots.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">
+              Screenshots
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              {currentApp.screenshots.map((url, index) => (
+                <div 
+                  key={index}
+                  className="aspect-video relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 group/img cursor-zoom-in shadow-xs transition-all hover:shadow-md hover:border-primary/20"
+                  onClick={() => window.open(url, '_blank')}
+                >
+                  <img 
+                    src={url} 
+                    alt={`${currentApp.name} screenshot ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Tech Stack */}
         {currentApp.stacks.length > 0 && (

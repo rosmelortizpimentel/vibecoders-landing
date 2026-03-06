@@ -56,15 +56,8 @@ export default function PartnershipsDirectory() {
   };
 
   return (
-    <div className="flex-1 space-y-6 w-full max-w-full overflow-x-hidden min-w-0 px-0.5 pb-24">
-      <header className="px-1">
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight mb-2">
-          {tPartner('title', { defaultValue: 'Directorio de Partnerships' })}
-        </h1>
-        <p className="text-muted-foreground max-w-2xl">
-          {tPartner('subtitle', { defaultValue: 'Conecta con otros builders, encuentra inversores y forma alianzas estratégicas.' })}
-        </p>
-      </header>
+    <div className="flex-1 space-y-6 w-full max-w-full overflow-x-hidden min-w-0 px-0.5 pb-24 pt-4">
+      {/* Search Bar */}
 
       {/* Search Bar */}
       <div className="flex items-center gap-4 px-1">

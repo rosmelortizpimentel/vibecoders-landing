@@ -111,7 +111,7 @@ export function AppCard({ app, onExpand, onToggleVisibility, onVerify, dragHandl
               </TooltipTrigger>
               <TooltipContent side="top">
                 <p className="text-xs">
-                  {app.partnership_types?.map(type => tPartner(`types.${type}.label`)).join(', ')}
+                  {app.partnership_types?.map(type => tPartner(`types.${type}`)).join(', ')}
                 </p>
               </TooltipContent>
             </Tooltip>

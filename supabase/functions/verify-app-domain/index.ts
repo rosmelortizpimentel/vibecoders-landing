@@ -213,8 +213,12 @@
    } catch (error) {
      console.error('[verify-app-domain] Unexpected error:', error);
      return new Response(
-       JSON.stringify({ success: false, error: 'internal_error', message: 'Error interno del servidor' }),
-       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+       JSON.stringify({ 
+         success: false, 
+         error: 'internal_error', 
+         message: error instanceof Error ? `Error interno: ${error.message} \nStack: ${error.stack}` : `Error: ${String(error)}` 
+       }),
+       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
      );
    }
  });

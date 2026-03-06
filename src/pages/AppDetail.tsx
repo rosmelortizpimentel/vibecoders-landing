@@ -400,6 +400,31 @@ export default function AppDetail() {
                           </div>
                         )}
 
+                        {/* Screenshot Gallery */}
+                        {app.screenshots && app.screenshots.length > 0 && (
+                          <div className="mt-8 pt-8 border-t border-gray-50">
+                            <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-5">
+                              {tCommon('screenshots', { defaultValue: 'Screenshots' })}
+                            </h3>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                              {app.screenshots.map((url, index) => (
+                                <div 
+                                  key={index}
+                                  className="aspect-video relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100 group/img cursor-zoom-in shadow-xs transition-all hover:shadow-md hover:border-primary/20"
+                                  onClick={() => window.open(url, '_blank')}
+                                >
+                                  <img 
+                                    src={url} 
+                                    alt={`${app.name} screenshot ${index + 1}`}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover/img:scale-105"
+                                  />
+                                  <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/5 transition-colors" />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
 
                         {/* Tech Stack */}
                         {app.stacks && app.stacks.length > 0 && (
