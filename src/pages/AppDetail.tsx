@@ -197,6 +197,8 @@ export default function AppDetail() {
     category: app.category,
     tags: app.tags || [],
     beta_active: app.beta_active || false,
+    open_to_partnerships: app.open_to_partnerships || false,
+    partnership_types: app.partnership_types || [],
     stacks: app.stacks,
     owner: {
       id: app.owner.id,

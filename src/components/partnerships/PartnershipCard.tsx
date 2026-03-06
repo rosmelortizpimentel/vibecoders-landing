@@ -16,8 +16,8 @@ export function PartnershipCard({ app, onContactClick }: PartnershipCardProps) {
     <article className="group bg-card border border-border rounded-lg overflow-hidden transition-all duration-200 hover:border-primary hover:shadow-md flex flex-col h-full ring-1 ring-border/50">
       <div className="p-5 flex-1 flex flex-col">
         {/* Header: Logo and Title */}
-        <div className="flex items-start gap-4 mb-4">
-          <div className="w-12 h-12 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+        <Link to={`/app/${app.id}`} className="flex items-start gap-4 mb-4 group/header">
+          <div className="w-12 h-12 rounded-xl bg-white border border-border flex items-center justify-center shrink-0 overflow-hidden shadow-sm transition-transform duration-200 group-hover/header:scale-105">
             {app.logo_url ? (
               <img src={app.logo_url} alt={app.name || ''} className="w-full h-full object-cover" />
             ) : (
@@ -25,20 +25,20 @@ export function PartnershipCard({ app, onContactClick }: PartnershipCardProps) {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-foreground leading-tight truncate group-hover:text-primary transition-colors">
+            <h3 className="text-lg font-bold text-foreground leading-tight truncate group-hover/header:text-primary transition-colors">
               {app.name}
             </h3>
             <p className="text-sm font-medium text-muted-foreground truncate mt-0.5">
               {app.tagline}
             </p>
           </div>
-        </div>
+        </Link>
 
         {/* Badges */}
         <div className="flex flex-wrap gap-1.5 mb-4">
           {app.partnership_types?.map((type) => (
             <span key={type} className="px-2 py-0.5 rounded-full bg-[#00C853]/10 text-[#00C853] border border-[#00C853]/20 text-[10px] font-bold uppercase tracking-wider shadow-sm">
-              {tPartner(`types.${type}.label`)}
+              {tPartner(`types.${type}`)}
             </span>
           ))}
           {app.category && (
@@ -72,7 +72,7 @@ export function PartnershipCard({ app, onContactClick }: PartnershipCardProps) {
             className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors text-sm font-bold shrink-0 shadow-sm"
           >
             <UserPlus className="w-4 h-4" />
-            <span className="hidden sm:inline">{tPartner('contactButton', { defaultValue: 'Me interesa' })}</span>
+            <span className="hidden sm:inline">{tPartner('card.interested', { defaultValue: 'Me interesa' })}</span>
           </button>
         </div>
       </div>

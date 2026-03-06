@@ -37,6 +37,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { ProBadge } from '@/components/ui/ProBadge';
+import { UpgradeBadge } from '@/components/ui/UpgradeBadge';
 
 interface AppEditorProps {
   app: AppData;
@@ -417,10 +419,12 @@ interface AppEditorProps {
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{tPartner('settings.title')}</h3>
             </div>
             {!isPremium && (
-              <Badge variant="outline" className="text-[10px] font-semibold text-muted-foreground border-border/50">
-                Builder Pro
-              </Badge>
+              <div className="flex items-center gap-2">
+                <ProBadge />
+                <UpgradeBadge />
+              </div>
             )}
+            {isPremium && <ProBadge />}
           </div>
 
           <div className="space-y-4">

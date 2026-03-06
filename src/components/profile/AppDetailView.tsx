@@ -1,5 +1,5 @@
-import * as React from 'react';
 import { X, ChevronLeft, ChevronRight, ExternalLink, Heart, Upload, ImageIcon, BadgeCheck, AlertCircle, Trash2, Calendar, LayoutTemplate, Zap, UserPlus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -63,6 +63,7 @@ interface Founder {
 
 export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaultOwner }: AppDetailViewProps) {
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const { t } = useTranslation('publicProfile');
   const { t: tPartner } = useTranslation('partnerships');
   const [screenshotIndex, setScreenshotIndex] = React.useState(0);
@@ -276,7 +277,7 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
                   </TooltipTrigger>
                   <TooltipContent side="top">
                     <p className="text-xs">
-                      {currentApp.partnership_types?.map((type: string) => tPartner(`types.${type}.label`)).join(', ')}
+                      {currentApp.partnership_types?.map((type: string) => tPartner(`types.${type}`)).join(', ')}
                     </p>
                   </TooltipContent>
                 </Tooltip>
@@ -414,6 +415,46 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
           </div>
         )}
         
+        {/* Partnership section */}
+        {currentApp.open_to_partnerships && (
+          <div className="mb-8 p-6 bg-[#00C853]/5 border border-[#00C853]/10 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="p-1.5 bg-[#00C853]/10 rounded-lg">
+                <UserPlus className="w-4 h-4 text-[#00C853]" />
+              </div>
+              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                {tPartner('detail.title')}
+              </h3>
+            </div>
+            
+            <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+              {tPartner('detail.description')}
+            </p>
+
+            <div className="flex flex-wrap gap-2 mb-6">
+              {currentApp.partnership_types?.map((type: string) => (
+                <span 
+                  key={type}
+                  className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white border border-[#00C853]/20 text-[#00C853] shadow-sm"
+                >
+                  {tPartner(`types.${type}`)}
+                </span>
+              ))}
+            </div>
+
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/chat?user=${currentApp.owner?.id}`);
+              }}
+              className="w-full bg-[#00C853] hover:bg-[#00C853]/90 text-white rounded-xl h-11 text-sm font-bold shadow-md shadow-[#00C853]/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              {tPartner('detail.contactButton')}
+            </Button>
+          </div>
+        )}
+
         {/* Founders Section */}
         {foundersList.length > 0 ? (
           <div className="mb-8">

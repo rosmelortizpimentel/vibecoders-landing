@@ -21,5 +21,10 @@
     "description": "Activa esta opción para aparecer en el directorio público y conectar con inversores o partners.",
     "selectRoles": "Selecciona qué estás buscando:"
   },
-  "chatMessage": "Hola, vi tu app {{appName}} en el directorio de partnerships y me interesa conectar como {{role}}."
+  "chatMessage": "Hola, vi tu app {{appName}} en el directorio de partnerships y me interesa conectar como {{role}}.",
+  "detail": {
+    "title": "Alianzas Estratégicas",
+    "description": "Este proyecto busca partners para crecer. Si te interesa colaborar, contacta al builder.",
+    "contactButton": "Me interesa"
+  }
 }

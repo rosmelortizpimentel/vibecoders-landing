@@ -267,6 +267,18 @@ export function useTranslation<T extends Section>(section: T): { t: (key: string
       if (result && typeof result === 'object' && k in result) {
         result = (result as Record<string, unknown>)[k];
       } else {
+        // Handle defaultValue if provided
+        if (data?.defaultValue) {
+          let defaultValue = String(data.defaultValue);
+          // Still process interpolation even if using default value
+          Object.entries(data).forEach(([dk, dv]) => {
+            if (dk !== 'defaultValue') {
+              defaultValue = defaultValue.replace(`{{${dk}}}`, String(dv));
+            }
+          });
+          return defaultValue;
+        }
+
         // Fallback to English if not foundational or current language is not English
         if (language !== 'en') {
           const englishTranslations = translations['en'][section];
@@ -278,7 +290,15 @@ export function useTranslation<T extends Section>(section: T): { t: (key: string
               return key;
             }
           }
-          return typeof englishResult === 'string' ? englishResult : key;
+          let finalEnglishResult = typeof englishResult === 'string' ? englishResult : key;
+          if (data) {
+            Object.entries(data).forEach(([k, v]) => {
+              if (k !== 'defaultValue') {
+                finalEnglishResult = finalEnglishResult.replace(`{{${k}}}`, String(v));
+              }
+            });
+          }
+          return finalEnglishResult;
         }
         return key; // Return key if not found
       }
@@ -287,7 +307,9 @@ export function useTranslation<T extends Section>(section: T): { t: (key: string
     
     if (data) {
       Object.entries(data).forEach(([k, v]) => {
-        finalResult = finalResult.replace(`{{${k}}}`, String(v));
+        if (k !== 'defaultValue') {
+          finalResult = finalResult.replace(`{{${k}}}`, String(v));
+        }
       });
     }
     
