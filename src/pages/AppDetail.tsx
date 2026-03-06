@@ -425,25 +425,29 @@ export default function AppDetail() {
 
                     {/* Partnership section */}
                     {app.open_to_partnerships && (
-                      <div className="p-6 bg-[#00C853]/5 border border-[#00C853]/10 rounded-2xl shadow-sm">
+                      <div className="p-5 bg-primary/[0.03] border border-primary/10 rounded-2xl shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                          <UserPlus className="w-12 h-12 text-primary" />
+                        </div>
+                        
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="p-1.5 bg-[#00C853]/10 rounded-lg">
-                            <UserPlus className="w-4 h-4 text-[#00C853]" />
+                          <div className="p-1.5 bg-primary/10 rounded-lg">
+                            <UserPlus className="w-4 h-4 text-primary" />
                           </div>
-                          <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">
+                          <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">
                             {tPartner('detail.title')}
                           </h3>
                         </div>
                         
-                        <p className="text-sm text-gray-600 mb-5 leading-relaxed">
+                        <p className="text-sm text-gray-600 mb-4 leading-relaxed pr-8">
                           {tPartner('detail.description')}
                         </p>
 
-                        <div className="flex flex-wrap gap-2 mb-6">
+                        <div className="flex flex-wrap gap-1.5 mb-5">
                           {app.partnership_types?.map((type: string) => (
                             <span 
                               key={type}
-                              className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white border border-[#00C853]/20 text-[#00C853] shadow-sm"
+                              className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-white border border-primary/10 text-primary shadow-xs"
                             >
                               {tPartner(`types.${type}`)}
                             </span>
@@ -454,9 +458,8 @@ export default function AppDetail() {
                           onClick={() => {
                             navigate(`/chat?user=${app.owner?.id}`);
                           }}
-                          className="w-full bg-[#00C853] hover:bg-[#00C853]/90 text-white rounded-xl h-11 text-sm font-bold shadow-md shadow-[#00C853]/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                          className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-xs font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98]"
                         >
-                          <UserPlus className="w-4 h-4 mr-2" />
                           {tPartner('detail.contactButton')}
                         </Button>
                       </div>
