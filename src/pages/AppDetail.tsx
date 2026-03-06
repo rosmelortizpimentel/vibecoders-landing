@@ -36,13 +36,13 @@ import {
   Globe,
   UserPlus,
   Users,
+  Loader2,
 } from 'lucide-react';
 import { ProBadge } from '@/components/ui/ProBadge';
 import { UpgradeBadge } from '@/components/ui/UpgradeBadge';
 import { PremiumComparisonModal } from '@/components/ui/PremiumComparisonModal';
 import { useHasFeature } from '@/hooks/useFeatures';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Tooltip,
@@ -50,12 +50,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import { useAppFounders } from '@/hooks/useAppFounders';
 import { FounderSearchDialog } from '@/components/profile/FounderSearchDialog';
 import {
@@ -72,7 +66,6 @@ import {
 
 import { AppDetailView } from '@/components/profile/AppDetailView';
 import { PublicApp } from '@/hooks/usePublicProfile';
-import { UserPlus } from 'lucide-react';
 
 export default function AppDetail() {
   const { appId } = useParams<{ appId: string }>();
