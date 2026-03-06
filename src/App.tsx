@@ -23,6 +23,7 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Me from "./pages/Me";
 import BuildLog from "./pages/BuildLog";
+import PartnershipsDirectory from "./pages/PartnershipsDirectory";
 import BuildLogOgDynamic from "./pages/BuildLogOgDynamic";
 import Admin from "./pages/Admin";
 import PublicProfile from "./pages/PublicProfile";
@@ -104,8 +105,6 @@ const App = () => {
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/post/:slug" element={<Post />} />
               
-              
-              
               {/* Plan selection & payment */}
               <Route path="/choose-plan" element={<ChoosePlan />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
@@ -139,6 +138,10 @@ const App = () => {
                   <Route path="/apps/:appId/founders" element={<MyAppHub />} />
                   <Route path="/apps/:appId/banners" element={<MyAppHub />} />
                   <Route path="/apps/:appId/banners/:bannerId" element={<MyAppHub />} />
+                  
+                  {/* Partnerships Directory - Not in Sidebar but inside App */}
+                  <Route path="/partnerships" element={<PartnershipsDirectory />} />
+
                   <Route path="/my-apps" element={<Navigate to="/apps" replace />} />
                   <Route path="/my-apps/:appId" element={<Navigate to="/apps" replace />} />
                   <Route path="/beta-testing" element={<Navigate to="/apps" replace />} />

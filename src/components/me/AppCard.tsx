@@ -2,9 +2,11 @@ import { AppData } from '@/hooks/useApps';
 import { useCategories } from '@/hooks/useCategories';
 import { useStatuses } from '@/hooks/useStatuses';
 import { Switch } from '@/components/ui/switch';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, UserPlus } from 'lucide-react';
 import { VerificationBadge } from './VerificationBadge';
 import { getStatusColors } from '@/lib/appStatusColors';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface AppCardProps {
   app: AppData;
@@ -17,6 +19,7 @@ interface AppCardProps {
 export function AppCard({ app, onExpand, onToggleVisibility, onVerify, dragHandleProps }: AppCardProps) {
   const { categories } = useCategories();
   const { statuses } = useStatuses();
+  const { t: tPartner } = useTranslation('partnerships');
 
   const category = categories.find(c => c.id === app.category_id);
   const status = statuses.find(s => s.id === app.status_id);
@@ -97,6 +100,24 @@ export function AppCard({ app, onExpand, onToggleVisibility, onVerify, dragHandl
           </a>
         </div>
         
+        {app.open_to_partnerships && (
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-tight border shrink-0 bg-[#00C853]/10 text-[#00C853] border-[#00C853]/20">
+                  <UserPlus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <span className="hidden min-[400px]:inline">Partnerships</span>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top">
+                <p className="text-xs">
+                  {app.partnership_types?.map(type => tPartner(`types.${type}`)).join(', ')}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
         {/* Status badge - visible on all screens */}
         {status && (
           <span 

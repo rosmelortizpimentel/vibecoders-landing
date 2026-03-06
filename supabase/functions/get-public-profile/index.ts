@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
       .from('apps')
       .select(`
         id, url, name, tagline, description, logo_url, category_id, status_id, display_order, is_verified,
-        hours_ideation, hours_building, screenshots, tags, beta_active, user_id,
+        hours_ideation, hours_building, screenshots, tags, beta_active, user_id, open_to_partnerships, partnership_types,
         app_stacks(stack_id)
       `)
       .eq('is_visible', true)
@@ -186,6 +186,8 @@ Deno.serve(async (req) => {
         screenshots: app.screenshots || [],
         tags: app.tags || [],
         beta_active: app.beta_active || false,
+        open_to_partnerships: app.open_to_partnerships || false,
+        partnership_types: app.partnership_types || [],
         status: status ? { name: status.name, slug: status.slug } : null,
         category: app.category_id && categories ? categories.find(c => c.id === app.category_id) : null,
         stacks: appStacks

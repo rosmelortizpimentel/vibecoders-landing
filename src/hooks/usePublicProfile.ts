@@ -21,6 +21,8 @@ export interface PublicApp {
   category?: { name: string; slug: string } | null;
   tags?: string[];
   beta_active: boolean;
+  open_to_partnerships?: boolean;
+  partnership_types?: string[];
   stacks: PublicAppStack[];
   owner?: {
     id: string;

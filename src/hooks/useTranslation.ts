@@ -29,6 +29,7 @@ import newLandingEs from '@/i18n/es/newLanding.json';
 import proEs from '@/i18n/es/pro.json';
 import surveyEs from '@/i18n/es/survey.json';
 import roadmapEs from '@/i18n/es/roadmap.json';
+import partnershipsEs from '@/i18n/es/partnerships.json';
 
 
 // English imports
@@ -59,6 +60,7 @@ import newLandingEn from '@/i18n/en/newLanding.json';
 import proEn from '@/i18n/en/pro.json';
 import surveyEn from '@/i18n/en/survey.json';
 import roadmapEn from '@/i18n/en/roadmap.json';
+import partnershipsEn from '@/i18n/en/partnerships.json';
 
 
 // French imports
@@ -89,6 +91,7 @@ import newLandingFr from '@/i18n/fr/newLanding.json';
 import proFr from '@/i18n/fr/pro.json';
 import surveyFr from '@/i18n/fr/survey.json';
 import roadmapFr from '@/i18n/fr/roadmap.json';
+import partnershipsFr from '@/i18n/fr/partnerships.json';
 
 
 // Portuguese imports
@@ -119,6 +122,7 @@ import newLandingPt from '@/i18n/pt/newLanding.json';
 import proPt from '@/i18n/pt/pro.json';
 import surveyPt from '@/i18n/pt/survey.json';
 import roadmapPt from '@/i18n/pt/roadmap.json';
+import partnershipsPt from '@/i18n/pt/partnerships.json';
 
 
 const translations = {
@@ -150,6 +154,7 @@ const translations = {
     pro: proEs,
     survey: surveyEs,
     roadmap: roadmapEs,
+    partnerships: partnershipsEs,
     
   },
   en: {
@@ -180,6 +185,7 @@ const translations = {
     pro: proEn,
     survey: surveyEn,
     roadmap: roadmapEn,
+    partnerships: partnershipsEn,
     
   },
   fr: {
@@ -210,6 +216,7 @@ const translations = {
     pro: proFr,
     survey: surveyFr,
     roadmap: roadmapFr,
+    partnerships: partnershipsFr,
     
   },
   pt: {
@@ -240,6 +247,7 @@ const translations = {
     pro: proPt,
     survey: surveyPt,
     roadmap: roadmapPt,
+    partnerships: partnershipsPt,
     
   },
 } as const;
@@ -259,6 +267,18 @@ export function useTranslation<T extends Section>(section: T): { t: (key: string
       if (result && typeof result === 'object' && k in result) {
         result = (result as Record<string, unknown>)[k];
       } else {
+        // Handle defaultValue if provided
+        if (data?.defaultValue) {
+          let defaultValue = String(data.defaultValue);
+          // Still process interpolation even if using default value
+          Object.entries(data).forEach(([dk, dv]) => {
+            if (dk !== 'defaultValue') {
+              defaultValue = defaultValue.replace(`{{${dk}}}`, String(dv));
+            }
+          });
+          return defaultValue;
+        }
+
         // Fallback to English if not foundational or current language is not English
         if (language !== 'en') {
           const englishTranslations = translations['en'][section];
@@ -270,7 +290,15 @@ export function useTranslation<T extends Section>(section: T): { t: (key: string
               return key;
             }
           }
-          return typeof englishResult === 'string' ? englishResult : key;
+          let finalEnglishResult = typeof englishResult === 'string' ? englishResult : key;
+          if (data) {
+            Object.entries(data).forEach(([k, v]) => {
+              if (k !== 'defaultValue') {
+                finalEnglishResult = finalEnglishResult.replace(`{{${k}}}`, String(v));
+              }
+            });
+          }
+          return finalEnglishResult;
         }
         return key; // Return key if not found
       }
@@ -279,7 +307,9 @@ export function useTranslation<T extends Section>(section: T): { t: (key: string
     
     if (data) {
       Object.entries(data).forEach(([k, v]) => {
-        finalResult = finalResult.replace(`{{${k}}}`, String(v));
+        if (k !== 'defaultValue') {
+          finalResult = finalResult.replace(`{{${k}}}`, String(v));
+        }
       });
     }
     
