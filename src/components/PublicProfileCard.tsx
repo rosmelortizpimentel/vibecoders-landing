@@ -101,6 +101,8 @@ function PublicAppCard({
    onSelect: () => void;
 }) {
   const { t } = useTranslation('publicProfile');
+  const { t: tPartner } = useTranslation('partnerships');
+
 
   const appUrl = (() => {
     try {
@@ -191,6 +193,23 @@ function PublicAppCard({
 
         {/* Badges aligned to right */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {app.open_to_partnerships && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-[#00C853]/10 text-[#00C853] flex-shrink-0 cursor-help border border-[#00C853]/20">
+                    <UserPlus className="w-2.5 h-2.5" />
+                    Partnerships
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  <p className="text-xs">
+                    {app.partnership_types?.map(type => tPartner(`types.${type}.label`)).join(', ')}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {app.beta_active && (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
@@ -263,6 +282,7 @@ function PublicAppCard({
 export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfileCardProps) {
   const { user } = useAuth();
   const { t } = useTranslation('publicProfile');
+  const { t: tPartner } = useTranslation('partnerships');
   const { language } = useLanguage();
   const { data: settings } = useGeneralSettings();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -441,6 +461,21 @@ export function PublicProfileCard({ profile, onNavigateToProfile }: PublicProfil
               )}
               {profile.is_contributor && profile.show_contributor_badge && (
                 <ContributorBadge />
+              )}
+              {profile.apps.some(app => app.open_to_partnerships) && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold border border-[#00C853]/30 bg-[#00C853]/10 text-[#00C853] shrink-0">
+                        <UserPlus className="w-3.5 h-3.5" />
+                        Open to Partnerships
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-sm">{tPartner('profileBadgeTooltip', { defaultValue: 'Buscando partnerships para sus aplicaciones' })}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
 

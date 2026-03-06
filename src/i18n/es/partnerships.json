@@ -1,0 +1,25 @@
+{
+  "title": "Directorio de Partnerships",
+  "subtitle": "Conecta con otros builders, encuentra inversores y forma alianzas estratégicas.",
+  "openToPartnerships": "Open to Partnerships",
+  "types": {
+    "investor": "Inversor",
+    "tech_partner": "Tech Partner",
+    "growth_partner": "Growth Partner"
+  },
+  "filters": {
+    "allRoles": "Todos los roles",
+    "allCategories": "Todas las categorías"
+  },
+  "card": {
+    "interested": "Me interesa",
+    "owner": "App de {{name}}"
+  },
+  "emptyState": "No se encontraron apps abiertas a partnerships.",
+  "settings": {
+    "title": "Open to Partnerships",
+    "description": "Activa esta opción para aparecer en el directorio público y conectar con inversores o partners.",
+    "selectRoles": "Selecciona qué estás buscando:"
+  },
+  "chatMessage": "Hola, vi tu app {{appName}} en el directorio de partnerships y me interesa conectar como {{role}}."
+}

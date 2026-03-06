@@ -1,0 +1,25 @@
+{
+  "title": "Annuaire des Partenariats",
+  "subtitle": "Connectez-vous avec d'autres créateurs, trouvez des investisseurs et formez des alliances stratégiques.",
+  "openToPartnerships": "Ouvert aux partenariats",
+  "types": {
+    "investor": "Investisseur",
+    "tech_partner": "Partenaire Technique",
+    "growth_partner": "Partenaire de Croissance"
+  },
+  "filters": {
+    "allRoles": "Tous les rôles",
+    "allCategories": "Toutes les catégories"
+  },
+  "card": {
+    "interested": "Ça m'intéresse",
+    "owner": "App de {{name}}"
+  },
+  "emptyState": "Aucune application ouverte aux partenariats n'a été trouvée.",
+  "settings": {
+    "title": "Ouvert aux Partenariats",
+    "description": "Activez cette option pour apparaître dans l'annuaire public et vous connecter avec des investisseurs ou partenaires.",
+    "selectRoles": "Sélectionnez ce que vous recherchez:"
+  },
+  "chatMessage": "Bonjour, j'ai vu votre application {{appName}} dans l'annuaire des partenariats et je suis intéressé(e) pour me connecter en tant que {{role}}."
+}

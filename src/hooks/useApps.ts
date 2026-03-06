@@ -25,6 +25,8 @@ export interface AppData {
   verified_at: string | null;
   verified_url: string | null;
   screenshots: string[];
+  open_to_partnerships: boolean;
+  partnership_types: string[];
   // Beta fields
   beta_active: boolean;
   beta_mode: string;
@@ -85,6 +87,8 @@ export function useApps() {
         ...app,
         stacks: app.app_stacks?.map((s: { stack_id: string }) => s.stack_id) || [],
         screenshots: app.screenshots || [],
+        open_to_partnerships: app.open_to_partnerships || false,
+        partnership_types: app.partnership_types || [],
         tags: (app as { tags?: string[] }).tags || [],
       })) || [];
     },
@@ -126,7 +130,7 @@ export function useApps() {
       'category_id', 'status_id', 'hours_ideation', 'hours_building', 
       'is_visible', 'display_order', 'beta_active', 'beta_mode', 
       'beta_limit', 'beta_link', 'beta_instructions', 'tags', 'screenshots',
-      'analytics_enabled'
+      'analytics_enabled', 'open_to_partnerships', 'partnership_types'
     ];
 
     permittedFields.forEach(field => {

@@ -5,10 +5,13 @@ import { useCategories } from '@/hooks/useCategories';
 import { useStatuses } from '@/hooks/useStatuses';
 import { useTechStacks } from '@/hooks/useTechStacks';
 import { useAutoSave } from '@/hooks/useAutoSave';
+import { useSubscription } from '@/hooks/useSubscription';
 import { DebouncedInput, DebouncedTextarea } from '@/components/ui/debounced-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Plus } from 'lucide-react';
 import { 
@@ -45,11 +48,14 @@ interface AppEditorProps {
 }
 
  export function AppEditor({ app, onUpdate, onUploadLogo, onUploadScreenshot, onDelete, onVerify }: AppEditorProps) {
-  const { categories } = useCategories();
+   const { categories } = useCategories();
    const { statuses } = useStatuses();
    const { t } = useTranslation('apps');
+   const { t: tPartner } = useTranslation('partnerships');
    const navigate = useNavigate();
   const { groupedStacks, stacks } = useTechStacks();
+  const { isPro, isFounder } = useSubscription();
+  const isPremium = isPro || isFounder;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const screenshotInputRef = useRef<HTMLInputElement>(null);
   
@@ -72,6 +78,24 @@ interface AppEditorProps {
     const updates = { [field]: value };
     setLocalApp(prev => ({ ...prev, ...updates }));
     autoSave(updates);
+  };
+
+  const handlePartnershipToggle = (checked: boolean) => {
+    if (!isPremium) return;
+    const updates: Partial<AppData> = { open_to_partnerships: checked };
+    if (!checked) {
+      updates.partnership_types = [];
+    }
+    setLocalApp(prev => ({ ...prev, ...updates }));
+    autoSave(updates);
+  };
+
+  const handlePartnerTypeToggle = (type: string) => {
+    const current = localApp.partnership_types || [];
+    const newTypes = current.includes(type) 
+      ? current.filter(t => t !== type)
+      : [...current, type];
+    handleChange('partnership_types', newTypes);
   };
 
   const handleStackToggle = (stackId: string) => {
@@ -385,7 +409,81 @@ interface AppEditorProps {
           </div>
         </div>
 
-        {/* 4. Media */}
+        {/* 4. Partnerships */}
+        <div className="bg-background border border-border/60 shadow-sm rounded-xl p-6 space-y-6">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <div className="w-1.5 h-4 bg-primary rounded-full" />
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{tPartner('settings.title')}</h3>
+            </div>
+            {!isPremium && (
+              <Badge variant="outline" className="text-[10px] font-semibold text-muted-foreground border-border/50">
+                Builder Pro
+              </Badge>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-lg border border-border/60 p-4 transition-colors", localApp.open_to_partnerships ? "bg-primary/5 border-primary/20" : "bg-muted/10")}>
+              <div className="space-y-0.5 mt-1 sm:mt-0">
+                <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <LucideIcons.Handshake className="w-4 h-4 text-primary" />
+                  {tPartner('settings.title')}
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {tPartner('settings.description')}
+                </p>
+              </div>
+              <Switch
+                checked={localApp.open_to_partnerships || false}
+                onCheckedChange={handlePartnershipToggle}
+                disabled={!isPremium}
+                className="shrink-0"
+              />
+            </div>
+
+            {localApp.open_to_partnerships && (
+              <div className="space-y-3 pt-2 animate-in slide-in-from-top-2 fade-in duration-300">
+                <Label className="text-foreground text-xs font-semibold">{tPartner('settings.selectRoles')}</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    { id: 'investor', label: tPartner('types.investor') },
+                    { id: 'tech_partner', label: tPartner('types.tech_partner') },
+                    { id: 'growth_partner', label: tPartner('types.growth_partner') }
+                  ].map(type => {
+                    const isSelected = (localApp.partnership_types || []).includes(type.id);
+                    return (
+                      <div 
+                        key={type.id}
+                        onClick={() => handlePartnerTypeToggle(type.id)}
+                        className={cn(
+                          "flex flex-col gap-1 p-3 rounded-xl border cursor-pointer transition-all h-full",
+                          isSelected 
+                            ? "border-primary bg-primary/5 shadow-sm" 
+                            : "border-border/60 bg-background hover:border-primary/30 hover:bg-muted/30"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={cn(
+                            "w-4 h-4 rounded-full border flex items-center justify-center transition-colors shrink-0",
+                            isSelected ? "border-primary bg-primary" : "border-muted-foreground/30 bg-transparent"
+                          )}>
+                            {isSelected && <div className="w-1.5 h-1.5 bg-background rounded-full" />}
+                          </div>
+                          <span className={cn("text-sm font-semibold line-clamp-1", isSelected ? "text-primary" : "text-foreground")}>
+                            {type.label}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* 5. Media */}
         <div className="bg-background border border-border/60 shadow-sm rounded-xl p-6 space-y-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">

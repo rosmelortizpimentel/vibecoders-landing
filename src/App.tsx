@@ -23,6 +23,7 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import Me from "./pages/Me";
 import BuildLog from "./pages/BuildLog";
+import PartnershipsDirectory from "./pages/PartnershipsDirectory";
 import BuildLogOgDynamic from "./pages/BuildLogOgDynamic";
 import Admin from "./pages/Admin";
 import PublicProfile from "./pages/PublicProfile";
@@ -104,7 +105,7 @@ const App = () => {
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/post/:slug" element={<Post />} />
               
-              
+              <Route path="/partnerships" element={<PartnershipsDirectory />} />
               
               {/* Plan selection & payment */}
               <Route path="/choose-plan" element={<ChoosePlan />} />

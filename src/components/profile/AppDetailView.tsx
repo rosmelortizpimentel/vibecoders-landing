@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { X, ChevronLeft, ChevronRight, ExternalLink, Heart, Upload, ImageIcon, BadgeCheck, AlertCircle, Trash2, Calendar, LayoutTemplate, Zap } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ExternalLink, Heart, Upload, ImageIcon, BadgeCheck, AlertCircle, Trash2, Calendar, LayoutTemplate, Zap, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -64,6 +64,7 @@ interface Founder {
 export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaultOwner }: AppDetailViewProps) {
   const isMobile = useIsMobile();
   const { t } = useTranslation('publicProfile');
+  const { t: tPartner } = useTranslation('partnerships');
   const [screenshotIndex, setScreenshotIndex] = React.useState(0);
   const [contributors, setContributors] = React.useState<Contributor[]>([]);
   const [loadingContributors, setLoadingContributors] = React.useState(false);
@@ -264,6 +265,23 @@ export function AppDetailView({ apps, selectedIndex, onClose, onNavigate, defaul
         <div className="flex flex-col items-center text-center">
           {/* Custom Badges Layer */}
           <div className="flex items-center gap-1.5 mb-3 justify-center">
+            {currentApp.open_to_partnerships && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-[#00C853]/10 text-[#00C853] flex-shrink-0 cursor-help border border-[#00C853]/20">
+                      <UserPlus className="w-2.5 h-2.5" />
+                      Partnerships
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-xs">
+                      {currentApp.partnership_types?.map((type: string) => tPartner(`types.${type}.label`)).join(', ')}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {currentApp.beta_active && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
