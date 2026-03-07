@@ -123,8 +123,9 @@ Deno.serve(async (req) => {
       user_liked: userLiked,
     }
 
-    // Remove app_stacks from response (we transformed it to stacks)
+    // Remove sensitive/internal fields from response
     delete response.app_stacks
+    delete response.verification_token
 
     console.log('App detail fetched:', { appId, testersCount, isOwner })
 
