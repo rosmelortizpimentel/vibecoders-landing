@@ -160,11 +160,15 @@ Deno.serve(async (req: Request) => {
         ]
       };
 
+      if (!firecrawlKey) {
+        throw new Error('FIRECRAWL_API_KEY not configured');
+      }
+
       // Call Firecrawl
       const firecrawlResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${firecrawlKey || 'fc-ad48c06a5d4b469a8d1ebdcda351f86d'}`,
+          'Authorization': `Bearer ${firecrawlKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(firecrawlPayload)

@@ -89,7 +89,6 @@ export function Sidebar() {
   // Map sidebar item keys to their respective badge counts from hooks
   const badgeMapping: Record<string, number> = {
     'notifications': unreadCount,
-    'my-apps': ownedAppsCount,
     'public-beta-testing': publicSquadsCount,
   };
 

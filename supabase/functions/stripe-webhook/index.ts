@@ -16,6 +16,7 @@ Deno.serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY not set");
+    if (!webhookSecret) throw new Error("STRIPE_WEBHOOK_SECRET not set");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const supabaseAdmin = createClient(
@@ -24,15 +25,14 @@ Deno.serve(async (req) => {
     );
 
     const body = await req.text();
-    let event: Stripe.Event;
-
-    if (webhookSecret) {
-      const signature = req.headers.get("stripe-signature");
-      if (!signature) throw new Error("No stripe-signature header");
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } else {
-      event = JSON.parse(body) as Stripe.Event;
+    const signature = req.headers.get("stripe-signature");
+    if (!signature) {
+      return new Response(JSON.stringify({ error: "Missing stripe-signature" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+    const event: Stripe.Event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
 
     console.log(`[STRIPE-WEBHOOK] Event: ${event.type}`);
 

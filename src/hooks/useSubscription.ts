@@ -7,10 +7,6 @@ export type UserTier = 'founder' | 'free' | 'pro' | 'pending';
 interface Subscription {
   tier: UserTier;
   founder_number: number | null;
-  stripe_customer_id: string | null;
-  subscription_id: string | null;
-  subscription_status: string | null;
-  current_period_end: string | null;
   founder_welcome_seen: boolean;
 }
 
@@ -24,8 +20,8 @@ export function useSubscription() {
       if (!user?.id) return null;
       
       const { data, error } = await supabase
-        .from('user_subscriptions' as any)
-        .select('*')
+        .from('user_subscriptions')
+        .select('tier, founder_number, founder_welcome_seen')
         .eq('user_id', user.id)
         .maybeSingle();
 
@@ -34,15 +30,13 @@ export function useSubscription() {
         return null;
       }
       if (!data) return null;
+
+      const subData = data as any; // Still need to cast because select string doesn't provide precise row type in current version
       return {
-        tier: (data as any).tier,
-        founder_number: (data as any).founder_number,
-        stripe_customer_id: (data as any).stripe_customer_id,
-        subscription_id: (data as any).subscription_id,
-        subscription_status: (data as any).subscription_status,
-        current_period_end: (data as any).current_period_end,
-        founder_welcome_seen: (data as any).founder_welcome_seen ?? false,
-      } as Subscription;
+        tier: subData.tier as UserTier,
+        founder_number: subData.founder_number,
+        founder_welcome_seen: subData.founder_welcome_seen ?? false,
+      };
     },
     enabled: !!user?.id,
     staleTime: 60_000,

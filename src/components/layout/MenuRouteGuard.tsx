@@ -30,10 +30,7 @@ export function MenuRouteGuard() {
     return currentPath === item.path || currentPath.startsWith(item.path + '/');
   });
 
-  // If we found a matching menu item and it's inactive, redirect to home
-  if (menuItem && !menuItem.isActive) {
-    return <Navigate to="/home" replace />;
-  }
-
+  // If we found a matching menu item, it is active (thanks to backend filtering).
+  // If not found, we allow access to other dashboard routes not explicitly in the menu.
   return <Outlet />;
 }

@@ -13,5 +13,27 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+  },
+  global: {
+    fetch: async (url, options) => {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        try {
+          const clonedResponse = response.clone();
+          const data = await clonedResponse.json();
+          if (data && (data.hint || data.details)) {
+            const sanitizedData = { ...data, hint: null, details: null };
+            return new Response(JSON.stringify(sanitizedData), {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers
+            });
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      return response;
+    }
   }
 });
