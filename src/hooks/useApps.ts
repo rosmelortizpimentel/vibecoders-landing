@@ -20,7 +20,7 @@ export interface AppData {
   updated_at: string;
   stacks?: string[];
   is_verified: boolean;
-  verification_token: string;
+  verification_token: string | null;
   verified_at: string | null;
   verified_url: string | null;
   screenshots: string[];
