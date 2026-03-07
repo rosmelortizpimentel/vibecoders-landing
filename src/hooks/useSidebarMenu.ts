@@ -63,6 +63,7 @@ function useBaseSidebarMenu() {
       const { data, error } = await supabase
         .from('sidebar_menu_items')
         .select('*')
+        .eq('is_active', true)
         .order('display_order', { ascending: true });
 
       if (error) throw error;
@@ -75,8 +76,7 @@ function useBaseSidebarMenu() {
 /** Returns only active menu items (for sidebar rendering) */
 export function useSidebarMenu() {
   const { data: items = [], isLoading } = useBaseSidebarMenu();
-  const activeItems = items.filter(item => item.isActive);
-  return { items: activeItems, isLoading };
+  return { items, isLoading };
 }
 
 /** Returns ALL menu items (active + inactive) for route guarding */

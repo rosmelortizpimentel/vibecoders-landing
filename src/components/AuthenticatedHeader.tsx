@@ -95,7 +95,6 @@ export function AuthenticatedHeader({
 
   const badgeMap: Record<string, number> = {
     'notifications': unreadCount,
-    'beta-testing': ownedAppsCount,
     'public-beta-testing': publicSquadsCount,
   };
 
