@@ -2334,6 +2334,10 @@ export type Database = {
           likes_count: number
         }[]
       }
+      get_app_verification_token: {
+        Args: { p_app_id: string }
+        Returns: string
+      }
       get_showcase_apps: {
         Args: never
         Returns: {
