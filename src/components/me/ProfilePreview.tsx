@@ -58,9 +58,13 @@ const socialConfig = [
   { key: 'email_public', icon: Mail, getUrl: (v: string) => `mailto:${v}` },
 ] as const;
 
+import { useSubscription } from '@/hooks/useSubscription';
+
 export function ProfilePreview({ profile, apps, isMobileSheet = false }: ProfilePreviewProps) {
   const { statuses } = useStatuses();
   const { stacks } = useTechStacks();
+  const { isPro, isFounder } = useSubscription();
+  const hasPremium = isPro || isFounder;
   const t = useTranslation('profile');
   const visibleApps = apps.filter(app => app.is_visible);
   
@@ -219,7 +223,7 @@ export function ProfilePreview({ profile, apps, isMobileSheet = false }: Profile
                 )}
               </div>
 
-              {profile.booking_url && (
+              {profile.booking_url && hasPremium && (
                 <a
                   href={profile.booking_url.startsWith('http') ? profile.booking_url : `https://${profile.booking_url}`}
                   target="_blank"

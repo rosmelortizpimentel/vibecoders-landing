@@ -57,6 +57,9 @@
   "saving": "Guardando...",
   "saved": "Guardado",
   "error": "Error",
+  "errors": {
+    "ERR_PREMIUM_BOOKING_REQUIRED": "Tu plan actual no tiene habilitado el Link Personalizado."
+  },
   "preview": "Vista Previa",
   "viewLive": "Ver perfil en vivo",
   "required": "requerido",
