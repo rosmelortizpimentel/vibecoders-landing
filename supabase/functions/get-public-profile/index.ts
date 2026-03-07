@@ -6,7 +6,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-Deno.serve(async (req) => {
+// Helper function to build referral URL
+const buildStackReferralUrl = (
+  stack: { website_url?: string | null; referral_url?: string | null; referral_param?: string | null; default_referral_code?: string | null },
+  customCode?: string | null
+): string | null => {
+  const code = customCode || stack.default_referral_code;
+  
+  if (stack.referral_url && code) {
+    return stack.referral_url.replace('{code}', code);
+  }
+  if (stack.referral_param && code && stack.website_url) {
+    try {
+      const url = new URL(stack.website_url);
+      url.searchParams.set(stack.referral_param, code);
+      return url.toString();
+    } catch {
+      return stack.website_url;
+    }
+  }
+  return stack.website_url || null;
+};
+
+Deno.serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -37,28 +59,6 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-     // Helper function to build referral URL
-     function buildStackReferralUrl(
-       stack: { website_url?: string | null; referral_url?: string | null; referral_param?: string | null; default_referral_code?: string | null },
-       customCode?: string | null
-     ): string | null {
-       const code = customCode || stack.default_referral_code;
-       
-       if (stack.referral_url && code) {
-         return stack.referral_url.replace('{code}', code);
-       }
-       if (stack.referral_param && code && stack.website_url) {
-         try {
-           const url = new URL(stack.website_url);
-           url.searchParams.set(stack.referral_param, code);
-           return url.toString();
-         } catch {
-           return stack.website_url;
-         }
-       }
-       return stack.website_url || null;
-     }
- 
     // 1. Search profile by username (case-insensitive) with all public fields
     const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
@@ -98,6 +98,38 @@ Deno.serve(async (req) => {
 
     console.log(`[get-public-profile] Found profile with id: ${profile.id}`)
 
+    // Security check: Only return booking_url if user is currently premium
+    if (profile.booking_url != null) {
+      let isPremium = false;
+      const { data: userRole } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', profile.id)
+        .eq('role', 'founder')
+        .maybeSingle();
+
+      if (userRole) {
+        isPremium = true;
+      } else {
+        const { data: userSub } = await supabaseAdmin
+          .from('user_subscriptions')
+          .select('subscription_status')
+          .eq('user_id', profile.id)
+          .in('subscription_status', ['active', 'trialing'])
+          .maybeSingle();
+        
+        if (userSub) {
+          isPremium = true;
+        }
+      }
+
+      if (!isPremium) {
+        console.log(`[get-public-profile] Omitting booking_url for non-premium user ${profile.id}`);
+        profile.booking_url = null;
+        profile.booking_button_text = null;
+      }
+    }
+
     // 2. Get apps where user is owner OR co-founder
     // First, get IDs of apps where user is co-founder
     const { data: foundedApps, error: founderError } = await supabaseAdmin
@@ -109,7 +141,7 @@ Deno.serve(async (req) => {
       console.error(`[get-public-profile] Founders query error:`, founderError)
     }
 
-    const coFoundedAppIds = (foundedApps || []).map(f => f.app_id)
+    const coFoundedAppIds = (foundedApps || []).map((f: any) => f.app_id)
     console.log(`[get-public-profile] Co-founded apps for ${username}:`, coFoundedAppIds)
 
     let appsQuery = supabaseAdmin
@@ -123,7 +155,7 @@ Deno.serve(async (req) => {
 
     if (coFoundedAppIds.length > 0) {
       // Use quotes for UUIDs in .in() filter inside .or()
-      const formattedIds = coFoundedAppIds.map(id => `"${id}"`).join(',')
+      const formattedIds = coFoundedAppIds.map((id: any) => `"${id}"`).join(',')
       appsQuery = appsQuery.or(`user_id.eq.${profile.id},id.in.(${formattedIds})`)
     } else {
       appsQuery = appsQuery.eq('user_id', profile.id)
@@ -149,18 +181,18 @@ Deno.serve(async (req) => {
        .eq('user_id', profile.id)
 
      // 6. Map apps with resolved status and stacks (including referral URLs)
-    const apps = (appsData || []).map(app => {
+    const apps = (appsData || []).map((app: any) => {
       const status = app.status_id && statuses 
-        ? statuses.find(s => s.id === app.status_id) 
+        ? statuses.find((s: any) => s.id === app.status_id) 
         : null
 
       const appStacks = (app.app_stacks || [])
         .map((as: { stack_id: string }) => {
-          const stack = stacks?.find(s => s.id === as.stack_id)
+          const stack = stacks?.find((s: any) => s.id === as.stack_id)
            if (!stack) return null
            
            // Check for user's custom referral code
-           const userReferral = userReferrals?.find(r => r.stack_id === stack.id)
+           const userReferral = userReferrals?.find((r: any) => r.stack_id === stack.id)
            const url = buildStackReferralUrl(stack, userReferral?.referral_code)
            
            return { 
@@ -189,7 +221,7 @@ Deno.serve(async (req) => {
         open_to_partnerships: app.open_to_partnerships || false,
         partnership_types: app.partnership_types || [],
         status: status ? { name: status.name, slug: status.slug } : null,
-        category: app.category_id && categories ? categories.find(c => c.id === app.category_id) : null,
+        category: app.category_id && categories ? categories.find((c: any) => c.id === app.category_id) : null,
         stacks: appStacks
       }
     })

@@ -470,7 +470,13 @@ export function ProfileTab({
               <AlertCircle className="h-4 w-4" />
             ) : null}
             <span>
-              {isSaving ? t('saving') : error ? `${t('error')}: ${error.message}` : null}
+              {isSaving 
+                ? t('saving') 
+                : error 
+                  ? (error.message === 'ERR_PREMIUM_BOOKING_REQUIRED' 
+                      ? t('errors.ERR_PREMIUM_BOOKING_REQUIRED') 
+                      : `${t('error')}: ${error.message}`)
+                  : null}
             </span>
           </div>
         )}

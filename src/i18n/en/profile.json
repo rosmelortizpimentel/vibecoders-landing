@@ -49,6 +49,9 @@
   "saving": "Saving...",
   "saved": "Saved",
   "error": "Error",
+  "errors": {
+    "ERR_PREMIUM_BOOKING_REQUIRED": "Your current plan does not have the Custom Link feature enabled."
+  },
   "preview": "Preview",
   "viewLive": "View live profile",
   "required": "required",
