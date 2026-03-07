@@ -90,6 +90,45 @@ export type Database = {
           },
         ]
       }
+      app_founders: {
+        Row: {
+          app_id: string
+          created_at: string | null
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          app_id: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          app_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_founders_app_id_fkey"
+            columns: ["app_id"]
+            isOneToOne: false
+            referencedRelation: "apps"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "app_founders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_likes: {
         Row: {
           app_id: string
@@ -234,6 +273,8 @@ export type Database = {
           is_visible: boolean
           logo_url: string | null
           name: string | null
+          open_to_partnerships: boolean
+          partnership_types: string[]
           screenshots: string[] | null
           status_id: string | null
           tagline: string | null
@@ -265,6 +306,8 @@ export type Database = {
           is_visible?: boolean
           logo_url?: string | null
           name?: string | null
+          open_to_partnerships?: boolean
+          partnership_types?: string[]
           screenshots?: string[] | null
           status_id?: string | null
           tagline?: string | null
@@ -296,6 +339,8 @@ export type Database = {
           is_visible?: boolean
           logo_url?: string | null
           name?: string | null
+          open_to_partnerships?: boolean
+          partnership_types?: string[]
           screenshots?: string[] | null
           status_id?: string | null
           tagline?: string | null
@@ -1670,6 +1715,7 @@ export type Database = {
       }
       sidebar_menu_items: {
         Row: {
+          badge_text: string | null
           created_at: string
           css_class: string | null
           display_order: number
@@ -1686,6 +1732,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          badge_text?: string | null
           created_at?: string
           css_class?: string | null
           display_order?: number
@@ -1702,6 +1749,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          badge_text?: string | null
           created_at?: string
           css_class?: string | null
           display_order?: number
@@ -2278,6 +2326,14 @@ export type Database = {
           tier: string
         }[]
       }
+      get_app_likes_batch: {
+        Args: { app_ids: string[]; p_user_id?: string }
+        Returns: {
+          app_id: string
+          is_liked: boolean
+          likes_count: number
+        }[]
+      }
       get_showcase_apps: {
         Args: never
         Returns: {
@@ -2292,6 +2348,16 @@ export type Database = {
           is_verified: boolean
           stacks: Json
           status: Json
+        }[]
+      }
+      get_top_apps: {
+        Args: { period?: string }
+        Returns: {
+          app_id: string
+          founders: Json
+          likes_count: number
+          logo_url: string
+          name: string
         }[]
       }
       get_user_features: { Args: { p_user_id: string }; Returns: string[] }
