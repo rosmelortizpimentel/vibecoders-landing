@@ -20,7 +20,7 @@ export interface AppData {
   updated_at: string;
   stacks?: string[];
   is_verified: boolean;
-  verification_token: string;
+  verification_token: string | null;
   verified_at: string | null;
   verified_url: string | null;
   screenshots: string[];
@@ -49,7 +49,12 @@ export function useApps() {
       const { data, error } = await supabase
         .from('apps')
         .select(`
-          *,
+          id, user_id, url, name, tagline, description, logo_url,
+          category_id, status_id, hours_ideation, hours_building,
+          is_visible, display_order, created_at, updated_at,
+          is_verified, verified_at, verified_url, screenshots, tags,
+          beta_active, beta_mode, beta_limit, beta_link, beta_instructions,
+          favicon_url, analytics_enabled, open_to_partnerships, partnership_types,
           app_stacks(stack_id)
         `)
         .eq('user_id', user.id)
@@ -57,8 +62,19 @@ export function useApps() {
 
       if (error) throw error;
 
+      // Fetch verification tokens securely via RPC (owner-only)
+      const appIds = data?.map(a => a.id) || [];
+      const tokenMap: Record<string, string | null> = {};
+      await Promise.all(
+        appIds.map(async (appId) => {
+          const { data: token } = await supabase.rpc('get_app_verification_token', { p_app_id: appId });
+          tokenMap[appId] = token || null;
+        })
+      );
+
       const appsWithStacks = data?.map(app => ({
         ...app,
+        verification_token: tokenMap[app.id] || null,
         stacks: app.app_stacks?.map((s: { stack_id: string }) => s.stack_id) || [],
         screenshots: app.screenshots || [],
         tags: (app as any).tags || [],
