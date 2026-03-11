@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { isSafeUrl } from "../_shared/url-validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -95,6 +96,19 @@ Deno.serve(async (req: Request) => {
    let fetchUrl = app.url.trim();
    if (!fetchUrl.startsWith('http://') && !fetchUrl.startsWith('https://')) {
      fetchUrl = `https://${fetchUrl}`;
+   }
+
+   // SSRF Protection: Validate URL before fetching
+   if (!isSafeUrl(fetchUrl)) {
+     console.error('[verify-app-domain] Blocked unsafe/internal URL:', fetchUrl);
+     return new Response(
+       JSON.stringify({ 
+         success: false, 
+         error: 'unsafe_url', 
+         message: 'La URL proporcionada no es permitida por razones de seguridad' 
+       }),
+       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+     );
    }
 
    // Fetch the website with timeout

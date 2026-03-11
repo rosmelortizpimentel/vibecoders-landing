@@ -2,6 +2,7 @@
  * Enhanced markdown parser for beta instructions
  * Supports: bold, italic, underline, unordered lists, numbered lists
  */
+import DOMPurify from 'dompurify';
 
 // Escape HTML to prevent XSS
 function escapeHtml(text: string): string {
@@ -92,7 +93,8 @@ export function parseMarkdown(text: string): string {
   // Convert line breaks to <br> (except inside lists)
   html = html.replace(/\n(?!<\/?(ul|ol|li))/g, '<br>');
 
-  return html;
+  // Final XSS sanitization
+  return DOMPurify.sanitize(html);
 }
 
 // For preview, we just show the text with formatting indicators visible

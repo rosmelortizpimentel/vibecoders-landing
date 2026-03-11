@@ -64,6 +64,24 @@ Deno.serve(async (req: Request) => {
         .eq('vibecoders_app_id', vibecodersAppId)
         .maybeSingle()
 
+      if (!mapping) {
+        // No mapping exists → verify this user actually owns the app in Vibecoders
+        // before creating a new mapping
+        const { data: app, error: appError } = await vibecodersAdmin
+          .from('apps')
+          .select('id, user_id')
+          .eq('id', vibecodersAppId)
+          .single()
+
+        if (appError || !app) {
+          throw { status: 404, message: 'App not found in Vibecoders' }
+        }
+
+        if (app.user_id !== vibecodersUserId) {
+          throw { status: 403, message: 'Forbidden: you do not own this app' }
+        }
+      }
+
       if (mapping) {
         // ✅ Verify ownership: mapping must belong to authenticated user
         if (mapping.user_id !== vibecodersUserId) {

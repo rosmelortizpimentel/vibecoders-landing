@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { isSafeUrl } from "../_shared/url-validation.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +17,12 @@ interface ScrapeRequest {
  */
 async function uploadFromUrl(supabase: any, bucket: string, path: string, url: string) {
   try {
+    // SSRF Protection: Validate URL before fetching
+    if (!isSafeUrl(url)) {
+      console.error(`[uploadFromUrl] Blocked unsafe/internal URL: ${url}`);
+      return null;
+    }
+
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
     
