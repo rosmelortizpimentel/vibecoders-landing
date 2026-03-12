@@ -16,6 +16,8 @@ import { SurveyManager } from '@/components/admin/SurveyManager';
 import { AppsMonitor } from '@/components/admin/AppsMonitor';
 import { MenuManager } from '@/components/admin/MenuManager';
 import { PlansFeaturesManager } from '@/components/admin/PlansFeaturesManager';
+import { SpeakersManager } from '@/components/admin/SpeakersManager';
+import { WorkshopsManager } from '@/components/admin/WorkshopsManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
