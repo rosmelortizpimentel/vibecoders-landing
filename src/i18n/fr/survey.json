@@ -7,5 +7,6 @@
   "submit": "Envoyer le feedback",
   "errorSaving": "Erreur lors de l'enregistrement de votre réponse. Veuillez réessayer.",
   "defaultBadge": "ENQUÊTE",
-  "defaultDescription": "Votre vote définit la feuille de route. Triez por priorité."
+  "defaultDescription": "Votre vote définit la feuille de route. Triez por priorité.",
+  "scrollMore": "Faire défiler pour en voir plus"
 }

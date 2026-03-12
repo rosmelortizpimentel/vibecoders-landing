@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +12,10 @@ import {
   CheckCircle2,
   CalendarDays,
   ClipboardList,
-  Trophy
+  Trophy,
+  ChevronUp,
+  ChevronDown,
+  Hand
 } from 'lucide-react';
 import {
   DndContext,
@@ -30,6 +33,7 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
+  defaultAnimateLayoutChanges,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from 'sonner';
@@ -50,7 +54,21 @@ interface Survey {
   survey_options: SurveyOption[];
 }
 
-function SortableOptionItem({ option, index }: { option: SurveyOption; index: number }) {
+function SortableOptionItem({ 
+  option, 
+  index, 
+  isFirst, 
+  isLast, 
+  onMoveUp, 
+  onMoveDown 
+}: { 
+  option: SurveyOption; 
+  index: number;
+  isFirst: boolean;
+  isLast: boolean;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+}) {
   const {
     attributes,
     listeners,
@@ -58,7 +76,10 @@ function SortableOptionItem({ option, index }: { option: SurveyOption; index: nu
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: option.id });
+  } = useSortable({ 
+    id: option.id,
+    animateLayoutChanges: defaultAnimateLayoutChanges 
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -70,19 +91,26 @@ function SortableOptionItem({ option, index }: { option: SurveyOption; index: nu
     <div 
       ref={setNodeRef} 
       style={style}
-      className={`flex items-start gap-4 py-2.5 px-4 bg-white rounded-xl border transition-all cursor-default group ${
-        isDragging ? 'border-[#3D5AFE] shadow-xl ring-2 ring-[#3D5AFE]/5 z-50' : 'border-gray-100 hover:border-gray-200 hover:shadow-sm'
+      className={`flex items-start gap-4 py-3 px-4 bg-white rounded-xl border transition-all cursor-grab active:cursor-grabbing group relative overflow-hidden ${
+        isDragging ? 'border-[#3D5AFE] shadow-xl ring-2 ring-[#3D5AFE]/5 z-50 scale-[1.02]' : 'border-gray-100 hover:border-gray-200 hover:shadow-sm'
       }`}
+      {...attributes}
+      {...listeners}
     >
+      {/* Hand Animation Indicator (appears on first item or hover) */}
+      {index === 0 && !isDragging && (
+        <div className="absolute top-0 right-12 animate-[hand-move_3s_ease-in-out_infinite] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+          <Hand className="h-6 w-6 text-[#3D5AFE]/20 rotate-12" />
+        </div>
+      )}
+
       <div 
-        {...attributes} 
-        {...listeners}
         className="flex h-8 w-8 items-center justify-center bg-gray-50 rounded-lg group-hover:bg-[#3D5AFE]/5 group-hover:text-[#3D5AFE] transition-colors touch-none flex-shrink-0"
       >
         <GripVertical className="h-4 w-4 text-gray-300" />
       </div>
       
-      <div className="flex flex-col gap-1 flex-1 min-w-0">
+      <div className="flex flex-col gap-1 flex-1 min-w-0 pointer-events-none">
         <div className="flex items-start gap-2">
           <span className="text-[11px] font-mono font-bold text-gray-300 mt-0.5">
             0{index + 1}
@@ -97,6 +125,27 @@ function SortableOptionItem({ option, index }: { option: SurveyOption; index: nu
           </p>
         )}
       </div>
+
+      <div className="flex flex-col gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity md:opacity-100 relative z-10 pointer-events-auto">
+        <button
+          onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          disabled={isFirst}
+          className={`p-1.5 rounded-md transition-colors ${isFirst ? 'text-gray-100' : 'text-gray-400 hover:bg-gray-100 hover:text-[#3D5AFE]'}`}
+          aria-label="Subir"
+        >
+          <ChevronUp className="h-4 w-4" />
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          disabled={isLast}
+          className={`p-1.5 rounded-md transition-colors ${isLast ? 'text-gray-100' : 'text-gray-400 hover:bg-gray-100 hover:text-[#3D5AFE]'}`}
+          aria-label="Bajar"
+        >
+          <ChevronDown className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -110,7 +159,11 @@ export function SurveyPopup() {
   const [comment, setComment] = useState('');
   
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 250,
@@ -163,6 +216,27 @@ export function SurveyPopup() {
   });
 
   const [orderedOptions, setOrderedOptions] = useState<SurveyOption[]>([]);
+  const [showTopFade, setShowTopFade] = useState(false);
+  const [showBottomFade, setShowBottomFade] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      setShowTopFade(scrollTop > 10);
+      setShowBottomFade(scrollTop + clientHeight < scrollHeight - 10);
+    }
+  };
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      // Initial check
+      setTimeout(handleScroll, 100);
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, [activeSurvey, orderedOptions]);
 
   useEffect(() => {
     if (activeSurvey) {
@@ -264,11 +338,19 @@ export function SurveyPopup() {
               </p>
             </div>
 
-            {/* Scrollable Content with Gradients */}
-            <div className="relative flex-1 flex flex-col bg-[#F8FAFF]">
+            {/* Scrollable Content with Dynamic Gradients */}
+            <div className="relative flex-1 flex flex-col bg-[#F8FAFF] overflow-hidden">
+              {/* Top Fade Indicator */}
               <div 
-                className="overflow-y-auto px-6 py-4 space-y-3 custom-scrollbar" 
-                style={{ maxHeight: 'calc(80vh - 160px)', minHeight: '320px' }}
+                className={`absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-[#F8FAFF] to-transparent z-10 pointer-events-none transition-opacity duration-300 ${
+                  showTopFade ? 'opacity-100' : 'opacity-0'
+                }`} 
+              />
+              
+              <div 
+                ref={scrollRef}
+                className="overflow-y-auto px-6 py-4 space-y-3 custom-scrollbar flex-1" 
+                style={{ maxHeight: 'calc(85vh - 160px)', minHeight: '320px' }}
               >
                 <DndContext
                   sensors={sensors}
@@ -285,6 +367,18 @@ export function SurveyPopup() {
                           key={option.id} 
                           option={option} 
                           index={index} 
+                          isFirst={index === 0}
+                          isLast={index === orderedOptions.length - 1}
+                          onMoveUp={() => {
+                            if (index > 0) {
+                              setOrderedOptions(items => arrayMove(items, index, index - 1));
+                            }
+                          }}
+                          onMoveDown={() => {
+                            if (index < orderedOptions.length - 1) {
+                              setOrderedOptions(items => arrayMove(items, index, index + 1));
+                            }
+                          }}
                         />
                       ))}
                     </div>
@@ -292,7 +386,7 @@ export function SurveyPopup() {
                 </DndContext>
 
                 {activeSurvey.show_comment_field && (
-                  <div className="space-y-2 pt-4 pb-4">
+                  <div className="space-y-2 pt-4 pb-8">
                     <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                       {t('commentLabel')}
                     </label>
@@ -306,8 +400,19 @@ export function SurveyPopup() {
                 )}
               </div>
 
-              {/* Bottom Gradient */}
-              <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#F8FAFF] to-transparent z-[5] pointer-events-none" />
+              {/* Bottom Fade Indicator with "Scroll for more" hint */}
+              <div 
+                className={`absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#F8FAFF] via-[#F8FAFF]/80 to-transparent z-10 pointer-events-none transition-opacity duration-300 flex flex-col items-center justify-end pb-2 ${
+                  showBottomFade ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <div className="animate-bounce mb-1">
+                  <ChevronDown className="h-4 w-4 text-[#3D5AFE]/40" />
+                </div>
+                <span className="text-[9px] font-bold text-[#3D5AFE]/40 uppercase tracking-tighter">
+                  {t('scrollMore')}
+                </span>
+              </div>
             </div>
 
             {/* Sticky Footer with refined typography */}

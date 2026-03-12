@@ -7,5 +7,6 @@
   "submit": "Enviar Feedback",
   "errorSaving": "Erro ao salvar sua resposta. Por favor, tente novamente.",
   "defaultBadge": "PESQUISA",
-  "defaultDescription": "Seu voto define o roadmap. Ordene por prioridade."
+  "defaultDescription": "Seu voto define o roteiro. Ordene por prioridade.",
+  "scrollMore": "Role para ver mais"
 }

@@ -7,5 +7,6 @@
   "submit": "Enviar Feedback",
   "errorSaving": "Error al guardar tu respuesta. Por favor intenta de nuevo.",
   "defaultBadge": "ENCUESTA",
-  "defaultDescription": "Tu voto define el roadmap. Ordena por prioridad."
+  "defaultDescription": "Tu voto define el roadmap. Ordena por prioridad.",
+  "scrollMore": "Desliza para ver más"
 }
