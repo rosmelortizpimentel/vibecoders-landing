@@ -1767,6 +1767,33 @@ export type Database = {
         }
         Relationships: []
       }
+      speakers: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          photo_url: string | null
+          tagline: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id?: string
+          photo_url?: string | null
+          tagline?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          photo_url?: string | null
+          tagline?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscription_plans: {
         Row: {
           created_at: string | null
@@ -2311,6 +2338,72 @@ export type Database = {
           utm_source?: string | null
           viewport_height?: number | null
           viewport_width?: number | null
+        }
+        Relationships: []
+      }
+      workshop_speakers: {
+        Row: {
+          speaker_id: string
+          workshop_id: string
+        }
+        Insert: {
+          speaker_id: string
+          workshop_id: string
+        }
+        Update: {
+          speaker_id?: string
+          workshop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workshop_speakers_speaker_id_fkey"
+            columns: ["speaker_id"]
+            isOneToOne: false
+            referencedRelation: "speakers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workshop_speakers_workshop_id_fkey"
+            columns: ["workshop_id"]
+            isOneToOne: false
+            referencedRelation: "workshops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workshops: {
+        Row: {
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          scheduled_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          scheduled_at: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          scheduled_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
