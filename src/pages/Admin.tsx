@@ -89,6 +89,8 @@ const Admin = () => {
         <Route path="apps" element={<AppsMonitor />} />
         <Route path="menu" element={<MenuManager />} />
         <Route path="plans-features" element={<PlansFeaturesManager />} />
+        <Route path="speakers" element={<SpeakersManager />} />
+        <Route path="workshops" element={<WorkshopsManager />} />
       </Route>
     </Routes>
   );

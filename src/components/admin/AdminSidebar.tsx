@@ -61,6 +61,16 @@ const menuItems = [
     icon: Key,
   },
   {
+    title: 'Ponentes',
+    href: '/admin/speakers',
+    icon: Mic,
+  },
+  {
+    title: 'Talleres',
+    href: '/admin/workshops',
+    icon: Calendar,
+  },
+  {
     title: 'Settings',
     href: '/admin/settings',
     icon: Settings,
