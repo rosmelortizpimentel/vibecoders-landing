@@ -10,6 +10,7 @@ import {
   Loader2,
   Trash2
 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   DndContext,
   closestCenter,
@@ -87,6 +88,7 @@ function SortableOptionRow({
       <button 
         {...attributes} 
         {...listeners}
+        type="button"
         className="p-1 cursor-grab active:cursor-grabbing hover:bg-gray-200 rounded touch-none"
       >
         <GripVertical className="h-4 w-4 text-gray-400" />
@@ -124,7 +126,6 @@ export function SurveyForm({ initialData, onSubmit, onCancel, isLoading }: Surve
   const [isActive, setIsActive] = useState(initialData?.is_active ?? true);
   const [showCommentField, setShowCommentField] = useState(initialData?.show_comment_field ?? true);
   
-  // Internal state for sortable options (using temp IDs if not original)
   const [options, setOptions] = useState<{ id: string; text: string; description?: string; originalId?: string }[]>(
     initialData?.options.map(opt => ({ 
       id: opt.id || Math.random().toString(36).substr(2, 9), 
@@ -164,10 +165,16 @@ export function SurveyForm({ initialData, onSubmit, onCancel, isLoading }: Surve
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
-    if (!question.trim()) return;
+    if (!title.trim()) {
+      toast.error('El título es requerido');
+      return;
+    }
+    if (!question.trim()) {
+      toast.error('La pregunta es requerida');
+      return;
+    }
     if (options.length < 2) {
-      alert('Debes añadir al menos 2 opciones');
+      toast.error('Debes añadir al menos 2 opciones');
       return;
     }
 
@@ -187,7 +194,12 @@ export function SurveyForm({ initialData, onSubmit, onCancel, isLoading }: Surve
       }))
     };
 
-    await onSubmit(data);
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      console.error('Submit error:', error);
+      toast.error('Error al guardar la encuesta');
+    }
   };
 
   return (
@@ -197,123 +209,125 @@ export function SurveyForm({ initialData, onSubmit, onCancel, isLoading }: Surve
           <h2 className="text-xl font-bold text-gray-900">
             {initialData ? 'Editar Encuesta' : 'Nueva Encuesta'}
           </h2>
-          <button onClick={onCancel} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button type="button" onClick={onCancel} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X className="h-5 w-5 text-gray-400" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Nombre de la Encuesta (uso interno)</label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Feedback Semanal"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col">
+          <div className="flex-1 space-y-6">
+            <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Texto del Badge</label>
+                <label className="text-sm font-medium">Nombre de la Encuesta (uso interno)</label>
                 <Input
-                  value={badgeText}
-                  onChange={(e) => setBadgeText(e.target.value)}
-                  placeholder="e.g. ENCUESTA o BETA"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Feedback Semanal"
                 />
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Texto del Badge</label>
+                  <Input
+                    value={badgeText}
+                    onChange={(e) => setBadgeText(e.target.value)}
+                    placeholder="e.g. ENCUESTA o BETA"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Subtítulo / Instrucción</label>
+                  <Input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="e.g. Ordena según importancia"
+                  />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <label className="text-sm font-medium">Subtítulo / Instrucción</label>
+                <label className="text-sm font-medium text-gray-900">Pregunta de la Encuesta</label>
                 <Input
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="e.g. Ordena según importancia"
+                  id="question"
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="¿Qué funcionalidades deberíamos priorizar?"
+                  required
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-900">Pregunta de la Encuesta</label>
-            <Input
-              id="question"
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder="¿Qué funcionalidades deberíamos priorizar?"
-              required
-            />
-          </div>
-        </div>
-
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-            <div className="space-y-0.5">
-              <Label>Estado de la Encuesta</Label>
-              <p className="text-xs text-gray-500">Activa el popup para los usuarios</p>
-            </div>
-            <Switch checked={isActive} onCheckedChange={setIsActive} />
-          </div>
-
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-            <div className="space-y-0.5">
-              <Label>Campo de Comentarios</Label>
-              <p className="text-xs text-gray-500">Permite al usuario dejar un comentario general</p>
-            </div>
-            <Switch checked={showCommentField} onCheckedChange={setShowCommentField} />
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Opciones a Priorizar (Arrastra para reordenar por defecto)</Label>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                onClick={handleAddOption}
-                className="h-8 gap-1"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Añadir Opción
-              </Button>
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="space-y-0.5">
+                <Label>Estado de la Encuesta</Label>
+                <p className="text-xs text-gray-500">Activa el popup para los usuarios</p>
+              </div>
+              <Switch checked={isActive} onCheckedChange={setIsActive} />
             </div>
 
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext
-                  items={options.map(o => o.id)}
-                  strategy={verticalListSortingStrategy}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
+              <div className="space-y-0.5">
+                <Label>Campo de Comentarios</Label>
+                <p className="text-xs text-gray-500">Permite al usuario dejar un comentario general</p>
+              </div>
+              <Switch checked={showCommentField} onCheckedChange={setShowCommentField} />
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Opciones a Priorizar (Arrastra para reordenar por defecto)</Label>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAddOption}
+                  className="h-8 gap-1"
                 >
-                  {options.map((option) => (
-                    <SortableOptionRow
-                      key={option.id}
-                      option={option}
-                      onRemove={handleRemoveOption}
-                      onUpdate={handleUpdateOption}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
+                  <Plus className="h-3.5 w-3.5" />
+                  Añadir Opción
+                </Button>
+              </div>
+
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
+                >
+                  <SortableContext
+                    items={options.map(o => o.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {options.map((option) => (
+                      <SortableOptionRow
+                        key={option.id}
+                        option={option}
+                        onRemove={handleRemoveOption}
+                        onUpdate={handleUpdateOption}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+              
+              {options.length === 0 && (
+                <p className="text-center py-4 text-sm text-gray-400 italic">
+                  Aún no has añadido ninguna opción.
+                </p>
+              )}
             </div>
-            
-            {options.length === 0 && (
-              <p className="text-center py-4 text-sm text-gray-400 italic">
-                Aún no has añadido ninguna opción.
-              </p>
-            )}
+          </div>
+
+          <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3 sticky bottom-0 z-10 -mx-6 -mb-6 mt-6">
+            <Button type="button" variant="ghost" onClick={onCancel} disabled={isLoading}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={isLoading} className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 min-w-[120px]">
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : initialData ? 'Guardar Cambios' : 'Crear Encuesta'}
+            </Button>
           </div>
         </form>
-
-        <div className="p-6 border-t border-gray-100 bg-gray-50 flex items-center justify-end gap-3 sticky bottom-0 z-10">
-          <Button variant="ghost" onClick={onCancel} disabled={isLoading}>
-            Cancelar
-          </Button>
-          <Button type="submit" onClick={handleSubmit} disabled={isLoading} className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 min-w-[120px]">
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : initialData ? 'Guardar Cambios' : 'Crear Encuesta'}
-          </Button>
-        </div>
       </div>
     </div>
   );

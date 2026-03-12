@@ -70,29 +70,29 @@ function SortableOptionItem({ option, index }: { option: SurveyOption; index: nu
     <div 
       ref={setNodeRef} 
       style={style}
-      className={`flex items-start gap-2 py-2 px-3 bg-white rounded-lg border transition-all cursor-default group ${
-        isDragging ? 'border-[#3D5AFE] shadow-md ring-2 ring-[#3D5AFE]/10 z-50' : 'border-gray-100 hover:border-gray-200'
+      className={`flex items-start gap-4 py-2.5 px-4 bg-white rounded-xl border transition-all cursor-default group ${
+        isDragging ? 'border-[#3D5AFE] shadow-xl ring-2 ring-[#3D5AFE]/5 z-50' : 'border-gray-100 hover:border-gray-200 hover:shadow-sm'
       }`}
     >
       <div 
         {...attributes} 
         {...listeners}
-        className="flex h-6 w-6 items-center justify-center bg-gray-50 rounded hover:bg-[#3D5AFE]/5 group-hover:text-[#3D5AFE] transition-colors touch-none flex-shrink-0 mt-0.5"
+        className="flex h-8 w-8 items-center justify-center bg-gray-50 rounded-lg group-hover:bg-[#3D5AFE]/5 group-hover:text-[#3D5AFE] transition-colors touch-none flex-shrink-0"
       >
-        <GripVertical className="h-3.5 w-3.5 text-gray-400" />
+        <GripVertical className="h-4 w-4 text-gray-300" />
       </div>
       
-      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[11px] font-bold text-gray-400 w-4 flex-shrink-0">
-            {index + 1}
+      <div className="flex flex-col gap-1 flex-1 min-w-0">
+        <div className="flex items-start gap-2">
+          <span className="text-[11px] font-mono font-bold text-gray-300 mt-0.5">
+            0{index + 1}
           </span>
-          <p className="font-bold text-gray-900 text-[14px] leading-[1.2] truncate">
+          <p className="font-semibold text-gray-900 text-[14px] leading-tight">
             {option.text}
           </p>
         </div>
         {option.description && (
-          <p className="text-[13px] text-gray-500 leading-normal pl-6 line-clamp-2">
+          <p className="text-[12px] text-gray-500 leading-relaxed pl-6">
             {option.description}
           </p>
         )}
@@ -225,7 +225,7 @@ export function SurveyPopup() {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center md:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white md:rounded-[24px] w-full h-full md:h-auto md:max-w-[440px] overflow-hidden shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col">
+      <div className="bg-white md:rounded-[24px] w-full h-full md:h-auto md:max-w-[660px] overflow-hidden shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col">
         
         {isSubmitted ? (
           <div className="p-10 text-center flex flex-col items-center justify-center min-h-[300px]">
@@ -237,37 +237,39 @@ export function SurveyPopup() {
             </div>
         ) : (
           <>
-            {/* Compact Header */}
-            <div className="px-4 py-3 bg-[#3D5AFE] text-white relative flex-shrink-0 min-h-[80px] flex flex-col justify-center">
+            {/* Compact Premium Header */}
+            <div className="px-5 py-4 bg-gradient-to-br from-[#3D5AFE] to-[#2A41C7] text-white relative flex-shrink-0">
               <button 
                 onClick={handleClose}
-                className="absolute top-2 right-2 p-1.5 hover:bg-white/10 rounded-full transition-colors z-10"
+                className="absolute top-3 right-3 p-1.5 hover:bg-white/10 rounded-full transition-colors z-10"
                 aria-label={t('close')}
               >
                 <X className="h-4 w-4" />
               </button>
               
-              <div className="flex items-center gap-2 mb-1">
-                <ClipboardList className="h-4 w-4 opacity-70" />
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1 bg-white/10 rounded-md">
+                  <ClipboardList className="h-3 w-3" />
+                </div>
+                <span className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-80">
                   {activeSurvey.badge_text || t('defaultBadge')}
                 </span>
               </div>
               
-              <h2 className="text-base font-bold leading-tight truncate">
+              <h2 className="text-[15px] font-bold leading-tight mb-1 pr-6">
                 {activeSurvey.question}
               </h2>
-              <p className="text-[11px] text-white/80 truncate">
+              <p className="text-[11px] text-white/70 leading-normal font-medium max-w-[90%]">
                 {activeSurvey.description || t('defaultDescription')}
               </p>
             </div>
 
             {/* Scrollable Content with Gradients */}
-            <div className="relative flex-1 flex flex-col">
-              {/* Top Gradient */}
-              <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-[#F8FAFF] to-transparent z-[5] pointer-events-none" />
-              
-              <div className="overflow-y-auto px-4 py-4 space-y-2 bg-[#F8FAFF]" style={{ height: 'calc(80vh - 180px)', minHeight: '300px' }}>
+            <div className="relative flex-1 flex flex-col bg-[#F8FAFF]">
+              <div 
+                className="overflow-y-auto px-6 py-4 space-y-3 custom-scrollbar" 
+                style={{ maxHeight: 'calc(80vh - 160px)', minHeight: '320px' }}
+              >
                 <DndContext
                   sensors={sensors}
                   collisionDetection={closestCenter}
@@ -290,15 +292,15 @@ export function SurveyPopup() {
                 </DndContext>
 
                 {activeSurvey.show_comment_field && (
-                  <div className="space-y-1 pt-2 pb-6">
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                  <div className="space-y-2 pt-4 pb-4">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                       {t('commentLabel')}
                     </label>
                     <textarea
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       placeholder={t('commentPlaceholder')}
-                      className="w-full min-h-[60px] p-2 bg-white border border-gray-100 rounded-lg text-[13px] focus:ring-1 focus:ring-[#3D5AFE] outline-none shadow-sm"
+                      className="w-full min-h-[80px] p-3 bg-white border border-gray-100 rounded-xl text-[13px] focus:ring-2 focus:ring-[#3D5AFE]/20 focus:border-[#3D5AFE] outline-none transition-all placeholder:text-gray-300 shadow-sm"
                     />
                   </div>
                 )}
@@ -308,19 +310,19 @@ export function SurveyPopup() {
               <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#F8FAFF] to-transparent z-[5] pointer-events-none" />
             </div>
 
-            {/* Sticky Footer with Blur */}
-            <div className="p-3 md:p-4 bg-white/80 backdrop-blur-md border-t border-gray-100 flex items-center gap-2 flex-shrink-0">
+            {/* Sticky Footer with refined typography */}
+            <div className="p-4 md:px-6 md:py-4 bg-white/90 backdrop-blur-md border-t border-gray-50 flex items-center gap-3 flex-shrink-0">
               <Button 
                 variant="ghost" 
                 onClick={handleClose}
-                className="flex-1 text-gray-500 font-medium text-sm h-10"
+                className="flex-1 text-gray-400 hover:text-gray-600 font-medium text-[13px] h-11"
               >
                 {t('close')}
               </Button>
               <Button 
                 onClick={handleSubmit}
                 disabled={responseMutation.isPending}
-                className="flex-[2] bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white font-bold rounded-lg h-10 text-sm shadow-md"
+                className="flex-[2] bg-[#3D5AFE] hover:bg-[#2A41C7] text-white font-bold rounded-xl h-11 text-[13px] shadow-lg shadow-[#3D5AFE]/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 {responseMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

@@ -1,45 +1,49 @@
 
 
-# Plan: Restore the `/api/og` Vercel Serverless Function
+# Plan: Sistema de Ponentes y Talleres
 
-## Problem
-The file `api/og.ts` (Vercel Serverless Function) was deleted at some point during recent iterations. The `vercel.json` rewrites still correctly route bot/crawler requests to `/api/og?username=:username`, but since the function no longer exists, those requests fall through to the SPA catch-all and return generic HTML without OG meta tags.
+## Base de datos (migración SQL)
 
-## Solution
-Create `api/og.ts` — a lightweight Vercel Serverless Function that proxies requests to the existing Supabase Edge Function `og-profile-meta`.
+### Tabla `speakers`
+- `id` uuid PK default gen_random_uuid()
+- `user_id` uuid **nullable** (opcional, solo para vincular con un perfil existente)
+- `display_name` text NOT NULL
+- `tagline` text
+- `photo_url` text
+- `created_at` timestamptz default now()
 
-### File to create: `api/og.ts`
+### Tabla `workshops`
+- `id` uuid PK default gen_random_uuid()
+- `title` text NOT NULL
+- `description` text
+- `banner_url` text
+- `scheduled_at` timestamptz NOT NULL
+- `duration_minutes` integer
+- `status` text NOT NULL default 'draft' (draft/published/cancelled)
+- `created_at` timestamptz default now()
+- `updated_at` timestamptz default now()
 
-```typescript
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+### Tabla `workshop_speakers`
+- `workshop_id` uuid FK → workshops ON DELETE CASCADE
+- `speaker_id` uuid FK → speakers ON DELETE CASCADE
+- PK compuesto (workshop_id, speaker_id)
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { username } = req.query;
+### RLS — solo admins (las 3 tablas)
+- SELECT/INSERT/UPDATE/DELETE: `has_role(auth.uid(), 'admin')`
 
-  if (!username || typeof username !== 'string') {
-    res.status(400).send('Missing username');
-    return;
-  }
+### Storage
+- Bucket `workshop-assets` (público) para banners
+- Policy: solo admins pueden subir/eliminar
 
-  const supabaseUrl = 'https://zkotnnmrehzqonlyeorv.supabase.co';
-  const response = await fetch(
-    `${supabaseUrl}/functions/v1/og-profile-meta?username=${encodeURIComponent(username)}`
-  );
+## Frontend
 
-  const html = await response.text();
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
-  res.status(response.status).send(html);
-}
-```
+### Nuevos archivos
+1. **`src/components/admin/SpeakersManager.tsx`** — Lista de ponentes con foto, nombre, tagline. Botón para agregar ponente: Dialog con buscador de usuarios (query a profiles). Al seleccionar, clona name/tagline/avatar_url a los campos del speaker. Campos editables post-clonación. Botón eliminar.
 
-### Why this works
-- `vercel.json` already has the rewrite rules sending bot traffic and `?og=1` requests to `/api/og?username=:username`
-- The Supabase Edge Function `og-profile-meta` is deployed and functional (confirmed in config.toml with `verify_jwt = false`)
-- This proxy avoids cross-domain redirect issues that LinkedIn rejects
+2. **`src/components/admin/WorkshopsManager.tsx`** — Lista de talleres con título, fecha, estado, ponentes. Formulario crear/editar: título, descripción, datetime-local, banner upload a `workshop-assets`, estado select (draft/published/cancelled), multi-select de ponentes desde tabla speakers.
 
-### Technical detail
-- Single file creation: `api/og.ts`
-- No other files need changes
-- No database changes needed
+### Archivos a modificar
+3. **`src/components/admin/AdminSidebar.tsx`** — Agregar 2 items: "Ponentes" (icon: `Mic`) y "Talleres" (icon: `Calendar`)
+
+4. **`src/pages/Admin.tsx`** — Agregar rutas `/admin/speakers` y `/admin/workshops` con imports de los nuevos componentes
 
