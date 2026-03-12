@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Layers, Settings, Users, Mail, Cpu, MessageCircle, ChevronLeft, ChevronRight, Menu, Bell, ClipboardList, AppWindow, PanelLeft, Key } from 'lucide-react';
+import { LayoutGrid, Layers, Settings, Users, Mail, Cpu, MessageCircle, ChevronLeft, ChevronRight, Menu, Bell, ClipboardList, AppWindow, PanelLeft, Key, Mic, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
