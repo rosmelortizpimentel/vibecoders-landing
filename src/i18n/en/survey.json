@@ -7,5 +7,6 @@
   "submit": "Send Feedback",
   "errorSaving": "Error saving your response. Please try again.",
   "defaultBadge": "SURVEY",
-  "defaultDescription": "Your vote defines the roadmap. Order by priority."
+  "defaultDescription": "Your vote defines the roadmap. Order by priority.",
+  "scrollMore": "Scroll for more"
 }

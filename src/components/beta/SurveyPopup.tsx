@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -216,6 +216,27 @@ export function SurveyPopup() {
   });
 
   const [orderedOptions, setOrderedOptions] = useState<SurveyOption[]>([]);
+  const [showTopFade, setShowTopFade] = useState(false);
+  const [showBottomFade, setShowBottomFade] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+      setShowTopFade(scrollTop > 10);
+      setShowBottomFade(scrollTop + clientHeight < scrollHeight - 10);
+    }
+  };
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll);
+      // Initial check
+      setTimeout(handleScroll, 100);
+      return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    }
+  }, [activeSurvey, orderedOptions]);
 
   useEffect(() => {
     if (activeSurvey) {
@@ -317,11 +338,19 @@ export function SurveyPopup() {
               </p>
             </div>
 
-            {/* Scrollable Content with Gradients */}
-            <div className="relative flex-1 flex flex-col bg-[#F8FAFF]">
+            {/* Scrollable Content with Dynamic Gradients */}
+            <div className="relative flex-1 flex flex-col bg-[#F8FAFF] overflow-hidden">
+              {/* Top Fade Indicator */}
               <div 
-                className="overflow-y-auto px-6 py-4 space-y-3 custom-scrollbar" 
-                style={{ maxHeight: 'calc(80vh - 160px)', minHeight: '320px' }}
+                className={`absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-[#F8FAFF] to-transparent z-10 pointer-events-none transition-opacity duration-300 ${
+                  showTopFade ? 'opacity-100' : 'opacity-0'
+                }`} 
+              />
+              
+              <div 
+                ref={scrollRef}
+                className="overflow-y-auto px-6 py-4 space-y-3 custom-scrollbar flex-1" 
+                style={{ maxHeight: 'calc(85vh - 160px)', minHeight: '320px' }}
               >
                 <DndContext
                   sensors={sensors}
@@ -357,7 +386,7 @@ export function SurveyPopup() {
                 </DndContext>
 
                 {activeSurvey.show_comment_field && (
-                  <div className="space-y-2 pt-4 pb-4">
+                  <div className="space-y-2 pt-4 pb-8">
                     <label className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
                       {t('commentLabel')}
                     </label>
@@ -371,8 +400,19 @@ export function SurveyPopup() {
                 )}
               </div>
 
-              {/* Bottom Gradient */}
-              <div className="absolute bottom-0 left-0 right-0 h-4 bg-gradient-to-t from-[#F8FAFF] to-transparent z-[5] pointer-events-none" />
+              {/* Bottom Fade Indicator with "Scroll for more" hint */}
+              <div 
+                className={`absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-[#F8FAFF] via-[#F8FAFF]/80 to-transparent z-10 pointer-events-none transition-opacity duration-300 flex flex-col items-center justify-end pb-2 ${
+                  showBottomFade ? 'opacity-100' : 'opacity-0'
+                }`}
+              >
+                <div className="animate-bounce mb-1">
+                  <ChevronDown className="h-4 w-4 text-[#3D5AFE]/40" />
+                </div>
+                <span className="text-[9px] font-bold text-[#3D5AFE]/40 uppercase tracking-tighter">
+                  {t('scrollMore')}
+                </span>
+              </div>
             </div>
 
             {/* Sticky Footer with refined typography */}
