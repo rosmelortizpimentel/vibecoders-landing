@@ -66,7 +66,7 @@ const menuItems = [
     icon: Mic,
   },
   {
-    title: 'Talleres',
+    title: 'Charlas',
     href: '/admin/workshops',
     icon: Calendar,
   },
