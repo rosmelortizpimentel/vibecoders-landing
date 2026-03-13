@@ -58,7 +58,7 @@ async function fetchPublicApps({
       owner:profiles!apps_user_id_fkey(id, username, name, avatar_url),
       app_founders(role, profile:profiles(id, username, name, avatar_url)),
       category:app_categories(id, name),
-      status:app_statuses(name, slug, color)
+      status:app_statuses${filter === 'for-sale' ? '!inner' : ''}(name, slug, color)
     `)
     .eq('is_visible', true);
 
@@ -75,6 +75,10 @@ async function fetchPublicApps({
     if (subFilter !== 'all') {
       query = query.contains('partnership_types', [subFilter]);
     }
+  }
+
+  if (filter === 'for-sale') {
+    query = query.eq('status.slug', 'for-sale');
   }
 
   const { data, error } = await query

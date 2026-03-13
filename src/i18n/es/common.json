@@ -65,5 +65,11 @@
         "description": "Microsoft Clarity para estadísticas de uso (anonimizadas)."
       }
     }
+  },
+  "directory": {
+    "all": "Todas",
+    "openForTesting": "Open for Testing",
+    "openToPartnerships": "Open to Partnerships",
+    "forSale": "For Sale"
   }
 }

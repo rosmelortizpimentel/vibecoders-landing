@@ -32,6 +32,7 @@ export function AppDirectoryCard({
   showBetaBadge = true,
   showPartnershipBadge = true
 }: AppDirectoryCardProps) {
+  const { t } = useTranslation('common');
   const { t: tPartner } = useTranslation('partnerships');
   const navigate = useNavigate();
   const [toggling, setToggling] = useState(false);
@@ -99,7 +100,7 @@ export function AppDirectoryCard({
       onClick={() => navigate(`/app/${app.id}`)}
     >
       {/* Logo */}
-      <div className="w-14 h-14 rounded-xl bg-white border border-border flex items-center justify-center shrink-0 overflow-hidden shadow-sm transition-transform duration-200 group-hover:scale-105 p-1.5">
+      <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center shrink-0 overflow-hidden shadow-sm transition-transform duration-200 group-hover:scale-105 p-1.5">
         {app.logo_url ? (
           <img src={app.logo_url} alt={app.name || ''} className="w-full h-full object-contain" />
         ) : (
@@ -130,7 +131,7 @@ export function AppDirectoryCard({
           )}
           {app.status && (
             <span
-              className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 border"
+              className="px-2 py-0.5 rounded-full text-[10px] font-normal uppercase tracking-wider shrink-0 border"
               style={{
                 color: app.status.slug === 'live' ? '#68CF94' : app.status.slug === 'building' ? '#854d0e' : app.status.color,
                 backgroundColor: app.status.slug === 'live' ? '#68CF9426' : app.status.slug === 'building' ? '#FFD90026' : `${app.status.color}15`,
@@ -147,19 +148,15 @@ export function AppDirectoryCard({
 
         {/* Badges */}
         <div className="flex items-center gap-2 flex-wrap mb-2">
-          {app.category && (
-            <span className="px-2 py-0.5 rounded-full bg-[#f5f5f5] text-[#1C1C1C]/60 text-[10px] font-bold uppercase tracking-wider border border-border/50">
-              {app.category.name}
-            </span>
-          )}
+
           {app.beta_active && showBetaBadge && (
-            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20 text-[10px] font-bold uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20 text-[10px] uppercase tracking-wider">
               Open for Testing
             </span>
           )}
           {app.open_to_partnerships && showPartnershipBadge && (
-            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider">
-              Partnerships
+            <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[10px] uppercase tracking-wider">
+              {t('directory.openToPartnerships')}
             </span>
           )}
         </div>
@@ -178,20 +175,12 @@ export function AppDirectoryCard({
                   {(founder.name || 'U').substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <span className="text-xs text-muted-foreground font-medium whitespace-normal leading-tight">
+              <span className="text-xs text-[#6B7280] font-medium whitespace-normal leading-tight">
                 {founder.name || founder.username}
               </span>
             </Link>
           ))}
 
-          {app.open_to_partnerships && app.partnership_types?.map((type) => (
-            <span 
-              key={type} 
-              className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-100 uppercase whitespace-nowrap"
-            >
-              Busco {tPartner(`types.${type}`)}
-            </span>
-          ))}
         </div>
       </div>
 
