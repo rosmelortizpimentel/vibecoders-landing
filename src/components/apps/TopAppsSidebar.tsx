@@ -20,7 +20,6 @@ export function TopAppsSidebar() {
     <div className="bg-white rounded-xl overflow-hidden lg:max-h-[calc(100vh-120px)] lg:overflow-y-auto no-scrollbar" style={{ border: '1px solid #eeeeee', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
       {/* Header */}
       <div className="flex items-center gap-2 px-5 pt-5 pb-3">
-        <Trophy className="w-5 h-5 text-amber-500" />
         <h2 className="text-lg font-bold text-foreground">Top Apps</h2>
       </div>
 
@@ -86,24 +85,15 @@ export function TopAppsSidebar() {
                 </Link>
                 {/* Founders */}
                 {app.founders && app.founders.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <div className="flex flex-wrap items-center gap-2 mt-0">
                     {app.founders.map(founder => (
                       <Link 
                         key={founder.id} 
                         to={`/profile/${founder.username}`}
-                        className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                        className="flex items-center hover:opacity-80 transition-opacity"
                         title={founder.name}
                       >
-                        <div className="w-4 h-4 rounded-full overflow-hidden bg-muted shrink-0 shadow-sm border border-border">
-                          {founder.avatar_url ? (
-                            <img src={founder.avatar_url} alt={founder.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-primary/10 text-[8px] font-bold text-primary">
-                              {founder.name?.charAt(0)}
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-muted-foreground hover:text-primary hover:underline transition-colors whitespace-normal leading-tight">
+                        <span className="text-[10px] text-muted-foreground hover:text-primary hover:underline transition-colors whitespace-normal leading-tight">
                           {founder.name}
                         </span>
                       </Link>

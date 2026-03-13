@@ -26,5 +26,10 @@
     "title": "Open to Partnerships",
     "description": "The founder is open to collaborate. Are you the partner this project needs?",
     "contactButton": "I'm interested"
+  },
+  "forSale": {
+    "title": "Open for Sale",
+    "description": "This project is available for purchase. Contact the founder to discuss details.",
+    "contactButton": "Contact via Chat"
   }
 }

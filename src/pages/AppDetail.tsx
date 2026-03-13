@@ -40,7 +40,8 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  BadgeDollarSign
 } from 'lucide-react';
 import { ProBadge } from '@/components/ui/ProBadge';
 import { UpgradeBadge } from '@/components/ui/UpgradeBadge';
@@ -99,6 +100,11 @@ export default function AppDetail() {
     removeFounder,
     canManageFounders 
   } = useAppFounders(appId || '');
+
+  const ownerFounder = founders.find(f => f.role === 'owner');
+  const ownerProfile = ownerFounder 
+    ? { ...ownerFounder.profile, id: ownerFounder.user_id } 
+    : app?.owner;
 
   const [selectedScreenshotIndex, setSelectedScreenshotIndex] = useState<number | null>(null);
 
@@ -384,7 +390,7 @@ export default function AppDetail() {
                           {/* Info */}
                           <div className="flex-1 text-center md:text-left min-w-0">
                             <div className="flex items-center gap-2 justify-center md:justify-start mb-2">
-                               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 truncate">
+                               <h1 className="text-xl md:text-2xl font-bold text-gray-900 truncate">
                                  {app.name}
                                </h1>
                                {app.is_verified && (
@@ -402,15 +408,15 @@ export default function AppDetail() {
                                  </TooltipProvider>
                                )}
                             </div>
-                            <p className="text-lg text-gray-500 font-light mb-4 text-left">
+                            <p className="text-base text-gray-500 font-light mb-4 text-left">
                               {app.tagline}
                             </p>
                             
                             <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                               <Button 
                                 asChild 
-                                size="sm"
-                                className="rounded-full bg-gray-900 hover:bg-gray-800"
+                                variant="outline"
+                                className="rounded-full bg-transparent border-[#1C1C1C] text-[#1C1C1C] hover:bg-gray-50 hover:text-[#1C1C1C] font-medium text-xs h-auto py-1 px-3"
                               >
                                 <a 
                                   href={app.url.startsWith('http') ? app.url : `https://${app.url}`} 
@@ -419,12 +425,12 @@ export default function AppDetail() {
                                   className="flex items-center gap-2"
                                 >
                                   {tCommon('visitWebsite')}
-                                  <ExternalLink className="w-4 h-4" />
+                                  <ExternalLink className="w-3.5 h-3.5" />
                                 </a>
                               </Button>
                               
                               {app.status && (
-                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/5 text-primary border border-primary/10">
+                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-normal bg-transparent text-[#1C1C1C] border border-[#1C1C1C]">
                                    {app.status.name}
                                  </span>
                               )}
@@ -497,7 +503,7 @@ export default function AppDetail() {
                                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-50 border border-gray-100"
                                 >
                                   <img src={stack.logo_url} alt={stack.name} className="w-5 h-5 object-contain" />
-                                  <span className="text-xs font-semibold text-gray-700">{stack.name}</span>
+                                  <span className="text-xs font-normal text-gray-700">{stack.name}</span>
                                 </div>
                               ))}
                             </div>
@@ -543,12 +549,12 @@ export default function AppDetail() {
                               }} />
                               
                               <div className="absolute top-4 right-4 flex items-center gap-2">
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                                  founder.role === 'owner' 
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-normal uppercase tracking-wider border ${
+                                  (founder.role === 'owner' && founders.length === 1)
                                     ? 'bg-primary/5 text-primary border-primary/20' 
                                     : 'bg-gray-50 text-gray-500 border-gray-200'
                                 }`}>
-                                  {founder.role === 'owner' ? 'Owner' : 'Co-founder'}
+                                  {(founder.role === 'owner' && founders.length === 1) ? 'Owner' : 'Co-founder'}
                                 </span>
                               </div>
                            </div>
@@ -558,16 +564,16 @@ export default function AppDetail() {
 
                     {/* Partnership section */}
                     {app.open_to_partnerships && (
-                      <div className="p-4 bg-primary/[0.03] border border-primary/10 rounded-2xl shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                          <UserPlus className="w-12 h-12 text-primary" />
+                      <div className="p-4 bg-[#F5FBF8] border border-[#D1D5DB]/30 rounded-2xl shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-[#1C1C1C]">
+                          <UserPlus className="w-12 h-12" />
                         </div>
                         
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="p-1.5 bg-primary/10 rounded-lg">
-                            <UserPlus className="w-4 h-4 text-primary" />
+                          <div className="p-1.5 bg-[#1C1C1C]/5 rounded-lg">
+                            <UserPlus className="w-4 h-4 text-[#1C1C1C]" />
                           </div>
-                          <h3 className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">
+                          <h3 className="text-[10px] font-bold text-[#1C1C1C] uppercase tracking-[0.2em]">
                             {tPartner('detail.title')}
                           </h3>
                         </div>
@@ -578,16 +584,10 @@ export default function AppDetail() {
                         
                         <div className="flex flex-wrap gap-1.5 mb-4">
                           {app.partnership_types?.map((type: string) => {
-                            const colors = type === 'investor' 
-                              ? "bg-purple-100 text-purple-700 border-purple-200" 
-                              : type === 'tech_partner'
-                                ? "bg-blue-100 text-blue-700 border-blue-200"
-                                : "bg-orange-100 text-orange-700 border-orange-200";
-                            
                             return (
                               <span 
                                 key={type}
-                                className={cn("px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border shadow-xs", colors)}
+                                className="px-2.5 py-1 rounded-full text-[9px] font-normal uppercase tracking-wider bg-transparent border border-[#D1D5DB] text-[#374151] shadow-xs"
                               >
                                 {tPartner(`types.${type}`)}
                               </span>
@@ -595,14 +595,60 @@ export default function AppDetail() {
                           })}
                         </div>
 
-                        {user?.id !== app.owner?.id && (
+                        {/* Contact button */}
+                        {ownerProfile?.id && (
                           <Button 
                             onClick={() => {
-                              navigate(`/chat?user=${app.owner?.id}`);
+                              navigate(`/chat?user=${ownerProfile.id}`);
                             }}
-                            className="w-full bg-primary hover:bg-primary/90 text-white rounded-xl h-10 text-xs font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.01] active:scale-[0.98]"
+                            className="w-full bg-[#68CF94] hover:bg-[#68CF94]/90 text-[#1C1C1C] rounded-xl h-10 text-xs font-semibold shadow-lg shadow-[#68CF94]/20 transition-all hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center gap-2"
                           >
+                            <Avatar className="w-5 h-5 border border-black/10">
+                              <AvatarImage src={ownerProfile.avatar_url} />
+                              <AvatarFallback className="bg-white/20 text-[8px]">
+                                {ownerProfile.name?.charAt(0) || ownerProfile.username?.charAt(0) || 'O'}
+                              </AvatarFallback>
+                            </Avatar>
                             {tPartner('detail.contactButton')}
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                    {/* For Sale section */}
+                    {app.status?.slug === 'for-sale' && (
+                      <div className="p-4 bg-[#FAFAFA] border border-gray-100 rounded-2xl shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-[#1C1C1C]">
+                          <BadgeDollarSign className="w-12 h-12" />
+                        </div>
+                        
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="p-1.5 bg-[#1C1C1C]/5 rounded-lg">
+                            <BadgeDollarSign className="w-4 h-4 text-[#1C1C1C]" />
+                          </div>
+                          <h3 className="text-[10px] font-bold text-[#1C1C1C] uppercase tracking-[0.2em]">
+                            {tPartner('forSale.title')}
+                          </h3>
+                        </div>
+                        
+                        <p className="text-sm text-gray-600 mb-4 leading-relaxed pr-6">
+                          {tPartner('forSale.description')}
+                        </p>
+
+                        {/* Contact button */}
+                        {ownerProfile?.id && (
+                          <Button 
+                            onClick={() => {
+                              navigate(`/chat?user=${ownerProfile.id}`);
+                            }}
+                            className="w-full bg-[#1C1C1C] hover:bg-black text-[#FFFFFF] rounded-xl h-10 text-xs font-semibold shadow-lg shadow-black/20 transition-all hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center gap-2"
+                          >
+                            <Avatar className="w-5 h-5 border border-white/10">
+                              <AvatarImage src={ownerProfile.avatar_url} />
+                              <AvatarFallback className="bg-white/10 text-[8px]">
+                                {ownerProfile.name?.charAt(0) || ownerProfile.username?.charAt(0) || 'O'}
+                              </AvatarFallback>
+                            </Avatar>
+                            {tPartner('forSale.contactButton')}
                           </Button>
                         )}
                       </div>

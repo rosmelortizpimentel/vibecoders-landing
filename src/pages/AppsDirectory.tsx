@@ -66,9 +66,10 @@ export default function AppsDirectory() {
   }, [sheetOpen, currentFilter, activeSubFilter]);
 
   const filters = [
-    { id: 'all', label: 'Todas', path: '/apps' },
-    { id: 'open-for-testing', label: 'Open for Testing', path: '/apps/open-for-testing' },
-    { id: 'open-to-partnerships', label: 'Open to Partnerships', path: '/apps/open-to-partnerships' },
+    { id: 'all', label: t('directory.all'), path: '/apps' },
+    { id: 'open-for-testing', label: t('directory.openForTesting'), path: '/apps/open-for-testing' },
+    { id: 'open-to-partnerships', label: t('directory.openToPartnerships'), path: '/apps/open-to-partnerships' },
+    { id: 'for-sale', label: t('directory.forSale'), path: '/apps/for-sale' },
   ];
 
   const subFilters = [
@@ -140,9 +141,9 @@ export default function AppsDirectory() {
                 key={f.id}
                 onClick={() => navigate(f.path)}
                 className={cn(
-                  "px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap border h-10 flex items-center justify-center",
+                  "px-3 py-2 rounded-full text-sm font-normal transition-all whitespace-nowrap border h-10 flex items-center justify-center",
                   currentFilter === f.id || (currentFilter === 'all' && f.id === 'all')
-                    ? "bg-[#68CF94] text-[#1C1C1C] border-[#68CF94]" 
+                    ? "bg-[#1C1C1C] text-[#FFFFFF] border-[#1C1C1C]" 
                     : "bg-white text-[#1C1C1C]/60 border-[#e5e5e5] hover:bg-muted"
                 )}
               >
@@ -188,7 +189,7 @@ export default function AppsDirectory() {
       </div>
 
       {/* Two-Column Layout */}
-      <div className="flex flex-col lg:flex-row lg:items-start gap-6 px-1 mt-4">
+      <div className="flex flex-col lg:flex-row lg:items-start gap-6 px-1 mt-2">
         {/* Left Column — App List */}
         <div className="flex-1 min-w-0">
           {isLoading ? (
@@ -219,8 +220,8 @@ export default function AppsDirectory() {
                     isLiked={likesMap[app.id]?.is_liked ?? false}
                     isAuthenticated={!!user}
                     onLikeToggled={invalidateLikes}
-                    showBetaBadge={currentFilter !== 'open-for-testing'}
-                    showPartnershipBadge={currentFilter !== 'open-to-partnerships'}
+                    showBetaBadge={true}
+                    showPartnershipBadge={true}
                   />
                 ))}
               </div>
