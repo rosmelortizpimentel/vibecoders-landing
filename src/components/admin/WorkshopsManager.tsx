@@ -11,13 +11,17 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Plus, Trash2, Pencil, Calendar, Upload } from 'lucide-react';
+import { Plus, Trash2, Pencil, Calendar as CalendarIcon, Upload, List } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { WorkshopCalendar } from './WorkshopCalendar';
+import { TimezoneDisplay } from './TimezoneDisplay';
 
 interface Workshop {
   id: string;
   title: string;
+  tagline: string | null;
   description: string | null;
   banner_url: string | null;
   scheduled_at: string;
@@ -52,7 +56,7 @@ export function WorkshopsManager() {
   const [selectedSpeakerIds, setSelectedSpeakerIds] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    title: '', description: '', banner_url: '', scheduled_at: '', duration_minutes: '', status: 'draft',
+    title: '', tagline: '', description: '', banner_url: '', scheduled_at: '', duration_minutes: '', status: 'draft',
   });
 
   const fetchWorkshops = async () => {
@@ -62,7 +66,7 @@ export function WorkshopsManager() {
       .select('*')
       .order('scheduled_at', { ascending: true });
 
-    if (wErr) { toast.error('Error al cargar talleres'); setLoading(false); return; }
+    if (wErr) { toast.error('Error al cargar charlas'); setLoading(false); return; }
 
     const { data: wsData } = await supabase.from('workshop_speakers').select('workshop_id, speaker_id');
     const { data: sData } = await supabase.from('speakers').select('id, display_name, photo_url');
@@ -111,6 +115,7 @@ export function WorkshopsManager() {
 
     const payload = {
       title: formData.title,
+      tagline: formData.tagline || null,
       description: formData.description || null,
       banner_url: formData.banner_url || null,
       scheduled_at: formData.scheduled_at,
@@ -127,7 +132,7 @@ export function WorkshopsManager() {
       workshopId = editing.id;
     } else {
       const { data, error } = await supabase.from('workshops').insert(payload).select('id').single();
-      if (error || !data) { toast.error('Error al crear taller'); return; }
+      if (error || !data) { toast.error('Error al crear charla'); return; }
       workshopId = data.id;
     }
 
@@ -138,22 +143,22 @@ export function WorkshopsManager() {
       await supabase.from('workshop_speakers').insert(rows);
     }
 
-    toast.success(editing ? 'Taller actualizado' : 'Taller creado');
+    toast.success(editing ? 'Charla actualizada' : 'Charla creada');
     closeDialog();
     fetchWorkshops();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este taller?')) return;
+    if (!confirm('¿Eliminar esta charla?')) return;
     const { error } = await supabase.from('workshops').delete().eq('id', id);
     if (error) { toast.error('Error al eliminar'); return; }
-    toast.success('Taller eliminado');
+    toast.success('Charla eliminada');
     fetchWorkshops();
   };
 
   const openCreate = () => {
     setEditing(null);
-    setFormData({ title: '', description: '', banner_url: '', scheduled_at: '', duration_minutes: '', status: 'draft' });
+    setFormData({ title: '', tagline: '', description: '', banner_url: '', scheduled_at: '', duration_minutes: '', status: 'draft' });
     setSelectedSpeakerIds([]);
     setShowDialog(true);
   };
@@ -162,6 +167,7 @@ export function WorkshopsManager() {
     setEditing(w);
     setFormData({
       title: w.title,
+      tagline: w.tagline || '',
       description: w.description || '',
       banner_url: w.banner_url || '',
       scheduled_at: w.scheduled_at ? w.scheduled_at.slice(0, 16) : '',
@@ -182,71 +188,109 @@ export function WorkshopsManager() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Calendar className="h-6 w-6" /> Talleres
+            <CalendarIcon className="h-6 w-6" /> Charlas
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">{workshops.length} talleres</p>
+          <p className="text-sm text-muted-foreground mt-1">{workshops.length} charlas</p>
         </div>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> Nuevo taller</Button>
+        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> Nueva charla</Button>
       </div>
 
       {loading ? (
         <p className="text-muted-foreground">Cargando...</p>
       ) : workshops.length === 0 ? (
-        <p className="text-muted-foreground">No hay talleres aún.</p>
+        <p className="text-muted-foreground">No hay charlas aún.</p>
       ) : (
-        <Table>
+        <Tabs defaultValue="list" className="w-full">
+          <div className="flex justify-end mb-4">
+            <TabsList>
+              <TabsTrigger value="list" className="flex items-center gap-2">
+                <List className="h-4 w-4" /> Lista
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4" /> Calendario
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="list" className="mt-0">
+            <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Título</TableHead>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Ponentes</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
+              <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Título</TableHead>
+              <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Fecha</TableHead>
+              <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Hora (Local)</TableHead>
+              <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Horarios (Países)</TableHead>
+              <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Estado</TableHead>
+              <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Ponentes</TableHead>
+              <TableHead className="py-2 h-auto text-[11px] font-bold uppercase text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {workshops.map((w) => (
-              <TableRow key={w.id}>
-                <TableCell className="font-medium">{w.title}</TableCell>
-                <TableCell>{format(new Date(w.scheduled_at), "d MMM yyyy, HH:mm", { locale: es })}</TableCell>
-                <TableCell>
-                  <Badge variant={STATUS_MAP[w.status]?.variant || 'secondary'}>
+              <TableRow key={w.id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-100">
+                <TableCell className="py-1.5">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{w.title}</span>
+                    {w.tagline && <span className="text-[11px] text-gray-500 line-clamp-1">{w.tagline}</span>}
+                  </div>
+                </TableCell>
+                <TableCell className="py-1.5 text-[13px] text-gray-600">
+                  {format(new Date(w.scheduled_at), "d 'de' MMM, yyyy", { locale: es })}
+                </TableCell>
+                <TableCell className="py-1.5 text-[13px] font-medium text-gray-900">
+                  {format(new Date(w.scheduled_at), "HH:mm 'hs'", { locale: es })}
+                </TableCell>
+                <TableCell className="py-1.5">
+                  <TimezoneDisplay date={w.scheduled_at} variant="compact" />
+                </TableCell>
+                <TableCell className="py-1.5">
+                  <Badge variant={STATUS_MAP[w.status]?.variant || 'secondary'} className="text-[10px] px-1.5 py-0 h-auto font-medium">
                     {STATUS_MAP[w.status]?.label || w.status}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  <div className="flex -space-x-2">
+                <TableCell className="py-1.5">
+                  <div className="flex -space-x-1.5">
                     {w.speakers.map(s => (
-                      <Avatar key={s.id} className="h-7 w-7 border-2 border-background">
+                      <Avatar key={s.id} className="h-6 w-6 border-2 border-background shadow-sm">
                         <AvatarImage src={s.photo_url || ''} />
-                        <AvatarFallback className="text-xs">{s.display_name.charAt(0)}</AvatarFallback>
+                        <AvatarFallback className="text-[9px]">{s.display_name.charAt(0)}</AvatarFallback>
                       </Avatar>
                     ))}
-                    {w.speakers.length === 0 && <span className="text-xs text-muted-foreground">Sin ponentes</span>}
+                    {w.speakers.length === 0 && <span className="text-[11px] text-muted-foreground italic">Sin ponentes</span>}
                   </div>
                 </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="ghost" size="icon" onClick={() => openEdit(w)}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(w.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                <TableCell className="py-1.5 text-right space-x-1">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(w)}><Pencil className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(w.id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
             ))}
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
+        </TabsContent>
+
+        <TabsContent value="calendar" className="mt-0">
+          <WorkshopCalendar workshops={workshops} onEdit={openEdit} />
+        </TabsContent>
+      </Tabs>
       )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={(v) => { if (!v) closeDialog(); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>{editing ? 'Editar Taller' : 'Nuevo Taller'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? 'Editar Charla' : 'Nueva Charla'}</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div>
               <Label>Título *</Label>
               <Input value={formData.title} onChange={(e) => setFormData(p => ({ ...p, title: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Tagline (Subtítulo)</Label>
+              <Input value={formData.tagline} onChange={(e) => setFormData(p => ({ ...p, tagline: e.target.value }))} placeholder="Una breve descripción para la lista" />
             </div>
             <div>
               <Label>Descripción</Label>
@@ -254,8 +298,12 @@ export function WorkshopsManager() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Fecha y hora *</Label>
+                <Label className="flex items-center gap-1.5">
+                  Fecha y hora *
+                  <img src="https://flagcdn.com/w20/ca.png" width="16" height="12" alt="Canada" className="inline-block rounded-[1px]" title="Hora local (Canadá)" />
+                </Label>
                 <Input type="datetime-local" value={formData.scheduled_at} onChange={(e) => setFormData(p => ({ ...p, scheduled_at: e.target.value }))} />
+                <TimezoneDisplay date={formData.scheduled_at} className="mt-2" />
               </div>
               <div>
                 <Label>Duración (min)</Label>
