@@ -18,6 +18,7 @@ import { MenuManager } from '@/components/admin/MenuManager';
 import { PlansFeaturesManager } from '@/components/admin/PlansFeaturesManager';
 import { SpeakersManager } from '@/components/admin/SpeakersManager';
 import { WorkshopsManager } from '@/components/admin/WorkshopsManager';
+import { ResourceManager } from '@/components/admin/ResourceManager';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 
@@ -91,6 +92,7 @@ const Admin = () => {
         <Route path="plans-features" element={<PlansFeaturesManager />} />
         <Route path="speakers" element={<SpeakersManager />} />
         <Route path="workshops" element={<WorkshopsManager />} />
+        <Route path="resources" element={<ResourceManager />} />
       </Route>
     </Routes>
   );

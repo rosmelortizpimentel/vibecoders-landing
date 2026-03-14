@@ -71,6 +71,11 @@ const menuItems = [
     icon: Calendar,
   },
   {
+    title: 'Recursos',
+    href: '/admin/resources',
+    icon: ClipboardList,
+  },
+  {
     title: 'Settings',
     href: '/admin/settings',
     icon: Settings,

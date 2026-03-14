@@ -42,7 +42,7 @@ const mapItem = (item: SidebarMenuItemRow): SidebarMenuItem => {
     id: item.id,
     key: item.key,
     labelKey: item.label_key,
-    path: item.path,
+    path: item.path === '/resources' ? '/feed' : item.path,
     icon: IconComponent,
     section: item.section,
     displayOrder: item.display_order,

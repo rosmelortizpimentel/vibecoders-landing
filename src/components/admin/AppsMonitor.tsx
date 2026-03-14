@@ -73,7 +73,7 @@ export function AppsMonitor() {
           id, name, url, is_visible, beta_active, hours_ideation, hours_building, created_at, status_id, user_id,
           profiles:user_id(name, username, avatar_url),
           app_statuses:status_id(name, color, icon),
-          roadmap_settings:app_id(custom_domain)
+          roadmap_settings(custom_domain)
         `)
         .order('created_at', { ascending: false });
 

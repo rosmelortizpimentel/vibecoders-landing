@@ -20,6 +20,7 @@
     "myIdeas": "Minhas Ideias",
     "roadmap": "Roadmap",
     "prompts": "Prompt Vault",
+    "resources": "Feed de Recursos",
     "vibers": "Minha Comunidade",
     "startups": "Explorar",
     "betaTesting": "Beta Testing",
@@ -35,5 +36,32 @@
     "admin": "Admin"
   },
   "joinGroup": "Entrar no Grupo",
-  "upgradeOffer": "🔥 Oferta expira em 28 de Fev"
+  "upgradeOffer": "🔥 Oferta expira em 28 de Fev",
+  "resources": {
+    "createPost": "Criar publicação",
+    "editPost": "Editar publicação",
+    "deletePost": "Excluir publicação",
+    "deletePostTitle": "Excluir publicação",
+    "deletePostDescription": "Tem certeza de que deseja excluir esta publicação? Esta ação não pode ser desfeita.",
+    "placeholder": "O que você quer compartilhar hoje?",
+    "edited": "(Editado)",
+    "content": "Conteúdo",
+    "media": "Imagens / Mídia",
+    "downloads": "Links de Download / Documentos",
+    "downloadsTitle": "Recursos",
+    "publish": "Publicar",
+    "saveChanges": "Salvar Alterações",
+    "cancel": "Cancelar",
+    "deleteConfirm": "Tem certeza de que deseja excluir esta publicação? Todos os comentários também serão excluídos.",
+    "showingLess": "mostrar menos",
+    "showingMore": "ver mais",
+    "noDownloads": "Sem links de download",
+    "addMedia": "Adicionar Mídia",
+    "noMedia": "Nenhuma mídia adicionada",
+    "addFile": "Anexar Arquivo",
+    "addLink": "Adicionar Link",
+    "maxSize": "Máx",
+    "fileTooLarge": "Arquivo muito grande",
+    "invalidFileType": "Tipo de arquivo inválido"
+  }
 }

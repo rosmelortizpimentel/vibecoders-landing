@@ -19,7 +19,7 @@ function escapeHtml(text: string): string {
 export function parseMarkdown(text: string): string {
   if (!text) return '';
 
-  let html = escapeHtml(text);
+  let html = text;
 
   // Bold: **text** or __text__
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
@@ -90,11 +90,14 @@ export function parseMarkdown(text: string): string {
 
   html = processedLines.join('\n');
 
+  // Auto-linkify raw URLs (http:// or https://) not already in an href attribute
+  html = html.replace(/(?<!href=["'])(https?:\/\/[^\s<]+)/gi, '<a href="$1" target="_blank" rel="noopener noreferrer" class="text-[#3D5AFE] hover:underline break-all">$1</a>');
+
   // Convert line breaks to <br> (except inside lists)
   html = html.replace(/\n(?!<\/?(ul|ol|li))/g, '<br>');
 
-  // Final XSS sanitization
-  return DOMPurify.sanitize(html);
+  // Final XSS sanitization, ensuring target attribute is preserved
+  return DOMPurify.sanitize(html, { ADD_ATTR: ['target'] });
 }
 
 // For preview, we just show the text with formatting indicators visible
