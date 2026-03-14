@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { parseMarkdown } from '@/lib/markdown';
 import { cn } from '@/lib/utils';
-import { Eye, PenLine } from 'lucide-react';
+import { Eye, PenLine, Bold, Italic, Underline, List } from 'lucide-react';
 
 interface MarkdownEditorProps {
   value: string;
@@ -21,12 +21,38 @@ export function MarkdownEditor({
   minHeight = "min-h-[400px]"
 }: MarkdownEditorProps) {
   const [mode, setMode] = useState<'write' | 'preview'>('write');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const injectMarkdown = (prefix: string, suffix: string = '') => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(start, end);
+    const before = text.substring(0, start);
+    const after = text.substring(end);
+
+    const newValue = `${before}${prefix}${selectedText}${suffix}${after}`;
+    onChange(newValue);
+
+    // Reset focus and selection
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + prefix.length,
+        end + prefix.length
+      );
+    }, 0);
+  };
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
       <div className="flex items-center justify-between border-b border-border bg-muted/20 px-4 py-2">
         <div className="flex items-center gap-1">
           <button
+            type="button"
             onClick={() => setMode('write')}
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
@@ -37,6 +63,7 @@ export function MarkdownEditor({
             Write
           </button>
           <button
+            type="button"
             onClick={() => setMode('preview')}
             className={cn(
               "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
@@ -47,11 +74,49 @@ export function MarkdownEditor({
             Preview
           </button>
         </div>
+
+        {mode === 'write' && (
+          <div className="flex items-center gap-1 border-l border-border ml-2 pl-2">
+            <button
+              type="button"
+              onClick={() => injectMarkdown('**', '**')}
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              title="Bold"
+            >
+              <Bold className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => injectMarkdown('*', '*')}
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              title="Italic"
+            >
+              <Italic className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => injectMarkdown('~~', '~~')}
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              title="Underline"
+            >
+              <Underline className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => injectMarkdown('- ')}
+              className="p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              title="Bullet List"
+            >
+              <List className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden relative">
         {mode === 'write' ? (
           <Textarea
+            ref={textareaRef}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}

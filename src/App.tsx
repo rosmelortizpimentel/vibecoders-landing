@@ -51,6 +51,7 @@ import Settings from "./pages/Settings";
 import TestAnalytics from "./pages/TestAnalytics";
 import Analytics from "./pages/Analytics";
 import Chat from "./pages/Chat";
+import Resources from "./pages/Resources";
 
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -165,6 +166,7 @@ const App = () => {
                   <Route path="/analytics" element={<Analytics />} />
                   <Route path="/analytics/:appId" element={<Analytics />} />
                   {/* Chat — hidden from menu */}
+                  <Route path="/feed" element={<Resources />} />
                   <Route path="/chat" element={<Chat />} />
                   <Route path="/chat/:conversationId" element={<Chat />} />
                   {/* Legacy redirect */}
