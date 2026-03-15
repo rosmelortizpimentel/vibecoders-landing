@@ -352,6 +352,8 @@ const Settings = () => {
 
       const { data: { publicUrl } } = supabase.storage
         .from('profile-assets')
+        .getPublicUrl(filePath);
+      
       setSpeakerData({ ...speakerData, photo_url: publicUrl });
       toast.success('Foto cargada correctamente');
     } catch (error) {
