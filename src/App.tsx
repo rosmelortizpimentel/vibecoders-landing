@@ -53,6 +53,8 @@ import Analytics from "./pages/Analytics";
 import Chat from "./pages/Chat";
 import Resources from "./pages/Resources";
 import LiveClasses from "./pages/LiveClasses";
+import { lazy, Suspense } from "react";
+const EventsPage = lazy(() => import("./pages/events/EventsPage"));
 
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -107,6 +109,7 @@ const App = () => {
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/post/:slug" element={<Post />} />
               <Route path="/clases-en-vivo" element={<LiveClasses />} />
+              <Route path="/events" element={<Suspense fallback={<div className="fixed inset-0 flex items-center justify-center" style={{background:'#0f1923'}}><div className="w-10 h-10 border-3 border-white/20 border-t-[#475DFF] rounded-full animate-spin" /></div>}><EventsPage /></Suspense>} />
               
               {/* Plan selection & payment */}
               <Route path="/choose-plan" element={<ChoosePlan />} />
