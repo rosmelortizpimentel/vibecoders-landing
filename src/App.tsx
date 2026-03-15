@@ -52,6 +52,7 @@ import TestAnalytics from "./pages/TestAnalytics";
 import Analytics from "./pages/Analytics";
 import Chat from "./pages/Chat";
 import Resources from "./pages/Resources";
+import LiveClasses from "./pages/LiveClasses";
 
 import ChoosePlan from "./pages/ChoosePlan";
 import PaymentSuccess from "./pages/PaymentSuccess";
@@ -105,6 +106,7 @@ const App = () => {
               <Route path="/terms" element={<Terms />} />
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/post/:slug" element={<Post />} />
+              <Route path="/clases-en-vivo" element={<LiveClasses />} />
               
               {/* Plan selection & payment */}
               <Route path="/choose-plan" element={<ChoosePlan />} />
@@ -128,7 +130,8 @@ const App = () => {
                   <Route path="/me" element={<Navigate to="/me/profile" replace />} />
                   <Route path="/me/profile" element={<Me />} />
                   <Route path="/me/branding" element={<Me />} />
-                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/settings" element={<Navigate to="/settings/account" replace />} />
+                  <Route path="/settings/:tab" element={<Settings />} />
                   
                   {/* Private Apps Management - Moved to /me/apps */}
                   <Route path="/me/apps" element={<MyApps />} />

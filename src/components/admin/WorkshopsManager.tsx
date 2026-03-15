@@ -27,6 +27,7 @@ interface Workshop {
   scheduled_at: string;
   duration_minutes: number | null;
   status: string;
+  is_confirmed: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -56,7 +57,7 @@ export function WorkshopsManager() {
   const [selectedSpeakerIds, setSelectedSpeakerIds] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
-    title: '', tagline: '', description: '', banner_url: '', scheduled_at: '', duration_minutes: '', status: 'draft',
+    title: '', tagline: '', description: '', banner_url: '', scheduled_at: '', duration_minutes: '', status: 'draft', is_confirmed: false,
   });
 
   const fetchWorkshops = async () => {
@@ -118,9 +119,10 @@ export function WorkshopsManager() {
       tagline: formData.tagline || null,
       description: formData.description || null,
       banner_url: formData.banner_url || null,
-      scheduled_at: formData.scheduled_at,
+      scheduled_at: new Date(formData.scheduled_at).toISOString(),
       duration_minutes: formData.duration_minutes ? parseInt(formData.duration_minutes) : null,
       status: formData.status,
+      is_confirmed: formData.is_confirmed,
       updated_at: new Date().toISOString(),
     };
 
@@ -158,7 +160,7 @@ export function WorkshopsManager() {
 
   const openCreate = () => {
     setEditing(null);
-    setFormData({ title: '', tagline: '', description: '', banner_url: '', scheduled_at: '', duration_minutes: '', status: 'draft' });
+    setFormData({ title: '', tagline: '', description: '', banner_url: '', scheduled_at: '', duration_minutes: '', status: 'draft', is_confirmed: false });
     setSelectedSpeakerIds([]);
     setShowDialog(true);
   };
@@ -170,9 +172,10 @@ export function WorkshopsManager() {
       tagline: w.tagline || '',
       description: w.description || '',
       banner_url: w.banner_url || '',
-      scheduled_at: w.scheduled_at ? w.scheduled_at.slice(0, 16) : '',
+      scheduled_at: w.scheduled_at ? format(new Date(w.scheduled_at), "yyyy-MM-dd'T'HH:mm") : '',
       duration_minutes: w.duration_minutes?.toString() || '',
       status: w.status,
+      is_confirmed: w.is_confirmed || false,
     });
     setSelectedSpeakerIds(w.speakers.map(s => s.id));
     setShowDialog(true);
@@ -225,6 +228,7 @@ export function WorkshopsManager() {
               <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Hora (Local)</TableHead>
               <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Horarios (Países)</TableHead>
               <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Estado</TableHead>
+              <TableHead className="py-2 h-auto text-[11px] font-bold uppercase text-center">Confirmada</TableHead>
               <TableHead className="py-2 h-auto text-[11px] font-bold uppercase">Ponentes</TableHead>
               <TableHead className="py-2 h-auto text-[11px] font-bold uppercase text-right">Acciones</TableHead>
             </TableRow>
@@ -250,6 +254,11 @@ export function WorkshopsManager() {
                 <TableCell className="py-1.5">
                   <Badge variant={STATUS_MAP[w.status]?.variant || 'secondary'} className="text-[10px] px-1.5 py-0 h-auto font-medium">
                     {STATUS_MAP[w.status]?.label || w.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="py-1.5 text-center">
+                  <Badge variant={w.is_confirmed ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 h-auto font-medium">
+                    {w.is_confirmed ? 'Sí' : 'No'}
                   </Badge>
                 </TableCell>
                 <TableCell className="py-1.5">
@@ -310,16 +319,24 @@ export function WorkshopsManager() {
                 <Input type="number" value={formData.duration_minutes} onChange={(e) => setFormData(p => ({ ...p, duration_minutes: e.target.value }))} placeholder="60" />
               </div>
             </div>
-            <div>
-              <Label>Estado</Label>
-              <Select value={formData.status} onValueChange={(v) => setFormData(p => ({ ...p, status: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Borrador</SelectItem>
-                  <SelectItem value="published">Publicado</SelectItem>
-                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3 items-end">
+              <div>
+                <Label>Estado</Label>
+                <Select value={formData.status} onValueChange={(v) => setFormData(p => ({ ...p, status: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Borrador</SelectItem>
+                    <SelectItem value="published">Publicado</SelectItem>
+                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2 pb-2">
+                <Checkbox id="is_confirmed" checked={formData.is_confirmed} onCheckedChange={(c) => setFormData(p => ({ ...p, is_confirmed: !!c }))} />
+                <Label htmlFor="is_confirmed" className="text-sm font-medium leading-none cursor-pointer">
+                  Charla confirmada
+                </Label>
+              </div>
             </div>
             <div>
               <Label>Banner</Label>

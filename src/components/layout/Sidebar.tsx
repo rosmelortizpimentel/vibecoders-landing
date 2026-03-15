@@ -10,9 +10,12 @@ import {
   Settings,
   MessageSquare,
   BarChart3,
+  Mic,
 } from 'lucide-react';
 import vibecodersLogo from '@/assets/vibecoders-logo.png';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import { useUserRole } from '@/hooks/useUserRole';
@@ -64,6 +67,35 @@ export function Sidebar() {
 
   const { isPro, isFounder } = useSubscription();
   const hasPremium = isPro || isFounder;
+
+  // Check if user is speaker and has upcoming workshops
+  const { data: speakerStatus } = useQuery({
+    queryKey: ['sidebar-speaker-status', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return { isSpeaker: false, hasUpcoming: false };
+      
+      // 1. Get speaker id
+      const { data: speaker } = await supabase
+        .from('speakers')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (!speaker) return { isSpeaker: false, hasUpcoming: false };
+      
+      // 2. Check for upcoming confirmed workshops
+      const { count } = await supabase
+        .from('workshops')
+        .select('id, workshop_speakers!inner(speaker_id)', { count: 'exact', head: true })
+        .eq('workshop_speakers.speaker_id', speaker.id)
+        .eq('is_confirmed', true)
+        .gt('scheduled_at', new Date().toISOString());
+        
+      return { isSpeaker: true, hasUpcoming: (count || 0) > 0 };
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Listen for external sidebar-collapse commands (e.g. from roadmap auto-collapse)
   useEffect(() => {
@@ -252,6 +284,34 @@ export function Sidebar() {
             </Link>
           );
         })}
+        
+        {/* Conditional Speaker Button */}
+        {speakerStatus?.isSpeaker && speakerStatus?.hasUpcoming && (
+          <Link
+            to="/settings/speaker"
+            className={cn(
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 mt-2",
+              location.pathname === '/settings/speaker'
+                ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_15px_-3px_rgba(61,90,254,0.3)]"
+                : "bg-[#3D5AFE] text-white hover:bg-[#3D5AFE]/90 shadow-lg shadow-[#3D5AFE]/20 hover:scale-[1.02] active:scale-[0.98]",
+              isCollapsed && "justify-center px-2"
+            )}
+            title={isCollapsed ? "Speaker" : undefined}
+          >
+            <div className="relative">
+              <Mic className={cn(
+                "h-5 w-5 transition-colors shrink-0",
+                location.pathname === '/settings/speaker' ? "text-primary" : "text-white"
+              )} />
+              {location.pathname !== '/settings/speaker' && (
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-white rounded-full animate-pulse shadow-sm" />
+              )}
+            </div>
+            {!isCollapsed && (
+              <span className="truncate flex-1 font-bold tracking-tight">Speaker</span>
+            )}
+          </Link>
+        )}
       </nav>
 
       {/* Roadmap & Feedback */}
