@@ -332,6 +332,13 @@ const Settings = () => {
     const file = e.target.files?.[0];
     if (!file || !profile?.id) return;
     
+    // 10MB limit (10 * 1024 * 1024 bytes)
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      toast.error('La foto es demasiado grande. Debe pesar menos de 10MB.');
+      return;
+    }
+    
     setIsUploadingPhoto(true);
     try {
       const fileExt = file.name.split('.').pop();
@@ -345,13 +352,10 @@ const Settings = () => {
 
       const { data: { publicUrl } } = supabase.storage
         .from('profile-assets')
-        .getPublicUrl(filePath);
-
       setSpeakerData({ ...speakerData, photo_url: publicUrl });
       toast.success('Foto cargada correctamente');
-    } catch (err: any) {
-      console.error('Error uploading speaker photo:', err);
-      toast.error('Error al subir la foto: ' + err.message);
+    } catch (error) {
+      toast.error('Error al cargar la foto: ' + (error instanceof Error ? error.message : 'Error desconocido'));
     } finally {
       setIsUploadingPhoto(false);
     }
