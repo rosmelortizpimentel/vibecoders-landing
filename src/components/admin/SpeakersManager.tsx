@@ -7,12 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { Plus, Trash2, Search, Pencil, Mic } from 'lucide-react';
+import { Plus, Trash2, Search, Pencil, Mic, Loader2, Camera, Upload, UserMinus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface Speaker {
   id: string;
   user_id: string | null;
   display_name: string;
+  email: string | null;
   tagline: string | null;
   photo_url: string | null;
   created_at: string;
@@ -36,7 +38,14 @@ export function SpeakersManager() {
   const [searchResults, setSearchResults] = useState<ProfileResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [manualMode, setManualMode] = useState(false);
-  const [formData, setFormData] = useState({ display_name: '', tagline: '', photo_url: '', user_id: null as string | null });
+  const [formData, setFormData] = useState({ 
+    display_name: '', 
+    email: '', 
+    tagline: '', 
+    photo_url: '', 
+    user_id: null as string | null 
+  });
+  const [isUploading, setIsUploading] = useState(false);
 
   const fetchSpeakers = async () => {
     setLoading(true);
@@ -47,9 +56,45 @@ export function SpeakersManager() {
     if (error) {
       toast.error('Error al cargar ponentes');
     } else {
-      setSpeakers((data as Speaker[]) || []);
+      setSpeakers(data || []);
     }
     setLoading(false);
+  };
+
+  const handleAdminPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 10MB limit
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      toast.error('La foto es demasiado grande. Debe pesar menos de 10MB.');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `speakers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('workshop-assets')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('workshop-assets')
+        .getPublicUrl(filePath);
+
+      setFormData(prev => ({ ...prev, photo_url: publicUrl }));
+      toast.success('Foto cargada correctamente');
+    } catch (error) {
+      toast.error('Error al cargar la foto: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   useEffect(() => { fetchSpeakers(); }, []);
@@ -69,6 +114,7 @@ export function SpeakersManager() {
   const selectUser = (profile: ProfileResult) => {
     setFormData({
       display_name: profile.name || '',
+      email: '', // Email might not be in profile object, user needs to fill or we could try to fetch it
       tagline: profile.tagline || '',
       photo_url: profile.avatar_url || '',
       user_id: profile.id,
@@ -81,11 +127,12 @@ export function SpeakersManager() {
     if (!formData.display_name.trim()) { toast.error('El nombre es requerido'); return; }
     const { error } = await supabase.from('speakers').insert({
       display_name: formData.display_name,
+      email: formData.email || null,
       tagline: formData.tagline || null,
       photo_url: formData.photo_url || null,
       user_id: formData.user_id,
     });
-    if (error) { toast.error('Error al crear ponente'); return; }
+    if (error) { toast.error('Error al crear ponente: ' + error.message); return; }
     toast.success('Ponente agregado');
     setShowAddDialog(false);
     resetForm();
@@ -96,10 +143,11 @@ export function SpeakersManager() {
     if (!editingSpeaker || !formData.display_name.trim()) return;
     const { error } = await supabase.from('speakers').update({
       display_name: formData.display_name,
+      email: formData.email || null,
       tagline: formData.tagline || null,
       photo_url: formData.photo_url || null,
     }).eq('id', editingSpeaker.id);
-    if (error) { toast.error('Error al actualizar'); return; }
+    if (error) { toast.error('Error al actualizar: ' + error.message); return; }
     toast.success('Ponente actualizado');
     setShowEditDialog(false);
     setEditingSpeaker(null);
@@ -117,12 +165,24 @@ export function SpeakersManager() {
 
   const openEditDialog = (speaker: Speaker) => {
     setEditingSpeaker(speaker);
-    setFormData({ display_name: speaker.display_name, tagline: speaker.tagline || '', photo_url: speaker.photo_url || '', user_id: speaker.user_id });
+    setFormData({ 
+      display_name: speaker.display_name, 
+      email: speaker.email || '',
+      tagline: speaker.tagline || '', 
+      photo_url: speaker.photo_url || '', 
+      user_id: speaker.user_id 
+    });
     setShowEditDialog(true);
   };
 
   const resetForm = () => {
-    setFormData({ display_name: '', tagline: '', photo_url: '', user_id: null });
+    setFormData({ 
+      display_name: '', 
+      email: '',
+      tagline: '', 
+      photo_url: '', 
+      user_id: null 
+    });
     setSearchQuery('');
     setSearchResults([]);
     setManualMode(false);
@@ -168,7 +228,17 @@ export function SpeakersManager() {
                     <AvatarFallback>{s.display_name.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </TableCell>
-                <TableCell className="font-medium">{s.display_name}</TableCell>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {s.display_name}
+                    {!s.user_id && (
+                      <Badge variant="outline" className="text-[10px] py-0 h-4 bg-muted/30 text-muted-foreground border-border/50 font-normal flex items-center gap-1">
+                        <UserMinus className="h-2.5 w-2.5" />
+                        Manual
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="text-muted-foreground">{s.tagline || '—'}</TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="ghost" size="icon" onClick={() => openEditDialog(s)}><Pencil className="h-4 w-4" /></Button>
@@ -230,19 +300,53 @@ export function SpeakersManager() {
                 <Input value={formData.display_name} onChange={(e) => setFormData(p => ({ ...p, display_name: e.target.value }))} />
               </div>
               <div>
+                <Label>Email</Label>
+                <Input type="email" value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} placeholder="email@ejemplo.com" />
+              </div>
+              <div>
                 <Label>Tagline</Label>
                 <Input value={formData.tagline} onChange={(e) => setFormData(p => ({ ...p, tagline: e.target.value }))} />
               </div>
               <div>
-                <Label>URL de foto</Label>
-                <Input value={formData.photo_url} onChange={(e) => setFormData(p => ({ ...p, photo_url: e.target.value }))} />
+                <Label>Foto del ponente</Label>
+                <div className="flex items-center gap-4 mt-1">
+                  <div className="relative group">
+                    <Avatar className="h-20 w-20 border-2 border-border group-hover:border-primary transition-colors">
+                      <AvatarImage src={formData.photo_url || ''} className="object-cover" />
+                      <AvatarFallback className="text-xl">{formData.display_name.charAt(0) || '?'}</AvatarFallback>
+                    </Avatar>
+                    <label 
+                      htmlFor="admin-photo-upload" 
+                      className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity"
+                    >
+                      <Camera className="h-6 w-6 text-white" />
+                      <input 
+                        id="admin-photo-upload" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handleAdminPhotoUpload}
+                        disabled={isUploading}
+                      />
+                    </label>
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full h-9 gap-2"
+                      onClick={() => document.getElementById('admin-photo-upload')?.click()}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {isUploading ? 'Subiendo...' : 'Subir foto'}
+                    </Button>
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      Máximo 10MB.
+                    </p>
+                  </div>
+                </div>
               </div>
-              {formData.photo_url && (
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={formData.photo_url} />
-                  <AvatarFallback>{formData.display_name.charAt(0)}</AvatarFallback>
-                </Avatar>
-              )}
             </div>
           )}
 
@@ -257,25 +361,59 @@ export function SpeakersManager() {
       <Dialog open={showEditDialog} onOpenChange={(v) => { if (!v) { setEditingSpeaker(null); resetForm(); } setShowEditDialog(v); }}>
         <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Editar Ponente</DialogTitle></DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
               <Label>Nombre a mostrar *</Label>
               <Input value={formData.display_name} onChange={(e) => setFormData(p => ({ ...p, display_name: e.target.value }))} />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input type="email" value={formData.email} onChange={(e) => setFormData(p => ({ ...p, email: e.target.value }))} placeholder="email@ejemplo.com" />
             </div>
             <div>
               <Label>Tagline</Label>
               <Input value={formData.tagline} onChange={(e) => setFormData(p => ({ ...p, tagline: e.target.value }))} />
             </div>
             <div>
-              <Label>URL de foto</Label>
-              <Input value={formData.photo_url} onChange={(e) => setFormData(p => ({ ...p, photo_url: e.target.value }))} />
+              <Label>Foto del ponente</Label>
+              <div className="flex items-center gap-4 mt-1">
+                <div className="relative group">
+                  <Avatar className="h-20 w-20 border-2 border-border group-hover:border-primary transition-colors">
+                    <AvatarImage src={formData.photo_url || ''} className="object-cover" />
+                    <AvatarFallback className="text-xl">{formData.display_name.charAt(0) || '?'}</AvatarFallback>
+                  </Avatar>
+                  <label 
+                    htmlFor="edit-admin-photo-upload" 
+                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 cursor-pointer rounded-full transition-opacity"
+                  >
+                    <Camera className="h-6 w-6 text-white" />
+                    <input 
+                      id="edit-admin-photo-upload" 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={handleAdminPhotoUpload}
+                      disabled={isUploading}
+                    />
+                  </label>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full h-9 gap-2"
+                    onClick={() => document.getElementById('edit-admin-photo-upload')?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {isUploading ? 'Subiendo...' : 'Subir foto'}
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    Máximo 10MB.
+                  </p>
+                </div>
+              </div>
             </div>
-            {formData.photo_url && (
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={formData.photo_url} />
-                <AvatarFallback>{formData.display_name.charAt(0)}</AvatarFallback>
-              </Avatar>
-            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setEditingSpeaker(null); resetForm(); setShowEditDialog(false); }}>Cancelar</Button>

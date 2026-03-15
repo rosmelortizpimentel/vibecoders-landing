@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { usePageHeader } from '@/contexts/PageHeaderContext';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   Settings as SettingsIcon, AlertCircle, Loader2, Download, 
   Shield, User as UserIcon, Activity, Trash2, 
-  Cookie, Globe, Copy, Check
+  Cookie, Globe, Copy, Check, Mic, Camera, Upload, ExternalLink, Clock, Calendar
 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { useProfileEditor } from '@/hooks/useProfileEditor';
+import { useTranslation } from '@/hooks/useTranslation';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -24,20 +28,106 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-type SettingsSection = 'account' | 'privacy';
+type SettingsSection = 'account' | 'privacy' | 'speaker';
 
 const Settings = () => {
   const tCommon = useTranslation('common');
   const { setHeaderContent } = usePageHeader();
   const { profile, loading, isSaving, error, updateProfile } = useProfileEditor();
+  const { user } = useAuth();
   const { language, setLanguage } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
   
-  const [activeSection, setActiveSection] = useState<SettingsSection>('account');
+  const { tab } = useParams<{tab: string}>();
+  const navigate = useNavigate();
+  const activeSection = (tab as SettingsSection) || 'account';
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [hasCopiedUsername, setHasCopiedUsername] = useState(false);
+
+  // Speaker state
+  const [isSpeakerLoading, setIsSpeakerLoading] = useState(true);
+  const [speakerData, setSpeakerData] = useState<any>(null);
+  const [isSavingSpeaker, setIsSavingSpeaker] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [workshops, setWorkshops] = useState<any[]>([]);
+  const [isLoadingWorkshops, setIsLoadingWorkshops] = useState(false);
+  const [activeWorkshopTab, setActiveWorkshopTab] = useState<'upcoming' | 'past'>('upcoming');
+
+  useEffect(() => {
+    const fetchSpeakerData = async () => {
+      if (!user?.id) return;
+      try {
+        const { data, error } = await supabase
+          .from('speakers')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) throw error;
+        setSpeakerData(data);
+      } catch (err) {
+        console.error('Error fetching speaker data:', err);
+      } finally {
+        setIsSpeakerLoading(false);
+      }
+    };
+
+    fetchSpeakerData();
+  }, [user?.id]);
+
+  useEffect(() => {
+    const fetchWorkshops = async () => {
+      if (!speakerData?.id) return;
+      setIsLoadingWorkshops(true);
+      try {
+        const { data, error } = await supabase
+          .from('workshops')
+          .select(`
+            *,
+            workshop_speakers!inner(speaker_id)
+          `)
+          .eq('workshop_speakers.speaker_id', speakerData.id)
+          .eq('is_confirmed', true)
+          .order('scheduled_at', { ascending: false });
+
+        if (error) throw error;
+        setWorkshops(data || []);
+      } catch (err) {
+        console.error('Error fetching workshops:', err);
+      } finally {
+        setIsLoadingWorkshops(false);
+      }
+    };
+
+    if (speakerData?.id && activeSection === 'speaker') {
+      fetchWorkshops();
+    }
+  }, [speakerData?.id, activeSection]);
+
+  const getTimeInTimezone = (date: string, timeZone: string) => {
+    try {
+      return new Intl.DateTimeFormat('es-MX', {
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone,
+        hour12: true
+      }).format(new Date(date));
+    } catch (e) {
+      return '--:--';
+    }
+  };
+
+  const TIMEZONES = [
+    { label: 'UTC', code: 'gb', zone: 'UTC', flag: 'https://flagcdn.com/w20/gb.png' },
+    { label: 'MAD', code: 'es', zone: 'Europe/Madrid', flag: 'https://flagcdn.com/w20/es.png' },
+    { label: 'STG', code: 'cl', zone: 'America/Santiago', flag: 'https://flagcdn.com/w20/cl.png' },
+    { label: 'LIM', code: 'pe', zone: 'America/Lima', flag: 'https://flagcdn.com/w20/pe.png' },
+    { label: 'MEX', code: 'mx', zone: 'America/Mexico_City', flag: 'https://flagcdn.com/w20/mx.png' },
+    { label: 'MIA', code: 'us', zone: 'America/New_York', flag: 'https://flagcdn.com/w20/us.png' },
+  ];
 
   useEffect(() => {
     setHeaderContent(
@@ -180,7 +270,7 @@ const Settings = () => {
     const isActive = activeSection === id;
     return (
       <button
-        onClick={() => setActiveSection(id)}
+        onClick={() => navigate(`/settings/${id}`)}
         className={cn(
           "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-semibold transition-all border",
           isActive 
@@ -213,6 +303,64 @@ const Settings = () => {
     { code: 'fr', label: 'Français' },
   ] as const;
 
+  const handleSpeakerSave = async () => {
+    if (!speakerData || !speakerData.id) return;
+    setIsSavingSpeaker(true);
+    try {
+      const { error } = await supabase
+        .from('speakers')
+        .update({
+          display_name: speakerData.display_name,
+          email: speakerData.email,
+          tagline: speakerData.tagline,
+          photo_url: speakerData.photo_url,
+        })
+        .eq('id', speakerData.id)
+        .eq('user_id', profile?.id); // Extra safety
+
+      if (error) throw error;
+      toast.success('Perfil de ponente actualizado');
+    } catch (err: any) {
+      console.error('Error saving speaker profile:', err);
+      toast.error('Error al guardar datos: ' + err.message);
+    } finally {
+      setIsSavingSpeaker(false);
+    }
+  };
+  
+  const handleSpeakerPhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !profile?.id) return;
+    
+    // 10MB limit (10 * 1024 * 1024 bytes)
+    const MAX_SIZE = 10 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      toast.error('La foto es demasiado grande. Debe pesar menos de 10MB.');
+      return;
+    }
+    
+    setIsUploadingPhoto(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const filePath = `speakers/${profile.id}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-assets')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-assets')
+      setSpeakerData({ ...speakerData, photo_url: publicUrl });
+      toast.success('Foto cargada correctamente');
+    } catch (error) {
+      toast.error('Error al cargar la foto: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
   return (
     <div className="container px-3 sm:px-4 pt-4 sm:pt-6 pb-20 sm:pb-8 flex-1 max-w-2xl mx-auto">
       
@@ -237,9 +385,10 @@ const Settings = () => {
       )}
 
       {/* Tabs Layout */}
-      <div className="flex gap-1.5 mb-4">
+      <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1 -mx-3 sm:mx-0 px-3 sm:px-0 hide-scrollbar">
         {renderNavTab('account', <UserIcon className="w-[14px] h-[14px]" />, 'Cuenta')}
         {renderNavTab('privacy', <Shield className="w-[14px] h-[14px]" />, 'Privacidad')}
+        {!isSpeakerLoading && speakerData && renderNavTab('speaker', <Mic className="w-[14px] h-[14px]" />, 'Perfil Ponente')}
       </div>
 
       {/* Main Content Card */}
@@ -390,6 +539,295 @@ const Settings = () => {
               </div>
             </div>
 
+          </div>
+         )}
+         {activeSection === 'speaker' && speakerData && (
+          <div className="divide-y divide-slate-100 flex flex-col w-full animate-in fade-in duration-300">
+            <div className="p-4 md:p-5">
+              <div className="w-full mb-6 text-center sm:text-left">
+                <h3 className="text-[14px] font-bold text-slate-900 tracking-tight">Perfil de Ponente</h3>
+                <p className="text-[12px] text-slate-500 mt-0.5">
+                  Actualiza tus datos públicos que se mostrarán en los workshops en los que participes. Solo tú puedes editar esta información.
+                </p>
+              </div>
+
+              <div className="flex flex-col lg:flex-row gap-6">
+                <div className="flex-1 space-y-4">
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-[12px] font-semibold text-slate-900">Nombre Público</Label>
+                      <Input 
+                        value={speakerData.display_name || ''} 
+                        onChange={e => setSpeakerData({...speakerData, display_name: e.target.value})} 
+                        className="h-9 text-[13px]"
+                        placeholder="Tu nombre (e.g., Rosmel)"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-[12px] font-semibold text-slate-900">Tagline / Profesión</Label>
+                      <Input 
+                        value={speakerData.tagline || ''} 
+                        onChange={e => setSpeakerData({...speakerData, tagline: e.target.value})} 
+                        className="h-9 text-[13px]"
+                        placeholder="Frontend Engineer @ VibeCoders"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[12px] font-semibold text-slate-900">Email (para agendarte, no será público)</Label>
+                      <Input 
+                        value={speakerData.email || ''} 
+                        onChange={e => setSpeakerData({...speakerData, email: e.target.value})} 
+                        type="email"
+                        placeholder="contacto@ejemplo.com"
+                      />
+                    </div>
+
+                    <div className="pt-2">
+                      <Button 
+                        onClick={handleSpeakerSave} 
+                        disabled={isSavingSpeaker}
+                        className="bg-[#3D5AFE] hover:bg-[#3D5AFE]/90 text-white font-semibold rounded-md h-8 px-4 text-[12px] w-full sm:w-auto"
+                      >
+                        {isSavingSpeaker ? <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> : null}
+                        Guardar Perfil de Ponente
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lg:w-[240px] space-y-4">
+                  <div className="space-y-3">
+                    <Label className="text-[12px] font-semibold text-slate-900">Foto del Ponente</Label>
+                    <div className="flex flex-col gap-3">
+                      {/* Removed manual button, now integrated as overlay */}
+                      
+                          <div className="w-full aspect-[4/5] rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50 flex items-center justify-center relative group">
+                            {speakerData.photo_url ? (
+                              <>
+                                <img 
+                                  src={speakerData.photo_url} 
+                                  alt="Vista previa ponente" 
+                                  className="max-w-full max-h-full object-contain transition-transform duration-500 group-hover:scale-105" 
+                                />
+                                <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity cursor-pointer text-white gap-2">
+                                  {isUploadingPhoto ? (
+                                    <Loader2 className="h-5 w-5 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <Camera className="h-6 w-6" />
+                                      <span className="text-[11px] font-medium">Reemplazar foto</span>
+                                    </>
+                                  )}
+                                  <input 
+                                    type="file" 
+                                    className="hidden" 
+                                    accept="image/*" 
+                                    onChange={handleSpeakerPhotoUpload}
+                                    disabled={isUploadingPhoto}
+                                  />
+                                </label>
+                              </>
+                            ) : (
+                              <label className="flex flex-col items-center justify-center gap-2 cursor-pointer w-full h-full text-slate-400 hover:text-slate-600 transition-colors">
+                                {isUploadingPhoto ? (
+                                  <Loader2 className="h-6 w-6 animate-spin" />
+                                ) : (
+                                  <>
+                                    <Camera className="h-8 w-8" />
+                                    <span className="text-[12px] font-medium">Cargar Foto</span>
+                                  </>
+                                )}
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  accept="image/*" 
+                                  onChange={handleSpeakerPhotoUpload}
+                                  disabled={isUploadingPhoto}
+                                />
+                              </label>
+                            )}
+                          </div>
+                          <div className="mt-2 text-[10px] text-slate-400 flex flex-col gap-1">
+                            <div className="flex items-center gap-1.5">
+                              <Camera className="w-3 h-3" />
+                              Foto exclusiva para eventos.
+                            </div>
+                          </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Separate section for workshops below the profile card */}
+            <div className="pt-2 px-4 md:px-5 pb-8 animate-in slide-in-from-bottom-2 duration-500">
+              <div className="pt-4 border-t border-slate-100 flex flex-col space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-[15px] font-bold text-slate-900 tracking-tight">Mis Charlas Confirmadas</h3>
+                    <p className="text-[12px] text-slate-500 mt-0.5">Listado de eventos públicos y privados.</p>
+                  </div>
+                  <Link 
+                    to="/clases-en-vivo" 
+                    className="text-[12px] bg-slate-50 border border-slate-200 text-slate-700 px-4 py-2 rounded-full font-semibold flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors shadow-sm"
+                  >
+                    Ver calendario público
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                  </Link>
+                </div>
+
+                {/* Internal Tabs for Filtering Workshops */}
+                <div className="flex gap-1 p-1 bg-slate-50 rounded-lg w-fit border border-slate-100">
+                  <button 
+                    onClick={() => setActiveWorkshopTab('upcoming')}
+                    className={cn(
+                      "px-4 py-1.5 text-[12px] font-bold rounded-md transition-all",
+                      activeWorkshopTab === 'upcoming' 
+                        ? "bg-white text-[#3D5AFE] shadow-sm border border-slate-100" 
+                        : "text-slate-500 hover:text-slate-800"
+                    )}
+                  >
+                    Próximas
+                  </button>
+                  <button 
+                    onClick={() => setActiveWorkshopTab('past')}
+                    className={cn(
+                      "px-4 py-1.5 text-[12px] font-bold rounded-md transition-all",
+                      activeWorkshopTab === 'past' 
+                        ? "bg-white text-[#3D5AFE] shadow-sm border border-slate-100" 
+                        : "text-slate-500 hover:text-slate-800"
+                    )}
+                  >
+                    Pasadas
+                  </button>
+                </div>
+
+                {isLoadingWorkshops ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-slate-200" />
+                  </div>
+                ) : (() => {
+                  const now = new Date();
+                  const filteredWorkshops = workshops
+                    .filter(w => {
+                      const date = new Date(w.scheduled_at);
+                      return activeWorkshopTab === 'upcoming' ? date >= now : date < now;
+                    })
+                    .sort((a, b) => {
+                      const dateA = new Date(a.scheduled_at).getTime();
+                      const dateB = new Date(b.scheduled_at).getTime();
+                      return activeWorkshopTab === 'upcoming' ? dateA - dateB : dateB - dateA;
+                    });
+
+                  if (filteredWorkshops.length === 0) {
+                    return (
+                      <div className="text-center py-12 bg-white border border-dashed border-slate-200 rounded-xl">
+                        <Calendar className="w-8 h-8 text-slate-100 mx-auto mb-3" />
+                        <p className="text-[13px] text-slate-400 font-medium">
+                          {activeWorkshopTab === 'upcoming' 
+                            ? "No tienes charlas programadas próximamente." 
+                            : "No se encontraron charlas en el historial."}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid gap-4">
+                      {filteredWorkshops.map((workshop) => (
+                        <div 
+                          key={workshop.id} 
+                          className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm hover:border-[#3D5AFE]/20 transition-all duration-300 group"
+                        >
+                          <div className="flex justify-between items-start gap-4 mb-3">
+                            <div className="space-y-1.5">
+                              <h4 className="text-[15px] font-bold text-slate-900 leading-tight group-hover:text-[#3D5AFE] transition-colors">
+                                {workshop.title}
+                              </h4>
+                              {workshop.tagline && (
+                                <p className="text-[13px] text-slate-500 italic leading-relaxed border-l-2 border-slate-100 pl-3">
+                                  {workshop.tagline}
+                                </p>
+                              )}
+                            </div>
+                            {activeWorkshopTab === 'past' && (
+                              <div className="shrink-0 px-3 py-1 rounded-full bg-green-50 text-green-700 text-[10px] font-extrabold uppercase tracking-widest border border-green-100">
+                                Realizada
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-x-6 gap-y-4 py-4 border-y border-slate-50">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-lg bg-[#3D5AFE]/5 flex items-center justify-center">
+                                <Calendar className="w-4 h-4 text-[#3D5AFE]" />
+                              </div>
+                              <span className="text-[12px] font-bold text-slate-700 capitalize">
+                                {format(new Date(workshop.scheduled_at), "eeee, d 'de' MMMM", { locale: es })}
+                              </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 bg-slate-50/80 px-4 py-2 rounded-xl border border-slate-100">
+                              <Clock className="w-4 h-4 text-slate-400" />
+                              <div className="flex gap-5">
+                                {[...TIMEZONES]
+                                  .sort((a, b) => {
+                                    // Chronological sorting based on local time
+                                    const getNumericTime = (tz: string) => {
+                                      const d = new Date(workshop.scheduled_at);
+                                      const parts = new Intl.DateTimeFormat('en-US', {
+                                        hour: 'numeric',
+                                        minute: 'numeric',
+                                        hourCycle: 'h23',
+                                        timeZone: tz,
+                                      }).formatToParts(d);
+                                      const h = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
+                                      const m = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
+                                      return h * 60 + m;
+                                    };
+                                    return getNumericTime(a.zone) - getNumericTime(b.zone);
+                                  })
+                                  .map((tz) => (
+                                  <div key={tz.label} className="flex flex-col items-center gap-1">
+                                    <div className="flex items-center gap-1">
+                                      <img 
+                                        src={tz.flag} 
+                                        alt={tz.label} 
+                                        className="w-3.5 h-auto object-contain rounded-[1px] shadow-[0_0_0_1px_rgba(0,0,0,0.05)]" 
+                                      />
+                                      <span className="text-[10px] font-extrabold text-slate-400 leading-none">{tz.label}</span>
+                                    </div>
+                                    <span className="text-[10px] font-normal text-slate-800 tabular-nums whitespace-nowrap">
+                                      {getTimeInTimezone(workshop.scheduled_at, tz.zone)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-end pt-2">
+                            {workshop.luma_url && (
+                              <a 
+                                href={workshop.luma_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-[13px] font-bold text-[#3D5AFE] flex items-center gap-1.5 hover:translate-x-1 transition-transform"
+                              >
+                                Ver en Luma
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         )}
 
