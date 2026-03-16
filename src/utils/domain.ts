@@ -9,6 +9,11 @@ export const isCustomDomain = (hostname: string) => {
   
     // Si el hostname actual NO termina en ninguno de los dominios base,
     // significa que es un dominio completamente personalizado.
+    // Excluimos las vistas previas de Lovable de ser consideradas dominios personalizados
+    if (hostname.includes('lovable.app') && hostname.startsWith('preview--')) {
+      return false;
+    }
+
     return !baseDomains.some(base => hostname === base || hostname.endsWith(`.${base}`));
   };
   

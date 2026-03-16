@@ -14,7 +14,10 @@ import { detectedSubdomain, isCustomDomain } from '@/utils/domain';
 const isCustom = isCustomDomain(window.location.hostname);
 
 // On load, if subdomain detected and at root, redirect to /roadmap
-if ((detectedSubdomain || isCustom) && window.location.pathname === '/') {
+// But DO NOT redirect if it's a Lovable preview subdomain
+const isLovablePreview = window.location.hostname.includes('lovable.app') && window.location.hostname.startsWith('preview--');
+
+if ((detectedSubdomain || isCustom) && window.location.pathname === '/' && !isLovablePreview) {
   window.history.replaceState(null, '', '/roadmap');
 }
 // import Index from "./pages/Index";
@@ -96,7 +99,7 @@ const App = () => {
                 </>
               )}
               {/* Public routes - New Landing is now Official */}
-              <Route path="/" element={detectedSubdomain || isCustom ? <Navigate to="/roadmap" replace /> : <NewLanding />} />
+              <Route path="/" element={(detectedSubdomain || isCustom) && !isLovablePreview ? <Navigate to="/roadmap" replace /> : <NewLanding />} />
               {/* Public roadmap & feedback: /@username/app-slug/roadmap */}
               <Route path="/:handle/:appSlug/roadmap" element={<PublicRoadmap />} />
               <Route path="/:handle/:appSlug/feedback" element={<PublicRoadmap />} />
