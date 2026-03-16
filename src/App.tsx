@@ -14,8 +14,8 @@ import { detectedSubdomain, isCustomDomain } from '@/utils/domain';
 const isCustom = isCustomDomain(window.location.hostname);
 
 // On load, if subdomain detected and at root, redirect to /roadmap
-// But DO NOT redirect if it's a Lovable preview subdomain
-const isLovablePreview = window.location.hostname.includes('lovable.app') && window.location.hostname.startsWith('preview--');
+// But DO NOT redirect if it's a Lovable platform subdomain (preview or editor)
+const isLovablePreview = window.location.hostname.endsWith('lovable.app') || window.location.hostname.endsWith('lovableproject.com');
 
 if ((detectedSubdomain || isCustom) && window.location.pathname === '/' && !isLovablePreview) {
   window.history.replaceState(null, '', '/roadmap');

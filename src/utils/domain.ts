@@ -4,13 +4,14 @@ export const isCustomDomain = (hostname: string) => {
       'vibecoders.la',
       'localhost',
       '127.0.0.1',
-      // Agregar otros dominios base si hay entornos de staging, etc.
+      'lovable.app',
+      'lovableproject.com',
     ];
   
     // Si el hostname actual NO termina en ninguno de los dominios base,
     // significa que es un dominio completamente personalizado.
     // Excluimos las vistas previas de Lovable de ser consideradas dominios personalizados
-    if (hostname.includes('lovable.app') && hostname.startsWith('preview--')) {
+    if (hostname.endsWith('lovable.app') || hostname.endsWith('lovableproject.com')) {
       return false;
     }
 
@@ -19,6 +20,14 @@ export const isCustomDomain = (hostname: string) => {
   
   export const getSubdomain = (hostname: string) => {
     if (isCustomDomain(hostname)) return null;
+  
+    // Ignore Lovable platform subdomains (e.g., preview--project.lovable.app or project-id.lovable.app)
+    const isPlatformDomain = hostname.endsWith('lovable.app') || hostname.endsWith('lovableproject.com');
+    if (isPlatformDomain && hostname.split('.').length > (hostname.includes('localhost') ? 1 : 2)) {
+      if (!hostname.startsWith('www.')) {
+        return null;
+      }
+    }
   
     const parts = hostname.split('.');
     let subdomain = null;
